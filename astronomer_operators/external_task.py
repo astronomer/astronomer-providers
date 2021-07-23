@@ -1,9 +1,14 @@
+import asyncio
 import datetime
 from typing import Any, Dict, List, Tuple
+from airflow.models.taskinstance import TaskInstance
 
 from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.triggers.base import BaseTrigger
+from airflow.utils.session import provide_session
+from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
+from sqlalchemy import func
+
 
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):
@@ -55,7 +60,7 @@ class TaskStateTrigger(BaseTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         return (
-            "astronomer_operators.external_task.ExternalTaskTrigger",
+            "astronomer_operators.external_task.TaskStateTrigger",
             {
                 "dag_id": self.dag_id,
                 "task_id": self.task_id,
@@ -73,9 +78,28 @@ class TaskStateTrigger(BaseTrigger):
         #   Query the database and see if there are matching tasks
         #   Sleep
 
+        while True:
+            num_tasks = await self.count_tasks()
+            if num_tasks == len(self.execution_dates):
+                yield TriggerEvent(True)
+                return
+            await asyncio.sleep(5)
+
     @sync_to_async
-    def count_tasks(self) -> int:
+    @provide_session
+    def count_tasks(self, session) -> int:
         """
         See how many tasks in the database match our criteria.
         """
         # TODO: Run database query and return count
+        count = (
+                session.query(func.count())  # .count() is inefficient
+                .filter(
+                    TaskInstance.dag_id == self.dag_id,
+                    TaskInstance.task_id == self.task_id,
+                    TaskInstance.state.in_(self.states),
+                    TaskInstance.execution_date.in_(self.execution_dates),
+                )
+                .scalar()
+            )
+        return count
