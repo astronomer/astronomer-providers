@@ -1,0 +1,26 @@
+version: 2.1
+
+workflows:
+  test:
+    jobs:
+      - test
+
+jobs:
+  test:
+    description: Test & Lint
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -e .[tests]
+      - run:
+          name: Static checks
+          command: |
+            pre-commit run --all-files || { git --no-pager diff && false ; }
+      - run:
+          name: Run tests
+          command: pytest --junit-xml=test-report/report.xml
+      - store_test_results:
+          path: test-report
