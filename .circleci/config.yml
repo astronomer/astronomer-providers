@@ -14,7 +14,8 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: pip install -e .[tests]
+          command: "pip install
+    git+https://github.com/apache/airflow.git@deferrable#egg=airflow && pip install -e .[tests]"
       - run:
           name: Static checks
           command: |
