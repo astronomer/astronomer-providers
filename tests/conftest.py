@@ -30,7 +30,7 @@ def airflow_db():
 @pytest.fixture
 def session():
     """
-    Creates a SQLAlchemy session
+    Creates a SQLAlchemy session.
     """
     with create_session() as session:
         yield session
@@ -38,6 +38,9 @@ def session():
 
 @pytest.fixture(autouse=True)
 def clean_db(session):
+    """
+    Clears test database after each test is run.
+    """
     session.query(Trigger).delete()
     session.query(DagRun).delete()
     session.query(TaskInstance).delete()
