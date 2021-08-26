@@ -5,9 +5,8 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.models import DAG, DagRun, TaskInstance
+from airflow.models import DagRun, TaskInstance
 from airflow.operators.dummy import DummyOperator
-from airflow.utils.dates import days_ago
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.timezone import datetime
 
@@ -23,16 +22,7 @@ TEST_TASK_ID = "external_task_sensor_check"
 TEST_EXT_DAG_ID = "wait_for_me_dag"  # DAG the external task sensor is waiting on
 TEST_EXT_TASK_ID = "wait_for_me_task"  # Task the external task sensor is waiting on
 TEST_STATES = ["success", "fail"]
-
-
-@pytest.fixture
-def dag():
-    """
-    Creates a test DAG with default arguments.
-    """
-    args = {"owner": "airflow", "start_date": days_ago(0)}
-    dag = DAG(TEST_DAG_ID, default_args=args)
-    yield dag
+TEST_POLL_INTERVAL = 3.0
 
 
 @pytest.fixture
@@ -190,6 +180,7 @@ def test_task_state_trigger_serialization():
         TEST_TASK_ID,
         TEST_STATES,
         [DEFAULT_DATE],
+        TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer_operators.external_task.TaskStateTrigger"
@@ -198,6 +189,7 @@ def test_task_state_trigger_serialization():
         "task_id": TEST_TASK_ID,
         "states": TEST_STATES,
         "execution_dates": [DEFAULT_DATE],
+        "poll_interval": TEST_POLL_INTERVAL,
     }
 
 
@@ -210,6 +202,7 @@ def test_task_dag_trigger_serialization():
         TEST_DAG_ID,
         TEST_STATES,
         [DEFAULT_DATE],
+        TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer_operators.external_task.DagStateTrigger"
@@ -217,6 +210,7 @@ def test_task_dag_trigger_serialization():
         "dag_id": TEST_DAG_ID,
         "states": TEST_STATES,
         "execution_dates": [DEFAULT_DATE],
+        "poll_interval": TEST_POLL_INTERVAL,
     }
 
 
