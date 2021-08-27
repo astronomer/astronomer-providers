@@ -32,8 +32,10 @@ def context():
     yield context
 
 
-@mock.patch("astronomer_hooks.databricks.DatabricksHook.submit_run")
-@mock.patch("astronomer_hooks.databricks.DatabricksHook.get_run_page_url")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch(
+    "airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url"
+)
 def test_databricks_submit_run_operator_async(
     submit_run_response, get_run_page_url_response, context
 ):
@@ -61,8 +63,8 @@ def test_databricks_submit_run_operator_async(
     ), "Trigger is not a DatabricksTrigger"
 
 
-@mock.patch("astronomer_hooks.databricks.DatabricksHook.run_now")
-@mock.patch("astronomer_hooks.databricks.DatabricksHook.get_run_page_url")
+@mock.patch("astronomer_operators.hooks.databricks.DatabricksHook.run_now")
+@mock.patch("astronomer_operators.hooks.databricks.DatabricksHook.get_run_page_url")
 def test_databricks_run_now_operator_async(
     run_now_response,
     get_run_page_url_response,
@@ -104,7 +106,6 @@ def test_databricks_run_now_execute_complete(caplog):
     operator.execute_complete({})
 
     assert f"{TASK_ID} completed successfully." in caplog.text
-    assert f"View run status, Spark UI, and logs at {RUN_PAGE_URL}" in caplog.text
 
 
 def test_databricks_trigger_serialization():
@@ -133,7 +134,9 @@ def test_databricks_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch(
+    "astronomer_operators.hooks.databricks.DatabricksHookAsync.get_run_state_async"
+)
 async def test_databricks_trigger_success(run_state):
     """
     Tests that the DatabricksTrigger only fires once a
@@ -164,7 +167,9 @@ async def test_databricks_trigger_success(run_state):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch(
+    "astronomer_operators.hooks.databricks.DatabricksHookAsync.get_run_state_async"
+)
 async def test_databricks_trigger_running(run_state, caplog):
     """
     Tests that the DatabricksTrigger does not fire while a
@@ -202,7 +207,9 @@ async def test_databricks_trigger_running(run_state, caplog):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch(
+    "astronomer_operators.hooks.databricks.DatabricksHookAsync.get_run_state_async"
+)
 async def test_databricks_trigger_terminated(run_state):
     """
     Tests that the DatabricksTrigger does not fire once a
@@ -228,7 +235,7 @@ async def test_databricks_trigger_terminated(run_state):
         await trigger.run().__anext__()
         # TODO: figure out how to stop the loop if possible...
         # Prevents error when task is destroyed while in "pending" state
-        asyncio.get_event_loop().stop()
+        # asyncio.get_event_loop().stop()
 
     assert (
         str(exc.value)

@@ -10,7 +10,7 @@ from airflow.providers.databricks.operators.databricks import (
 )
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer_hooks.databricks import DatabricksHookAsync
+from astronomer_operators.hooks.databricks import DatabricksHookAsync
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
@@ -55,9 +55,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        # TODO: verify these logs are happening in the UI
         self.log.info("%s completed successfully.", self.task_id)
-        self.log.info("View run status, Spark UI, and logs at %s", self.run_page_url)
         return None
 
 
@@ -102,12 +100,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        # self.log.info("%s completed successfully.", self.task_id)
-        self.log.info("%s completed successfully.", self.run_id)
-
-        # # TODO: The log below causes a failure. Either remove this log or figure out how
-        # to make self.run_page_url value exist in this function from assignment on line 80:
-        # self.log.info("View run status, Spark UI, and logs at %s", self.run_page_url)
+        self.log.info("%s completed successfully.", self.task_id)
         return None
 
 
