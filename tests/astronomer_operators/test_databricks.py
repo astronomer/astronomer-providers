@@ -193,8 +193,6 @@ async def test_databricks_trigger_running(run_state, caplog):
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
     # TriggerEvent was not returned
     assert task.done() is False
 
@@ -233,9 +231,6 @@ async def test_databricks_trigger_terminated(run_state):
 
     with pytest.raises(AirflowException) as exc:
         await trigger.run().__anext__()
-        # TODO: figure out how to stop the loop if possible...
-        # Prevents error when task is destroyed while in "pending" state
-        # asyncio.get_event_loop().stop()
 
     assert (
         str(exc.value)
