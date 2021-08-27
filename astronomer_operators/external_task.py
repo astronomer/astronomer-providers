@@ -113,6 +113,7 @@ class TaskStateTrigger(BaseTrigger):
                 "task_id": self.task_id,
                 "states": self.states,
                 "execution_dates": self.execution_dates,
+                "poll_interval": self.poll_interval,
             },
         )
 
@@ -171,6 +172,7 @@ class DagStateTrigger(BaseTrigger):
                 "dag_id": self.dag_id,
                 "states": self.states,
                 "execution_dates": self.execution_dates,
+                "poll_interval": self.poll_interval,
             },
         )
 
