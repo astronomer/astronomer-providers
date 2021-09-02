@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import pytest
 from aioresponses import aioresponses
@@ -76,3 +77,12 @@ def aioresponse():
     """
     with aioresponses() as async_response:
         yield async_response
+
+
+@pytest.fixture
+def context():
+    """
+    Creates a context with default execution date.
+    """
+    context = {"execution_date": datetime(2015, 1, 1)}
+    yield context
