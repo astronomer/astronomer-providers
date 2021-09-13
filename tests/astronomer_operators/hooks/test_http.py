@@ -24,7 +24,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
 
 @pytest.mark.asyncio
 async def test_do_api_call_async_retryable_error(caplog, aioresponse):
-    caplog.set_level(logging.ERROR, logger="astronomer_operators.hooks.http")
+    caplog.set_level(logging.WARNING, logger="astronomer_operators.hooks.http")
     hook = HttpHookAsync(method="GET")
     aioresponse.get("http://httpbin.org/non_existent_endpoint", status=500, repeat=True)
 
