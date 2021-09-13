@@ -132,7 +132,7 @@ class HttpHookAsync(BaseHook):
                     response.raise_for_status()
                     return response
                 except ClientResponseError as e:
-                    self.log.error(
+                    self.log.warning(
                         "[Try %d of %d] Request to %s failed.",
                         attempt_num,
                         self.retry_limit,
