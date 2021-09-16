@@ -23,7 +23,6 @@ class DatabricksHookAsync(DatabricksHook):
         retry_limit: int = 3,
         retry_delay: float = 1.0,
     ) -> None:
-        super().__init__()
         self.databricks_conn_id = databricks_conn_id
         self.databricks_conn = None  # To be set asynchronously in create_hook()
         self.timeout_seconds = timeout_seconds
