@@ -157,7 +157,6 @@ class DatabricksTrigger(BaseTrigger):
                     )
                     raise AirflowException(error_message)
             else:
-                # TODO: Figure out logging for trigger
                 self.log.info("%s in run state: %s", self.task_id, run_state)
                 self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
                 await asyncio.sleep(self.polling_period_seconds)

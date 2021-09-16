@@ -3,14 +3,13 @@ import logging
 from unittest import mock
 
 import pytest
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPInternalServerError
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
 )
 
-from astronomer_operators.hooks.databricks import DatabricksHookAsync
+from astronomer_operators.hooks.databricks import create_hook
 
 TASK_ID = "databricks_check"
 CONN_ID = "unit_test_conn_id"
@@ -30,7 +29,7 @@ async def test_databricks_hook_get_run_state(mocked_response):
     is in a PENDING state (i.e. "RUNNING") and after it reaches a TERMINATED
     state (i.e. "SUCCESS").
     """
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     # Mock response while job is running
     mocked_response.return_value = {
         "state": {
@@ -72,7 +71,7 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     and basic auth.
     """
     caplog.set_level(logging.INFO)
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -98,7 +97,7 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     and basic auth.
     """
     caplog.set_level(logging.INFO)
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     hook.databricks_conn.extra = json.dumps({"token": "test_token"})
     params = {"run_id": RUN_ID}
 
@@ -119,7 +118,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     Asserts that the Databricks hook will throw an exception
     when a non-retryable error is returned by the API.
     """
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
 
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
@@ -127,7 +126,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
 
     aioresponse.get(
         "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
-        exception=HTTPBadRequest(),
+        status=400,
     )
 
     with pytest.raises(AirflowException) as exc:
@@ -142,14 +141,14 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     Asserts that the Databricks hook will attempt another API call as many
     times as the retry_limit when a retryable error is returned by the API.
     """
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
         "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
-        exception=HTTPInternalServerError(),
+        status=500,
         repeat=True,
     )
 
@@ -167,7 +166,7 @@ async def test_do_api_call_async_post(aioresponse):
     """
     Asserts that the Databricks hook makes a POST call as expected.
     """
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
@@ -192,7 +191,7 @@ async def test_do_api_call_async_unknown_method():
     Asserts that the Databricks hook throws an exception when it attempts to
     make an API call using a non-existent method.
     """
-    hook = DatabricksHookAsync()
+    hook = await create_hook()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
@@ -205,13 +204,3 @@ async def test_do_api_call_async_unknown_method():
         await hook._do_api_call_async(("NOPE", "api/2.0/jobs/runs/submit"), json)
 
     assert str(exc.value) == "Unexpected HTTP Method: NOPE"
-
-
-def test_retryable_error_async():
-    """
-    Asserts that HTTP errors are properly identified as retryable
-    when the status code >= 500.
-    """
-    hook = DatabricksHookAsync()
-    assert hook._retryable_error_async(HTTPInternalServerError)
-    assert not hook._retryable_error_async(HTTPBadRequest)
