@@ -19,6 +19,7 @@ from astronomer_operators.external_task import (
 DEFAULT_DATE = datetime(2015, 1, 1)
 TEST_DAG_ID = "unit_test_dag"
 TEST_TASK_ID = "external_task_sensor_check"
+TEST_RUN_ID = "unit_test_dag_run_id"
 TEST_EXT_DAG_ID = "wait_for_me_dag"  # DAG the external task sensor is waiting on
 TEST_EXT_TASK_ID = "wait_for_me_task"  # Task the external task sensor is waiting on
 TEST_STATES = ["success", "fail"]
@@ -224,6 +225,13 @@ async def test_task_state_trigger(session, dag):
     Asserts that the TaskStateTrigger only goes off on or after a TaskInstance
     reaches an allowed state (i.e. SUCCESS).
     """
+    dag_run = DagRun(
+        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
+    )
+
+    session.add(dag_run)
+    session.commit()
+
     external_task = DummyOperator(task_id=TEST_TASK_ID, dag=dag)
     instance = TaskInstance(external_task, DEFAULT_DATE)
     session.add(instance)
