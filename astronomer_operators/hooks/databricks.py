@@ -2,7 +2,7 @@ import asyncio
 import base64
 
 import aiohttp
-from aiohttp.web_exceptions import HTTPException
+from aiohttp import ClientResponseError
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
@@ -10,9 +10,27 @@ from airflow.providers.databricks.hooks.databricks import (
     DatabricksHook,
     RunState,
 )
+from asgiref.sync import sync_to_async
+
+DEFAULT_CONN_NAME = "databricks_default"
 
 
 class DatabricksHookAsync(DatabricksHook):
+    def __init__(
+        self,
+        databricks_conn_id: str = DEFAULT_CONN_NAME,
+        timeout_seconds: int = 180,
+        retry_limit: int = 3,
+        retry_delay: float = 1.0,
+    ) -> None:
+        self.databricks_conn_id = databricks_conn_id
+        self.databricks_conn = None  # To be set asynchronously in create_hook()
+        self.timeout_seconds = timeout_seconds
+        if retry_limit < 1:
+            raise ValueError("Retry limit must be greater than equal to 1")
+        self.retry_limit = retry_limit
+        self.retry_delay = retry_delay
+
     async def get_run_state_async(self, run_id: str) -> RunState:
         """
         Retrieves run state of the run using an asyncronous api call.
@@ -88,12 +106,12 @@ class DatabricksHookAsync(DatabricksHook):
                     )
                     response.raise_for_status()
                     return await response.json()
-                except HTTPException as e:
+                except ClientResponseError as e:
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry.
                         raise AirflowException(
-                            f"Response: {e}, Status Code: {e.status_code}"
+                            f"Response: {e.message}, Status Code: {e.status}"
                         )
                     self._log_request_error(attempt_num, e)
 
@@ -119,5 +137,21 @@ class DatabricksHookAsync(DatabricksHook):
             - anything with a status code >= 500
 
         Most retryable errors are covered by status code >= 500.
+        :return: if the status is retryable
+        :rtype: bool
         """
-        return exception.status_code >= 500
+        return exception.status >= 500
+
+
+async def create_hook():
+    """
+    Initializes a new DatabricksHookAsync then sets its databricks_conn
+    field asynchronously.
+    :return: a new async Databricks hook
+    :rtype: DataBricksHookAsync()
+    """
+    self = DatabricksHookAsync()
+    self.databricks_conn = await sync_to_async(self.get_connection)(
+        self.databricks_conn_id
+    )
+    return self

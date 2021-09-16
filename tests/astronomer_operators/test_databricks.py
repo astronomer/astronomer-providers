@@ -193,12 +193,16 @@ async def test_databricks_trigger_running(run_state, caplog):
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
     # TriggerEvent was not returned
     assert task.done() is False
 
-    # # TODO: uncomment these after logging is implemented in Trigger
-    # assert f"{TASK_ID} in run state: RUNNING" in caplog.text
-    # assert f"Sleeping for {POLLING_PERIOD_SECONDS} seconds." in caplog.text
+    assert (
+        f"{TASK_ID} in run state: {{'life_cycle_state': 'RUNNING', 'result_state': '', 'state_message': 'In run'}}"
+        in caplog.text
+    )
+    assert f"Sleeping for {POLLING_PERIOD_SECONDS} seconds." in caplog.text
 
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
