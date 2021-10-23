@@ -36,7 +36,6 @@ class AirbyteHookAsync(AirbyteHook):
         :param job_id: id of the run
         :return: state of the run
         """
-        state = None
         start = time.monotonic()
         while True:
             if self.timeout and start + self.timeout < time.monotonic():
@@ -53,19 +52,20 @@ class AirbyteHookAsync(AirbyteHook):
         """
         self.airbyte_conn = await sync_to_async(self.get_connection)(self.http_conn_id)
         return await self._do_api_call_async(
-            method="POST",
             endpoint=f"{self.airbyte_conn.host}/api/{self.api_version}/jobs/get",
             json={"id": job_id},
             headers={"accept": "application/json"},
         )
 
-    async def _do_api_call_async(self, method, endpoint, json, headers={}):
+    async def _do_api_call_async(self, endpoint, json, headers={}):
         """
         Utility function to perform an asynchronous API call with retries
-        :param endpoint_info: Tuple of method and endpoint
-        :type endpoint_info: tuple[string, string]
+        :param endpoint: The endpoint url
+        :type endpoint: string
         :param json: Parameters for this API call.
         :type json: dict
+        :param headers: Optional headers dict
+        :type headers: dict
         :return: If the api call returns a OK status code,
             this function returns the response in JSON. Otherwise,
             we throw an AirflowException.
@@ -74,21 +74,13 @@ class AirbyteHookAsync(AirbyteHook):
         attempt_num = 1
 
         async with aiohttp.ClientSession() as session:
-            if method == "GET":
-                request_func = session.get
-            elif method == "POST":
-                request_func = session.post
-            elif method == "PATCH":
-                request_func = session.patch
-            else:
-                raise AirflowException("Unexpected HTTP Method: " + method)
+            request_func = session.post
 
             while True:
                 try:
                     response = await request_func(
                         endpoint,
-                        json=json if method in ("POST", "PATCH") else None,
-                        params=json if method == "GET" else None,
+                        json=json,
                         headers=headers,
                         timeout=self.timeout,
                     )

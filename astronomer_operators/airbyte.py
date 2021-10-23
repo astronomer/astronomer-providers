@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 from typing import Any, Dict, Tuple
 
 from airflow.exceptions import AirflowException
@@ -20,7 +21,7 @@ class AirbyteTriggerAsyncOperator(AirbyteTriggerSyncOperator):
         self.log.info("Job %s was submitted to Airbyte Server", job_id)
 
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(self.timeout),
             trigger=AirbyteTrigger(
                 conn_id=self.airbyte_conn_id,
                 task_id=self.task_id,
@@ -38,8 +39,6 @@ class AirbyteTriggerAsyncOperator(AirbyteTriggerSyncOperator):
         successful.
         """
         self.log.info("Job completed successfully.")
-        self.log.info(context)
-        self.log.info(event)
         return None
 
 

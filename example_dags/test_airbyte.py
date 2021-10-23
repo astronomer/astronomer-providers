@@ -9,4 +9,5 @@ with DAG(
     async_http_sensor = AirbyteTriggerAsyncOperator(
         task_id="async_airbyte",
         connection_id="e26da53d-8f89-4b35-97c5-9c79b993ff35",
+        timeout=30
     )
