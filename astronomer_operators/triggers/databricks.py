@@ -20,7 +20,7 @@ class DatabricksTrigger(BaseTrigger):
         super().__init__()
         self.conn_id = conn_id
         self.task_id = task_id
-        self.run_id = run_idc
+        self.run_id = run_id
         self.retry_limit = retry_limit
         self.retry_delay = retry_delay
         self.polling_period_seconds = polling_period_seconds
