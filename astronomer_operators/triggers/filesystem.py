@@ -38,7 +38,7 @@ class FileTrigger(BaseTrigger):
         Serializes FileTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.filesystem.FileTrigger",
+            "astronomer_operators.triggers.filesystem.FileTrigger",
             {
                 "filepath": self.filepath,
                 "recursive": self.recursive,

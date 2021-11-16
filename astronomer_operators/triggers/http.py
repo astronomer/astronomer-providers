@@ -57,7 +57,7 @@ class HttpTrigger(BaseTrigger):
         Serializes HttpTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.http.HttpTrigger",
+            "astronomer_operators.triggers.http.HttpTrigger",
             {
                 "endpoint": self.endpoint,
                 "data": self.data,

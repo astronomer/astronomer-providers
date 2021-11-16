@@ -30,7 +30,7 @@ class TaskStateTrigger(BaseTrigger):
         Serializes TaskStatetrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.external_task.TaskStateTrigger",
+            "astronomer_operators.triggers.external_task.TaskStateTrigger",
             {
                 "dag_id": self.dag_id,
                 "task_id": self.task_id,

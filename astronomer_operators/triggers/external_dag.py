@@ -28,7 +28,7 @@ class DagStateTrigger(BaseTrigger):
         Serializes DagStateTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.external_task.DagStateTrigger",
+            "astronomer_operators.triggers.external_dag.DagStateTrigger",
             {
                 "dag_id": self.dag_id,
                 "states": self.states,

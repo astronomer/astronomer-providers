@@ -30,7 +30,7 @@ class DatabricksTrigger(BaseTrigger):
         Serializes DatabricksTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.databricks.DatabricksTrigger",
+            "astronomer_operators.triggers.databricks.DatabricksTrigger",
             {
                 "conn_id": self.conn_id,
                 "task_id": self.task_id,
