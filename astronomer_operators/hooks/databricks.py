@@ -16,21 +16,6 @@ DEFAULT_CONN_NAME = "databricks_default"
 
 
 class DatabricksHookAsync(DatabricksHook):
-    def __init__(
-        self,
-        databricks_conn_id: str = DEFAULT_CONN_NAME,
-        timeout_seconds: int = 180,
-        retry_limit: int = 3,
-        retry_delay: float = 1.0,
-    ) -> None:
-        self.databricks_conn_id = databricks_conn_id
-        self.databricks_conn = None  # To be set asynchronously in create_hook()
-        self.timeout_seconds = timeout_seconds
-        if retry_limit < 1:
-            raise ValueError("Retry limit must be greater than equal to 1")
-        self.retry_limit = retry_limit
-        self.retry_delay = retry_delay
-
     async def get_run_state_async(self, run_id: str) -> RunState:
         """
         Retrieves run state of the run using an asyncronous api call.
@@ -63,6 +48,11 @@ class DatabricksHookAsync(DatabricksHook):
         method, endpoint = endpoint_info
         headers = USER_AGENT_HEADER
         attempt_num = 1
+
+        if not self.databricks_conn:
+            self.databricks_conn = await sync_to_async(self.get_connection)(
+                self.databricks_conn_id
+            )
 
         if "token" in self.databricks_conn.extra_dejson:
             self.log.info("Using token auth. ")
@@ -141,17 +131,3 @@ class DatabricksHookAsync(DatabricksHook):
         :rtype: bool
         """
         return exception.status >= 500
-
-
-async def create_hook():
-    """
-    Initializes a new DatabricksHookAsync then sets its databricks_conn
-    field asynchronously.
-    :return: a new async Databricks hook
-    :rtype: DataBricksHookAsync()
-    """
-    self = DatabricksHookAsync()
-    self.databricks_conn = await sync_to_async(self.get_connection)(
-        self.databricks_conn_id
-    )
-    return self
