@@ -272,9 +272,7 @@ async def test_dag_state_trigger(session, dag):
     reaches an allowed state (i.e. SUCCESS).
     """
     dag_run = DagRun(
-        dag.dag_id,
-        run_type="manual",
-        execution_date=DEFAULT_DATE,
+        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
     )
 
     session.add(dag_run)
