@@ -9,7 +9,7 @@ from airflow.providers.databricks.hooks.databricks import (
     SUBMIT_RUN_ENDPOINT,
 )
 
-from astronomer_operators.hooks.databricks import create_hook
+from astronomer_operators.hooks.databricks import DatabricksHookAsync
 
 TASK_ID = "databricks_check"
 CONN_ID = "unit_test_conn_id"
@@ -29,7 +29,7 @@ async def test_databricks_hook_get_run_state(mocked_response):
     is in a PENDING state (i.e. "RUNNING") and after it reaches a TERMINATED
     state (i.e. "SUCCESS").
     """
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     # Mock response while job is running
     mocked_response.return_value = {
         "state": {
@@ -71,7 +71,7 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     and basic auth.
     """
     caplog.set_level(logging.INFO)
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -97,7 +97,7 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     and basic auth.
     """
     caplog.set_level(logging.INFO)
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     hook.databricks_conn.extra = json.dumps({"token": "test_token"})
     params = {"run_id": RUN_ID}
 
@@ -118,7 +118,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     Asserts that the Databricks hook will throw an exception
     when a non-retryable error is returned by the API.
     """
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
 
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
@@ -141,7 +141,7 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     Asserts that the Databricks hook will attempt another API call as many
     times as the retry_limit when a retryable error is returned by the API.
     """
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -166,7 +166,7 @@ async def test_do_api_call_async_post(aioresponse):
     """
     Asserts that the Databricks hook makes a POST call as expected.
     """
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
@@ -191,7 +191,7 @@ async def test_do_api_call_async_unknown_method():
     Asserts that the Databricks hook throws an exception when it attempts to
     make an API call using a non-existent method.
     """
-    hook = await create_hook()
+    hook = DatabricksHookAsync()
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
