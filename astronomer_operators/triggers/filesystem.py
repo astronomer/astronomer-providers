@@ -1,12 +1,13 @@
 import asyncio
 import datetime
+import logging
 import os
 from glob import glob
 from typing import Any, Dict, Tuple
 
 from triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer_operators.operators.filesystem import log
+log = logging.getLogger(__name__)
 
 
 class FileTrigger(BaseTrigger):
