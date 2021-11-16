@@ -31,7 +31,7 @@ def test_databricks_trigger_serialization():
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.operators.databricks.DatabricksTrigger"
+    assert classpath == "astronomer_operators.triggers.databricks.DatabricksTrigger"
     assert kwargs == {
         "conn_id": CONN_ID,
         "task_id": TASK_ID,

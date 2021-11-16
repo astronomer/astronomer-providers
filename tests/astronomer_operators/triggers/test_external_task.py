@@ -76,7 +76,7 @@ def test_task_state_trigger_serialization():
         TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.operators.external_task.TaskStateTrigger"
+    assert classpath == "astronomer_operators.triggers.external_task.TaskStateTrigger"
     assert kwargs == {
         "dag_id": TEST_DAG_ID,
         "task_id": TEST_TASK_ID,

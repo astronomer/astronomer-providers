@@ -16,7 +16,7 @@ def test_filesystem_trigger_serialization():
         filepath="/files/dags/example_async_file.py", poll_interval=TEST_POLL_INTERVAL
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.filesystem.FileTrigger"
+    assert classpath == "astronomer_operators.triggers.filesystem.FileTrigger"
     assert kwargs == {
         "filepath": "/files/dags/example_async_file.py",
         "poll_interval": TEST_POLL_INTERVAL,
