@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.http import HttpSensorAsync
+from astronomer_operators.operators.http import HttpSensorAsync
 
 with DAG(
     "example_async_http_sensor", tags=["example", "async"], start_date=days_ago(2)

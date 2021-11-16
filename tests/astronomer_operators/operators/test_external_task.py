@@ -5,11 +5,9 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.utils.timezone import datetime
 
-from astronomer_operators.operators.external_task import (
-    DagStateTrigger,
-    ExternalTaskSensorAsync,
-    TaskStateTrigger,
-)
+from astronomer_operators.operators.external_task import ExternalTaskSensorAsync
+from astronomer_operators.triggers.external_dag import DagStateTrigger
+from astronomer_operators.triggers.external_task import TaskStateTrigger
 
 DEFAULT_DATE = datetime(2015, 1, 1)
 TEST_DAG_ID = "unit_test_dag"
