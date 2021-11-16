@@ -8,6 +8,7 @@ from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
 )
+from asgiref.sync import sync_to_async
 
 from astronomer_operators.hooks.databricks import DatabricksHookAsync
 
@@ -72,6 +73,9 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     """
     caplog.set_level(logging.INFO)
     hook = DatabricksHookAsync()
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -98,6 +102,9 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     """
     caplog.set_level(logging.INFO)
     hook = DatabricksHookAsync()
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.extra = json.dumps({"token": "test_token"})
     params = {"run_id": RUN_ID}
 
@@ -119,7 +126,9 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     when a non-retryable error is returned by the API.
     """
     hook = DatabricksHookAsync()
-
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -142,6 +151,9 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     times as the retry_limit when a retryable error is returned by the API.
     """
     hook = DatabricksHookAsync()
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -167,6 +179,9 @@ async def test_do_api_call_async_post(aioresponse):
     Asserts that the Databricks hook makes a POST call as expected.
     """
     hook = DatabricksHookAsync()
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
@@ -192,6 +207,9 @@ async def test_do_api_call_async_unknown_method():
     make an API call using a non-existent method.
     """
     hook = DatabricksHookAsync()
+    hook.databricks_conn = await sync_to_async(hook.get_connection)(
+        hook.databricks_conn_id
+    )
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {

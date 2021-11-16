@@ -49,9 +49,10 @@ class DatabricksHookAsync(DatabricksHook):
         headers = USER_AGENT_HEADER
         attempt_num = 1
 
-        self.databricks_conn = await sync_to_async(self.get_connection)(
-            self.databricks_conn_id
-        )
+        if not self.databricks_conn:
+            self.databricks_conn = await sync_to_async(self.get_connection)(
+                self.databricks_conn_id
+            )
 
         if "token" in self.databricks_conn.extra_dejson:
             self.log.info("Using token auth. ")
