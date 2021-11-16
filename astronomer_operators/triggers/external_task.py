@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Tuple
 
 from airflow.models import TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
 from sqlalchemy import func
-from utils.session import provide_session
 
 
 class TaskStateTrigger(BaseTrigger):

@@ -4,7 +4,7 @@ import sys
 import pytest
 from airflow.models import DagRun, TaskInstance
 from airflow.operators.dummy import DummyOperator
-from utils.state import TaskInstanceState
+from airflow.utils.state import TaskInstanceState
 
 from astronomer_operators.triggers.external_task import TaskStateTrigger
 from tests.astronomer_operators.operators.test_external_task import (

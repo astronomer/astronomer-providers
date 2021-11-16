@@ -3,7 +3,7 @@ import sys
 
 import pytest
 from airflow.models import DagRun
-from utils.state import DagRunState
+from airflow.utils.state import DagRunState
 
 from astronomer_operators.triggers.external_dag import DagStateTrigger
 from tests.astronomer_operators.operators.test_external_task import (
