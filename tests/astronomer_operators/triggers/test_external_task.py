@@ -2,8 +2,8 @@ import asyncio
 import sys
 
 import pytest
-from models import DagRun, TaskInstance
-from operators.dummy import DummyOperator
+from airflow.models import DagRun, TaskInstance
+from airflow.operators.dummy import DummyOperator
 from utils.state import TaskInstanceState
 
 from astronomer_operators.triggers.external_task import TaskStateTrigger

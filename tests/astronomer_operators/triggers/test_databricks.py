@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 from airflow import AirflowException
-from providers.databricks.hooks.databricks import RunState
+from airflow.providers.databricks.hooks.databricks import RunState
 
 from astronomer_operators.triggers.databricks import DatabricksTrigger
 from tests.astronomer_operators.operators.test_databricks import (

@@ -2,9 +2,9 @@ import asyncio
 import datetime
 from typing import Any, Dict, List, Tuple
 
+from airflow.models import DagRun
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
-from models import DagRun
 from sqlalchemy import func
 from utils.session import provide_session
 

@@ -2,7 +2,7 @@ import asyncio
 import sys
 
 import pytest
-from models import DagRun
+from airflow.models import DagRun
 from utils.state import DagRunState
 
 from astronomer_operators.triggers.external_dag import DagStateTrigger
