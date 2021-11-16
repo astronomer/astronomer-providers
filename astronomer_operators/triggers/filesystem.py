@@ -5,7 +5,7 @@ import os
 from glob import glob
 from typing import Any, Dict, Tuple
 
-from triggers.base import BaseTrigger, TriggerEvent
+from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 log = logging.getLogger(__name__)
 

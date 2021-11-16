@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Dict, Optional, Tuple, Union
 
 from airflow import AirflowException
-from triggers.base import BaseTrigger, TriggerEvent
+from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer_operators.hooks.http import HttpHookAsync
 

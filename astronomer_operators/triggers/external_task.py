@@ -2,10 +2,10 @@ import asyncio
 import datetime
 from typing import Any, Dict, List, Tuple
 
+from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
 from models import TaskInstance
 from sqlalchemy import func
-from triggers.base import BaseTrigger, TriggerEvent
 from utils.session import provide_session
 
 
