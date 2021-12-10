@@ -1,7 +1,7 @@
 import airflow
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.operators.filesystem import FileSensorAsync
+from astronomer_operators.core.operators.filesystem import FileSensorAsync
 
 with airflow.DAG(
     "example_async_file_sensor", start_date=days_ago(1), tags=["async"]

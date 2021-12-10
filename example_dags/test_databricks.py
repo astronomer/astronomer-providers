@@ -3,7 +3,7 @@ from datetime import timedelta
 from airflow import DAG
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.operators.databricks import (
+from astronomer_operators.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
     DatabricksSubmitRunOperatorAsync,
 )
