@@ -8,9 +8,7 @@ from astronomer_operators.databricks.operators.databricks import (
     DatabricksSubmitRunOperatorAsync,
 )
 
-notebook_task = {
-    "notebook_path": "/Users/andrew.godwin@astronomer.io/Quickstart Notebook"
-}
+notebook_task = {"notebook_path": "/Users/andrew.godwin@astronomer.io/Quickstart Notebook"}
 
 default_args = {
     "owner": "airflow",

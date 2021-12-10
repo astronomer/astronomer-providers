@@ -12,9 +12,7 @@ def test_filesystem_trigger_serialization():
     Asserts that the TaskStateTrigger correctly serializes its arguments
     and classpath.
     """
-    trigger = FileTrigger(
-        filepath="/files/dags/example_async_file.py", poll_interval=TEST_POLL_INTERVAL
-    )
+    trigger = FileTrigger(filepath="/files/dags/example_async_file.py", poll_interval=TEST_POLL_INTERVAL)
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer_operators.core.triggers.filesystem.FileTrigger"
     assert kwargs == {

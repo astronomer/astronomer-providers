@@ -55,9 +55,7 @@ class DatabricksTrigger(BaseTrigger):
                     yield TriggerEvent(True)
                     return
                 else:
-                    error_message = (
-                        f"{self.task_id} failed with terminal state: {run_state}"
-                    )
+                    error_message = f"{self.task_id} failed with terminal state: {run_state}"
                     raise AirflowException(error_message)
             else:
                 self.log.info("%s in run state: %s", self.task_id, run_state)

@@ -31,10 +31,7 @@ def test_databricks_trigger_serialization():
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
-    assert (
-        classpath
-        == "astronomer_operators.databricks.triggers.databricks.DatabricksTrigger"
-    )
+    assert classpath == "astronomer_operators.databricks.triggers.databricks.DatabricksTrigger"
     assert kwargs == {
         "conn_id": CONN_ID,
         "task_id": TASK_ID,
@@ -46,9 +43,7 @@ def test_databricks_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async"
-)
+@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_success(run_state):
     """
     Tests that the DatabricksTrigger only fires once a
@@ -79,9 +74,7 @@ async def test_databricks_trigger_success(run_state):
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async"
-)
+@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_running(run_state, caplog):
     """
     Tests that the DatabricksTrigger does not fire while a
@@ -121,9 +114,7 @@ async def test_databricks_trigger_running(run_state, caplog):
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async"
-)
+@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_terminated(run_state):
     """
     Tests that the DatabricksTrigger does not fire once a
@@ -148,7 +139,4 @@ async def test_databricks_trigger_terminated(run_state):
     with pytest.raises(AirflowException) as exc:
         await trigger.run().__anext__()
 
-    assert (
-        str(exc.value)
-        == f"{TASK_ID} failed with terminal state: {run_state.return_value}"
-    )
+    assert str(exc.value) == f"{TASK_ID} failed with terminal state: {run_state.return_value}"

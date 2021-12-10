@@ -92,18 +92,11 @@ class HttpHookAsync(BaseHook):
                 try:
                     _headers.update(conn.extra_dejson)
                 except TypeError:
-                    self.log.warning(
-                        "Connection to %s has invalid extra field.", conn.host
-                    )
+                    self.log.warning("Connection to %s has invalid extra field.", conn.host)
         if headers:
             _headers.update(headers)
 
-        if (
-            self.base_url
-            and not self.base_url.endswith("/")
-            and endpoint
-            and not endpoint.startswith("/")
-        ):
+        if self.base_url and not self.base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
             url = self.base_url + "/" + endpoint
         else:
             url = (self.base_url or "") + (endpoint or "")
@@ -138,10 +131,7 @@ class HttpHookAsync(BaseHook):
                         self.retry_limit,
                         url,
                     )
-                    if (
-                        not self._retryable_error_async(e)
-                        or attempt_num == self.retry_limit
-                    ):
+                    if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
                         self.log.error("HTTP error: %s", e)
                         # In this case, the user probably made a mistake.
                         # Don't retry.

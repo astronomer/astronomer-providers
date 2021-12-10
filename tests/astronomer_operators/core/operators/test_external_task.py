@@ -44,9 +44,7 @@ def test_external_task_sensor_async(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, TaskStateTrigger
-    ), "Trigger is not a TaskStateTrigger"
+    assert isinstance(exc.value.trigger, TaskStateTrigger), "Trigger is not a TaskStateTrigger"
 
 
 def test_external_dag_sensor_async(dag, context):
@@ -64,9 +62,7 @@ def test_external_dag_sensor_async(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DagStateTrigger
-    ), "Trigger is not a DagStateTrigger"
+    assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
 
 def test_external_dag_sensor_async_falsy(dag, context):
@@ -84,14 +80,10 @@ def test_external_dag_sensor_async_falsy(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DagStateTrigger
-    ), "Trigger is not a DagStateTrigger"
+    assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
 
-@mock.patch(
-    "astronomer_operators.core.operators.external_task.ExternalTaskSensorAsync.get_count"
-)
+@mock.patch("astronomer_operators.core.operators.external_task.ExternalTaskSensorAsync.get_count")
 def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every task monitored by
@@ -108,15 +100,10 @@ def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, con
     with pytest.raises(AirflowException) as exc:
         sensor.execute_complete(context, session)
 
-    assert (
-        str(exc.value)
-        == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
-    )
+    assert str(exc.value) == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
 
 
-@mock.patch(
-    "astronomer_operators.core.operators.external_task.ExternalTaskSensorAsync.get_count"
-)
+@mock.patch("astronomer_operators.core.operators.external_task.ExternalTaskSensorAsync.get_count")
 def test_dag_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every DAG monitored by

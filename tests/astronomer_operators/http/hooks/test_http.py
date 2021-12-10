@@ -35,10 +35,7 @@ async def test_do_api_call_async_retryable_error(caplog, aioresponse):
         await hook.run(endpoint="non_existent_endpoint")
 
     assert str(exc.value) == "500:Internal Server Error"
-    assert (
-        "[Try 3 of 3] Request to http://httpbin.org/non_existent_endpoint failed"
-        in caplog.text
-    )
+    assert "[Try 3 of 3] Request to http://httpbin.org/non_existent_endpoint failed" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -74,9 +71,7 @@ async def test_post_request(aioresponse):
         reason="OK",
     )
 
-    with mock.patch(
-        "airflow.hooks.base.BaseHook.get_connection", side_effect=get_airflow_connection
-    ):
+    with mock.patch("airflow.hooks.base.BaseHook.get_connection", side_effect=get_airflow_connection):
         resp = await hook.run("v1/test")
         assert resp.status == 200
 
@@ -92,8 +87,6 @@ async def test_post_request_with_error_code(aioresponse):
         reason="I am teapot",
     )
 
-    with mock.patch(
-        "airflow.hooks.base.BaseHook.get_connection", side_effect=get_airflow_connection
-    ):
+    with mock.patch("airflow.hooks.base.BaseHook.get_connection", side_effect=get_airflow_connection):
         with pytest.raises(AirflowException):
             await hook.run("v1/test")

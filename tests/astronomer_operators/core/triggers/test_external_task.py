@@ -27,9 +27,7 @@ async def test_task_state_trigger(session, dag):
     Asserts that the TaskStateTrigger only goes off on or after a TaskInstance
     reaches an allowed state (i.e. SUCCESS).
     """
-    dag_run = DagRun(
-        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
-    )
+    dag_run = DagRun(dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID)
 
     session.add(dag_run)
     session.commit()
@@ -76,9 +74,7 @@ def test_task_state_trigger_serialization():
         TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
-    assert (
-        classpath == "astronomer_operators.core.triggers.external_task.TaskStateTrigger"
-    )
+    assert classpath == "astronomer_operators.core.triggers.external_task.TaskStateTrigger"
     assert kwargs == {
         "dag_id": TEST_DAG_ID,
         "task_id": TEST_TASK_ID,

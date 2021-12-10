@@ -16,9 +16,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
 
         # Work out if we are a DAG sensor or a Task sensor
         # Defer to our trigger
-        if (
-            not self.external_task_id
-        ):  # Tempting to explicitly check for None, but this captures falsy values
+        if not self.external_task_id:  # Tempting to explicitly check for None, but this captures falsy values
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=DagStateTrigger(
@@ -44,9 +42,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
             )
 
     @provide_session
-    def execute_complete(
-        self, context, session, event=None
-    ):  # pylint: disable=unused-argument
+    def execute_complete(self, context, session, event=None):  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Verifies that there is a success status for each task via execution date.
@@ -59,9 +55,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
                     f"The external task {self.external_task_id} in DAG {self.external_dag_id} failed."
                 )
             else:
-                raise AirflowException(
-                    f"The external DAG {self.external_dag_id} failed."
-                )
+                raise AirflowException(f"The external DAG {self.external_dag_id} failed.")
         return None
 
     def get_execution_dates(self, context):
@@ -75,7 +69,5 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
             execution_date = self._handle_execution_date_fn(context=context)
         else:
             execution_date = context["execution_date"]
-        execution_dates = (
-            execution_date if isinstance(execution_date, list) else [execution_date]
-        )
+        execution_dates = execution_date if isinstance(execution_date, list) else [execution_date]
         return execution_dates

@@ -25,9 +25,7 @@ async def test_dag_state_trigger(session, dag):
     Tests that the DagStateTrigger only goes off on or after a DagRun
     reaches an allowed state (i.e. SUCCESS).
     """
-    dag_run = DagRun(
-        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
-    )
+    dag_run = DagRun(dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID)
 
     session.add(dag_run)
     session.commit()
@@ -67,9 +65,7 @@ def test_task_dag_trigger_serialization():
         TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
-    assert (
-        classpath == "astronomer_operators.core.triggers.external_dag.DagStateTrigger"
-    )
+    assert classpath == "astronomer_operators.core.triggers.external_dag.DagStateTrigger"
     assert kwargs == {
         "dag_id": TEST_DAG_ID,
         "states": TEST_STATES,

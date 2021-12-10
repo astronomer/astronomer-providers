@@ -31,12 +31,8 @@ def context():
 
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
-@mock.patch(
-    "airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url"
-)
-def test_databricks_submit_run_operator_async(
-    submit_run_response, get_run_page_url_response, context
-):
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+def test_databricks_submit_run_operator_async(submit_run_response, get_run_page_url_response, context):
     """
     Asserts that a task is deferred and an DatabricksTrigger will be fired
     when the DatabricksSubmitRunOperatorAsync is executed.
@@ -48,23 +44,17 @@ def test_databricks_submit_run_operator_async(
         task_id="submit_run",
         databricks_conn_id=CONN_ID,
         existing_cluster_id="xxxx-xxxxxx-xxxxxx",
-        notebook_task={
-            "notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"
-        },
+        notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
     )
 
     with pytest.raises(TaskDeferred) as exc:
         operator.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DatabricksTrigger
-    ), "Trigger is not a DatabricksTrigger"
+    assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
 
 @mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHook.run_now")
-@mock.patch(
-    "astronomer_operators.databricks.hooks.databricks.DatabricksHook.get_run_page_url"
-)
+@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
 def test_databricks_run_now_operator_async(
     run_now_response,
     get_run_page_url_response,
@@ -84,9 +74,7 @@ def test_databricks_run_now_operator_async(
     with pytest.raises(TaskDeferred) as exc:
         operator.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DatabricksTrigger
-    ), "Trigger is not a DatabricksTrigger"
+    assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
 
 @pytest.mark.xfail
