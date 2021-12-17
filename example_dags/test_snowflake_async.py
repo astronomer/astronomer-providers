@@ -21,9 +21,7 @@ Example use of Snowflake related operators.
 from datetime import datetime
 
 from airflow import DAG
-from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-from airflow.providers.snowflake.transfers.s3_to_snowflake import S3ToSnowflakeOperator
-from airflow.providers.snowflake.transfers.snowflake_to_slack import SnowflakeToSlackOperator
+from astronomer_operators.snowflake import SnowflakeOperatorAsyn
 
 SNOWFLAKE_CONN_ID = 'my_snowflake_conn'
 SLACK_CONN_ID = 'my_slack_conn'
@@ -34,7 +32,6 @@ SNOWFLAKE_WAREHOUSE = 'warehouse_name'
 SNOWFLAKE_DATABASE = 'database_name'
 SNOWFLAKE_ROLE = 'role_name'
 SNOWFLAKE_SAMPLE_TABLE = 'sample_table'
-S3_FILE_PATH = '</path/to/file/sample_file.csv'
 
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
@@ -59,7 +56,7 @@ dag = DAG(
 )
 
 
-snowflake_op_sql_str = SnowflakeOperator(
+snowflake_op_sql_str = SnowflakeOperatorAsyn(
     task_id='snowflake_op_sql_str',
     dag=dag,
     sql=CREATE_TABLE_SQL_STRING,
@@ -69,7 +66,7 @@ snowflake_op_sql_str = SnowflakeOperator(
     role=SNOWFLAKE_ROLE,
 )
 
-snowflake_op_with_params = SnowflakeOperator(
+snowflake_op_with_params = SnowflakeOperatorAsyn(
     task_id='snowflake_op_with_params',
     dag=dag,
     sql=SQL_INSERT_STATEMENT,
@@ -80,56 +77,19 @@ snowflake_op_with_params = SnowflakeOperator(
     role=SNOWFLAKE_ROLE,
 )
 
-snowflake_op_sql_list = SnowflakeOperator(task_id='snowflake_op_sql_list', dag=dag, sql=SQL_LIST)
+snowflake_op_sql_list = SnowflakeOperatorAsyn(task_id='snowflake_op_sql_list', dag=dag, sql=SQL_LIST)
 
-snowflake_op_sql_multiple_stmts = SnowflakeOperator(
+snowflake_op_sql_multiple_stmts = SnowflakeOperatorAsyn(
     task_id='snowflake_op_sql_multiple_stmts',
     dag=dag,
     sql=SQL_MULTIPLE_STMTS,
 )
-
-snowflake_op_template_file = SnowflakeOperator(
-    task_id='snowflake_op_template_file',
-    dag=dag,
-    sql='/path/to/sql/<filename>.sql',
-)
-
-# [END howto_operator_snowflake]
-
-# [START howto_operator_s3_to_snowflake]
-
-copy_into_table = S3ToSnowflakeOperator(
-    task_id='copy_into_table',
-    s3_keys=[S3_FILE_PATH],
-    table=SNOWFLAKE_SAMPLE_TABLE,
-    schema=SNOWFLAKE_SCHEMA,
-    stage=SNOWFLAKE_STAGE,
-    file_format="(type = 'CSV',field_delimiter = ';')",
-    dag=dag,
-)
-
-# [END howto_operator_s3_to_snowflake]
-
-# [START howto_operator_snowflake_to_slack]
-
-slack_report = SnowflakeToSlackOperator(
-    task_id="slack_report",
-    sql=SNOWFLAKE_SLACK_SQL,
-    slack_message=SNOWFLAKE_SLACK_MESSAGE,
-    slack_conn_id=SLACK_CONN_ID,
-    dag=dag,
-)
-
-# [END howto_operator_snowflake_to_slack]
 
 (
     snowflake_op_sql_str
     >> [
         snowflake_op_with_params,
         snowflake_op_sql_list,
-        snowflake_op_template_file,
-        copy_into_table,
-        snowflake_op_sql_multiple_stmts,
+        snowflake_op_sql_multiple_stmts
     ]
-    >> slack_report
 )
