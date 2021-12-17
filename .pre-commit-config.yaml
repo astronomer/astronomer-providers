@@ -3,7 +3,7 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
-        args: ["--target-version=py37"]
+        args: ["--target-version=py37", "--line-length=110"]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.7.0

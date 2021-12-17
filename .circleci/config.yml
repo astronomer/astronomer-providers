@@ -14,8 +14,10 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: "pip install
-    git+https://github.com/astronomer/airflow.git@main#egg=apache-airflow[databricks] && pip install -e .[tests]"
+          command: >-
+            pip install 'git+https://github.com/astronomer/airflow.git@v2-2-2'
+            && pip install 'apache-airflow-providers-databricks==2.0.2'
+            && pip install -e .[tests]
       - run:
           name: Static checks
           command: |
