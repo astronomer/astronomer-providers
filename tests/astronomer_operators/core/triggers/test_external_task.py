@@ -7,7 +7,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.utils.state import TaskInstanceState
 
 from astronomer_operators.core.triggers.external_task import TaskStateTrigger
-from tests.astronomer_operators.core.operators.test_external_task import (
+from tests.astronomer_operators.core.sensors.test_external_task import (
     DEFAULT_DATE,
     TEST_DAG_ID,
     TEST_POLL_INTERVAL,

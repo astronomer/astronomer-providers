@@ -4,7 +4,7 @@ import sys
 import pytest
 
 from astronomer_operators.core.triggers.filesystem import FileTrigger
-from tests.astronomer_operators.core.operators.test_filesystem import TEST_POLL_INTERVAL
+from tests.astronomer_operators.core.sensors.test_filesystem import TEST_POLL_INTERVAL
 
 
 def test_filesystem_trigger_serialization():

@@ -13,7 +13,7 @@ until the second DAG is complete.
 from airflow import DAG
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.core.operators.external_task import ExternalTaskSensorAsync
+from astronomer_operators.core.sensors.external_task import ExternalTaskSensorAsync
 
 default_args = {"start_date": days_ago(0)}
 with DAG("test_external_task_async", schedule_interval="@daily", default_args=default_args) as dag:
