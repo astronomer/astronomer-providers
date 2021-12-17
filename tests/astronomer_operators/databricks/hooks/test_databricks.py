@@ -1,6 +1,6 @@
-import json
 import logging
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException
@@ -8,7 +8,6 @@ from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
 )
-from asgiref.sync import sync_to_async
 
 from astronomer_operators.databricks.hooks.databricks import DatabricksHookAsync
 
@@ -71,7 +70,8 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     """
     caplog.set_level(logging.INFO)
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -98,8 +98,9 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     """
     caplog.set_level(logging.INFO)
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
-    hook.databricks_conn.extra = json.dumps({"token": "test_token"})
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
+    hook.databricks_conn.extra_dejson = {"token": "test_token"}
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
@@ -120,7 +121,8 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     when a non-retryable error is returned by the API.
     """
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -143,7 +145,8 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     times as the retry_limit when a retryable error is returned by the API.
     """
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     params = {"run_id": RUN_ID}
@@ -166,7 +169,8 @@ async def test_do_api_call_async_post(aioresponse):
     Asserts that the Databricks hook makes a POST call as expected.
     """
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
     json = {
@@ -192,16 +196,17 @@ async def test_do_api_call_async_unknown_method():
     make an API call using a non-existent method.
     """
     hook = DatabricksHookAsync()
-    hook.databricks_conn = await sync_to_async(hook.get_connection)(hook.databricks_conn_id)
+    hook.databricks_conn = MagicMock()
+    hook.databricks_conn.host = "https://localhost"
     hook.databricks_conn.login = LOGIN
     hook.databricks_conn.password = PASSWORD
-    json = {
+    payload = {
         "task_id": TASK_ID,
         "existing_cluster_id": "xxxx-xxxxxx-xxxxxx",
         "notebook_task": {"notebook_path": "/Users/test@astronomer.io/test_notebook"},
     }
 
     with pytest.raises(AirflowException) as exc:
-        await hook._do_api_call_async(("NOPE", "api/2.0/jobs/runs/submit"), json)
+        await hook._do_api_call_async(("NOPE", "api/2.0/jobs/runs/submit"), payload)
 
     assert str(exc.value) == "Unexpected HTTP Method: NOPE"

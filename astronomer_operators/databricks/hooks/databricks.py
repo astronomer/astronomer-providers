@@ -12,8 +12,6 @@ from airflow.providers.databricks.hooks.databricks import (
 )
 from asgiref.sync import sync_to_async
 
-DEFAULT_CONN_NAME = "databricks_default"
-
 
 class DatabricksHookAsync(DatabricksHook):
     async def get_run_state_async(self, run_id: str) -> RunState:
