@@ -10,6 +10,12 @@ jobs:
     description: Test & Lint
     docker:
       - image: cimg/python:3.9
+      - image: cimg/postgres:14.0
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: airflow
+          POSTGRES_PASSWORD: airflow
+          POSTGRES_HOST: postgres
     steps:
       - checkout
       - run:
@@ -25,5 +31,3 @@ jobs:
       - run:
           name: Run tests
           command: pytest --junit-xml=test-report/report.xml
-      - store_test_results:
-          path: test-report
