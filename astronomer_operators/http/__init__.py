@@ -18,3 +18,6 @@ def __getattr__(name):
             stacklevel=2,
         )
         return globals()[name]
+
+
+__all__ = ["HttpSensorAsync", "HttpTrigger"]
