@@ -6,8 +6,10 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.utils.timezone import datetime
 
 from astronomer_operators.core.operators.external_task import ExternalTaskSensorAsync
-from astronomer_operators.core.triggers.external_dag import DagStateTrigger
-from astronomer_operators.core.triggers.external_task import TaskStateTrigger
+from astronomer_operators.core.triggers.external_task import (
+    DagStateTrigger,
+    TaskStateTrigger,
+)
 
 DEFAULT_DATE = datetime(2015, 1, 1)
 TEST_DAG_ID = "unit_test_dag"

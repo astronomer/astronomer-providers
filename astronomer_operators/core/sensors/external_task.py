@@ -2,8 +2,10 @@ from airflow.exceptions import AirflowException
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
 
-from astronomer_operators.core.triggers.external_dag import DagStateTrigger
-from astronomer_operators.core.triggers.external_task import TaskStateTrigger
+from astronomer_operators.core.triggers.external_task import (
+    DagStateTrigger,
+    TaskStateTrigger,
+)
 
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):
