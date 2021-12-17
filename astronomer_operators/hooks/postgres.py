@@ -16,13 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Iterable, List, Optional, Tuple, Union, Mapping, Any
-from airflow.models.connection import Connection
-from copy import deepcopy
-import asyncpg
 import asyncio
-from airflow.exceptions import AirflowException
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
+
+import asyncpg
+from airflow.models.connection import Connection
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from asgiref.sync import sync_to_async
 
 
 class PostgresHookAsync(PostgresHook):
@@ -50,19 +50,15 @@ class PostgresHookAsync(PostgresHook):
     :type postgres_conn_id: str
     """
 
-    conn_name_attr = 'postgres_conn_id'
-    default_conn_name = 'postgres_default'
-    conn_type = 'postgres'
-    hook_name = 'Postgres'
+    conn_name_attr = "postgres_conn_id"
+    default_conn_name = "postgres_default"
+    conn_type = "postgres"
+    hook_name = "Postgres"
     supports_autocommit = True
 
     def __init__(
-        self,
-        retry_limit: int = 3,
-        retry_delay: float = 1.0,
-        *args, 
-        **kwargs
-        ) -> None:
+        self, retry_limit: int = 3, retry_delay: float = 1.0, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.connection: Optional[Connection] = kwargs.pop("connection", None)
         self.schema: Optional[str] = kwargs.pop("schema", None)
@@ -79,27 +75,29 @@ class PostgresHookAsync(PostgresHook):
         """
         from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 
-        redshift = conn.extra_dejson.get('redshift', False)
-        aws_conn_id = conn.extra_dejson.get('aws_conn_id', 'aws_default')
-        aws_hook = AwsBaseHook(aws_conn_id, client_type='rds')
+        redshift = conn.extra_dejson.get("redshift", False)
+        aws_conn_id = conn.extra_dejson.get("aws_conn_id", "aws_default")
+        aws_hook = AwsBaseHook(aws_conn_id, client_type="rds")
         login = conn.login
         if conn.port is None:
             port = 5439 if redshift else 5432
         else:
             port = conn.port
         if redshift:
-            # Pull the custer-identifier from the beginning of the Redshift URL
+            # Pull the cluster-identifier from the beginning of the Redshift URL
             # ex. my-cluster.ccdre4hpd39h.us-east-1.redshift.amazonaws.com returns my-cluster
-            cluster_identifier = conn.extra_dejson.get('cluster-identifier', conn.host.split('.')[0])
-            client = aws_hook.get_client_type('redshift')
+            cluster_identifier = conn.extra_dejson.get(
+                "cluster-identifier", conn.host.split(".")[0]
+            )
+            client = aws_hook.get_client_type("redshift")
             cluster_creds = client.get_cluster_credentials(
                 DbUser=conn.login,
                 DbName=self.schema or conn.schema,
                 ClusterIdentifier=cluster_identifier,
                 AutoCreate=False,
             )
-            token = cluster_creds['DbPassword']
-            login = cluster_creds['DbUser']
+            token = cluster_creds["DbPassword"]
+            login = cluster_creds["DbUser"]
         else:
             token = aws_hook.conn.generate_db_auth_token(conn.host, port, conn.login)
         return login, token, port
@@ -107,16 +105,16 @@ class PostgresHookAsync(PostgresHook):
     async def run(
         self,
         sql: Union[str, List[str]],
-        parameters: Optional[Union[Mapping, Iterable]] = None
-        )-> Any:
+        parameters: Optional[Union[Mapping, Iterable]] = None,
+    ) -> Any:
         """Establishes asynchronous connection to postgres database using asyncpg
         and executes SQL."""
 
         conn_id = getattr(self, self.conn_name_attr)
-        conn = deepcopy(self.connection or self.get_connection(conn_id))
+        conn = await sync_to_async(self.get_connection)(conn_id)
 
         # check for authentication via AWS IAM
-        if conn.extra_dejson.get('iam', False):
+        if conn.extra_dejson.get("iam", False):
             conn.login, conn.password, conn.port = self.get_iam_token(conn)
 
         conn_args = dict(
@@ -129,36 +127,37 @@ class PostgresHookAsync(PostgresHook):
 
         for arg_name, arg_val in conn.extra_dejson.items():
             if arg_name not in [
-                'iam',
-                'redshift',
-                'cursor',
-                'cluster-identifier',
-                'aws_conn_id',
+                "iam",
+                "redshift",
+                "cursor",
+                "cluster-identifier",
+                "aws_conn_id",
             ]:
                 conn_args[arg_name] = arg_val
 
         # Create a connection pool and acquire a connection.
-        self.log.info(f"Connecting to {conn_args['host']}")
+        self.log.info("Connecting to %s", conn_args["host"])
         async with asyncpg.create_pool(**conn_args) as pool:
             async with pool.acquire() as con:
                 attempt_num = 1
                 self.log.info("Successfully acquired connection!")
-                while True: 
+                while True:
                     try:
                         response = await con.execute(sql)
-                        self.log.info(f"Query execution response is {response}")
-                        return response
+                        self.log.info("Query execution response is %s", response)
+                        return {"status": "success", "message": response}
                     except Exception as e:
                         self.log.warning(
-                        "[Try %d of %d] Request  %s failed.",
-                        attempt_num,
-                        self.retry_limit,
-                        sql)
-                        if (attempt_num == self.retry_limit):
+                            "[Try %d of %d] Request  %s failed.",
+                            attempt_num,
+                            self.retry_limit,
+                            sql,
+                        )
+                        if attempt_num == self.retry_limit:
                             self.log.error("Database error: %s", e)
                             # In this case, the user probably made a mistake.
                             # Don't retry.
-                            raise AirflowException(str(e.status) + ":" + e.message)
+                            return {"status": "error", "message": e}
 
                     attempt_num += 1
                     await asyncio.sleep(self.retry_delay)
