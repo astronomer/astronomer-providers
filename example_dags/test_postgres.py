@@ -1,12 +1,12 @@
 from airflow import DAG
-from astronomer_operators.postgres import PostgresOperatorAsync
 from airflow.utils.dates import days_ago
+
+from astronomer_operators.postgres import PostgresOperatorAsync
 
 # Ensure to create a postgres_default connection before triggering this DAG.
 
 # create_pet_table, populate_pet_table, get_all_pets, and get_birth_date are examples of tasks created by
 # instantiating the Postgres Async Operator
-
 
 with DAG(
     dag_id="postgres_async_dag",
@@ -23,7 +23,7 @@ with DAG(
             pet_type VARCHAR NOT NULL,
             birth_date DATE NOT NULL,
             OWNER VARCHAR NOT NULL);
-          """
+          """,
     )
 
     populate_pet_table = PostgresOperatorAsync(
@@ -37,10 +37,12 @@ with DAG(
             VALUES ( 'Lester', 'Hamster', '2020-06-23', 'Lily');
             INSERT INTO pet (name, pet_type, birth_date, OWNER)
             VALUES ( 'Quincy', 'Parrot', '2013-08-11', 'Anne');
-            """
+            """,
     )
 
-    get_all_pets = PostgresOperatorAsync(task_id="get_all_pets", sql="SELECT * FROM pet;")
+    get_all_pets = PostgresOperatorAsync(
+        task_id="get_all_pets", sql="SELECT * FROM pet;"
+    )
     get_birth_date = PostgresOperatorAsync(
         task_id="get_birth_date",
         sql="""
@@ -48,7 +50,7 @@ with DAG(
             WHERE birth_date
             BETWEEN SYMMETRIC DATE '{{ params.begin_date }}' AND DATE '{{ params.end_date }}';
             """,
-        params={'begin_date': '2020-01-01', 'end_date': '2020-12-31'}
-        )
+        params={"begin_date": "2020-01-01", "end_date": "2020-12-31"},
+    )
 
     create_pet_table >> populate_pet_table >> get_all_pets >> get_birth_date
