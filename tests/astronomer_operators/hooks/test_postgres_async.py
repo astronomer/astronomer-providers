@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import pytest
 
@@ -8,6 +9,9 @@ from astronomer_operators.hooks.postgres import PostgresHookAsync
 def test_rowcount():
     print("$$$$$$$$$$")
     print("Inside test_rowcount")
+    os.environ[
+        "AIRFLOW_CONN_POSTGRES_DEFAULT"
+    ] = "postgresql://postgres:@localhost/airflow"
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(rowcount())
     loop.close()
@@ -18,7 +22,6 @@ def test_rowcount():
 
 
 @pytest.mark.asyncio
-@pytest.mark.backend("postgres")
 async def rowcount():
     print("###########")
     print("Inside test_rowcount_async")
