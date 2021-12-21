@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.postgres import PostgresOperatorAsync
+from astronomer_operators.postgres.operators.postgres import PostgresOperatorAsync
 
 # Ensure to create a postgres_default connection before triggering this DAG.
 
@@ -40,9 +40,7 @@ with DAG(
             """,
     )
 
-    get_all_pets = PostgresOperatorAsync(
-        task_id="get_all_pets", sql="SELECT * FROM pet;"
-    )
+    get_all_pets = PostgresOperatorAsync(task_id="get_all_pets", sql="SELECT * FROM pet;")
     get_birth_date = PostgresOperatorAsync(
         task_id="get_birth_date",
         sql="""
