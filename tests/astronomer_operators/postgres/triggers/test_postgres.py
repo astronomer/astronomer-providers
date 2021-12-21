@@ -41,7 +41,7 @@ async def test_postgres_trigger_running(caplog):
 
     # TriggerEvent was returned
     assert task.done() is True
-
+    print(caplog.text)
     assert "Connecting to postgres" in caplog.text
 
     # Prevents error when task is destroyed while in "pending" state

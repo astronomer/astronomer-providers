@@ -31,7 +31,7 @@ class PostgresTrigger(BaseTrigger):
         Serializes PostgresTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.postgres.PostgresTrigger",
+            "astronomer_operators.postgres.triggers.postgres.PostgresTrigger",
             {
                 "sql": self.sql,
                 "postgres_conn_id": self.postgres_conn_id,
