@@ -40,9 +40,10 @@ async def test_postgres_trigger_running(caplog):
     await asyncio.sleep(1)
 
     # TriggerEvent was returned
+    print("#######", task.done())
     assert task.done() is True
-    print(caplog.text)
-    assert "Connecting to postgres" in caplog.text
+    print("$$$$$$$", caplog.text)
+    assert "Connecting to localhost" in caplog.text
 
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
