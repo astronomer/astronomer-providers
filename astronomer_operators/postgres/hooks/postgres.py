@@ -56,9 +56,7 @@ class PostgresHookAsync(PostgresHook):
     hook_name = "Postgres"
     supports_autocommit = True
 
-    def __init__(
-        self, retry_limit: int = 3, retry_delay: float = 1.0, *args, **kwargs
-    ) -> None:
+    def __init__(self, retry_limit: int = 3, retry_delay: float = 1.0, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.connection: Optional[Connection] = kwargs.pop("connection", None)
         self.schema: Optional[str] = kwargs.pop("schema", None)
@@ -86,9 +84,7 @@ class PostgresHookAsync(PostgresHook):
         if redshift:
             # Pull the cluster-identifier from the beginning of the Redshift URL
             # ex. my-cluster.ccdre4hpd39h.us-east-1.redshift.amazonaws.com returns my-cluster
-            cluster_identifier = conn.extra_dejson.get(
-                "cluster-identifier", conn.host.split(".")[0]
-            )
+            cluster_identifier = conn.extra_dejson.get("cluster-identifier", conn.host.split(".")[0])
             client = aws_hook.get_client_type("redshift")
             cluster_creds = client.get_cluster_credentials(
                 DbUser=conn.login,
