@@ -20,6 +20,7 @@ import asyncio
 from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 import asyncpg
+from airflow.exceptions import AirflowNotFoundException
 from airflow.models.connection import Connection
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from asgiref.sync import sync_to_async
@@ -105,55 +106,57 @@ class PostgresHookAsync(PostgresHook):
     ) -> Any:
         """Establishes asynchronous connection to postgres database using asyncpg
         and executes SQL."""
+        try:
+            conn_id = getattr(self, self.conn_name_attr)
+            conn = await sync_to_async(self.get_connection)(conn_id)
 
-        conn_id = getattr(self, self.conn_name_attr)
-        conn = await sync_to_async(self.get_connection)(conn_id)
+            # check for authentication via AWS IAM
+            if conn.extra_dejson.get("iam", False):
+                conn.login, conn.password, conn.port = self.get_iam_token(conn)
 
-        # check for authentication via AWS IAM
-        if conn.extra_dejson.get("iam", False):
-            conn.login, conn.password, conn.port = self.get_iam_token(conn)
+            conn_args = dict(
+                host=conn.host,
+                user=conn.login,
+                password=conn.password,
+                database=self.schema or conn.schema,
+                port=conn.port,
+            )
 
-        conn_args = dict(
-            host=conn.host,
-            user=conn.login,
-            password=conn.password,
-            database=self.schema or conn.schema,
-            port=conn.port,
-        )
+            for arg_name, arg_val in conn.extra_dejson.items():
+                if arg_name not in [
+                    "iam",
+                    "redshift",
+                    "cursor",
+                    "cluster-identifier",
+                    "aws_conn_id",
+                ]:
+                    conn_args[arg_name] = arg_val
 
-        for arg_name, arg_val in conn.extra_dejson.items():
-            if arg_name not in [
-                "iam",
-                "redshift",
-                "cursor",
-                "cluster-identifier",
-                "aws_conn_id",
-            ]:
-                conn_args[arg_name] = arg_val
+            # Create a connection pool and acquire a connection.
+            self.log.info("Connecting to %s", conn_args["host"])
+            async with asyncpg.create_pool(**conn_args) as pool:
+                async with pool.acquire() as con:
+                    attempt_num = 1
+                    self.log.info("Successfully acquired connection!")
+                    while True:
+                        try:
+                            response = await con.execute(sql)
+                            self.log.info("Query execution response is %s", response)
+                            return {"status": "success", "message": response}
+                        except Exception as e:
+                            self.log.warning(
+                                "[Try %d of %d] Request  %s failed.",
+                                attempt_num,
+                                self.retry_limit,
+                                sql,
+                            )
+                            if attempt_num == self.retry_limit:
+                                self.log.error("Database error: %s", e)
+                                # In this case, the user probably made a mistake.
+                                # Don't retry.
+                                return {"status": "error", "message": e}
 
-        # Create a connection pool and acquire a connection.
-        self.log.info("Connecting to %s", conn_args["host"])
-        async with asyncpg.create_pool(**conn_args) as pool:
-            async with pool.acquire() as con:
-                attempt_num = 1
-                self.log.info("Successfully acquired connection!")
-                while True:
-                    try:
-                        response = await con.execute(sql)
-                        self.log.info("Query execution response is %s", response)
-                        return {"status": "success", "message": response}
-                    except Exception as e:
-                        self.log.warning(
-                            "[Try %d of %d] Request  %s failed.",
-                            attempt_num,
-                            self.retry_limit,
-                            sql,
-                        )
-                        if attempt_num == self.retry_limit:
-                            self.log.error("Database error: %s", e)
-                            # In this case, the user probably made a mistake.
-                            # Don't retry.
-                            return {"status": "error", "message": e}
-
-                    attempt_num += 1
-                    await asyncio.sleep(self.retry_delay)
+                        attempt_num += 1
+                        await asyncio.sleep(self.retry_delay)
+        except AirflowNotFoundException as e:
+            return {"status": "error", "message": e.title}
