@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from unittest import mock
 
 import pytest
 
@@ -21,9 +22,9 @@ def test_postgres_trigger_serialization():
         "sql": "SELECT 1",
         "task_id": TASK_ID,
         "postgres_conn_id": CONN_ID,
-        "database": None,
-        "parameters": None,
-        "poll_interval": 1,
+        "application_name": mock.ANY,
+        "pid": mock.ANY,
+        "poll_interval": 2.0,
     }
 
 
@@ -32,7 +33,7 @@ async def test_postgres_trigger_running(caplog):
     """
     Tests the PostgresTrigger run state
     """
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
 
     trigger = PostgresTrigger(postgres_conn_id=CONN_ID, task_id=TASK_ID, sql="SELECT 1")
 
