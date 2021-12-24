@@ -19,24 +19,23 @@
 import unittest
 from unittest import mock
 
-import pytest
-
 from airflow.models.dag import DAG
-from astronomer_operators.snowflake.operators.snowflake import SnowflakeOperatorAsync
 from airflow.utils import timezone
+
+from astronomer_operators.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
 DEFAULT_DATE = timezone.datetime(2015, 1, 1)
 DEFAULT_DATE_ISO = DEFAULT_DATE.isoformat()
 DEFAULT_DATE_DS = DEFAULT_DATE_ISO[:10]
-TEST_DAG_ID = 'unit_test_dag'
+TEST_DAG_ID = "unit_test_dag"
 LONG_MOCK_PATH = "astronomer_operators.snowflake.operators.snowflake."
-LONG_MOCK_PATH += 'SnowflakeOperatorAsync.get_db_hook'
+LONG_MOCK_PATH += "SnowflakeOperatorAsync.get_db_hook"
 
 
 class TestSnowflakeOperator(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        args = {'owner': 'airflow', 'start_date': DEFAULT_DATE}
+        args = {"owner": "airflow", "start_date": DEFAULT_DATE}
         dag = DAG(TEST_DAG_ID, default_args=args)
         self.dag = dag
 
@@ -47,7 +46,9 @@ class TestSnowflakeOperator(unittest.TestCase):
             dummy VARCHAR(50)
         );
         """
-        operator = SnowflakeOperatorAsync(task_id='basic_snowflake', sql=sql, dag=self.dag, do_xcom_push=False)
+        operator = SnowflakeOperatorAsync(
+            task_id="basic_snowflake", sql=sql, dag=self.dag, do_xcom_push=False
+        )
         # do_xcom_push=False because otherwise the XCom test will fail due to the mocking (it actually works)
+        # Dummy change
         operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, ignore_ti_state=True)
-
