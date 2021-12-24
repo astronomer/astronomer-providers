@@ -55,7 +55,6 @@ class SnowflakeHookAsync(SnowflakeHook):
             # or if db does not supports autocommit, we do a manual commit.
             if not self.get_autocommit(conn):
                 conn.commit()
-        self.log.info("query ids: ", self.query_ids)
         return self.query_ids
 
     def check_query_output(self, query_ids):
