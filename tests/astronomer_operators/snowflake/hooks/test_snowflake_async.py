@@ -18,31 +18,30 @@
 #
 import re
 import unittest
-from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Union
 from unittest import mock
 
 import pytest
+from airflow.models import Connection
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from airflow.models import Connection
 from astronomer_operators.snowflake.hooks.snowflake import SnowflakeHookAsync
 
-_PASSWORD = 'snowflake42'
+_PASSWORD = "snowflake42"
 
 BASE_CONNECTION_KWARGS: Dict[str, Union[str, Dict[str, str]]] = {
-    'login': 'user',
-    'password': 'pw',
-    'schema': 'public',
-    'extra': {
-        'database': 'db',
-        'account': 'airflow',
-        'warehouse': 'af_wh',
-        'region': 'af_region',
-        'role': 'af_role',
+    "login": "user",
+    "password": "pw",
+    "schema": "public",
+    "extra": {
+        "database": "db",
+        "account": "airflow",
+        "warehouse": "af_wh",
+        "region": "af_region",
+        "role": "af_role",
     },
 }
 
@@ -78,113 +77,113 @@ class TestPytestSnowflakeHookAsync:
             (
                 BASE_CONNECTION_KWARGS,
                 (
-                    'snowflake://user:pw@airflow.af_region/db/public?'
-                    'warehouse=af_wh&role=af_role&authenticator=snowflake'
+                    "snowflake://user:pw@airflow.af_region/db/public?"
+                    "warehouse=af_wh&role=af_role&authenticator=snowflake"
                 ),
                 {
-                    'account': 'airflow',
-                    'application': 'AIRFLOW',
-                    'authenticator': 'snowflake',
-                    'database': 'db',
-                    'password': 'pw',
-                    'region': 'af_region',
-                    'role': 'af_role',
-                    'schema': 'public',
-                    'session_parameters': None,
-                    'user': 'user',
-                    'warehouse': 'af_wh',
+                    "account": "airflow",
+                    "application": "AIRFLOW",
+                    "authenticator": "snowflake",
+                    "database": "db",
+                    "password": "pw",
+                    "region": "af_region",
+                    "role": "af_role",
+                    "schema": "public",
+                    "session_parameters": None,
+                    "user": "user",
+                    "warehouse": "af_wh",
                 },
             ),
             (
                 {
                     **BASE_CONNECTION_KWARGS,
                     **{
-                        'extra': {
-                            'extra__snowflake__database': 'db',
-                            'extra__snowflake__account': 'airflow',
-                            'extra__snowflake__warehouse': 'af_wh',
-                            'extra__snowflake__region': 'af_region',
-                            'extra__snowflake__role': 'af_role',
+                        "extra": {
+                            "extra__snowflake__database": "db",
+                            "extra__snowflake__account": "airflow",
+                            "extra__snowflake__warehouse": "af_wh",
+                            "extra__snowflake__region": "af_region",
+                            "extra__snowflake__role": "af_role",
                         },
                     },
                 },
                 (
-                    'snowflake://user:pw@airflow.af_region/db/public?'
-                    'warehouse=af_wh&role=af_role&authenticator=snowflake'
+                    "snowflake://user:pw@airflow.af_region/db/public?"
+                    "warehouse=af_wh&role=af_role&authenticator=snowflake"
                 ),
                 {
-                    'account': 'airflow',
-                    'application': 'AIRFLOW',
-                    'authenticator': 'snowflake',
-                    'database': 'db',
-                    'password': 'pw',
-                    'region': 'af_region',
-                    'role': 'af_role',
-                    'schema': 'public',
-                    'session_parameters': None,
-                    'user': 'user',
-                    'warehouse': 'af_wh',
+                    "account": "airflow",
+                    "application": "AIRFLOW",
+                    "authenticator": "snowflake",
+                    "database": "db",
+                    "password": "pw",
+                    "region": "af_region",
+                    "role": "af_role",
+                    "schema": "public",
+                    "session_parameters": None,
+                    "user": "user",
+                    "warehouse": "af_wh",
                 },
             ),
             (
                 {
                     **BASE_CONNECTION_KWARGS,
-                    'extra': {
-                        'extra__snowflake__database': 'db',
-                        'extra__snowflake__account': 'airflow',
-                        'extra__snowflake__warehouse': 'af_wh',
-                        'extra__snowflake__region': 'af_region',
-                        'extra__snowflake__role': 'af_role',
-                        'extra__snowflake__insecure_mode': 'True',
+                    "extra": {
+                        "extra__snowflake__database": "db",
+                        "extra__snowflake__account": "airflow",
+                        "extra__snowflake__warehouse": "af_wh",
+                        "extra__snowflake__region": "af_region",
+                        "extra__snowflake__role": "af_role",
+                        "extra__snowflake__insecure_mode": "True",
                     },
                 },
                 (
-                    'snowflake://user:pw@airflow.af_region/db/public?'
-                    'warehouse=af_wh&role=af_role&authenticator=snowflake'
+                    "snowflake://user:pw@airflow.af_region/db/public?"
+                    "warehouse=af_wh&role=af_role&authenticator=snowflake"
                 ),
                 {
-                    'account': 'airflow',
-                    'application': 'AIRFLOW',
-                    'authenticator': 'snowflake',
-                    'database': 'db',
-                    'password': 'pw',
-                    'region': 'af_region',
-                    'role': 'af_role',
-                    'schema': 'public',
-                    'session_parameters': None,
-                    'user': 'user',
-                    'warehouse': 'af_wh',
-                    'insecure_mode': True,
+                    "account": "airflow",
+                    "application": "AIRFLOW",
+                    "authenticator": "snowflake",
+                    "database": "db",
+                    "password": "pw",
+                    "region": "af_region",
+                    "role": "af_role",
+                    "schema": "public",
+                    "session_parameters": None,
+                    "user": "user",
+                    "warehouse": "af_wh",
+                    "insecure_mode": True,
                 },
             ),
             (
                 {
                     **BASE_CONNECTION_KWARGS,
-                    'extra': {
-                        'extra__snowflake__database': 'db',
-                        'extra__snowflake__account': 'airflow',
-                        'extra__snowflake__warehouse': 'af_wh',
-                        'extra__snowflake__region': 'af_region',
-                        'extra__snowflake__role': 'af_role',
-                        'extra__snowflake__insecure_mode': 'False',
+                    "extra": {
+                        "extra__snowflake__database": "db",
+                        "extra__snowflake__account": "airflow",
+                        "extra__snowflake__warehouse": "af_wh",
+                        "extra__snowflake__region": "af_region",
+                        "extra__snowflake__role": "af_role",
+                        "extra__snowflake__insecure_mode": "False",
                     },
                 },
                 (
-                    'snowflake://user:pw@airflow.af_region/db/public?'
-                    'warehouse=af_wh&role=af_role&authenticator=snowflake'
+                    "snowflake://user:pw@airflow.af_region/db/public?"
+                    "warehouse=af_wh&role=af_role&authenticator=snowflake"
                 ),
                 {
-                    'account': 'airflow',
-                    'application': 'AIRFLOW',
-                    'authenticator': 'snowflake',
-                    'database': 'db',
-                    'password': 'pw',
-                    'region': 'af_region',
-                    'role': 'af_role',
-                    'schema': 'public',
-                    'session_parameters': None,
-                    'user': 'user',
-                    'warehouse': 'af_wh',
+                    "account": "airflow",
+                    "application": "AIRFLOW",
+                    "authenticator": "snowflake",
+                    "database": "db",
+                    "password": "pw",
+                    "region": "af_region",
+                    "role": "af_role",
+                    "schema": "public",
+                    "session_parameters": None,
+                    "user": "user",
+                    "warehouse": "af_wh",
                 },
             ),
         ],
@@ -193,99 +192,101 @@ class TestPytestSnowflakeHookAsync:
         self, connection_kwargs, expected_uri, expected_conn_params
     ):
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
         ):
-            assert SnowflakeHookAsync(snowflake_conn_id='test_conn').get_uri() == expected_uri
-            assert SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params() == expected_conn_params
+            assert SnowflakeHookAsync(snowflake_conn_id="test_conn").get_uri() == expected_uri
+            assert (
+                SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params() == expected_conn_params
+            )
 
     def test_get_conn_params_should_support_private_auth_with_encrypted_key(
         self, encrypted_temporary_private_key
     ):
         connection_kwargs = {
             **BASE_CONNECTION_KWARGS,
-            'password': _PASSWORD,
-            'extra': {
-                'database': 'db',
-                'account': 'airflow',
-                'warehouse': 'af_wh',
-                'region': 'af_region',
-                'role': 'af_role',
-                'private_key_file': str(encrypted_temporary_private_key),
+            "password": _PASSWORD,
+            "extra": {
+                "database": "db",
+                "account": "airflow",
+                "warehouse": "af_wh",
+                "region": "af_region",
+                "role": "af_role",
+                "private_key_file": str(encrypted_temporary_private_key),
             },
         }
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
         ):
-            assert 'private_key' in SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params()
+            assert "private_key" in SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params()
 
     def test_get_conn_params_should_support_private_auth_with_unencrypted_key(
         self, non_encrypted_temporary_private_key
     ):
         connection_kwargs = {
             **BASE_CONNECTION_KWARGS,
-            'password': None,
-            'extra': {
-                'database': 'db',
-                'account': 'airflow',
-                'warehouse': 'af_wh',
-                'region': 'af_region',
-                'role': 'af_role',
-                'private_key_file': str(non_encrypted_temporary_private_key),
+            "password": None,
+            "extra": {
+                "database": "db",
+                "account": "airflow",
+                "warehouse": "af_wh",
+                "region": "af_region",
+                "role": "af_role",
+                "private_key_file": str(non_encrypted_temporary_private_key),
             },
         }
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
         ):
-            assert 'private_key' in SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params()
-        connection_kwargs['password'] = ''
+            assert "private_key" in SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params()
+        connection_kwargs["password"] = ""
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
         ):
-            assert 'private_key' in SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params()
-        connection_kwargs['password'] = _PASSWORD
+            assert "private_key" in SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params()
+        connection_kwargs["password"] = _PASSWORD
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**connection_kwargs).get_uri()
         ), pytest.raises(TypeError, match="Password was given but private key is not encrypted."):
-            SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params()
+            SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params()
 
     def test_should_add_partner_info(self):
         with unittest.mock.patch.dict(
-            'os.environ',
+            "os.environ",
             AIRFLOW_CONN_TEST_CONN=Connection(**BASE_CONNECTION_KWARGS).get_uri(),
-            AIRFLOW_SNOWFLAKE_PARTNER='PARTNER_NAME',
+            AIRFLOW_SNOWFLAKE_PARTNER="PARTNER_NAME",
         ):
             assert (
-                SnowflakeHookAsync(snowflake_conn_id='test_conn')._get_conn_params()['application']
+                SnowflakeHookAsync(snowflake_conn_id="test_conn")._get_conn_params()["application"]
                 == "PARTNER_NAME"
             )
 
     def test_hook_parameters_should_take_precedence(self):
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_TEST_CONN=Connection(**BASE_CONNECTION_KWARGS).get_uri()
+            "os.environ", AIRFLOW_CONN_TEST_CONN=Connection(**BASE_CONNECTION_KWARGS).get_uri()
         ):
             hook = SnowflakeHookAsync(
-                snowflake_conn_id='test_conn',
+                snowflake_conn_id="test_conn",
                 account="TEST_ACCOUNT",
                 warehouse="TEST_WAREHOUSE",
                 database="TEST_DATABASE",
                 region="TEST_REGION",
                 role="TEST_ROLE",
                 schema="TEST_SCHEMA",
-                authenticator='TEST_AUTH',
+                authenticator="TEST_AUTH",
                 session_parameters={"AA": "AAA"},
             )
             assert {
-                'account': 'TEST_ACCOUNT',
-                'application': 'AIRFLOW',
-                'authenticator': 'TEST_AUTH',
-                'database': 'TEST_DATABASE',
-                'password': 'pw',
-                'region': 'TEST_REGION',
-                'role': 'TEST_ROLE',
-                'schema': 'TEST_SCHEMA',
-                'session_parameters': {'AA': 'AAA'},
-                'user': 'user',
-                'warehouse': 'TEST_WAREHOUSE',
+                "account": "TEST_ACCOUNT",
+                "application": "AIRFLOW",
+                "authenticator": "TEST_AUTH",
+                "database": "TEST_DATABASE",
+                "password": "pw",
+                "region": "TEST_REGION",
+                "role": "TEST_ROLE",
+                "schema": "TEST_SCHEMA",
+                "session_parameters": {"AA": "AAA"},
+                "user": "user",
+                "warehouse": "TEST_WAREHOUSE",
             } == hook._get_conn_params()
             assert (
                 "snowflake://user:pw@TEST_ACCOUNT.TEST_REGION/TEST_DATABASE/TEST_SCHEMA"
@@ -295,16 +296,16 @@ class TestPytestSnowflakeHookAsync:
     @pytest.mark.parametrize(
         "sql,query_ids",
         [
-            ('select * from table', ['uuid', 'uuid']),
-            ('select * from table;select * from table2', ['uuid', 'uuid', 'uuid2', 'uuid2']),
-            (['select * from table;'], ['uuid', 'uuid']),
-            (['select * from table;', 'select * from table2;'], ['uuid', 'uuid', 'uuid2', 'uuid2']),
+            ("select * from table", ["uuid", "uuid"]),
+            ("select * from table;select * from table2", ["uuid", "uuid", "uuid2", "uuid2"]),
+            (["select * from table;"], ["uuid", "uuid"]),
+            (["select * from table;", "select * from table2;"], ["uuid", "uuid", "uuid2", "uuid2"]),
         ],
     )
     def test_run_storing_query_ids_extra(self, sql, query_ids):
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ), unittest.mock.patch('airflow_operators.snowflake.hooks.snowflake.connector') as mock_connector:
+            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
+        ), unittest.mock.patch("airflow_operators.snowflake.hooks.snowflake.connector") as mock_connector:
             hook = SnowflakeHookAsync()
             conn = mock_connector.connect.return_value
             cur = mock.MagicMock(rowcount=0)
@@ -318,28 +319,29 @@ class TestPytestSnowflakeHookAsync:
             assert hook.query_ids == query_ids[::2]
             cur.close.assert_called()
 
-    @mock.patch('astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run')
+    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
     def test_connection_success(self, mock_run):
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
+            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
         ):
             hook = SnowflakeHookAsync()
-            mock_run.return_value = [{'1': 1}]
+            mock_run.return_value = [{"1": 1}]
             status, msg = hook.test_connection()
+            print("Dummy comment")
             assert status is True
-            assert msg == 'Connection successfully tested'
-            mock_run.assert_called_once_with(sql='select 1')
+            assert msg == "Connection successfully tested"
+            mock_run.assert_called_once_with(sql="select 1")
 
     @mock.patch(
-        'astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run',
-        side_effect=Exception('Connection Errors'),
+        "astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run",
+        side_effect=Exception("Connection Errors"),
     )
     def test_connection_failure(self, mock_run):
         with unittest.mock.patch.dict(
-            'os.environ', AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
+            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
         ):
             hook = SnowflakeHookAsync()
             status, msg = hook.test_connection()
             assert status is False
-            assert msg == 'Connection Errors'
-            mock_run.assert_called_once_with(sql='select 1')
+            assert msg == "Connection Errors"
+            mock_run.assert_called_once_with(sql="select 1")
