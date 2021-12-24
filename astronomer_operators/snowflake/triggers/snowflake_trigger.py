@@ -1,8 +1,9 @@
 import asyncio
-from subprocess import run
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple
+
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+
 from astronomer_operators.snowflake.hooks.snowflake import SnowflakeHookAsync
 
 
@@ -19,11 +20,11 @@ def get_db_hook(self) -> SnowflakeHookAsync:
 
 class SnowflakeTrigger(BaseTrigger):
     def __init__(
-            self,
-            task_id: str,
-            polling_period_seconds: int,
-            query_ids: List[str],
-            snowflake_conn_id: str,
+        self,
+        task_id: str,
+        polling_period_seconds: int,
+        query_ids: List[str],
+        snowflake_conn_id: str,
     ):
         super().__init__()
         self.task_id = task_id
@@ -53,6 +54,7 @@ class SnowflakeTrigger(BaseTrigger):
         while True:
             try:
                 run_state = await hook.get_query_status(self.query_ids)
+                print("run state ", run_state)
                 if run_state:
                     yield TriggerEvent(run_state)
                     return
