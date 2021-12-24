@@ -18,14 +18,13 @@
 """
 Example use of SnowflakeAsync related operators.
 """
-from datetime import datetime
-
 from airflow import DAG
 from airflow.utils.dates import days_ago
+
 from astronomer_operators.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
-SNOWFLAKE_CONN_ID = 'my_snowflake_conn'
-SNOWFLAKE_SAMPLE_TABLE = 'sample_table'
+SNOWFLAKE_CONN_ID = "my_snowflake_conn"
+SNOWFLAKE_SAMPLE_TABLE = "sample_table"
 
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
@@ -42,41 +41,34 @@ SNOWFLAKE_SLACK_MESSAGE = (
 # [START howto_operator_snowflake]
 
 dag = DAG(
-    'example_snowflake',
+    "example_snowflake",
     start_date=days_ago(0),
     schedule_interval=None,
-    default_args={'snowflake_conn_id': SNOWFLAKE_CONN_ID},
-    tags=['example'],
+    default_args={"snowflake_conn_id": SNOWFLAKE_CONN_ID},
+    tags=["example"],
     catchup=False,
 )
 
 
 snowflake_op_sql_str = SnowflakeOperatorAsync(
-    task_id='snowflake_op_sql_str',
+    task_id="snowflake_op_sql_str",
     dag=dag,
     sql=CREATE_TABLE_SQL_STRING,
 )
 
 snowflake_op_with_params = SnowflakeOperatorAsync(
-    task_id='snowflake_op_with_params',
+    task_id="snowflake_op_with_params",
     dag=dag,
     sql=SQL_INSERT_STATEMENT,
     parameters={"id": 56},
 )
 
-snowflake_op_sql_list = SnowflakeOperatorAsync(task_id='snowflake_op_sql_list', dag=dag, sql=SQL_LIST)
+snowflake_op_sql_list = SnowflakeOperatorAsync(task_id="snowflake_op_sql_list", dag=dag, sql=SQL_LIST)
 
 snowflake_op_sql_multiple_stmts = SnowflakeOperatorAsync(
-    task_id='snowflake_op_sql_multiple_stmts',
+    task_id="snowflake_op_sql_multiple_stmts",
     dag=dag,
     sql=SQL_MULTIPLE_STMTS,
 )
 
-(
-    snowflake_op_sql_str
-    >> [
-        snowflake_op_with_params,
-        snowflake_op_sql_list,
-        snowflake_op_sql_multiple_stmts
-    ]
-)
+(snowflake_op_sql_str >> [snowflake_op_with_params, snowflake_op_sql_list, snowflake_op_sql_multiple_stmts])
