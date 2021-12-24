@@ -1,13 +1,14 @@
 from airflow.exceptions import AirflowException
-from airflow.providers.snowflake.operators.snowflake import (
-    SnowflakeOperator
-)
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+
 from astronomer_operators.snowflake.hooks.snowflake import SnowflakeHookAsync
-from astronomer_operators.snowflake.triggers.snowflake_trigger import SnowflakeTrigger, get_db_hook
+from astronomer_operators.snowflake.triggers.snowflake_trigger import (
+    SnowflakeTrigger,
+    get_db_hook,
+)
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
-
     def __init__(self, *, poll_interval: int = 5, **kwargs):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
@@ -18,21 +19,17 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
 
     def execute(self, context):
         """
-        Make a sync connection to snowflake and run query in execute_async 
+        Make a sync connection to snowflake and run query in execute_async
         function in snowflake and close the connection
         """
-        print("9988888888$$$$$$$$$$$$$$$$")
-        self.log.info('Executing: %s', self.sql)
+        self.log.info("Executing: %s", self.sql)
         hook = self.get_db_hook()
         self.log.info(self.sql)
         hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)
         self.query_ids = hook.query_ids
-        print("self.query_ids ", self.query_ids)
 
         if self.do_xcom_push:
-            context["ti"].xcom_push(key='query_ids', value=self.query_ids)
-
-        print("8888888888888888888")
+            context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
         self.defer(
             timeout=self.execution_timeout,
@@ -53,7 +50,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = '{0}: {1}'.format(event["type"], event["message"])
+                msg = "{0}: {1}".format(event["type"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
