@@ -12,8 +12,6 @@ from airflow.providers.databricks.hooks.databricks import (
 )
 from asgiref.sync import sync_to_async
 
-DEFAULT_CONN_NAME = "databricks_default"
-
 
 class DatabricksHookAsync(DatabricksHook):
     async def get_run_state_async(self, run_id: str) -> RunState:
@@ -50,9 +48,7 @@ class DatabricksHookAsync(DatabricksHook):
         attempt_num = 1
 
         if not self.databricks_conn:
-            self.databricks_conn = await sync_to_async(self.get_connection)(
-                self.databricks_conn_id
-            )
+            self.databricks_conn = await sync_to_async(self.get_connection)(self.databricks_conn_id)
 
         if "token" in self.databricks_conn.extra_dejson:
             self.log.info("Using token auth. ")
@@ -100,17 +96,14 @@ class DatabricksHookAsync(DatabricksHook):
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry.
-                        raise AirflowException(
-                            f"Response: {e.message}, Status Code: {e.status}"
-                        )
+                        raise AirflowException(f"Response: {e.message}, Status Code: {e.status}")
                     self._log_request_error(attempt_num, e)
 
                 if attempt_num == self.retry_limit:
                     raise AirflowException(
-                        (
-                            "API requests to Databricks failed {} times. "
-                            + "Giving up."
-                        ).format(self.retry_limit)
+                        ("API requests to Databricks failed {} times. " + "Giving up.").format(
+                            self.retry_limit
+                        )
                     )
 
                 attempt_num += 1

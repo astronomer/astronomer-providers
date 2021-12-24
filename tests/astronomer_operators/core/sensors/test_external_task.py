@@ -1,18 +1,13 @@
-import asyncio
-import sys
 from datetime import timedelta
 from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.models import DagRun, TaskInstance
-from airflow.operators.dummy import DummyOperator
-from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.timezone import datetime
 
-from astronomer_operators.external_task import (
+from astronomer_operators.core.sensors.external_task import ExternalTaskSensorAsync
+from astronomer_operators.core.triggers.external_task import (
     DagStateTrigger,
-    ExternalTaskSensorAsync,
     TaskStateTrigger,
 )
 
@@ -51,9 +46,7 @@ def test_external_task_sensor_async(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, TaskStateTrigger
-    ), "Trigger is not a TaskStateTrigger"
+    assert isinstance(exc.value.trigger, TaskStateTrigger), "Trigger is not a TaskStateTrigger"
 
 
 def test_external_dag_sensor_async(dag, context):
@@ -71,9 +64,7 @@ def test_external_dag_sensor_async(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DagStateTrigger
-    ), "Trigger is not a DagStateTrigger"
+    assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
 
 def test_external_dag_sensor_async_falsy(dag, context):
@@ -91,12 +82,10 @@ def test_external_dag_sensor_async_falsy(dag, context):
     with pytest.raises(TaskDeferred) as exc:
         sensor.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, DagStateTrigger
-    ), "Trigger is not a DagStateTrigger"
+    assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
 
-@mock.patch("astronomer_operators.external_task.ExternalTaskSensorAsync.get_count")
+@mock.patch("astronomer_operators.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
 def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every task monitored by
@@ -113,13 +102,10 @@ def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, con
     with pytest.raises(AirflowException) as exc:
         sensor.execute_complete(context, session)
 
-    assert (
-        str(exc.value)
-        == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
-    )
+    assert str(exc.value) == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
 
 
-@mock.patch("astronomer_operators.external_task.ExternalTaskSensorAsync.get_count")
+@mock.patch("astronomer_operators.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
 def test_dag_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every DAG monitored by
@@ -169,133 +155,3 @@ def test_get_execution_dates(dag, context):
     execution_dates = sensor.get_execution_dates(context)
     assert execution_dates[0] == datetime(2015, 1, 1)
     assert len(execution_dates) == 1
-
-
-def test_task_state_trigger_serialization():
-    """
-    Asserts that the TaskStateTrigger correctly serializes its arguments
-    and classpath.
-    """
-    trigger = TaskStateTrigger(
-        TEST_DAG_ID,
-        TEST_TASK_ID,
-        TEST_STATES,
-        [DEFAULT_DATE],
-        TEST_POLL_INTERVAL,
-    )
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.external_task.TaskStateTrigger"
-    assert kwargs == {
-        "dag_id": TEST_DAG_ID,
-        "task_id": TEST_TASK_ID,
-        "states": TEST_STATES,
-        "execution_dates": [DEFAULT_DATE],
-        "poll_interval": TEST_POLL_INTERVAL,
-    }
-
-
-def test_task_dag_trigger_serialization():
-    """
-    Asserts that the DagStateTrigger correctly serializes its arguments
-    and classpath.
-    """
-    trigger = DagStateTrigger(
-        TEST_DAG_ID,
-        TEST_STATES,
-        [DEFAULT_DATE],
-        TEST_POLL_INTERVAL,
-    )
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.external_task.DagStateTrigger"
-    assert kwargs == {
-        "dag_id": TEST_DAG_ID,
-        "states": TEST_STATES,
-        "execution_dates": [DEFAULT_DATE],
-        "poll_interval": TEST_POLL_INTERVAL,
-    }
-
-
-@pytest.mark.skipif(
-    sys.version_info.minor <= 6 and sys.version_info.major <= 3,
-    reason="No async on 3.6",
-)
-@pytest.mark.asyncio
-async def test_task_state_trigger(session, dag):
-    """
-    Asserts that the TaskStateTrigger only goes off on or after a TaskInstance
-    reaches an allowed state (i.e. SUCCESS).
-    """
-    dag_run = DagRun(
-        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
-    )
-
-    session.add(dag_run)
-    session.commit()
-
-    external_task = DummyOperator(task_id=TEST_TASK_ID, dag=dag)
-    instance = TaskInstance(external_task, DEFAULT_DATE)
-    session.add(instance)
-    session.commit()
-
-    trigger = TaskStateTrigger(
-        dag.dag_id,
-        instance.task_id,
-        TEST_STATES,
-        [DEFAULT_DATE],
-        poll_interval=0.2,
-    )
-
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # It should not have produced a result
-    assert task.done() is False
-
-    # Progress the task to a "success" state so that run() yields a TriggerEvent
-    instance.state = TaskInstanceState.SUCCESS
-    session.commit()
-    await asyncio.sleep(0.5)
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
-
-
-@pytest.mark.skipif(
-    sys.version_info.minor <= 6 and sys.version_info.major <= 3,
-    reason="No async on 3.6",
-)
-@pytest.mark.asyncio
-async def test_dag_state_trigger(session, dag):
-    """
-    Tests that the DagStateTrigger only goes off on or after a DagRun
-    reaches an allowed state (i.e. SUCCESS).
-    """
-    dag_run = DagRun(
-        dag.dag_id, run_type="manual", execution_date=DEFAULT_DATE, run_id=TEST_RUN_ID
-    )
-
-    session.add(dag_run)
-    session.commit()
-
-    trigger = DagStateTrigger(
-        dag.dag_id,
-        TEST_STATES,
-        [DEFAULT_DATE],
-        poll_interval=0.2,
-    )
-
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # It should not have produced a result
-    assert task.done() is False
-
-    # Progress the dag to a "success" state so that yields a TriggerEvent
-    dag_run.state = DagRunState.SUCCESS
-    session.commit()
-    await asyncio.sleep(0.5)
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()

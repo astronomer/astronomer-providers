@@ -3,14 +3,12 @@ from datetime import timedelta
 from airflow import DAG
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.databricks import (
+from astronomer_operators.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
     DatabricksSubmitRunOperatorAsync,
 )
 
-notebook_task = {
-    "notebook_path": "/Users/andrew.godwin@astronomer.io/Quickstart Notebook"
-}
+notebook_task = {"notebook_path": "/Users/andrew.godwin@astronomer.io/Quickstart Notebook"}
 
 default_args = {
     "owner": "airflow",
