@@ -16,21 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 """
-Example use of Snowflake related operators.
+Example use of SnowflakeAsync related operators.
 """
 from datetime import datetime
 
 from airflow import DAG
-from astronomer_operators.snowflake import SnowflakeOperatorAsyn
+from airflow.utils.dates import days_ago
+from astronomer_operators.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
 SNOWFLAKE_CONN_ID = 'my_snowflake_conn'
-SLACK_CONN_ID = 'my_slack_conn'
-# TODO: should be able to rely on connection's schema, but currently param required by S3ToSnowflakeTransfer
-SNOWFLAKE_SCHEMA = 'schema_name'
-SNOWFLAKE_STAGE = 'stage_name'
-SNOWFLAKE_WAREHOUSE = 'warehouse_name'
-SNOWFLAKE_DATABASE = 'database_name'
-SNOWFLAKE_ROLE = 'role_name'
 SNOWFLAKE_SAMPLE_TABLE = 'sample_table'
 
 # SQL commands
@@ -49,37 +43,30 @@ SNOWFLAKE_SLACK_MESSAGE = (
 
 dag = DAG(
     'example_snowflake',
-    start_date=datetime(2021, 1, 1),
+    start_date=days_ago(0),
+    schedule_interval=None,
     default_args={'snowflake_conn_id': SNOWFLAKE_CONN_ID},
     tags=['example'],
     catchup=False,
 )
 
 
-snowflake_op_sql_str = SnowflakeOperatorAsyn(
+snowflake_op_sql_str = SnowflakeOperatorAsync(
     task_id='snowflake_op_sql_str',
     dag=dag,
     sql=CREATE_TABLE_SQL_STRING,
-    warehouse=SNOWFLAKE_WAREHOUSE,
-    database=SNOWFLAKE_DATABASE,
-    schema=SNOWFLAKE_SCHEMA,
-    role=SNOWFLAKE_ROLE,
 )
 
-snowflake_op_with_params = SnowflakeOperatorAsyn(
+snowflake_op_with_params = SnowflakeOperatorAsync(
     task_id='snowflake_op_with_params',
     dag=dag,
     sql=SQL_INSERT_STATEMENT,
     parameters={"id": 56},
-    warehouse=SNOWFLAKE_WAREHOUSE,
-    database=SNOWFLAKE_DATABASE,
-    schema=SNOWFLAKE_SCHEMA,
-    role=SNOWFLAKE_ROLE,
 )
 
-snowflake_op_sql_list = SnowflakeOperatorAsyn(task_id='snowflake_op_sql_list', dag=dag, sql=SQL_LIST)
+snowflake_op_sql_list = SnowflakeOperatorAsync(task_id='snowflake_op_sql_list', dag=dag, sql=SQL_LIST)
 
-snowflake_op_sql_multiple_stmts = SnowflakeOperatorAsyn(
+snowflake_op_sql_multiple_stmts = SnowflakeOperatorAsync(
     task_id='snowflake_op_sql_multiple_stmts',
     dag=dag,
     sql=SQL_MULTIPLE_STMTS,
