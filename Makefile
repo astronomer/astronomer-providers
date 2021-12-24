@@ -1,4 +1,4 @@
-.PHONY: dev clean stop help
+.PHONY: dev clean stop build-run help
 
 dev: ## Create a development Environment using `docker-compose` file.
 	docker-compose -f dev/docker-compose.yaml up -d
@@ -12,6 +12,9 @@ stop: ## Stop all the containers
 clean: ## Remove all the containers along with volumes
 	docker-compose -f dev/docker-compose.yaml down  --volumes --remove-orphans
 	rm -rf dev/logs
+
+build-run: ## Build the Docker Image & then run the containers
+	docker-compose -f dev/docker-compose.yaml up --build -d
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

@@ -13,6 +13,7 @@ Run the following commands from the root of the repository:
 - ``make stop`` - To stop all the containers
 - ``make clean`` - To remove all the containers along with volumes
 - ``make help`` - To view the available commands
+- ``make build-run`` - To build the docker image and then run containers
 
 Following ports are accessible from the host machine:
 
