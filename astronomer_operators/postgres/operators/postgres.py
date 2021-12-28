@@ -20,13 +20,13 @@ from contextlib import closing
 from copy import deepcopy
 
 import psycopg2
+import psycopg2.extras
 from airflow.exceptions import AirflowException
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from psycopg2.extensions import connection
 
 from astronomer_operators.postgres.triggers.postgres import PostgresTrigger
-
 
 class _PostgresHook(PostgresHook):
     def __init__(self, *args, **kwargs) -> None:
@@ -82,16 +82,20 @@ class _PostgresHook(PostgresHook):
         return self.conn
 
     def run(self, sql, autocommit=False, parameters=None, handler=None):
-        with closing(self.get_conn()) as conn:
-            self.wait(conn)
-            with closing(conn.cursor()) as cur:
-                self.log.info("Running statement: %s, parameters: %s", sql, parameters)
-                if parameters:
-                    cur.execute(sql, parameters)
-                else:
-                    cur.execute(sql)
-            return conn.get_backend_pid()
-
+        wait_func = psycopg2.extras.wait_select
+        try:
+            with closing(self.get_conn()) as conn:
+                self.wait(conn)
+                with closing(conn.cursor()) as cur:
+                    self.log.info("Running statement: %s, parameters: %s", sql, parameters)
+                    if parameters:
+                        cur.execute(sql, parameters)
+                    else:
+                        cur.execute(sql)
+                    wait_func(conn)
+                return conn.get_backend_pid()
+        except Exception as e:
+            raise AirflowException(e)
 
 class PostgresOperatorAsync(PostgresOperator):
     """
