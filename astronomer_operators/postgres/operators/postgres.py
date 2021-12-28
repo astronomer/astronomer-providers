@@ -28,6 +28,7 @@ from psycopg2.extensions import connection
 
 from astronomer_operators.postgres.triggers.postgres import PostgresTrigger
 
+
 class _PostgresHook(PostgresHook):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -96,6 +97,7 @@ class _PostgresHook(PostgresHook):
                 return conn.get_backend_pid()
         except Exception as e:
             raise AirflowException(e)
+
 
 class PostgresOperatorAsync(PostgresOperator):
     """
