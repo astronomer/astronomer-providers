@@ -305,7 +305,7 @@ class TestPytestSnowflakeHookAsync:
     def test_run_storing_query_ids_extra(self, sql, query_ids):
         with unittest.mock.patch.dict(
             "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ), unittest.mock.patch("airflow_operators.snowflake.hooks.snowflake.connector") as mock_connector:
+        ), unittest.mock.patch("astronomer_operators.snowflake.hooks.snowflake.connector") as mock_connector:
             hook = SnowflakeHookAsync()
             conn = mock_connector.connect.return_value
             cur = mock.MagicMock(rowcount=0)
