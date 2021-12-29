@@ -160,3 +160,34 @@ class PostgresHookAsync(PostgresHook):
                         await asyncio.sleep(self.retry_delay)
         except AirflowNotFoundException as e:
             return {"status": "error", "message": e.title}
+
+    async def get_first(self, sql, **kwargs):
+        conn_id = getattr(self, self.conn_name_attr)
+        conn: Connection = await sync_to_async(self.get_connection)(conn_id)
+
+        # check for authentication via AWS IAM
+        if conn.extra_dejson.get("iam", False):
+            conn.login, conn.password, conn.port = self.get_iam_token(conn)
+
+        conn_args = dict(
+            host=conn.host,
+            user=conn.login,
+            password=conn.password,
+            database=self.schema or conn.schema,
+            port=conn.port,
+        )
+
+        for arg_name, arg_val in conn.extra_dejson.items():
+            if arg_name not in [
+                "iam",
+                "redshift",
+                "cursor",
+                "cluster-identifier",
+                "aws_conn_id",
+            ]:
+                conn_args[arg_name] = arg_val
+
+        self.log.debug("Connecting to %s", conn_args["host"])
+        conn: asyncpg.Connection = await asyncpg.connect(**conn_args)
+        result: asyncpg.Record = await conn.fetchrow(sql)
+        return result
