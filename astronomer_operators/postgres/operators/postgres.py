@@ -46,7 +46,7 @@ class _PostgresHook(PostgresHook):
             else:
                 raise psycopg2.OperationalError("poll() returned %s" % state)
 
-    def get_conn(self) -> connection:
+    def get_conn(self, is_async=True) -> connection:
         """Establishes a connection to a postgres database."""
         conn_id = getattr(self, self.conn_name_attr)
         conn = deepcopy(self.connection or self.get_connection(conn_id))
@@ -62,7 +62,7 @@ class _PostgresHook(PostgresHook):
             dbname=self.schema or conn.schema,
             port=conn.port,
             application_name=self.application_name,
-            async_=True,
+            async_=is_async,
         )
         raw_cursor = conn.extra_dejson.get("cursor", False)
         if raw_cursor:
@@ -81,19 +81,36 @@ class _PostgresHook(PostgresHook):
         self.conn = psycopg2.connect(**conn_args)
         return self.conn
 
+    def is_valid_sql(self, sql):
+        """
+        Checks whether the sql to be executed has valid syntax
+        Uses a non-async connection to the postgres
+        """
+        with closing(self.get_conn(is_async=False)) as conn:
+            with closing(conn.cursor()) as cur:
+                self.log.info("Validating sql in the task")
+                cur.execute(
+                    f"""
+                    DO $TEST$ BEGIN RETURN;
+                    {sql}
+                    END; $TEST$;"""
+                )
+
     def run(self, sql, autocommit=False, parameters=None, handler=None):
-        try:
-            with closing(self.get_conn()) as conn:
-                self.wait(conn)
-                with closing(conn.cursor()) as cur:
-                    self.log.info("Running statement: %s, parameters: %s", sql, parameters)
-                    if parameters:
-                        cur.execute(sql, parameters)
-                    else:
-                        cur.execute(sql)
-                return conn.get_backend_pid()
-        except Exception as e:
-            raise AirflowException(e)
+        """
+        Validate the sql syntax and then execute the sql in asynchronous mode.
+        Returns backend pid
+        """
+        self.is_valid_sql(sql)
+        with closing(self.get_conn()) as conn:
+            self.wait(conn)
+            with closing(conn.cursor()) as cur:
+                self.log.info("Running statement: %s, parameters: %s", sql, parameters)
+                if parameters:
+                    cur.execute(sql, parameters)
+                else:
+                    cur.execute(sql)
+            return conn.get_backend_pid()
 
 
 class PostgresOperatorAsync(PostgresOperator):
