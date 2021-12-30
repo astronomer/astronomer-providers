@@ -28,7 +28,80 @@ from psycopg2.extensions import connection
 from astronomer_operators.postgres.triggers.postgres import PostgresTrigger
 
 
+class PostgresOperatorAsync(PostgresOperator):
+    """
+    Executes sql code in a specific Postgres database
+
+    :param sql: the sql code to be executed. (templated)
+    :type sql: Can receive a str representing a sql statement,
+        a list of str (sql statements), or reference to a template file.
+        Template reference are recognized by str ending in '.sql'
+    :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
+        reference to a specific postgres database.
+    :type postgres_conn_id: str
+    :param parameters: (optional) the parameters to render the SQL query with.
+    :type parameters: dict or iterable
+    :param database: name of database which overwrite defined one in connection
+    :type database: str
+    """
+
+    template_fields = ("sql",)
+    template_fields_renderers = {"sql": "sql"}
+    template_ext = (".sql",)
+    ui_color = "#ededed"
+
+    def execute(self, context):
+        """
+        Logic that the operator uses to execute the Postgres trigger,
+        and defer execution as expected.
+        """
+        if not self.autocommit:
+            self.log.warning("Autocommit can not be disabled when using PostgresOperatorAsync.")
+        if not isinstance(self.sql, str):
+            raise AirflowException(
+                "PostgresOperatorAsync requires 'sql' to be a string. Passing multiple queries is not supported."
+            )
+        application_name = f"{self.dag_id}-{self.task_id}"
+        self.hook = _PostgresHook(
+            postgres_conn_id=self.postgres_conn_id,
+            schema=self.database,
+            application_name=application_name,
+        )
+        pid = self.hook.run(self.sql, False, parameters=self.parameters)
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=PostgresTrigger(
+                sql=self.sql,
+                postgres_conn_id=self.postgres_conn_id,
+                task_id=self.task_id,
+                application_name=application_name,
+                pid=pid,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed successfully with response %s ",
+            self.task_id,
+            event["message"],
+        )
+        return None
+
+
 class _PostgresHook(PostgresHook):
+    """
+    An Internal PostgresHook that should only be used with PostgresOperatorAsync
+     to submit queries in "async" mode and checks if SQL is valid.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.application_name = kwargs.pop("application_name", None)
@@ -112,71 +185,3 @@ class _PostgresHook(PostgresHook):
                 else:
                     cur.execute(sql)
             return conn.get_backend_pid()
-
-
-class PostgresOperatorAsync(PostgresOperator):
-    """
-    Executes sql code in a specific Postgres database
-
-    :param sql: the sql code to be executed. (templated)
-    :type sql: Can receive a str representing a sql statement,
-        a list of str (sql statements), or reference to a template file.
-        Template reference are recognized by str ending in '.sql'
-    :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
-        reference to a specific postgres database.
-    :type postgres_conn_id: str
-    :param parameters: (optional) the parameters to render the SQL query with.
-    :type parameters: dict or iterable
-    :param database: name of database which overwrite defined one in connection
-    :type database: str
-    """
-
-    template_fields = ("sql",)
-    template_fields_renderers = {"sql": "sql"}
-    template_ext = (".sql",)
-    ui_color = "#ededed"
-
-    def execute(self, context):
-        """
-        Logic that the operator uses to execute the Postgres trigger,
-        and defer execution as expected.
-        """
-        if not self.autocommit:
-            self.log.warning("Autocommit can not be disabled when using PostgresOperatorAsync.")
-        if not isinstance(self.sql, str):
-            raise AirflowException(
-                "PostgresOperatorAsync requires 'sql' to be a string. Passing multiple queries is not supported."
-            )
-        application_name = f"{self.dag_id}-{self.task_id}"
-        self.hook = _PostgresHook(
-            postgres_conn_id=self.postgres_conn_id,
-            schema=self.database,
-            application_name=application_name,
-        )
-        pid = self.hook.run(self.sql, False, parameters=self.parameters)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=PostgresTrigger(
-                sql=self.sql,
-                postgres_conn_id=self.postgres_conn_id,
-                task_id=self.task_id,
-                application_name=application_name,
-                pid=pid,
-            ),
-            method_name="execute_complete",
-        )
-
-    def execute_complete(self, context, event=None):
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-        self.log.info(
-            "%s completed successfully with response %s ",
-            self.task_id,
-            event["message"],
-        )
-        return None
