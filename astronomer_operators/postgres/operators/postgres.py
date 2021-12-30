@@ -35,6 +35,7 @@ class _PostgresHook(PostgresHook):
 
     @staticmethod
     def wait(conn):
+        """From https://www.psycopg.org/docs/advanced.html#asynchronous-support"""
         while True:
             state = conn.poll()
             if state == psycopg2.extensions.POLL_OK:

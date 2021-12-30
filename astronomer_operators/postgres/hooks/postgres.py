@@ -17,7 +17,7 @@
 # under the License.
 
 import asyncio
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, List, Mapping, Optional, Union
 
 import asyncpg
 from airflow.exceptions import AirflowNotFoundException
@@ -66,39 +66,6 @@ class PostgresHookAsync(PostgresHook):
         self.retry_limit = retry_limit
         self.retry_delay = retry_delay
 
-    def get_iam_token(self, conn: Connection) -> Tuple[str, str, int]:
-        """
-        Uses AWSHook to retrieve a temporary password to connect to Postgres
-        or Redshift. Port is required. If none is provided, default is used for
-        each service
-        """
-        from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
-
-        redshift = conn.extra_dejson.get("redshift", False)
-        aws_conn_id = conn.extra_dejson.get("aws_conn_id", "aws_default")
-        aws_hook = AwsBaseHook(aws_conn_id, client_type="rds")
-        login = conn.login
-        if conn.port is None:
-            port = 5439 if redshift else 5432
-        else:
-            port = conn.port
-        if redshift:
-            # Pull the cluster-identifier from the beginning of the Redshift URL
-            # ex. my-cluster.ccdre4hpd39h.us-east-1.redshift.amazonaws.com returns my-cluster
-            cluster_identifier = conn.extra_dejson.get("cluster-identifier", conn.host.split(".")[0])
-            client = aws_hook.get_client_type("redshift")
-            cluster_creds = client.get_cluster_credentials(
-                DbUser=conn.login,
-                DbName=self.schema or conn.schema,
-                ClusterIdentifier=cluster_identifier,
-                AutoCreate=False,
-            )
-            token = cluster_creds["DbPassword"]
-            login = cluster_creds["DbUser"]
-        else:
-            token = aws_hook.conn.generate_db_auth_token(conn.host, port, conn.login)
-        return login, token, port
-
     async def run(
         self,
         sql: Union[str, List[str]],
@@ -110,27 +77,7 @@ class PostgresHookAsync(PostgresHook):
             conn_id = getattr(self, self.conn_name_attr)
             conn = await sync_to_async(self.get_connection)(conn_id)
 
-            # check for authentication via AWS IAM
-            if conn.extra_dejson.get("iam", False):
-                conn.login, conn.password, conn.port = self.get_iam_token(conn)
-
-            conn_args = dict(
-                host=conn.host,
-                user=conn.login,
-                password=conn.password,
-                database=self.schema or conn.schema,
-                port=conn.port,
-            )
-
-            for arg_name, arg_val in conn.extra_dejson.items():
-                if arg_name not in [
-                    "iam",
-                    "redshift",
-                    "cursor",
-                    "cluster-identifier",
-                    "aws_conn_id",
-                ]:
-                    conn_args[arg_name] = arg_val
+            conn_args = self._get_conn_args(conn)
 
             # Create a connection pool and acquire a connection.
             self.log.info("Connecting to %s", conn_args["host"])
@@ -165,10 +112,17 @@ class PostgresHookAsync(PostgresHook):
         conn_id = getattr(self, self.conn_name_attr)
         conn: Connection = await sync_to_async(self.get_connection)(conn_id)
 
-        # check for authentication via AWS IAM
-        if conn.extra_dejson.get("iam", False):
-            conn.login, conn.password, conn.port = self.get_iam_token(conn)
+        conn_args = self._get_conn_args(conn)
 
+        self.log.debug("Connecting to %s", conn_args["host"])
+        conn: asyncpg.Connection = await asyncpg.connect(**conn_args)
+        result: asyncpg.Record = await conn.fetchrow(sql)
+        return result
+
+    def _get_conn_args(self, conn: Connection) -> dict:
+        """
+        Helper function to get connection arguments.
+        """
         conn_args = dict(
             host=conn.host,
             user=conn.login,
@@ -187,7 +141,4 @@ class PostgresHookAsync(PostgresHook):
             ]:
                 conn_args[arg_name] = arg_val
 
-        self.log.debug("Connecting to %s", conn_args["host"])
-        conn: asyncpg.Connection = await asyncpg.connect(**conn_args)
-        result: asyncpg.Record = await conn.fetchrow(sql)
-        return result
+        return conn_args
