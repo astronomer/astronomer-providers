@@ -20,7 +20,6 @@ from contextlib import closing
 from copy import deepcopy
 
 import psycopg2
-import psycopg2.extras
 from airflow.exceptions import AirflowException
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
@@ -83,7 +82,6 @@ class _PostgresHook(PostgresHook):
         return self.conn
 
     def run(self, sql, autocommit=False, parameters=None, handler=None):
-        wait_func = psycopg2.extras.wait_select
         try:
             with closing(self.get_conn()) as conn:
                 self.wait(conn)
@@ -93,7 +91,6 @@ class _PostgresHook(PostgresHook):
                         cur.execute(sql, parameters)
                     else:
                         cur.execute(sql)
-                    wait_func(conn)
                 return conn.get_backend_pid()
         except Exception as e:
             raise AirflowException(e)
