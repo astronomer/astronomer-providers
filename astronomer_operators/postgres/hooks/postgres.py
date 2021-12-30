@@ -80,7 +80,7 @@ class PostgresHookAsync(PostgresHook):
             conn_args = self._get_conn_args(conn)
 
             # Create a connection pool and acquire a connection.
-            self.log.info("Connecting to %s", conn_args["host"])
+            self.log.debug("Connecting to %s", conn_args["host"])
             async with asyncpg.create_pool(**conn_args) as pool:
                 async with pool.acquire() as con:
                     attempt_num = 1

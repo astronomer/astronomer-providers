@@ -51,8 +51,8 @@ class PostgresTrigger(BaseTrigger):
         SELECT state, age(clock_timestamp(), query_start) FROM pg_stat_activity
         WHERE application_name = '{self.application_name}' and pid = '{self.pid}'
         """
-        self.log.info("Checking to see if the SQL query has already been executed")
-        self.log.debug("Running SQL: {sql_to_check}")
+        self.log.debug("Checking to see if the SQL query has already been executed")
+        self.log.debug("Running SQL: %s", sql_to_check)
         execution_age = None
         completion_message = "Query Execution completed. "
 
