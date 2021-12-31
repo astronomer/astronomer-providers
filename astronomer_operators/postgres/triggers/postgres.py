@@ -78,12 +78,22 @@ class PostgresTrigger(BaseTrigger):
                     yield TriggerEvent({"status": "success", "message": completion_message})
                     return
 
+                if state in ["idle in transaction (aborted)"]:
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "message": "One of the statements in the transaction caused an error.",
+                        }
+                    )
+                    return
+
                 # When the query is running it is in "active" state
-                self.log.debug(
+                self.log.info(
                     "Query is still running. Time elapsed: %s. State: %s",
                     execution_age,
                     state,
                 )
+                self.log.info("Sleeping for %s seconds.", self.poll_interval)
                 await asyncio.sleep(self.poll_interval)
             except Exception as e:
                 self.log.exception("Exception occurred while checking for query completion")
