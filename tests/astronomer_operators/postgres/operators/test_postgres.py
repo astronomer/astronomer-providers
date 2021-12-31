@@ -1,4 +1,4 @@
-import logging
+from unittest import mock
 
 import pytest
 from airflow.exceptions import TaskDeferred
@@ -32,16 +32,14 @@ def test_postgres_operator_async(context):
     assert isinstance(exc.value.trigger, PostgresTrigger), "Trigger is not a PostgresTrigger"
 
 
-@pytest.mark.xfail
-def test_postgres_execute_complete(caplog):
-    """
-    Asserts that logging occurs as expected.
-
-    TODO: It would appear that logging in the operator is not getting
-    picked up by pytest right now... come back to this later.
-    """
-    caplog.set_level(logging.INFO)
+def test_postgres_execute_complete():
+    """Asserts that logging occurs as expected"""
     operator = PostgresOperatorAsync(task_id="run_now", postgres_conn_id=CONN_ID, sql="SELECT 1")
-    operator.execute_complete({})
+    with mock.patch.object(operator.log, "info") as mock_log_info:
+        operator.execute_complete(
+            context=None, event={"status": "success", "message": "Query Execution completed. "}
+        )
 
-    assert f"{TASK_ID} completed successfully." in caplog.text
+    mock_log_info.assert_called_with(
+        "%s completed successfully with response %s ", "run_now", "Query Execution completed. "
+    )
