@@ -20,10 +20,10 @@ def context():
 
 
 def test_postgres_operator_async(context):
-    #     """
-    #     Asserts that a task is deferred and a PostgresTrigger will be fired
-    #     when the PostgresOperatorAsync is executed.
-    #     """
+    """
+    Asserts that a task is deferred and a PostgresTrigger will be fired
+    when the PostgresOperatorAsync is executed.
+    """
     operator = PostgresOperatorAsync(task_id=TASK_ID, postgres_conn_id=CONN_ID, sql="SELECT 1")
 
     with pytest.raises(TaskDeferred) as exc:

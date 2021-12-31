@@ -155,18 +155,18 @@ class _PostgresHook(PostgresHook):
         self.conn = psycopg2.connect(**conn_args)
         return self.conn
 
-    def is_valid_sql(self, sql):
+    def is_valid_sql(self, sql: str):
         """
         Checks whether the sql to be executed has valid syntax
         Uses a non-async connection to the postgres
         """
         with closing(self.get_conn(is_async=False)) as conn:
             with closing(conn.cursor()) as cur:
-                self.log.info("Validating sql in the task")
+                self.log.info("Validating SQL in the task")
                 cur.execute(
                     f"""
                     DO $TEST$ BEGIN RETURN;
-                    {sql}
+                    {sql.rstrip().rstrip(";")};
                     END; $TEST$;"""
                 )
 

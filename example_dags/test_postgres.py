@@ -46,11 +46,12 @@ with DAG(
         sql="""
             SELECT * FROM pet
             WHERE birth_date
-            BETWEEN SYMMETRIC DATE '{{ params.begin_date }}' AND DATE '{{ params.end_date }}';
+            BETWEEN SYMMETRIC DATE '{{ params.begin_date }}' AND DATE '{{ params.end_date }}'
             """,
         params={"begin_date": "2020-01-01", "end_date": "2020-12-31"},
     )
 
-    test_pg = PostgresOperatorAsync(task_id="test_pg", sql="SELECT pg_sleep(30); SELECT 42;")
+    test_pg = PostgresOperatorAsync(task_id="test_pg", sql="SELECT pg_sleep(2); SELECT 42")
 
-    create_pet_table >> populate_pet_table >> get_all_pets >> get_birth_date >> test_pg
+    create_pet_table >> populate_pet_table >> get_all_pets >> get_birth_date
+    create_pet_table >> test_pg
