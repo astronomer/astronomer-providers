@@ -10,11 +10,6 @@ jobs:
     description: Test & Lint
     docker:
       - image: cimg/python:3.9
-      - image: cimg/postgres:14.0
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: airflow
-          POSTGRES_PASSWORD: airflow
     steps:
       - checkout
       - run:
@@ -24,21 +19,6 @@ jobs:
             && pip install 'apache-airflow-providers-databricks==2.0.2'
             && pip install 'apache-airflow-providers-postgres'
             && pip install -e .[tests]
-      #  Wait for Postgres to be ready before proceeding
-      - run:
-          name: Dockerize wait on Postgres
-          command: dockerize -wait tcp://localhost:5432 -timeout 5m
-      - run:
-      # Our primary container isn't Postgres so run a sleep command until it's ready.
-          name: Waiting for Postgres to be ready
-          command: |
-            for i in `seq 1 20`;
-            do
-              nc -z 127.0.0.1 5432 && echo Success && exit 0
-              echo -n .
-              sleep 2
-            done
-            echo Failed waiting for Postgres && exit 1
       - run:
           name: Static checks
           command: |
