@@ -7,7 +7,8 @@ from astronomer_operators.postgres.operators.postgres import PostgresOperatorAsy
 from astronomer_operators.postgres.triggers.postgres import PostgresTrigger
 
 TASK_ID = "postgres_check"
-CONN_ID = "postgres_default"
+CONN_ID = "postgres_conn_id"
+DAG_ID = "postgres_check_dag"
 
 
 @pytest.fixture
@@ -19,11 +20,13 @@ def context():
     yield context
 
 
-def test_postgres_operator_async(context):
+@mock.patch("astronomer_operators.postgres.operators.postgres._PostgresHook.run")
+def test_postgres_operator_async(run_response, context):
     """
     Asserts that a task is deferred and a PostgresTrigger will be fired
     when the PostgresOperatorAsync is executed.
     """
+    run_response.return_value = 12345
     operator = PostgresOperatorAsync(task_id=TASK_ID, postgres_conn_id=CONN_ID, sql="SELECT 1")
 
     with pytest.raises(TaskDeferred) as exc:
