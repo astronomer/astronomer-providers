@@ -13,6 +13,7 @@ from snowflake.connector.util_text import split_statements
 class SnowflakeHookAsync(SnowflakeHook):
     def run(self, sql: Union[str, list], autocommit: bool = False, parameters: Optional[dict] = None):
         """
+        Makes sync connection to snowflake
         Runs a command or a list of commands. Pass a list of sql
         statements to the sql parameter to get them to execute
         sequentially. The variable query_ids is returned so that
@@ -65,8 +66,7 @@ class SnowflakeHookAsync(SnowflakeHook):
             with closing(conn.cursor(DictCursor)) as cur:
                 for query_id in query_ids:
                     cur.get_results_from_sfqid(query_id)
-                    results = cur.fetchall()
-                    print(f"{results[0]}")
+                    cur.fetchall()
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
 
@@ -110,7 +110,6 @@ class SnowflakeHookAsync(SnowflakeHook):
                 self.log.error("error_message ", error_message)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:
-            print(e)
             self.log.error(e)
             return {"status": "error", "message": e, "type": "ERROR"}
 

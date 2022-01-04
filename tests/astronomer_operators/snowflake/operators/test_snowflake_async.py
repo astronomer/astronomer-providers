@@ -75,7 +75,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, ignore_ti_state=True)
 
     @mock.patch(LONG_MOCK_PATH)
-    def test_snowflake_execute_operator_async(context):
+    def test_snowflake_execute_operator_async(self, context):
         """
         Asserts that a task is deferred and an SnowflakeTrigger will be fired
         when the SnowflakeOperatorAsync is executed.

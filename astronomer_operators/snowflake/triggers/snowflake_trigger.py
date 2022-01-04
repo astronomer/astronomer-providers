@@ -54,7 +54,6 @@ class SnowflakeTrigger(BaseTrigger):
         while True:
             try:
                 run_state = await hook.get_query_status(self.query_ids)
-                print("run state ", run_state)
                 if run_state:
                     yield TriggerEvent(run_state)
                     return
