@@ -94,21 +94,35 @@ class TestPostgresHookConn(unittest.TestCase):
     def test_get_conn_extra(self):
         asyncio.run(self.get_conn_extra())
 
-    # '''
-    # Below test is failing with error.
-    # FAILED test_postgres.py::TestPostgresHookConn::test_run_method - AttributeError: __aenter__
-    # '''
-    # @pytest.mark.asyncio
-    # @mock.patch('astronomer_operators.postgres.hooks.postgres.asyncpg.create_pool')
-    # async def run_method(self, mocked_pool):
-    #     print("In run_method")
-    #     self.db_hook.test_conn_id = 'non_default'
-    #     self.db_hook.get_connection = mock.Mock()
-    #     self.db_hook.get_connection.return_value = Connection(login='login-conn', password='password-conn',
-    #                                                           host='host',schema='schema')
-    #     await self.db_hook.run("select 1")
-    # To check here whether return value of run method is equal to {"status": "success", "message": response}
+    @mock.patch("astronomer_operators.postgres.hooks.postgres.asyncpg.create_pool")
+    async def run_method(self, mock_create_pool):
+        class AsyncContextMixin:
+            async def __aenter__(self):
+                return self
 
-    # def test_run_method(self):
-    #     print("in test_run_method")
-    #     asyncio.run(self.run_method())
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        class MockAsyncpgConnection(AsyncContextMixin):
+            def __init__(self, execute=None):
+                self.execute = execute
+
+        class MockAsyncpgPool(AsyncContextMixin):
+            def __init__(self, connection=None):
+                self._connection = connection
+                self.acquire = mock.MagicMock(return_value=self._connection)
+
+        mock_execute = mock.AsyncMock(return_value="data")
+        mock_connection = MockAsyncpgConnection(execute=mock_execute)
+        mock_create_pool.return_value = MockAsyncpgPool(connection=mock_connection)
+
+        self.db_hook.test_conn_id = "non_default"
+        self.db_hook.get_connection = mock.Mock()
+        self.db_hook.get_connection.return_value = Connection(
+            login="login-conn", password="password-conn", host="host", schema="schema"
+        )
+        result = await self.db_hook.run("select 1")
+        assert result == {"status": "success", "message": "data"}
+
+    def test_run_method(self):
+        asyncio.run(self.run_method())
