@@ -30,19 +30,19 @@ from astronomer_operators.postgres.triggers.postgres import PostgresTrigger
 
 class PostgresOperatorAsync(PostgresOperator):
     """
-    Executes sql code in a specific Postgres database
+    Executes sql code in a specific Postgres database.
 
-    :param sql: the sql code to be executed. (templated)
-    :type sql: Can receive a str representing a sql statement,
-        a list of str (sql statements), or reference to a template file.
-        Template reference are recognized by str ending in '.sql'
-    :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
-        reference to a specific postgres database.
-    :type postgres_conn_id: str
-    :param parameters: (optional) the parameters to render the SQL query with.
-    :type parameters: dict or iterable
-    :param database: name of database which overwrite defined one in connection
-    :type database: str
+    Params:
+
+    sql:  The sql code to be executed. (templated). This param can **ONLY** be a string and not a list.
+    Passing multiple queries is not supported.
+
+    postgres_conn_id:  The :ref:`postgres conn id <howto/connection:postgres>` reference to specific postgres database.
+
+    parameters: (optional) the parameters to render the SQL query with.
+
+    database: name of database which overwrite defined one in connection.
+
     """
 
     template_fields = ("sql",)
