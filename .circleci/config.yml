@@ -14,9 +14,10 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: >-
+          command: >
             pip install 'git+https://github.com/astronomer/airflow.git@v2-2-2'
             && pip install 'apache-airflow-providers-databricks==2.0.2'
+            && pip install 'apache-airflow-providers-postgres'
             && pip install -e .[tests]
       - run:
           name: Static checks
@@ -25,5 +26,3 @@ jobs:
       - run:
           name: Run tests
           command: pytest --junit-xml=test-report/report.xml
-      - store_test_results:
-          path: test-report

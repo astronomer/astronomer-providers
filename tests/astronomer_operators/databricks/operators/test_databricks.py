@@ -1,4 +1,3 @@
-import logging
 from unittest import mock
 
 import pytest
@@ -77,20 +76,13 @@ def test_databricks_run_now_operator_async(
     assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
 
-@pytest.mark.xfail
-def test_databricks_run_now_execute_complete(caplog):
-    """
-    Asserts that logging occurs as expected.
-
-    TODO: It would appear that logging in the operator is not getting
-    picked up by pytest right now... come back to this later.
-    """
-    caplog.set_level(logging.INFO)
+def test_databricks_run_now_execute_complete():
+    """Asserts that logging occurs as expected"""
     operator = DatabricksRunNowOperatorAsync(
         task_id=TASK_ID,
         databricks_conn_id=CONN_ID,
     )
     operator.run_page_url = RUN_PAGE_URL
-    operator.execute_complete({})
-
-    assert f"{TASK_ID} completed successfully." in caplog.text
+    with mock.patch.object(operator.log, "info") as mock_log_info:
+        operator.execute_complete({})
+    mock_log_info.assert_called_with("%s completed successfully.", "databricks_check")
