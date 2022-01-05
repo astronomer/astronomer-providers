@@ -43,7 +43,7 @@ def test_snowflake_trigger_serialization():
 )
 async def test_snowflake_trigger_running(mock_get_first, query_ids):
     """
-    Tests that the SnowflakeTrigger in running
+    Tests that the SnowflakeTrigger in
     """
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,

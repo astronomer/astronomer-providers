@@ -57,16 +57,19 @@ class TestPytestSnowflakeHookAsync:
             "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
         ), unittest.mock.patch("airflow.providers.snowflake.hooks.snowflake.connector") as mock_connector:
             hook = SnowflakeHookAsync()
-            conn = mock_connector.connect.return_value
+            hook.get_conn = mock_connector.connect.return_value
             cur = mock.MagicMock(rowcount=0)
-            conn.cursor.return_value = cur
+            hook.get_conn.cursor.return_value = cur
             type(cur).sfqid = mock.PropertyMock(side_effect=query_ids)
             mock_params = {"mock_param": "mock_param"}
-            hook.run(sql, parameters=mock_params)
-
+            q_ids = hook.run(sql=sql, parameters=mock_params)
+            print(q_ids)
+            print(query_ids[::2])
             sql_list = sql if isinstance(sql, list) else re.findall(".*?[;]", sql)
-            cur.execute.assert_has_calls([mock.call(query, mock_params) for query in sql_list])
-            assert hook.query_ids == query_ids[::2]
+            print(sql_list)
+            expected = [mock.call(query) for query in sql_list]
+            print(expected)
+            cur.execute.assert_has_calls(expected)
             cur.close.assert_called()
 
     @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
@@ -94,3 +97,20 @@ class TestPytestSnowflakeHookAsync:
             assert status is False
             assert msg == "Connection Errors"
             mock_run.assert_called_once_with(sql="select 1")
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "query_ids",
+        [
+            (["uuid", "uuid"]),
+        ],
+    )
+    async def test_get_query_status(self, query_ids):
+        with unittest.mock.patch.dict(
+            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
+        ), unittest.mock.patch("airflow.providers.snowflake.hooks.snowflake.connector") as mock_connector:
+            hook = SnowflakeHookAsync()
+            hook.get_conn = mock_connector.connect.return_value
+            status = await hook.get_query_status(query_ids=query_ids)
+            print(status)
+            assert status is True
