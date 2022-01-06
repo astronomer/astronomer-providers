@@ -22,7 +22,7 @@ class SnowflakeTrigger(BaseTrigger):
     def __init__(
         self,
         task_id: str,
-        polling_period_seconds: int,
+        polling_period_seconds: float,
         query_ids: List[str],
         snowflake_conn_id: str,
     ):

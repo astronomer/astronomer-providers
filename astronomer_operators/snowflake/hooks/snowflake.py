@@ -19,6 +19,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         sequentially. The variable query_ids is returned so that
         it can be used to check the  modify the behavior
         depending on the result of the query
+
         :param sql: the sql string to be executed with possibly multiple statements,
           or a list of sql statements to execute
         :type sql: str or list
@@ -110,13 +111,5 @@ class SnowflakeHookAsync(SnowflakeHook):
                 self.log.error("error_message ", error_message)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:
-            self.log.error(e)
-            return {"status": "error", "message": e, "type": "ERROR"}
-
-    def test_connection(self):
-        """Test the Snowflake connection by running a simple query."""
-        try:
-            self.run(sql="select 1")
-        except Exception as e:
-            return False, str(e)
-        return True, "Connection successfully tested"
+            self.log.error(str(e))
+            return {"status": "error", "message": str(e), "type": "ERROR"}

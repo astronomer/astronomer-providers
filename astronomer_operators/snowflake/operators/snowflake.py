@@ -24,7 +24,6 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         """
         self.log.info("Executing: %s", self.sql)
         hook = self.get_db_hook()
-        self.log.info(self.sql)
         hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)
         self.query_ids = hook.query_ids
 
