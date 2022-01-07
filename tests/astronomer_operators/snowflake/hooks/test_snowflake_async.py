@@ -16,101 +16,79 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import re
-import unittest
-from typing import Dict, Union
 from unittest import mock
 
 import pytest
-from airflow.models import Connection
+from snowflake.connector.constants import QueryStatus
 
 from astronomer_operators.snowflake.hooks.snowflake import SnowflakeHookAsync
-
-_PASSWORD = "snowflake42"
-
-BASE_CONNECTION_KWARGS: Dict[str, Union[str, Dict[str, str]]] = {
-    "login": "user",
-    "password": "pw",
-    "schema": "public",
-    "extra": {
-        "database": "db",
-        "account": "airflow",
-        "warehouse": "af_wh",
-        "region": "af_region",
-        "role": "af_role",
-    },
-}
 
 
 class TestPytestSnowflakeHookAsync:
     @pytest.mark.parametrize(
-        "sql,query_ids",
+        "sql,expected_sql,expected_query_ids",
         [
-            ("select * from table", ["uuid", "uuid"]),
-            ("select * from table;select * from table2", ["uuid", "uuid", "uuid2", "uuid2"]),
-            (["select * from table;"], ["uuid", "uuid"]),
-            (["select * from table;", "select * from table2;"], ["uuid", "uuid", "uuid2", "uuid2"]),
+            ("select * from table", ["select * from table"], ["uuid"]),
+            (
+                "select * from table;select * from table2",
+                ["select * from table;", "select * from table2"],
+                ["uuid1", "uuid2"],
+            ),
+            (["select * from table;"], ["select * from table;"], ["uuid1"]),
+            (
+                ["select * from table;", "select * from table2;"],
+                ["select * from table;", "select * from table2;"],
+                ["uuid1", "uuid2"],
+            ),
         ],
     )
-    def test_run_storing_query_ids(self, sql, query_ids):
-        with unittest.mock.patch.dict(
-            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ), unittest.mock.patch("airflow.providers.snowflake.hooks.snowflake.connector") as mock_connector:
-            hook = SnowflakeHookAsync()
-            hook.get_conn = mock_connector.connect.return_value
-            cur = mock.MagicMock(rowcount=0)
-            hook.get_conn.cursor.return_value = cur
-            type(cur).sfqid = mock.PropertyMock(side_effect=query_ids)
-            mock_params = {"mock_param": "mock_param"}
-            q_ids = hook.run(sql=sql, parameters=mock_params)
-            print(q_ids)
-            print(query_ids[::2])
-            sql_list = sql if isinstance(sql, list) else re.findall(".*?[;]", sql)
-            print(sql_list)
-            expected = [mock.call(query) for query in sql_list]
-            print(expected)
-            cur.execute.assert_has_calls(expected)
-            cur.close.assert_called()
+    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    def test_run_storing_query_ids(self, mock_conn, sql, expected_sql, expected_query_ids):
+        hook = SnowflakeHookAsync()
+        conn = mock_conn.return_value
+        cur = mock.MagicMock(rowcount=0)
+        conn.cursor.return_value = cur
+        type(cur).sfqid = mock.PropertyMock(side_effect=expected_query_ids)
+        mock_params = {"mock_param": "mock_param"}
+        hook.run(sql, parameters=mock_params)
 
-    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
-    def test_connection_success(self, mock_run):
-        with unittest.mock.patch.dict(
-            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ):
-            hook = SnowflakeHookAsync()
-            mock_run.return_value = [{"1": 1}]
-            status, msg = hook.test_connection()
-            assert status is True
-            assert msg == "Connection successfully tested"
-            mock_run.assert_called_once_with(sql="select 1")
-
-    @mock.patch(
-        "astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.run",
-        side_effect=Exception("Connection Errors"),
-    )
-    def test_connection_failure(self, mock_run):
-        with unittest.mock.patch.dict(
-            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ):
-            hook = SnowflakeHookAsync()
-            status, msg = hook.test_connection()
-            assert status is False
-            assert msg == "Connection Errors"
-            mock_run.assert_called_once_with(sql="select 1")
+        cur.execute_async.assert_has_calls([mock.call(query, mock_params) for query in expected_sql])
+        assert hook.query_ids == expected_query_ids
+        cur.close.assert_called()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "query_ids",
+        "query_ids, expected_state, expected_result",
         [
-            (["uuid", "uuid"]),
+            (["uuid"], QueryStatus.SUCCESS, {"status": "success", "query_ids": ["uuid"]}),
+            (
+                ["uuid1"],
+                QueryStatus.ABORTING,
+                {
+                    "status": "error",
+                    "type": "ABORTING",
+                    "message": "The query is in the process of being aborted on the server side.",
+                    "query_id": "uuid1",
+                },
+            ),
+            (
+                ["uuid1"],
+                QueryStatus.FAILED_WITH_ERROR,
+                {
+                    "status": "error",
+                    "type": "FAILED_WITH_ERROR",
+                    "message": "The query finished unsuccessfully.",
+                    "query_id": "uuid1",
+                },
+            ),
         ],
     )
-    async def test_get_query_status(self, query_ids):
-        with unittest.mock.patch.dict(
-            "os.environ", AIRFLOW_CONN_SNOWFLAKE_DEFAULT=Connection(**BASE_CONNECTION_KWARGS).get_uri()
-        ), unittest.mock.patch("airflow.providers.snowflake.hooks.snowflake.connector") as mock_connector:
-            hook = SnowflakeHookAsync()
-            hook.get_conn = mock_connector.connect.return_value
-            status = await hook.get_query_status(query_ids=query_ids)
-            print(status)
-            assert status is True
+    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    async def test_get_query_status(self, mock_conn, query_ids, expected_state, expected_result):
+        hook = SnowflakeHookAsync()
+        conn = mock_conn.return_value
+        conn.is_still_running.return_value = False
+        conn.get_query_status.return_value = expected_state
+        result = await hook.get_query_status(query_ids=query_ids)
+        print("Test case")
+        assert result == expected_result
