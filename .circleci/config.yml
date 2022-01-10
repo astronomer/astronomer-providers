@@ -14,17 +14,10 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: >
-            pip install 'git+https://github.com/astronomer/airflow.git@v2-2-2'
-            && pip install 'apache-airflow-providers-databricks==2.0.2'
-            && pip install 'apache-airflow-providers-snowflake'
-            && pip install 'apache-airflow-providers-postgres'
-            && pip install coverage
-            && pip install -e .[tests]
+          command: pip install -U -r scripts/ci/requirements.txt && pip install .[tests]
       - run:
           name: Static checks
-          command: |
-            pre-commit run --all-files || { git --no-pager diff && false ; }
+          command: pre-commit run --all-files || { git --no-pager diff && false ; }
       - run:
           name: Run tests
           command: |

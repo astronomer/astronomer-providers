@@ -1,0 +1,6 @@
+apache-airflow==2.2
+apache-airflow-providers-cncf-kubernetes>=3
+apache-airflow-providers-databricks==2.0.2
+apache-airflow-providers-snowflake
+apache-airflow-providers-postgres
+coverage
