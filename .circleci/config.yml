@@ -31,4 +31,6 @@ jobs:
             coverage report
             coverage html
       - store_artifacts:
-              path: htmlcov
+          path: htmlcov
+      - store_test_results:
+          path: test-report    
