@@ -1,31 +1,34 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 21.12b0
     hooks:
       - id: black
         args: ["--target-version=py37", "--line-length=110"]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.7.0
+    rev: 5.10.1
     hooks:
       - id: isort
         args: ["--profile=black"]
 
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.2
     hooks:
       - id: flake8
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
       - id: mixed-line-ending
+      - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.910
+    rev: v0.931
     hooks:
       - id: mypy
         exclude: ^tests/

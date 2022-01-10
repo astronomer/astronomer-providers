@@ -34,4 +34,4 @@ jobs:
       - store_artifacts:
           path: htmlcov
       - store_test_results:
-          path: test-report    
+          path: test-report

@@ -14,7 +14,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         super().__init__(**kwargs)
 
     def get_db_hook(self) -> SnowflakeHookAsync:
-        """Get the Snowflake Hook """
+        """Get the Snowflake Hook"""
         return get_db_hook(self)
 
     def execute(self, context):
