@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  codecov: codecov/codecov@3.2.2
+
 workflows:
   test:
     jobs:
@@ -19,7 +22,6 @@ jobs:
             && pip install 'apache-airflow-providers-databricks==2.0.2'
             && pip install 'apache-airflow-providers-snowflake'
             && pip install 'apache-airflow-providers-postgres'
-            && pip install coverage
             && pip install -e .[tests]
       - run:
           name: Static checks
@@ -28,10 +30,8 @@ jobs:
       - run:
           name: Run tests
           command: |
-            coverage run -m pytest --junit-xml=test-report/report.xml
-            coverage report
-            coverage html
-      - store_artifacts:
-          path: htmlcov
+            pytest --cov=./ --cov-report=xml --junit-xml=test-report/report.xml
+      - codecov/upload:
+          file: coverage.xml
       - store_test_results:
           path: test-report    
