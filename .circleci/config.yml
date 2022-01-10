@@ -19,6 +19,7 @@ jobs:
             && pip install 'apache-airflow-providers-databricks==2.0.2'
             && pip install 'apache-airflow-providers-snowflake'
             && pip install 'apache-airflow-providers-postgres'
+            && pip install coverage
             && pip install -e .[tests]
       - run:
           name: Static checks
@@ -26,4 +27,11 @@ jobs:
             pre-commit run --all-files || { git --no-pager diff && false ; }
       - run:
           name: Run tests
-          command: pytest --junit-xml=test-report/report.xml
+          command: |
+            coverage run -m pytest --junit-xml=test-report/report.xml
+            coverage report
+            coverage html
+      - store_artifacts:
+          path: htmlcov
+      - store_test_results:
+          path: test-report    
