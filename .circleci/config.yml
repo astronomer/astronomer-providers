@@ -17,6 +17,7 @@ jobs:
           command: >
             pip install 'git+https://github.com/astronomer/airflow.git@v2-2-2'
             && pip install 'apache-airflow-providers-databricks==2.0.2'
+            && pip install 'apache-airflow-providers-snowflake'
             && pip install 'apache-airflow-providers-postgres'
             && pip install -e .[tests]
       - run:
