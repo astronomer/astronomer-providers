@@ -8,6 +8,8 @@ from astronomer_operators.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
 
+TRIGGER_MODULE = "astronomer_operators.cncf.kubernetes.triggers.wait_container"
+
 
 def test_serialize():
     """
@@ -49,6 +51,7 @@ def get_read_pod_mock(states):
 )
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_timeout(load_kube_config):
+    """Verify that PodLaunchTimeoutException is yielded when timeout reached"""
     trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
 
     assert await trigger.run().__anext__() == TriggerEvent(
@@ -61,15 +64,34 @@ async def test_pending_timeout(load_kube_config):
 
 
 @pytest.mark.asyncio
+@mock.patch("kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod")
+@mock.patch("kubernetes_asyncio.config.load_kube_config")
+async def test_other_exception(load_kube_config, read_mock):
+    """Verify that any exception is emitted as an event"""
+    read_mock.side_effect = [NotImplementedError("testing")]
+    trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
+
+    assert await trigger.run().__anext__() == TriggerEvent(
+        {
+            "status": "error",
+            "error_type": "NotImplementedError",
+            "description": "testing",
+        }
+    )
+
+
+@pytest.mark.asyncio
 @mock.patch(
     "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
     new=get_read_pod_mock(["Pending", "Succeeded"]),
 )
-@mock.patch(
-    "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_container_completion"
-)
+@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_succeeded(load_kube_config, wait_completion):
+    """
+    When we get pod phase Succeeded we should immediately emit done event
+    and not call wait for pod completion.
+    """
     trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
 
     assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
@@ -81,11 +103,13 @@ async def test_pending_succeeded(load_kube_config, wait_completion):
     "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
     new=get_read_pod_mock(["Pending", "Running"]),
 )
-@mock.patch(
-    "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_container_completion"
-)
+@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_running(load_kube_config, wait_completion):
+    """
+    If we get Running phase within the timeout period we should move on to wait
+    for pod completion.
+    """
     trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
 
     assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
@@ -97,11 +121,14 @@ async def test_pending_running(load_kube_config, wait_completion):
     "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
     new=get_read_pod_mock(["Failed"]),
 )
-@mock.patch(
-    "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_container_completion"
-)
+@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_failed(load_kube_config, wait_completion):
+    """
+    When pod goes straight to 'Failed' phase during 'wait pod start'
+    we should immediately send execution back to KPO.  This is not a
+    trigger error and KPO will detect and handle the pod failure.
+    """
     trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
 
     assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
