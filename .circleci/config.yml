@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            coverage run -m pytest
+            coverage run -m pytest --junit-xml=test-report/report.xml
             coverage report
             coverage html
       - store_artifacts:
