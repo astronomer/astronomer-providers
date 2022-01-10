@@ -108,12 +108,12 @@ class WaitContainerTrigger(BaseTrigger):
                 if state not in self.TERMINAL_STATES:
                     await self.wait_for_container_completion(v1)
             yield TriggerEvent({"status": "done"})
-        except PodLaunchTimeoutException as e:
+        except Exception as e:
             message = e.args and e.args[0] or ""
             yield TriggerEvent(
                 {
                     "status": "error",
-                    "error_type": "PodLaunchTimeoutException",
+                    "error_type": e.__class__.__name__,
                     "description": message,
                 }
             )
