@@ -3,10 +3,13 @@ from datetime import timedelta
 from typing import Any, Dict, Optional, Tuple
 
 from airflow.exceptions import AirflowException
-from airflow.providers.cncf.kubernetes.utils.pod_manager import container_is_running
+from airflow.providers.cncf.kubernetes.utils.pod_manager import (
+    PodPhase,
+    container_is_running,
+)
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils import timezone
-from kubernetes_asyncio import client
+from kubernetes_asyncio.client import CoreV1Api
 
 from astronomer_operators.cncf.kubernetes.hooks.kubernetes_async import (
     KubernetesHookAsync,
@@ -33,13 +36,11 @@ class WaitContainerTrigger(BaseTrigger):
     :param pod_namespace: pod namespace
     :type pod_namespace: str
     :param pending_phase_timeout: max time in seconds to wait for pod to leave pending phase
-    :type pending_phase_timeout: int
+    :type pending_phase_timeout: float
     :param poll_interval: number of seconds between reading pod state
-    :type poll_interval: int
+    :type poll_interval: float
 
     """
-
-    TERMINAL_STATES = {"Succeeded", "Failed"}
 
     def __init__(
         self,
@@ -48,8 +49,8 @@ class WaitContainerTrigger(BaseTrigger):
         container_name: Optional[str] = None,
         pod_name: Optional[str] = None,
         pod_namespace: Optional[str] = None,
-        pending_phase_timeout: Optional[int] = 120,
-        poll_interval: Optional[int] = 5,
+        pending_phase_timeout: float = 120,
+        poll_interval: float = 5,
     ):
         self.kubernetes_conn_id = kubernetes_conn_id
         self.hook_params = hook_params
@@ -76,7 +77,7 @@ class WaitContainerTrigger(BaseTrigger):
     async def get_hook(self) -> KubernetesHookAsync:
         return KubernetesHookAsync(conn_id=self.kubernetes_conn_id, **(self.hook_params or {}))
 
-    async def wait_for_pod_start(self, v1):
+    async def wait_for_pod_start(self, v1_api: CoreV1Api):
         """
         Loops until pod phase leaves ``PENDING``
         If timeout is reached, throws error.
@@ -84,36 +85,36 @@ class WaitContainerTrigger(BaseTrigger):
         start_time = timezone.utcnow()
         timeout_end = start_time + timedelta(seconds=self.pending_phase_timeout)
         while timeout_end > timezone.utcnow():
-            pod = await v1.read_namespaced_pod(self.pod_name, self.pod_namespace)
+            pod = await v1_api.read_namespaced_pod(self.pod_name, self.pod_namespace)
             if not pod.status.phase == "Pending":
                 return pod.status.phase
             await asyncio.sleep(self.poll_interval)
         raise PodLaunchTimeoutException("Pod did not leave 'Pending' phase within specified timeout")
 
-    async def wait_for_container_completion(self, v1):
+    async def wait_for_container_completion(self, v1_api: CoreV1Api):
         """Waits until container ``self.container_name`` is no longer in running state."""
         while True:
-            pod = await v1.read_namespaced_pod(self.pod_name, self.pod_namespace)
+            pod = await v1_api.read_namespaced_pod(self.pod_name, self.pod_namespace)
             if not container_is_running(pod=pod, container_name=self.container_name):
                 break
             await asyncio.sleep(self.poll_interval)
 
     async def run(self):
-        self.log.debug(f"checking {self.pod_name=}, {self.pod_namespace=}")
+        self.log.debug("Checking pod %r in namespace %r.", self.pod_name, self.pod_namespace)
         try:
             hook = await self.get_hook()
-            async with await hook.get_api_client_async() as api:
-                v1 = client.CoreV1Api(api)
-                state = await self.wait_for_pod_start(v1)
-                if state not in self.TERMINAL_STATES:
-                    await self.wait_for_container_completion(v1)
+            async with await hook.get_api_client_async() as api_client:
+                v1_api = CoreV1Api(api_client)
+                state = await self.wait_for_pod_start(v1_api)
+                if state not in PodPhase.terminal_states:
+                    await self.wait_for_container_completion(v1_api)
             yield TriggerEvent({"status": "done"})
-        except PodLaunchTimeoutException as e:
+        except Exception as e:
             message = e.args and e.args[0] or ""
             yield TriggerEvent(
                 {
                     "status": "error",
-                    "error_type": "PodLaunchTimeoutException",
+                    "error_type": e.__class__.__name__,
                     "description": message,
                 }
             )
