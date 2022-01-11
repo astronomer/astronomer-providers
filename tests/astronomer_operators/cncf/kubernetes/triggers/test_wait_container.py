@@ -8,7 +8,8 @@ from astronomer_operators.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
 
-TRIGGER_MODULE = "astronomer_operators.cncf.kubernetes.triggers.wait_container"
+TRIGGER_CLASS = "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger"
+READ_NAMESPACED_POD_PATH = "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod"
 
 
 def test_serialize():
@@ -31,24 +32,21 @@ def test_serialize():
     )
     trigger = WaitContainerTrigger(**expected_kwargs)
     classpath, actual_kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger"
+    assert classpath == TRIGGER_CLASS
     assert actual_kwargs == expected_kwargs
 
 
-def get_read_pod_mock(states):
+def get_read_pod_mock(phases_to_emit=None):
     async def mock_read_namespaced_pod(*args, **kwargs):
         event_mock = MagicMock()
-        event_mock.status.phase = states.pop(0)
+        event_mock.status.phase = phases_to_emit.pop(0)
         return event_mock
 
     return mock_read_namespaced_pod
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
-    new=get_read_pod_mock(["Pending", "Pending", "Pending", "Pending"]),
-)
+@mock.patch(READ_NAMESPACED_POD_PATH, new=get_read_pod_mock(["Pending", "Pending", "Pending", "Pending"]))
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_timeout(load_kube_config):
     """Verify that PodLaunchTimeoutException is yielded when timeout reached"""
@@ -64,7 +62,7 @@ async def test_pending_timeout(load_kube_config):
 
 
 @pytest.mark.asyncio
-@mock.patch("kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod")
+@mock.patch(READ_NAMESPACED_POD_PATH)
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_other_exception(load_kube_config, read_mock):
     """Verify that any exception is emitted as an event"""
@@ -81,11 +79,8 @@ async def test_other_exception(load_kube_config, read_mock):
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
-    new=get_read_pod_mock(["Pending", "Succeeded"]),
-)
-@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
+@mock.patch(READ_NAMESPACED_POD_PATH, new=get_read_pod_mock(["Pending", "Succeeded"]))
+@mock.patch(f"{TRIGGER_CLASS}.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_succeeded(load_kube_config, wait_completion):
     """
@@ -99,11 +94,8 @@ async def test_pending_succeeded(load_kube_config, wait_completion):
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
-    new=get_read_pod_mock(["Pending", "Running"]),
-)
-@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
+@mock.patch(READ_NAMESPACED_POD_PATH, new=get_read_pod_mock(["Pending", "Running"]))
+@mock.patch(f"{TRIGGER_CLASS}.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_pending_running(load_kube_config, wait_completion):
     """
@@ -117,11 +109,8 @@ async def test_pending_running(load_kube_config, wait_completion):
 
 
 @pytest.mark.asyncio
-@mock.patch(
-    "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod",
-    new=get_read_pod_mock(["Failed"]),
-)
-@mock.patch(f"{TRIGGER_MODULE}.WaitContainerTrigger.wait_for_container_completion")
+@mock.patch(READ_NAMESPACED_POD_PATH, new=get_read_pod_mock(["Failed"]))
+@mock.patch(f"{TRIGGER_CLASS}.wait_for_container_completion")
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 async def test_failed(load_kube_config, wait_completion):
     """
