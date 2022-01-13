@@ -7,14 +7,13 @@ from airflow import AirflowException
 from airflow.providers.databricks.hooks.databricks import RunState
 
 from astronomer_operators.databricks.triggers.databricks import DatabricksTrigger
-from tests.astronomer_operators.databricks.operators.test_databricks import (
-    CONN_ID,
-    POLLING_PERIOD_SECONDS,
-    RETRY_DELAY,
-    RETRY_LIMIT,
-    RUN_ID,
-    TASK_ID,
-)
+
+TASK_ID = "databricks_check"
+CONN_ID = "databricks_default"
+RUN_ID = "1"
+RETRY_LIMIT = 2
+RETRY_DELAY = 1.0
+POLLING_PERIOD_SECONDS = 1.0
 
 
 def test_databricks_trigger_serialization():

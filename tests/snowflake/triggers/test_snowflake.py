@@ -6,10 +6,9 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 
 from astronomer_operators.snowflake.triggers.snowflake_trigger import SnowflakeTrigger
-from tests.astronomer_operators.snowflake.operators.test_snowflake_async import (
-    POLLING_PERIOD_SECONDS,
-    TASK_ID,
-)
+
+TASK_ID = "snowflake_check"
+POLLING_PERIOD_SECONDS = 1.0
 
 
 def test_snowflake_trigger_serialization():

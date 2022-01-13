@@ -4,17 +4,17 @@ import sys
 import pytest
 from airflow.models import DagRun, TaskInstance
 from airflow.operators.dummy import DummyOperator
+from airflow.utils import timezone
 from airflow.utils.state import TaskInstanceState
 
 from astronomer_operators.core.triggers.external_task import TaskStateTrigger
-from tests.astronomer_operators.core.sensors.test_external_task import (
-    DEFAULT_DATE,
-    TEST_DAG_ID,
-    TEST_POLL_INTERVAL,
-    TEST_RUN_ID,
-    TEST_STATES,
-    TEST_TASK_ID,
-)
+
+DEFAULT_DATE = timezone.datetime(2015, 1, 1)
+TEST_DAG_ID = "unit_test_dag"
+TEST_TASK_ID = "external_task_sensor_check"
+TEST_RUN_ID = "unit_test_dag_run_id"
+TEST_STATES = ["success", "fail"]
+TEST_POLL_INTERVAL = 3.0
 
 
 @pytest.mark.skipif(
