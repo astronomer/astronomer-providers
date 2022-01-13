@@ -33,3 +33,11 @@ repos:
       - id: mypy
         exclude: ^tests/
         additional_dependencies: [types-aiofiles]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+      - id: codespell
+        name: Run codespell to check for common misspellings in files
+        language: python
+        types: [text]
