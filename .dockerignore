@@ -1,0 +1,10 @@
+.astro
+.env
+*.rst
+*.gitignore
+Makefile
+example_dags/
+dev/
+**/.mypy_cache/
+**/.pytest_cache/
+*.pyc
