@@ -93,3 +93,4 @@ class BigQueryHookAsync(BigQueryHook, GoogleBaseHook):
             print(job_client.__dict__)
             job_status_response = await job_client.get_query_results()
             print("job_status_response is", job_status_response)
+            return job_status_response
