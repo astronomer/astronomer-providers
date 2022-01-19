@@ -58,12 +58,12 @@ class BigQueryTrigger(BaseTrigger):
                 self.log.debug("Response from hook: %s", response_from_hook)
                 print(response_from_hook)
 
-                if response_from_hook["kind"]["jobComplete"]:
+                if response_from_hook["jobComplete"]:
                     yield TriggerEvent(
                         {
                             "status": "success",
                             "message": "Query completed",
-                            "api_response": response_from_hook["kind"]["rows"],
+                            "api_response": response_from_hook["rows"],
                         }
                     )
                     return
