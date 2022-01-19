@@ -73,7 +73,7 @@ class BigQueryHookAsync(BigQueryHook, GoogleBaseHook):
             print("{}: {}".format(item, value))
 
     def get_job_conn(self, project_id, job_id, s) -> Job:
-        """Returns a connection to Google Job API."""
+        """Returns a connection to Google Cloud Job API"""
         if not self._job_conn:
             with self.provide_gcp_credential_file_as_context() as conn:
                 self._job_conn = Job(job_id=job_id, project=project_id, service_file=conn, session=s)
@@ -85,7 +85,7 @@ class BigQueryHookAsync(BigQueryHook, GoogleBaseHook):
         job_id: str,
         project_id: Optional[str] = None,
     ):
-        """ Polls job status asynchronously """
+        """Polls job status asynchronously"""
         async with Session() as s:
             print("In get_job_status...")
             job_client = self.get_job_conn(project_id, job_id, s)
