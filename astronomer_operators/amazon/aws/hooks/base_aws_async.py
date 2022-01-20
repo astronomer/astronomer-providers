@@ -1,10 +1,7 @@
 import logging
-from typing import Optional, Union
 
 from aiobotocore.session import get_session
-from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook, _parse_s3_config
-from botocore.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -13,31 +10,6 @@ class AwsBaseHookAsync(AwsBaseHook):
     """
     Interacts with AWS using aiobotocore
     """
-
-    conn_name_attr = "aws_conn_id"
-    default_conn_name = "aws_default"
-    conn_type = "aws"
-    hook_name = "Amazon Web Services"
-
-    def __init__(
-        self,
-        aws_conn_id: Optional[str] = default_conn_name,
-        verify: Union[bool, str, None] = None,
-        region_name: Optional[str] = None,
-        client_type: Optional[str] = None,
-        resource_type: Optional[str] = None,
-        config: Optional[Config] = None,
-    ) -> None:
-        super().__init__()
-        self.aws_conn_id = aws_conn_id
-        self.verify = verify
-        self.client_type = client_type
-        self.resource_type = resource_type
-        self.region_name = region_name
-        self.config = config
-
-        if not (self.client_type or self.resource_type):
-            raise AirflowException("Either client_type or resource_type must be provided.")
 
     def get_client_async(self):
         # Fetch the Airflow connection object

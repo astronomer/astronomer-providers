@@ -13,6 +13,13 @@ class S3HookAsync(AwsBaseHookAsync):
     Interact with AWS S3, using the aiobotocore library.
     """
 
+    conn_type = "s3"
+    hook_name = "S3"
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs["client_type"] = "s3"
+        super().__init__(*args, **kwargs)
+
     async def check_for_key(self, key: str, bucket_name: Optional[str] = None) -> bool:
         """
         Checks if a key exists in a bucket asynchronously

@@ -44,7 +44,6 @@ class S3Trigger(BaseTrigger):
         Make an asynchronous connection using S3HookAsync.
         """
         hook = self._get_async_hook()
-
         while True:
             self.log.info("Poking for key : s3://%s/%s", self.bucket_name, self.bucket_key)
             if self.wildcard_match:
@@ -58,4 +57,6 @@ class S3Trigger(BaseTrigger):
                 return
 
     def _get_async_hook(self) -> S3HookAsync:
-        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
+        return S3HookAsync(
+            aws_conn_id=self.aws_conn_id, verify=self.verify, client_type="s3", resource_type="s3"
+        )
