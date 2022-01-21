@@ -23,10 +23,9 @@ import os
 from datetime import datetime
 
 from airflow import models
-from airflow.operators.bash import BashOperator
 
 from astronomer_operators.google.operators.bigquery_async import (
-    BigQueryGetDataOperatorAsync,
+    BigQueryInsertJobOperatorAsync,
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -34,8 +33,10 @@ DATASET_NAME = os.environ.get("GCP_BIGQUERY_DATASET_NAME", "phani_dataset")
 # LOCATION = "southamerica-east1"
 LOCATION = "us"
 
+
 TABLE_1 = "phani_table2"
 # TABLE_2 = "table2"
+TABLE_3 = "phani_table3"
 
 SCHEMA = [
     # {"name": "x", "type": "INTEGER", "mode": "NULLABLE"},
@@ -52,13 +53,16 @@ SCHEMA = [
 locations = [None, LOCATION]
 for index, location in enumerate(locations, 1):
     dag_id = "example_bigquery_queries_location_async" if location else "example_bigquery_queries_async"
-    DATASET = DATASET_NAME + str(index)
+    # DATASET = DATASET_NAME + str(index)
+    DATASET = "phani_dataset"
+    TABLE = "phani_table2"
     INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
     # [START howto_operator_bigquery_query]
     INSERT_ROWS_QUERY = (
-        f"INSERT {DATASET}.{TABLE_1} VALUES "
-        f"(42, 'monthy python', '{INSERT_DATE}'), "
-        f"(42, 'fishy fish', '{INSERT_DATE}');"
+        f"INSERT phani_dataset.{TABLE_1} VALUES "
+        # f"(42, 'monthy python', '{INSERT_DATE}'), "
+        # f"(42, 'fishy fish', '{INSERT_DATE}');"
+        f"('500','600'); "
     )
     # [END howto_operator_bigquery_query]
 
@@ -99,20 +103,65 @@ for index, location in enumerate(locations, 1):
         # )
 
         # [START howto_operator_bigquery_insert_job]
-        # insert_query_job = BigQueryInsertJobOperator(
+        # insert_query_job = BigQueryInsertJobOperatorAsync(
         #     task_id="insert_query_job",
         #     configuration={
         #         "query": {
         #             "query": INSERT_ROWS_QUERY,
         #             "useLegacySql": False,
-        #         }
+        #         },
+        #
         #     },
         #     location=location,
         # )
+
+        execute_long_running_query = BigQueryInsertJobOperatorAsync(
+            task_id="execute_long_running_query",
+            configuration={
+                "query": {
+                    "query": """DECLARE success BOOL;
+DECLARE size_bytes INT64;
+DECLARE row_count INT64;
+DECLARE DELAY_TIME DATETIME;
+DECLARE WAIT STRING;
+SET success = FALSE;
+
+SELECT row_count = (SELECT row_count FROM phani_dataset.__TABLES__ WHERE table_id='ABC');
+IF row_count > 0  THEN
+    SELECT 'Table Exists!' as message, retry_count as retries;
+    SET success = TRUE;
+ELSE
+    SELECT 'Table does not exist' as message, row_count;
+    SET WAIT = 'TRUE';
+    SET DELAY_TIME = DATETIME_ADD(CURRENT_DATETIME,INTERVAL 1 MINUTE);
+    WHILE WAIT = 'TRUE' DO
+      IF (DELAY_TIME < CURRENT_DATETIME) THEN
+          SET WAIT = 'FALSE';
+      END IF;
+    END WHILE;
+END IF;""",
+                    "useLegacySql": False,
+                }
+            },
+            location=location,
+        )
+
+        # query_with_wrong_syntax = BigQueryInsertJobOperatorAsync(
+        #     task_id="query_with_wrong_syntax",
+        #     configuration={
+        #         "query": {
+        #             "query": "SELEC * FROM phani_dataset.phani_table2",
+        #             "useLegacySql": False,
+        #         },
+        #
+        #     },
+        #     location=location,
+        # )
+
         # [END howto_operator_bigquery_insert_job]
 
         # [START howto_operator_bigquery_select_job]
-        # select_query_job = BigQueryInsertJobOperator(
+        # select_query_job = BigQueryInsertJobOperatorAsync(
         #     task_id="select_query_job",
         #     configuration={
         #         "query": {
@@ -135,51 +184,51 @@ for index, location in enumerate(locations, 1):
         #     location=location,
         # )
 
-        # bigquery_execute_multi_query = BigQueryInsertJobOperator(
-        #     task_id="execute_multi_query",
-        #     configuration={
-        #         "query": {
-        #             "query": [
-        #                 f"SELECT * FROM {DATASET}.{TABLE_2}",
-        #                 f"SELECT COUNT(*) FROM {DATASET}.{TABLE_2}",
-        #             ],
-        #             "useLegacySql": False,
-        #         }
-        #     },
-        #     location=location,
-        # )
-        #
-        # execute_query_save = BigQueryInsertJobOperator(
-        #     task_id="execute_query_save",
-        #     configuration={
-        #         "query": {
-        #             "query": f"SELECT * FROM {DATASET}.{TABLE_1}",
-        #             "useLegacySql": False,
-        #             "destinationTable": {
-        #                 'projectId': PROJECT_ID,
-        #                 'datasetId': DATASET,
-        #                 'tableId': TABLE_2,
-        #             },
-        #         }
-        #     },
-        #     location=location,
-        # )
-
-        # [START howto_operator_bigquery_get_data]
-        get_data = BigQueryGetDataOperatorAsync(
-            task_id="get_data",
-            dataset_id="phani_dataset",
-            table_id=TABLE_1,
-            max_results=10,
-            selected_fields="col1,col2",
+        bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
+            task_id="execute_multi_query",
+            configuration={
+                "query": {
+                    "query": [
+                        f"SELECT * FROM {DATASET}.{TABLE}",
+                        f"SELECT COUNT(*) FROM {DATASET}.{TABLE}",
+                    ],
+                    "useLegacySql": False,
+                }
+            },
             location=location,
         )
-        # [END howto_operator_bigquery_get_data]
 
-        get_data_result = BashOperator(
-            task_id="get_data_result",
-            bash_command=f"echo {get_data.output}",
+        execute_query_save = BigQueryInsertJobOperatorAsync(
+            task_id="execute_query_save",
+            configuration={
+                "query": {
+                    "query": f"SELECT * FROM {DATASET}.{TABLE_1}",
+                    "useLegacySql": False,
+                    "destinationTable": {
+                        "projectId": PROJECT_ID,
+                        "datasetId": DATASET,
+                        "tableId": TABLE_3,
+                    },
+                }
+            },
+            location=location,
         )
+
+        # [START howto_operator_bigquery_get_data]
+        # get_data = BigQueryGetDataOperatorAsync(
+        #     task_id="get_data",
+        #     dataset_id="phani_dataset",
+        #     table_id=TABLE_1,
+        #     max_results=10,
+        #     selected_fields="col1,col2",
+        #     location=location,
+        # )
+        # # [END howto_operator_bigquery_get_data]
+        #
+        # get_data_result = BashOperator(
+        #     task_id="get_data_result",
+        #     bash_command=f"echo {get_data.output}",
+        # )
 
         # # [START howto_operator_bigquery_check]
         # check_count = BigQueryCheckOperator(
@@ -212,10 +261,11 @@ for index, location in enumerate(locations, 1):
         # [END howto_operator_bigquery_interval_check]
 
         # [create_table_1, create_table_2] >> insert_query_job >> select_query_job
-        #
+        bigquery_execute_multi_query >> execute_long_running_query
+        # insert_query_job >> execute_long_running_query >> select_query_job
         # insert_query_job >> execute_insert_query
         # execute_insert_query >> get_data >> get_data_result >> delete_dataset
-        get_data
+        # get_data
         # execute_insert_query >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
         # execute_insert_query >> [check_count, check_value, check_interval] >> delete_dataset
 
