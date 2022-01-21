@@ -166,16 +166,14 @@ services:
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html#before-you-begin"
           echo
         fi
-        mkdir -p /sources/logs /sources/dags /sources/plugins
         exec /entrypoint bash -c "
           airflow db upgrade && \
           airflow users create -r Admin -u admin -e admin -f admin -l admin -p admin && \
+          airflow connections import /usr/local/airflow/astronomer_operators/dev/connections.yaml || true && \
           airflow version"
     # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
-    volumes:
-      - .:/sources
 
   flower:
     <<: *airflow-common
