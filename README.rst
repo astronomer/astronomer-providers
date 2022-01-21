@@ -14,6 +14,7 @@ Run the following commands from the root of the repository:
 - ``make clean`` - To remove all the containers along with volumes
 - ``make help`` - To view the available commands
 - ``make build-run`` - To build the docker image and then run containers
+- ``make restart`` - To restart all the containers
 - ``make run-tests`` - Run CI tests
 - ``make run-static-checks`` - Run CI static code checks
 
