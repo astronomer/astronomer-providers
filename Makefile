@@ -1,4 +1,4 @@
-.PHONY: dev clean stop build-run help
+.PHONY: dev clean stop build-run restart restart-all run-tests run-static-checks help
 
 dev: ## Create a development Environment using `docker-compose` file.
 	docker-compose -f dev/docker-compose.yaml up -d
@@ -15,6 +15,12 @@ clean: ## Remove all the containers along with volumes
 
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
+
+restart: ## Restart Triggerer & Scheduler container
+	docker-compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler
+
+restart-all: ## Restart all the containers
+	docker-compose -f dev/docker-compose.yaml restart
 
 run-tests: ## Run CI tests
 	docker build -f scripts/ci/Dockerfile . -t astronomer-operators-ci
