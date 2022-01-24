@@ -66,3 +66,47 @@ class RedshiftClusterTrigger(BaseTrigger):
                         raise AirflowException(error_message)
             except AirflowException:
                 await asyncio.sleep(self.polling_period_seconds)
+
+
+class RedshiftClusterSensorTrigger(BaseTrigger):
+    def __init__(
+        self,
+        task_id: str,
+        aws_conn_id: str,
+        cluster_identifier: str,
+        target_status: str,
+        polling_period_seconds: float,
+    ):
+        super().__init__()
+        self.task_id = task_id
+        self.aws_conn_id = aws_conn_id
+        self.cluster_identifier = cluster_identifier
+        self.target_status = target_status
+        self.polling_period_seconds = polling_period_seconds
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Serializes RedshiftClusterSensorTrigger arguments and classpath.
+        """
+        return (
+            "astronomer_operators.amazon.aws.triggers.redshift_cluster.RedshiftClusterSensorTrigger",
+            {
+                "task_id": self.task_id,
+                "aws_conn_id": self.aws_conn_id,
+                "cluster_identifier": self.cluster_identifier,
+                "target_status": self.target_status,
+                "polling_period_seconds": self.polling_period_seconds,
+            },
+        )
+
+    async def run(self):
+        """
+        Simple async function run until the cluster status match the target status.
+        """
+        hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
+        while True:
+            res = await hook.cluster_status(self.cluster_identifier)
+            if res and res == self.target_status:
+                yield TriggerEvent(res)
+                return
+            await asyncio.sleep(self.poll_interval)
