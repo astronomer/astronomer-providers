@@ -101,5 +101,7 @@ class GCSAsyncObjectExistenceSensor(BaseSensorOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
         self.log.info("File %s was found in bucket %s.", self.object, self.bucket)
-        return None
+        return event["message"]

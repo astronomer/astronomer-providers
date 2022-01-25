@@ -20,7 +20,6 @@
 import warnings
 from typing import Optional
 
-from aiohttp import ClientSession as Session
 from gcloud.aio.storage import Storage
 # from google.cloud.exceptions import GoogleCloudError
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
@@ -49,11 +48,11 @@ class GCSAsyncHook(GoogleBaseHook):
             gcp_conn_id=gcp_conn_id,
         )
 
-    def get_conn(self, session) -> Storage:
+    def get_conn(self) -> Storage:
         """Returns a Google Cloud Storage service object."""
         # if not self._conn:
         with self.provide_gcp_credential_file_as_context() as conn:
-            self._conn = Storage(service_file=conn, session=session)
+            self._conn = Storage(service_file=conn)
         return self._conn
 
 
@@ -66,8 +65,8 @@ class GCSAsyncHook(GoogleBaseHook):
             storage bucket.
         :type object_name: str
         """
-        async with Session() as s:
-            client = self.get_conn(s)
-            bucket = client.get_bucket(bucket_name)
-            res  = await bucket.blob_exists(blob_name=object_name)
-            return res
+        client = self.get_conn()
+        bucket = client.get_bucket(bucket_name)
+        res  = await bucket.blob_exists(blob_name=object_name)
+        await client.close()
+        return res

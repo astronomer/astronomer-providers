@@ -57,16 +57,17 @@ class GCSTrigger(BaseTrigger):
         hook = self._get_async_hook()
         while True:
             try:
+                self.log.info("Checking for object %s in bucket %s", self.object_name, self.bucket)
                 res = await hook.exists(bucket_name=self.bucket,object_name=self.object_name)
                 if res:
                     yield TriggerEvent({"status": "Success", "message": res})
                     return
+                self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
                 await asyncio.sleep(self.polling_period_seconds)
-                print("slept and retry now")
             except Exception as e:
-                print(e)
-                error_message = f"failed with exception: {e}"
-                raise AirflowException(error_message)
+                self.log.exception("Exception occurred while checking with error ", e)
+                yield TriggerEvent({"status": "error", "message": e})
+                return
 
     def _get_async_hook(self) -> GCSAsyncHook:
         return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id)
