@@ -121,6 +121,9 @@ class WaitContainerTrigger(BaseTrigger):
             )
 
     def _format_exception_description(self, exc: Exception):
+        if isinstance(exc, PodLaunchTimeoutException):
+            return exc.args[0]
+
         description = f"Trigger {self.__class__.__name__} failed with exception {exc.__class__.__name__}."
         message = exc.args and exc.args[0] or ""
         if message:
