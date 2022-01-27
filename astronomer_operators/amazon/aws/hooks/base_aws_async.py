@@ -39,7 +39,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         if not (self.client_type or self.resource_type):
             raise AirflowException("Either client_type or resource_type must be provided.")
 
-    async def get_client_async(self):
+    def get_client_async(self):
         # Fetch the Airflow connection object
         connection_object = self.get_connection(self.aws_conn_id)
         extra_config = connection_object.extra_dejson
@@ -65,10 +65,9 @@ class AwsBaseHookAsync(AwsBaseHook):
             self.log.info("No credentials retrieved from Connection")
 
         async_connection = get_session()
-        async with async_connection.create_client(
+        return async_connection.create_client(
             self.resource_type,
             region_name=self.region_name,
             aws_secret_access_key=aws_secret_access_key,
             aws_access_key_id=aws_access_key_id,
-        ) as client:
-            return client
+        )

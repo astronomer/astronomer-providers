@@ -23,11 +23,11 @@ class S3HookAsync(AwsBaseHookAsync):
         :return: True if the key exists and False if not.
         :rtype: bool
         """
-        async_connection = await self.get_client_async()
 
         try:
-            await async_connection.head_object(Bucket=bucket_name, Key=key)
-            return True
+            async with self.get_client_async() as client:
+                await client.head_object(Bucket=bucket_name, Key=key)
+                return True
         except ClientError as e:
             if e.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 return False
