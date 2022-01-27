@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class AwsBaseHookAsync(AwsBaseHook):
     """
-    Interacts with AWS using aiobotocore
+    Interacts with AWS using aiobotocore asynchronously
     """
 
     def get_client_async(self):
