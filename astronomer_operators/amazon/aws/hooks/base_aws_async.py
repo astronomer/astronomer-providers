@@ -2,6 +2,7 @@ import logging
 
 from aiobotocore.session import get_session
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook, _parse_s3_config
+from asgiref.sync import sync_to_async
 
 log = logging.getLogger(__name__)
 
@@ -11,9 +12,9 @@ class AwsBaseHookAsync(AwsBaseHook):
     Interacts with AWS using aiobotocore asynchronously
     """
 
-    def get_client_async(self):
+    async def get_client_async(self):
         # Fetch the Airflow connection object
-        connection_object = self.get_connection(self.aws_conn_id)
+        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
         extra_config = connection_object.extra_dejson
 
         aws_access_key_id = None
@@ -27,7 +28,7 @@ class AwsBaseHookAsync(AwsBaseHook):
             aws_secret_access_key = extra_config["aws_secret_access_key"]
             self.log.info("Credentials retrieved from extra_config")
         elif "s3_config_file" in extra_config:
-            aws_access_key_id, aws_secret_access_key = _parse_s3_config(
+            aws_access_key_id, aws_secret_access_key = await sync_to_async(_parse_s3_config)(
                 extra_config["s3_config_file"],
                 extra_config.get("s3_config_format"),
                 extra_config.get("profile"),
