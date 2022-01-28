@@ -3,13 +3,12 @@ import logging
 from typing import Any, Dict, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-from airflow.exceptions import AirflowException
 from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
 
 log = logging.getLogger(__name__)
 
 
-class GCSTrigger(BaseTrigger):
+class GCSBlobTrigger(BaseTrigger):
     """
     A trigger that fires and it finds the requested file or folder present in the given bucket.
 
@@ -38,10 +37,10 @@ class GCSTrigger(BaseTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Serializes GCSTrigger arguments and classpath.
+        Serializes GCSBlobTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.google.cloud.triggers.gcs.GCSTrigger",
+            "astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger",
             {
                 "bucket": self.bucket,
                 "object_name": self.object_name,
@@ -57,17 +56,29 @@ class GCSTrigger(BaseTrigger):
         hook = self._get_async_hook()
         while True:
             try:
-                self.log.info("Checking for object %s in bucket %s", self.object_name, self.bucket)
-                res = await hook.exists(bucket_name=self.bucket,object_name=self.object_name)
-                if res:
-                    yield TriggerEvent({"status": "Success", "message": res})
-                    return
-                self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
-                await asyncio.sleep(self.polling_period_seconds)
+                res = await self._exists(hook=hook,bucket_name=self.bucket,object_name=self.object_name)
+                if not res:
+                    await asyncio.sleep(self.polling_period_seconds)
+                yield TriggerEvent({"status": "Success", "message": res})
             except Exception as e:
-                self.log.exception("Exception occurred while checking with error ", e)
                 yield TriggerEvent({"status": "error", "message": e})
-                return
 
+    
     def _get_async_hook(self) -> GCSAsyncHook:
         return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id)
+    
+    
+    async def _exists(self,hook: GCSAsyncHook ,bucket_name: str, object_name: str) -> bool:
+        """
+        Checks for the existence of a file in Google Cloud Storage.
+        :param bucket_name: The Google Cloud Storage bucket where the object is.
+        :type bucket_name: str
+        :param object_name: The name of the blob_name to check in the Google cloud
+            storage bucket.
+        :type object_name: str
+        """
+        async with hook.get_conn() as client:
+            bucket = client.get_bucket(bucket_name)
+            res  = await bucket.blob_exists(blob_name=object_name)
+            await client.close()
+            return res

@@ -50,23 +50,6 @@ class GCSAsyncHook(GoogleBaseHook):
 
     def get_conn(self) -> Storage:
         """Returns a Google Cloud Storage service object."""
-        # if not self._conn:
         with self.provide_gcp_credential_file_as_context() as conn:
             self._conn = Storage(service_file=conn)
         return self._conn
-
-
-    async def exists(self, bucket_name: str, object_name: str) -> bool:
-        """
-        Checks for the existence of a file in Google Cloud Storage.
-        :param bucket_name: The Google Cloud Storage bucket where the object is.
-        :type bucket_name: str
-        :param object_name: The name of the blob_name to check in the Google cloud
-            storage bucket.
-        :type object_name: str
-        """
-        client = self.get_conn()
-        bucket = client.get_bucket(bucket_name)
-        res  = await bucket.blob_exists(blob_name=object_name)
-        await client.close()
-        return res

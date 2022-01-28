@@ -17,15 +17,9 @@
 # under the License.
 """This module contains Google Cloud Storage sensors."""
 
-from asyncore import poll
-import os
-import warnings
-from datetime import datetime
-from typing import Callable, List, Optional, Sequence, Set, Union
 
 from airflow.exceptions import AirflowException
-from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
-from astronomer_operators.google.cloud.triggers.gcs import GCSTrigger
+from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 from airflow.sensors.base import BaseSensorOperator
 
 
@@ -83,10 +77,9 @@ class GCSAsyncObjectExistenceSensor(BaseSensorOperator):
     """
 
     def execute(self, context):
-        print("printing poll inyetval", self.polling_interval, type(self.polling_interval))
         self.defer(
             timeout=self.execution_timeout,
-            trigger=GCSTrigger(
+            trigger=GCSBlobTrigger(
                 bucket=self.bucket,
                 object_name=self.object,
                 polling_period_seconds=self.polling_interval,
