@@ -25,8 +25,7 @@ from tempfile import gettempdir
 
 from airflow import models
 
-from astronomer_operators.google.cloud.sensors.gcs import GCSAsyncObjectExistenceSensor
-# from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
+from astronomer_operators.google.cloud.sensors.gcs import GCSObjectExistenceSensorAsync
 
 START_DATE = datetime(2022, 1, 1)
 
@@ -52,7 +51,7 @@ PATH_TO_SAVED_FILE = os.environ.get(
 )
 
 # BUCKET_FILE_LOCATION = PATH_TO_UPLOAD_FILE.rpartition("/")[-1]
-BUCKET_FILE_LOCATION =  "wrong.txt"
+BUCKET_FILE_LOCATION =  "wrong1.txt"
 
 
 
@@ -64,10 +63,9 @@ with models.DAG(
     tags=['example'],
 ) as dag:
     # [START howto_sensor_object_exists_task]
-    gcs_object_exists = GCSAsyncObjectExistenceSensor(
+    gcs_object_exists = GCSObjectExistenceSensorAsync(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
-        mode='poke',
         task_id="gcs_object_exists_task",
         google_cloud_conn_id=CONNECTION_ID,
     )

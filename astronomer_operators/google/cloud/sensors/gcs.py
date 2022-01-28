@@ -20,10 +20,10 @@
 
 from airflow.exceptions import AirflowException
 from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
-from airflow.sensors.base import BaseSensorOperator
+from airflow.models.baseoperator import BaseOperator
 
 
-class GCSAsyncObjectExistenceSensor(BaseSensorOperator):
+class GCSObjectExistenceSensorAsync(BaseOperator):
     # """
     # Checks for the existence of a file in Google Cloud Storage.
     # :param bucket: The Google Cloud Storage bucket where the object is.
