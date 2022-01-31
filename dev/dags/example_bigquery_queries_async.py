@@ -173,46 +173,46 @@ END IF;""",
         # )
         # [END howto_operator_bigquery_select_job]
 
-        # execute_insert_query = BigQueryInsertJobOperator(
-        #     task_id="execute_insert_query",
+        execute_insert_query = BigQueryInsertJobOperatorAsync(
+            task_id="execute_insert_query",
+            configuration={
+                "query": {
+                    "query": INSERT_ROWS_QUERY,
+                    "useLegacySql": False,
+                }
+            },
+            location=location,
+        )
+
+        # bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
+        #     task_id="execute_multi_query",
         #     configuration={
         #         "query": {
-        #             "query": INSERT_ROWS_QUERY,
+        #             "query": [
+        #                 f"SELECT * FROM {DATASET}.{TABLE}",
+        #                 f"SELECT COUNT(*) FROM {DATASET}.{TABLE}",
+        #             ],
         #             "useLegacySql": False,
         #         }
         #     },
         #     location=location,
         # )
 
-        bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
-            task_id="execute_multi_query",
-            configuration={
-                "query": {
-                    "query": [
-                        f"SELECT * FROM {DATASET}.{TABLE}",
-                        f"SELECT COUNT(*) FROM {DATASET}.{TABLE}",
-                    ],
-                    "useLegacySql": False,
-                }
-            },
-            location=location,
-        )
-
-        execute_query_save = BigQueryInsertJobOperatorAsync(
-            task_id="execute_query_save",
-            configuration={
-                "query": {
-                    "query": f"SELECT * FROM {DATASET}.{TABLE_1}",
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": PROJECT_ID,
-                        "datasetId": DATASET,
-                        "tableId": TABLE_3,
-                    },
-                }
-            },
-            location=location,
-        )
+        # execute_query_save = BigQueryInsertJobOperatorAsync(
+        #     task_id="execute_query_save",
+        #     configuration={
+        #         "query": {
+        #             "query": f"SELECT * FROM {DATASET}.{TABLE_1}",
+        #             "useLegacySql": False,
+        #             "destinationTable": {
+        #                 "projectId": PROJECT_ID,
+        #                 "datasetId": DATASET,
+        #                 "tableId": TABLE_3,
+        #             },
+        #         }
+        #     },
+        #     location=location,
+        # )
 
         # [START howto_operator_bigquery_get_data]
         # get_data = BigQueryGetDataOperatorAsync(
@@ -261,7 +261,7 @@ END IF;""",
         # [END howto_operator_bigquery_interval_check]
 
         # [create_table_1, create_table_2] >> insert_query_job >> select_query_job
-        bigquery_execute_multi_query >> execute_long_running_query
+        execute_insert_query >> execute_long_running_query
         # insert_query_job >> execute_long_running_query >> select_query_job
         # insert_query_job >> execute_insert_query
         # execute_insert_query >> get_data >> get_data_result >> delete_dataset

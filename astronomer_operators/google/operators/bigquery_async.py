@@ -18,16 +18,12 @@
 
 
 """This module contains Google BigQueryAsync operators."""
-import enum
-import hashlib
-import json
-import re
-import uuid
-from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Set, Union
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from google.api_core.exceptions import Conflict
 
 from astronomer_operators.google.hooks.bigquery_async import BigQueryHookAsync
@@ -43,16 +39,7 @@ _DEPRECATION_MSG = (
 )
 
 
-class BigQueryUIColors(enum.Enum):
-    """Hex colors for BigQuery operators"""
-
-    CHECK = "#C0D7FF"
-    QUERY = "#A1BBFF"
-    TABLE = "#81A0FF"
-    DATASET = "#5F86FF"
-
-
-class BigQueryInsertJobOperatorAsync(BaseOperator):
+class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
     Starts a BigQuery job asynchronously, and returns job id.
     This operator works in the following way:
@@ -112,48 +99,6 @@ class BigQueryInsertJobOperatorAsync(BaseOperator):
     :type cancel_on_kill: bool
     """
 
-    template_fields: Sequence[str] = (
-        "configuration",
-        "job_id",
-        "impersonation_chain",
-    )
-    template_ext: Sequence[str] = (".json",)
-    template_fields_renderers = {"configuration": "json", "configuration.query.query": "sql"}
-    ui_color = BigQueryUIColors.QUERY.value
-
-    def __init__(
-        self,
-        configuration: Dict[str, Any],
-        project_id: Optional[str] = None,
-        location: Optional[str] = None,
-        job_id: Optional[str] = None,
-        force_rerun: bool = True,
-        reattach_states: Optional[Set[str]] = None,
-        gcp_conn_id: str = "google_cloud_default",
-        delegate_to: Optional[str] = None,
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
-        cancel_on_kill: bool = True,
-        **kwargs,
-    ) -> None:
-        super().__init__(**kwargs)
-        self.configuration = configuration
-        self.location = location
-        self.job_id = job_id
-        self.project_id = project_id
-        self.gcp_conn_id = gcp_conn_id
-        self.delegate_to = delegate_to
-        self.force_rerun = force_rerun
-        self.reattach_states: Set[str] = reattach_states or set()
-        self.impersonation_chain = impersonation_chain
-        self.cancel_on_kill = cancel_on_kill
-        self.hook: Optional[BigQueryHookAsync] = None
-
-    def prepare_template(self) -> None:
-        # If .json is passed then we have to read the file
-        if isinstance(self.configuration, str) and self.configuration.endswith(".json"):
-            with open(self.configuration) as file:
-                self.configuration = json.loads(file.read())
-
     def _submit_job(
         self,
         hook: BigQueryHookAsync,
@@ -165,27 +110,8 @@ class BigQueryInsertJobOperatorAsync(BaseOperator):
             project_id=self.project_id,
             location=self.location,
             job_id=job_id,
+            is_async=True,
         )
-
-    @staticmethod
-    def _handle_job_error(job: BigQueryJob) -> None:
-        if job.error_result:
-            raise AirflowException(f"BigQuery job {job.job_id} failed: {job.error_result}")
-
-    def _job_id(self, context):
-        if self.force_rerun:
-            hash_base = str(uuid.uuid4())
-        else:
-            hash_base = json.dumps(self.configuration, sort_keys=True)
-
-        uniqueness_suffix = hashlib.md5(hash_base.encode()).hexdigest()
-
-        if self.job_id:
-            return f"{self.job_id}_{uniqueness_suffix}"
-
-        exec_date = context["execution_date"].isoformat()
-        job_id = f"airflow_{self.dag_id}_{self.task_id}_{exec_date}_{uniqueness_suffix}"
-        return re.sub(r"[:\-+.]", "_", job_id)
 
     def execute(self, context: "Context"):
         hook = BigQueryHookAsync(
