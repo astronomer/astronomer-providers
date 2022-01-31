@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -68,14 +69,21 @@ async def test_other_exception(load_kube_config, read_mock):
     """Verify that any exception is emitted as an event"""
     read_mock.side_effect = [NotImplementedError("testing")]
     trigger = WaitContainerTrigger(pending_phase_timeout=5, poll_interval=2)
-
-    assert await trigger.run().__anext__() == TriggerEvent(
-        {
-            "status": "error",
-            "error_type": "NotImplementedError",
-            "description": "testing",
-        }
+    message = "\n".join(
+        [
+            r"Trigger WaitContainerTrigger failed with exception NotImplementedError.",
+            r"trigger exception message: testing",
+            r"trigger traceback:",
+            r"Traceback \(most recent call last\):",
+            r'  File ".+cncf\/kubernetes\/triggers\/wait_container.py\", line .+',
+        ]
     )
+    actual = await trigger.run().__anext__()
+    assert isinstance(actual, TriggerEvent)
+    assert actual.payload["status"] == "error"
+    assert actual.payload["error_type"] == "NotImplementedError"
+    description = actual.payload["description"]
+    assert re.match(message, description) is not None
 
 
 @pytest.mark.asyncio
