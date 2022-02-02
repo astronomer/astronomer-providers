@@ -2,7 +2,9 @@ import asyncio
 import logging
 from typing import Any, Dict, Tuple
 
+from aiohttp import ClientSession as Session
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+
 from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
 
 log = logging.getLogger(__name__)
@@ -56,21 +58,25 @@ class GCSBlobTrigger(BaseTrigger):
         hook = self._get_async_hook()
         while True:
             try:
-                res = await self._object_exists(hook=hook,bucket_name=self.bucket,object_name=self.object_name)
-                if res:
+                res = await self._object_exists(
+                    hook=hook, bucket_name=self.bucket, object_name=self.object_name
+                )
+                if res == "success":
                     yield TriggerEvent({"status": "Success", "message": res})
                     return
-                await asyncio.sleep(self.polling_period_seconds)
+                elif res == "pending":
+                    await asyncio.sleep(self.polling_period_seconds)
+                else:
+                    yield TriggerEvent({"status": "error", "message": res})
+                    return
             except Exception as e:
-                yield TriggerEvent({"status": "error", "message": e})
+                yield TriggerEvent({"status": "error", "message": str(e)})
                 return
 
-    
     def _get_async_hook(self) -> GCSAsyncHook:
         return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id)
-    
-    
-    async def _object_exists(self,hook: GCSAsyncHook ,bucket_name: str, object_name: str) -> bool:
+
+    async def _object_exists(self, hook: GCSAsyncHook, bucket_name: str, object_name: str) -> str:
         """
         Checks for the existence of a file in Google Cloud Storage.
         :param bucket_name: The Google Cloud Storage bucket where the object is.
@@ -79,7 +85,17 @@ class GCSBlobTrigger(BaseTrigger):
             storage bucket.
         :type object_name: str
         """
-        async with hook.get_conn() as client:
-            bucket = client.get_bucket(bucket_name)
-            res  = await bucket.blob_exists(blob_name=object_name)
+        async with Session() as s:
+            try:
+                client = await hook.get_storage_instance(s)
+                bucket = client.get_bucket(bucket_name)
+                object_response = await bucket.blob_exists(blob_name=object_name)
+                print("object respoonse", object_response)
+                if object_response:
+                    res = "success"
+                else:
+                    res = "pending"
+            except Exception as e:
+                self.log.exception("While checking for object encountered error....")
+                res = str(e)
             return res

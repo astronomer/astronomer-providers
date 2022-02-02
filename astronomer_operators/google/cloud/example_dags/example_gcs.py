@@ -21,16 +21,14 @@ Example Airflow DAG for Google Cloud Storage operators.
 
 import os
 from datetime import datetime
-from tempfile import gettempdir
 
 from airflow import models
 
-from astronomer_operators.google.cloud.sensors.gcs import GCSAsyncObjectExistenceSensor
-
+from astronomer_operators.google.cloud.sensors.gcs import GCSObjectExistenceSensorAsync
 
 START_DATE = datetime(2022, 1, 1)
 
-CONNECTION_ID = os.environ.get("CONNECTION_ID","my_connection")
+CONNECTION_ID = os.environ.get("CONNECTION_ID", "my_connection")
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 BUCKET_1 = os.environ.get("GCP_GCS_BUCKET_1", "test_bucket_rajath")
 # GCS_ACL_ENTITY = os.environ.get("GCS_ACL_ENTITY", "allUsers")
@@ -52,22 +50,21 @@ BUCKET_1 = os.environ.get("GCP_GCS_BUCKET_1", "test_bucket_rajath")
 # )
 
 # BUCKET_FILE_LOCATION = PATH_TO_UPLOAD_FILE.rpartition("/")[-1]
-BUCKET_FILE_LOCATION =  "test_folder/testing.txt"
-
+BUCKET_FILE_LOCATION = "test_folder/testing.txt"
 
 
 with models.DAG(
     "example_gcs_sensors",
     start_date=START_DATE,
     catchup=False,
-    schedule_interval='@once',
-    tags=['example'],
+    schedule_interval="@once",
+    tags=["example"],
 ) as dag:
     # [START howto_sensor_object_exists_task]
-    gcs_object_exists = GCSAsyncObjectExistenceSensor(
+    gcs_object_exists = GCSObjectExistenceSensorAsync(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
-        mode='poke',
+        mode="poke",
         task_id="gcs_object_exists_task",
         google_cloud_conn_id=CONNECTION_ID,
     )
@@ -76,5 +73,5 @@ with models.DAG(
     gcs_object_exists
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dag.run()

@@ -20,11 +20,12 @@
 import warnings
 from typing import Optional
 
-from gcloud.aio.storage import Storage
-# from google.cloud.exceptions import GoogleCloudError
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from asgiref.sync import sync_to_async
+from gcloud.aio.storage import Storage
 
 DEFAULT_TIMEOUT = 60
+
 
 class GCSAsyncHook(GoogleBaseHook):
     _conn = None  # type: Optional[Storage]
@@ -48,8 +49,8 @@ class GCSAsyncHook(GoogleBaseHook):
             gcp_conn_id=gcp_conn_id,
         )
 
-    def get_conn(self) -> Storage:
+    async def get_storage_instance(self, session) -> Storage:
         """Returns a Google Cloud Storage service object."""
-        with self.provide_gcp_credential_file_as_context() as conn:
-            self._conn = Storage(service_file=conn)
+        with await sync_to_async(self.provide_gcp_credential_file_as_context)() as conn:
+            self._conn = Storage(service_file=conn, session=session)
         return self._conn

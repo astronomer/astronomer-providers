@@ -19,8 +19,9 @@
 
 
 from airflow.exceptions import AirflowException
-from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 from airflow.models.baseoperator import BaseOperator
+
+from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 
 
 class GCSObjectExistenceSensorAsync(BaseOperator):
@@ -41,20 +42,16 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
     # :type object: str
     # """
 
-    template_fields = (
-        'bucket',
-        'object',
-        'google_cloud_conn_id'
-    )
-    ui_color = '#f0eee4'
+    template_fields = ("bucket", "object", "google_cloud_conn_id")
+    ui_color = "#f0eee4"
 
     def __init__(
         self,
         *,
         bucket: str,
         object: str,
-        polling_interval:float = 5.0,
-        google_cloud_conn_id: str = 'google_cloud_default',
+        polling_interval: float = 5.0,
+        google_cloud_conn_id: str = "google_cloud_default",
         **kwargs,
     ) -> None:
 
