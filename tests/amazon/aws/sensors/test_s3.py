@@ -95,10 +95,61 @@ class TestS3KeySensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    @mock.patch.object(S3KeySensorAsync, "poke")
+    def test_s3_key_sensor_execute_complete(self, key, bucket, mock_poke, mock_hook):
+        """
+        Asserts that a task is deferred and an S3Trigger will be fired
+        when the S3KeySensorAsync is executed.
+        """
+        mock_hook.check_for_key.return_value = False
+        mock_poke.return_value = False
+
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async",
+            bucket_key=key,
+            bucket_name=bucket,
+        )
+        assert sensor.execute_complete(context) is None
+
+    @parameterized.expand(
+        [
+            ["s3://bucket/key", None],
+            ["key", "bucket"],
+        ]
+    )
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    @mock.patch.object(S3KeySensorAsync, "poke")
+    def test_s3_key_sensor_execute_failure(self, key, bucket, mock_poke, mock_hook):
+        """
+        Asserts that a task is deferred and an S3Trigger will be fired
+        when the S3KeySensorAsync is executed.
+        """
+        mock_hook.check_for_key.return_value = False
+        mock_poke.return_value = False
+
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async",
+            bucket_key=key,
+            bucket_name=bucket,
+        )
+        with pytest.raises(AirflowException):
+            sensor.execute_complete(
+                context=context, event={"status": "error", "message": "test failure message"}
+            )
+
+    @parameterized.expand(
+        [
+            ["s3://bucket/key", None],
+            ["key", "bucket"],
+        ]
+    )
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     @mock.patch.object(S3KeySensorAsync, "defer")
     @mock.patch.object(S3KeySensorAsync, "poke")
     @mock.patch("astronomer_operators.amazon.aws.sensors.s3.S3Trigger")
-    def test_s3_key_sensor_async_1(self, key, bucket, mock_trigger, mock_poke, mock_defer, mock_hook):
+    def test_s3_key_sensor_async_with_mock_defer(
+        self, key, bucket, mock_trigger, mock_poke, mock_defer, mock_hook
+    ):
         """
         Asserts that a task is deferred and an S3Trigger will be fired
         when the S3KeySensorAsync is executed.
