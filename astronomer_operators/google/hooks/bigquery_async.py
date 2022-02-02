@@ -19,27 +19,48 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Optional, Union
+from functools import wraps
+from typing import Callable, Optional, TypeVar, Union, cast
 
 from aiohttp import ClientSession as Session
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from asgiref.sync import sync_to_async
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
-# from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from astronomer_operators.google.hooks.bigquery import BigQueryHook
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
 
-class BigQueryHookAsync(BigQueryHook, GoogleBaseHook):
+T = TypeVar("T", bound=Callable)
+
+
+class DelayedSuperInitMixin:
+    def __init__(self, *args, **kwargs):
+        self._init_args = args
+        self._init_kwargs = kwargs
+        self._super_init_has_run = False
+
+    @staticmethod
+    def super_init(function: T):
+        @wraps(function)
+        async def decorated(self, *args, **kwargs):
+            if not self._super_init_has_run:
+                await sync_to_async(super().__init__)(self, *self._init_args, **self._init_kwargs)
+                self._super_init_has_run = True
+            return await function(self, *args, **kwargs)
+
+        return cast(T, decorated)
+
+
+class BigQueryHookAsync(DelayedSuperInitMixin, BigQueryHook):
+    @DelayedSuperInitMixin.super_init
     async def get_job_instance(self, project_id, job_id, s) -> Job:
         """Get the specified job resource by job ID and project ID."""
         with await sync_to_async(self.provide_gcp_credential_file_as_context)() as conn:
             return Job(job_id=job_id, project=project_id, service_file=conn, session=s)
 
-    @GoogleBaseHook.fallback_to_default_project_id
+    @DelayedSuperInitMixin.super_init
     async def get_job_status(
         self,
         job_id: str,
