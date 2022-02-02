@@ -25,3 +25,10 @@ with DAG(
         wildcard_match=False,
         bucket_name="sample-bucket",
     )
+
+    check_if_wildcard_exists = S3KeySensorAsync(
+        task_id="check_if_wildcard_exists",
+        bucket_key="test*",
+        wildcard_match=True,
+        bucket_name="sample-bucket",
+    )
