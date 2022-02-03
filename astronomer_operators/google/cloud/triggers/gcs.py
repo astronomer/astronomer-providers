@@ -57,20 +57,14 @@ class GCSBlobTrigger(BaseTrigger):
         """
         hook = self._get_async_hook()
         while True:
-            try:
-                res = await self._object_exists(
-                    hook=hook, bucket_name=self.bucket, object_name=self.object_name
-                )
-                if res == "success":
-                    yield TriggerEvent({"status": "Success", "message": res})
-                    return
-                elif res == "pending":
-                    await asyncio.sleep(self.polling_period_seconds)
-                else:
-                    yield TriggerEvent({"status": "error", "message": res})
-                    return
-            except Exception as e:
-                yield TriggerEvent({"status": "error", "message": str(e)})
+            res = await self._object_exists(hook=hook, bucket_name=self.bucket, object_name=self.object_name)
+            if res == "success":
+                yield TriggerEvent({"status": "success", "message": res})
+                return
+            elif res == "pending":
+                await asyncio.sleep(self.polling_period_seconds)
+            else:
+                yield TriggerEvent({"status": "error", "message": res})
                 return
 
     def _get_async_hook(self) -> GCSAsyncHook:
@@ -90,7 +84,6 @@ class GCSBlobTrigger(BaseTrigger):
                 client = await hook.get_storage_instance(s)
                 bucket = client.get_bucket(bucket_name)
                 object_response = await bucket.blob_exists(blob_name=object_name)
-                print("object respoonse", object_response)
                 if object_response:
                     res = "success"
                 else:

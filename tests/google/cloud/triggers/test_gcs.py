@@ -17,9 +17,11 @@
 # under the License.
 
 
+import asyncio
 from unittest import mock
 
 import pytest
+from airflow.triggers.base import TriggerEvent
 
 from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 
@@ -48,7 +50,6 @@ def test_gcs_trigger_serialization():
     Asserts that the GCSBlobTrigger correctly serializes its arguments
     and classpath.
     """
-    print("running ")
     trigger = GCSBlobTrigger(
         TEST_BUCKET,
         TEST_OBJECT,
@@ -66,22 +67,104 @@ def test_gcs_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.sensors.gcs.GCSBlobTrigger")
-@mock.patch("astronomer_operators.google.cloud.sensors.gcs.GCSBlobTrigger._object_exists")
-async def test_object_exists(mock_trigger, mock_object_exists):
+@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+async def test_gcs_trigger_running(mock_object_exists):
     """
-    Asserts that a task is deferred and a GCSBlobTrigger will be fired
-    when the GCSObjectExistenceSensorAsync is executed.
+    Tests that the SnowflakeTrigger in
     """
-    mock_object_exists.return_value = True
+    mock_object_exists.return_value = "success"
     trigger = GCSBlobTrigger(
-        bucket=TEST_BUCKET,
-        object_name=TEST_OBJECT,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
-        google_cloud_conn_id=TEST_GCP_CONN_ID,
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
     )
-    trigger.run()
-    mock_trigger.assert_called()
-    mock_trigger.assert_called_once_with(
-        timeout=None, trigger=mock_trigger.return_value, method_name="execute_complete"
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is True
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
+@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+async def test_gcs_trigger_success(mock_object_exists, mock_get_conenction):
+    """
+    Tests that the SnowflakeTrigger in success case
+    """
+    mock_object_exists.return_value = "success"
+
+    trigger = GCSBlobTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
     )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is True
+    assert task.result() == TriggerEvent({"status": "success", "message": "success"})
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
+@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+async def test_gcs_trigger_exception(mock_conn, mock_get_connection):
+    """
+    Tests the SnowflkeTrigger does not fire if there is an exception.
+    """
+    mock_conn.return_value = "Test exception"
+
+    trigger = GCSBlobTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(1)
+
+    assert task.done() is True
+    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
+
+
+# @pytest.mark.asyncio
+# @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GCSAsyncHook")
+# @mock.patch("astronomer_operators.google.cloud.triggers.gcs.Session")
+# async def test_object_exists(mock_session, mock_trigger):
+#     """
+#     Asserts that a task is deferred and a GCSBlobTrigger will be fired
+#     when the GCSObjectExistenceSensorAsync is executed.
+#     """
+# trigger = GCSBlobTrigger(
+#     bucket=TEST_BUCKET,
+#     object_name=TEST_OBJECT,
+#     polling_period_seconds=TEST_POLLING_INTERVAL,
+#     google_cloud_conn_id=TEST_GCP_CONN_ID,
+# )
+# task = asyncio.create_task(trigger.run().__anext__())
+# await asyncio.sleep(0.5)
+
+# # TriggerEvent was returned
+# assert task.done() is True
+# assert task.result() == TriggerEvent({"status": "success", "message": True})
+
+# # Prevents error when task is destroyed while in "pending" state
+# asyncio.get_event_loop().stop()
+
+
+# trigger.run()
+# mock_trigger.assert_called()
+# mock_trigger.assert_called_once_with(
+#     timeout=None, trigger=mock_trigger.return_value, method_name="execute_complete"
+# )

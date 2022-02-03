@@ -17,7 +17,6 @@
 # under the License.
 
 
-import unittest
 from unittest import mock
 
 import pytest
@@ -25,30 +24,10 @@ from gcloud.aio.storage import Storage
 
 from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
 
-GCS_STRING = "astronomer_operators.google.cloud.hooks.gcs.{}"
 
-PROJECT_ID_TEST = "project-id"
-
-
-class TestGCSHook(unittest.TestCase):
-    def setUp(self):
-        with mock.patch(
-            GCS_STRING.format("GoogleBaseHook.__init__"),
-        ):
-            self.gcs_hook = GCSAsyncHook(gcp_conn_id="test")
-
-    @pytest.mark.asyncio
-    @mock.patch(
-        "astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.client_info",
-        new_callable=mock.PropertyMock,
-        return_value="CLIENT_INFO",
-    )
-    @mock.patch(GCS_STRING.format("GoogleBaseHook.get_connection"))
-    @mock.patch("gcloud.aio.storage.Storage")
-    async def test_storage_client_creation(self, mock_client, mock_client_info):
-        hook = GCSAsyncHook(gcp_conn_id="test")
-        result = await hook.get_conn()
-        mock_client.assert_called_once_with()
-        print(mock_client.assert_called_once_with())
-        mock_client_info.return_value = Storage()
-        assert mock_client_info.return_value == result
+@pytest.mark.asyncio
+@mock.patch("aiohttp.client.ClientSession")
+async def test_get_job_status(mock_session):
+    hook = GCSAsyncHook()
+    result = await hook.get_storage_instance(mock_session)
+    assert isinstance(result, Storage)
