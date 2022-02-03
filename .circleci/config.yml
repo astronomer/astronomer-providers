@@ -10,6 +10,7 @@ jobs:
     description: Test & Lint
     docker:
       - image: cimg/python:3.9
+    resource_class: large
     steps:
       - checkout
       - run:
