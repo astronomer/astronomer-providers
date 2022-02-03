@@ -24,7 +24,7 @@ def context():
     yield context
 
 
-@mock.patch("astronomer_operators.google.operators.bigquery_async.BigQueryHookAsync")
+@mock.patch("astronomer_operators.google.operators.bigquery_async.BigQueryHook")
 def test_bigquery_insert_job_operator_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryTrigger will be fired
