@@ -19,48 +19,43 @@
 """
 This module contains a BigQueryHookAsync
 """
-from functools import wraps
-from typing import Callable, Optional, TypeVar, Union, cast
+from typing import Optional, Union
 
 from aiohttp import ClientSession as Session
 from asgiref.sync import sync_to_async
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
+from hooks.base import BaseHook
 
 from astronomer_operators.google.hooks.bigquery import BigQueryHook
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
 
-T = TypeVar("T", bound=Callable)
+class BigQueryHookAsync(BaseHook):
+    def __init__(self, **kwargs):
+        self._hook_kwargs = kwargs
+        self._bigquery_hook_sync = None
 
+    async def get_bigquery_hook_sync(self):
+        """
+        Sync version of the BigQueryHook makes blocking calls in ``__init__`` so we don't inherit
+        from it but expose it here as a cached property.
+        """
+        if not self._bigquery_hook_sync:
+            self._bigquery_hook_sync = await sync_to_async(BigQueryHook)(**self._hook_kwargs)
+            print("initialized sync version of hook")
+        return self._bigquery_hook_sync
 
-class DelayedSuperInitMixin:
-    def __init__(self, *args, **kwargs):
-        self._init_args = args
-        self._init_kwargs = kwargs
-        self._super_init_has_run = False
+    async def service_file_as_context(self):
+        sync_hook = await self.get_bigquery_hook_sync()
+        return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
 
-    @staticmethod
-    def super_init(function: T):
-        @wraps(function)
-        async def decorated(self, *args, **kwargs):
-            if not self._super_init_has_run:
-                await sync_to_async(super().__init__)(self, *self._init_args, **self._init_kwargs)
-                self._super_init_has_run = True
-            return await function(self, *args, **kwargs)
-
-        return cast(T, decorated)
-
-
-class BigQueryHookAsync(DelayedSuperInitMixin, BigQueryHook):
-    @DelayedSuperInitMixin.super_init
-    async def get_job_instance(self, project_id, job_id, s) -> Job:
+    async def get_job_instance(self, project_id, job_id, session) -> Job:
         """Get the specified job resource by job ID and project ID."""
-        with await sync_to_async(self.provide_gcp_credential_file_as_context)() as conn:
-            return Job(job_id=job_id, project=project_id, service_file=conn, session=s)
+        with await self.service_file_as_context() as f:
+            return Job(job_id=job_id, project=project_id, service_file=f, session=session)
 
-    @DelayedSuperInitMixin.super_init
     async def get_job_status(
         self,
         job_id: str,
