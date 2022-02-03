@@ -22,10 +22,10 @@ This module contains a BigQueryHookAsync
 from typing import Optional, Union
 
 from aiohttp import ClientSession as Session
+from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
-from hooks.base import BaseHook
 
 from astronomer_operators.google.hooks.bigquery import BigQueryHook
 
