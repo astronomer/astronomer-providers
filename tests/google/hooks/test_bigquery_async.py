@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from gcloud.aio.bigquery import Job
 
 from astronomer_operators.google.hooks.bigquery_async import BigQueryHookAsync
 
@@ -17,6 +18,15 @@ TABLE_REFERENCE_REPR = {
     "datasetId": DATASET_ID,
     "projectId": PROJECT_ID,
 }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer_operators.google.hooks.bigquery_async.Session")
+async def test_get_job_instance(mock_session):
+    print("Entered test_get_job_instance")
+    hook = BigQueryHookAsync()
+    result = await hook.get_job_instance(project_id=PROJECT_ID, job_id=JOB_ID, session=mock_session)
+    assert isinstance(result, Job)
 
 
 @pytest.mark.asyncio
