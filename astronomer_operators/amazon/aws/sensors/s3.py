@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict
 
-from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.s3_key import S3KeySensor
 
 from astronomer_operators.amazon.aws.triggers.s3 import S3Trigger
@@ -55,7 +54,5 @@ class S3KeySensorAsync(S3KeySensor):
             )
 
     def execute_complete(self, context: Dict, event=None):  # pylint: disable=unused-argument
-        if event is not None and event.get("status") == "error":
-            raise AirflowException(event["message"])
         self.log.info("%s completed successfully.", self.task_id)
         return None
