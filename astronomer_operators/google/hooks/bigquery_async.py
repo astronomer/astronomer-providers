@@ -40,11 +40,10 @@ class BigQueryHookAsync(BaseHook):
     async def get_bigquery_hook_sync(self):
         """
         Sync version of the BigQueryHook makes blocking calls in ``__init__`` so we don't inherit
-        from it but expose it here as a cached property.
+        from it.
         """
         if not self._bigquery_hook_sync:
             self._bigquery_hook_sync = await sync_to_async(BigQueryHook)(**self._hook_kwargs)
-            print("initialized sync version of hook")
         return self._bigquery_hook_sync
 
     async def service_file_as_context(self):
