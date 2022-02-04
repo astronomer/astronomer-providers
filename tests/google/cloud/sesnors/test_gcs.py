@@ -33,12 +33,11 @@ TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_DAG_ID = "unit_tests_gcs_sensor"
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def context():
     """
     Creates an empty context.
     """
-    # context = {}
     yield
 
 
