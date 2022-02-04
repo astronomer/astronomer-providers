@@ -168,3 +168,54 @@ def test_execute_reattach(mock_hook, mock_md5):
     )
 
     job._begin.assert_called_once_with()
+
+
+@mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
+@mock.patch("astronomer_operators.google.operators.bigquery_async.BigQueryHook")
+def test_execute_force_rerun(mock_hook, mock_md5):
+    job_id = "123456"
+    hash_ = "hash"
+    real_job_id = f"{job_id}_{hash_}"
+    mock_md5.return_value.hexdigest.return_value = hash_
+
+    configuration = {
+        "query": {
+            "query": "SELECT * FROM any",
+            "useLegacySql": False,
+        }
+    }
+
+    mock_hook.return_value.insert_job.side_effect = Conflict("any")
+    job = MagicMock(
+        job_id=real_job_id,
+        error_result=False,
+        state="DONE",
+        done=lambda: False,
+    )
+    mock_hook.return_value.get_job.return_value = job
+
+    op = BigQueryInsertJobOperatorAsync(
+        task_id="insert_query_job",
+        configuration=configuration,
+        location=TEST_DATASET_LOCATION,
+        job_id=job_id,
+        project_id=TEST_GCP_PROJECT_ID,
+        reattach_states={"PENDING"},
+    )
+
+    with pytest.raises(AirflowException) as exc:
+        op.execute(context)
+
+    expected_exception_msg = (
+        f"Job with id: {real_job_id} already exists and is in {job.state} state. "
+        f"If you want to force rerun it consider setting `force_rerun=True`."
+        f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
+    )
+
+    assert str(exc.value) == expected_exception_msg
+
+    mock_hook.return_value.get_job.assert_called_once_with(
+        location=TEST_DATASET_LOCATION,
+        job_id=real_job_id,
+        project_id=TEST_GCP_PROJECT_ID,
+    )
