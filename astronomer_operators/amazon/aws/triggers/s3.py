@@ -11,7 +11,7 @@ from astronomer_operators.amazon.aws.hooks.s3 import S3HookAsync
 log = logging.getLogger(__name__)
 
 
-class S3Trigger(BaseTrigger):
+class S3KeyTrigger(BaseTrigger):
     def __init__(
         self,
         bucket_name: str,
@@ -94,10 +94,10 @@ class S3Trigger(BaseTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Serialize S3Trigger arguments and classpath.
+        Serialize S3KeyTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.amazon.aws.triggers.s3.S3Trigger",
+            "astronomer_operators.amazon.aws.triggers.s3.S3KeyTrigger",
             {
                 "bucket_name": self.bucket_name,
                 "bucket_key": self.bucket_key,

@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from airflow.providers.amazon.aws.sensors.s3_key import S3KeySensor
 
-from astronomer_operators.amazon.aws.triggers.s3 import S3Trigger
+from astronomer_operators.amazon.aws.triggers.s3 import S3KeyTrigger
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class S3KeySensorAsync(S3KeySensor):
         if not self.poke(context=context):
             self.defer(
                 timeout=self.execution_timeout,
-                trigger=S3Trigger(
+                trigger=S3KeyTrigger(
                     bucket_name=self.bucket_name,
                     bucket_key=self.bucket_key,
                     wildcard_match=self.wildcard_match,

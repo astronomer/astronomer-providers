@@ -9,7 +9,7 @@ from airflow.utils import timezone
 from parameterized import parameterized
 
 from astronomer_operators.amazon.aws.sensors.s3 import S3KeySensorAsync
-from astronomer_operators.amazon.aws.triggers.s3 import S3Trigger
+from astronomer_operators.amazon.aws.triggers.s3 import S3KeyTrigger
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
     @mock.patch.object(S3KeySensorAsync, "poke")
     def test_s3_key_sensor_async(self, key, bucket, mock_poke, mock_hook):
         """
-        Asserts that a task is deferred and an S3Trigger will be fired
+        Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -85,7 +85,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         with pytest.raises(TaskDeferred) as exc:
             sensor.execute(context)
 
-        assert isinstance(exc.value.trigger, S3Trigger), "Trigger is not a S3Trigger"
+        assert isinstance(exc.value.trigger, S3KeyTrigger), "Trigger is not a S3KeyTrigger"
 
     @parameterized.expand(
         [
@@ -97,7 +97,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
     @mock.patch.object(S3KeySensorAsync, "poke")
     def test_s3_key_sensor_execute_complete(self, key, bucket, mock_poke, mock_hook):
         """
-        Asserts that a task is deferred and an S3Trigger will be fired
+        Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -119,12 +119,12 @@ class TestS3KeySensorAsync(unittest.TestCase):
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     @mock.patch.object(S3KeySensorAsync, "defer")
     @mock.patch.object(S3KeySensorAsync, "poke")
-    @mock.patch("astronomer_operators.amazon.aws.sensors.s3.S3Trigger")
+    @mock.patch("astronomer_operators.amazon.aws.sensors.s3.S3KeyTrigger")
     def test_s3_key_sensor_async_with_mock_defer(
         self, key, bucket, mock_trigger, mock_poke, mock_defer, mock_hook
     ):
         """
-        Asserts that a task is deferred and an S3Trigger will be fired
+        Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -200,7 +200,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
     @mock.patch.object(S3KeySensorAsync, "poke")
     def test_s3_key_sensor_with_wildcard_async(self, mock_poke, mock_hook):
         """
-        Asserts that a task with wildcard=True is deferred and an S3Trigger will be fired
+        Asserts that a task with wildcard=True is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -213,4 +213,4 @@ class TestS3KeySensorAsync(unittest.TestCase):
         with pytest.raises(TaskDeferred) as exc:
             sensor.execute(context)
 
-        assert isinstance(exc.value.trigger, S3Trigger), "Trigger is not a S3Trigger"
+        assert isinstance(exc.value.trigger, S3KeyTrigger), "Trigger is not a S3KeyTrigger"
