@@ -64,7 +64,7 @@ def test_gcs_trigger_serialization():
 @mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_running(mock_object_exists, mock_get_conenction):
     """
-    Tests that the SnowflakeTrigger in
+    Tests that the GCSBlobTrigger is running
     """
     mock_object_exists.return_value = "success"
     trigger = GCSBlobTrigger(
@@ -88,7 +88,7 @@ async def test_gcs_trigger_running(mock_object_exists, mock_get_conenction):
 @mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_success(mock_object_exists, mock_get_conenction):
     """
-    Tests that the SnowflakeTrigger in success case
+    Tests that the GCSBlobTrigger is success case
     """
     mock_object_exists.return_value = "success"
 
@@ -114,7 +114,7 @@ async def test_gcs_trigger_success(mock_object_exists, mock_get_conenction):
 @mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_exception(mock_conn, mock_get_connection):
     """
-    Tests the SnowflkeTrigger does not fire if there is an exception.
+    Tests the GCSBlobTrigger does fire if there is an exception.
     """
     mock_conn.return_value = "Test exception"
 
@@ -139,8 +139,7 @@ async def test_gcs_trigger_exception(mock_conn, mock_get_connection):
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
 async def test_object_exists_exception(mock_get_connection, mock_trigger):
     """
-    Asserts that a task is deferred and a GCSBlobTrigger will be fired
-    when the GCSObjectExistenceSensorAsync is executed.
+    Tests the GCSBlobTrigger does fire if there is an exception.
     """
     mock_trigger.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
     trigger = GCSBlobTrigger(
@@ -164,8 +163,8 @@ async def test_object_exists_exception(mock_get_connection, mock_trigger):
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
 async def test_object_exists_success(mock_get_connection):
     """
-    Asserts that a task is deferred and a GCSBlobTrigger will be fired
-    when the GCSObjectExistenceSensorAsync is executed.
+    Tests to check if a partcular object in Google Cloud Storage
+    is found successfully
     """
 
     hook = mock.AsyncMock(GCSAsyncHook)
@@ -189,8 +188,8 @@ async def test_object_exists_success(mock_get_connection):
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
 async def test_object_exists_pending(mock_get_connection):
     """
-    Asserts that a task is deferred and a GCSBlobTrigger will be fired
-    when the GCSObjectExistenceSensorAsync is executed.
+    Tests to check if a partcular object in Google Cloud Storage
+    is not found
     """
 
     hook = mock.AsyncMock(GCSAsyncHook)
