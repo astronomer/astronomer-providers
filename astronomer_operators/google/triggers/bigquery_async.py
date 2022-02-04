@@ -74,7 +74,7 @@ class BigQueryTrigger(BaseTrigger):
 
             except Exception as e:
                 self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e), "api_response": None})
+                yield TriggerEvent({"status": "error", "message": str(e)})
                 return
 
     def _get_async_hook(self) -> BigQueryHookAsync:
