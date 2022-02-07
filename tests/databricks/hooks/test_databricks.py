@@ -4,10 +4,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException
+from airflow.providers.databricks.hooks import databricks
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
 )
+from packaging import version
 
 from astronomer_operators.databricks.hooks.databricks import DatabricksHookAsync
 
@@ -17,6 +19,11 @@ RUN_ID = "unit_test_run_id"
 LOGIN = "login"
 PASSWORD = "password"
 TOKEN = "token"
+databricks_api_version = "2.0"
+
+# For version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
+if version.parse(databricks.__version__) > version.parse("2.0.2"):
+    databricks_api_version = "2.1"
 
 
 @pytest.mark.asyncio
@@ -77,7 +84,7 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
+        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
         status=200,
         body='{"result":"Yay!"}',
     )
@@ -104,7 +111,7 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
+        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
         status=200,
         body='{"result":"Yay!"}',
     )
@@ -128,7 +135,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
+        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
         status=400,
     )
 
@@ -152,7 +159,7 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/2.0/jobs/runs/get?run_id=unit_test_run_id",
+        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
         status=500,
         repeat=True,
     )
@@ -180,7 +187,7 @@ async def test_do_api_call_async_post(aioresponse):
     }
 
     aioresponse.post(
-        "https://localhost/api/2.0/jobs/runs/submit",
+        "https://localhost/api/{}/jobs/runs/submit".format(databricks_api_version),
         status=202,
         body='{"result":"Yay!"}',
     )
