@@ -21,7 +21,7 @@ PASSWORD = "password"
 TOKEN = "token"
 databricks_api_version = "2.0"
 
-# For version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
+# For provider version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
 if version.parse(databricks.__version__) > version.parse("2.0.2"):
     databricks_api_version = "2.1"
 
