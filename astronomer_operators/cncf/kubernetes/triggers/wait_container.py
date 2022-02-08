@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from datetime import timedelta
 from typing import Any, Dict, Optional, Tuple
 
@@ -110,11 +111,23 @@ class WaitContainerTrigger(BaseTrigger):
                     await self.wait_for_container_completion(v1_api)
             yield TriggerEvent({"status": "done"})
         except Exception as e:
-            message = e.args and e.args[0] or ""
+            description = self._format_exception_description(e)
             yield TriggerEvent(
                 {
                     "status": "error",
                     "error_type": e.__class__.__name__,
-                    "description": message,
+                    "description": description,
                 }
             )
+
+    def _format_exception_description(self, exc: Exception):
+        if isinstance(exc, PodLaunchTimeoutException):
+            return exc.args[0]
+
+        description = f"Trigger {self.__class__.__name__} failed with exception {exc.__class__.__name__}."
+        message = exc.args and exc.args[0] or ""
+        if message:
+            description += f"\ntrigger exception message: {message}"
+        curr_traceback = traceback.format_exc()
+        description += f"\ntrigger traceback:\n{curr_traceback}"
+        return description
