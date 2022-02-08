@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException
-from airflow.providers.databricks.hooks import databricks
+from airflow.providers.databricks.hooks.databricks import __version__ as provider_version
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
