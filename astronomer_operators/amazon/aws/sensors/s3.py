@@ -54,5 +54,4 @@ class S3KeySensorAsync(S3KeySensor):
             )
 
     def execute_complete(self, context: Dict, event=None):  # pylint: disable=unused-argument
-        self.log.info("%s completed successfully.", self.task_id)
         return None
