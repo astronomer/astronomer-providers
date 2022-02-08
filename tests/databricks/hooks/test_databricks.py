@@ -25,7 +25,7 @@ api_version = "2.0"
 
 # For provider version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
 if version.parse(provider_version) > version.parse("2.0.2"):
-    databricks_api_version = "2.1"
+    api_version = "2.1"
 
 
 @pytest.mark.asyncio
@@ -86,7 +86,7 @@ async def test_do_api_call_async_get_basic_auth(caplog, aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
+        f"https://localhost/api/{api_version}/jobs/runs/get?run_id=unit_test_run_id",
         status=200,
         body='{"result":"Yay!"}',
     )
@@ -113,7 +113,7 @@ async def test_do_api_call_async_get_auth_token(caplog, aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
+        f"https://localhost/api/{api_version}/jobs/runs/get?run_id=unit_test_run_id",
         status=200,
         body='{"result":"Yay!"}',
     )
@@ -137,7 +137,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
+        f"https://localhost/api/{api_version}/jobs/runs/get?run_id=unit_test_run_id",
         status=400,
     )
 
@@ -161,7 +161,7 @@ async def test_do_api_call_async_retryable_error(aioresponse):
     params = {"run_id": RUN_ID}
 
     aioresponse.get(
-        "https://localhost/api/{}/jobs/runs/get?run_id=unit_test_run_id".format(databricks_api_version),
+        f"https://localhost/api/{api_version}/jobs/runs/get?run_id=unit_test_run_id",
         status=500,
         repeat=True,
     )
@@ -189,7 +189,7 @@ async def test_do_api_call_async_post(aioresponse):
     }
 
     aioresponse.post(
-        "https://localhost/api/{}/jobs/runs/submit".format(databricks_api_version),
+        f"https://localhost/api/{api_version}/jobs/runs/submit",
         status=202,
         body='{"result":"Yay!"}',
     )
