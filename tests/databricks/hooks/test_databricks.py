@@ -19,7 +19,7 @@ RUN_ID = "unit_test_run_id"
 LOGIN = "login"
 PASSWORD = "password"
 TOKEN = "token"
-databricks_api_version = "2.0"
+api_version = "2.0"
 
 # For provider version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
 if version.parse(provider_version) > version.parse("2.0.2"):
