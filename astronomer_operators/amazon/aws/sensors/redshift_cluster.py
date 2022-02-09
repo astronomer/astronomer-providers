@@ -1,7 +1,9 @@
 import logging
 from typing import TYPE_CHECKING, Sequence
 
-from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
+from airflow.providers.amazon.aws.sensors.redshift_cluster import (
+    AwsRedshiftClusterSensor,
+)
 
 from astronomer_operators.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class RedshiftClusterSensorAsync(RedshiftClusterSensor):
+class RedshiftClusterSensorAsync(AwsRedshiftClusterSensor):
     """
     Waits for a Redshift cluster to reach a specific status.
 

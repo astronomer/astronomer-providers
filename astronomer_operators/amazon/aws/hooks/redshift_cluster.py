@@ -26,7 +26,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         :param cluster_identifier: unique identifier of a cluster
         :type cluster_identifier: str
         """
-        async with self.get_client() as client:
+        async with await self.get_client_async() as client:
             try:
                 response = await client.describe_clusters(ClusterIdentifier=cluster_identifier)
                 print(response)
@@ -52,7 +52,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         """
         final_cluster_snapshot_identifier = final_cluster_snapshot_identifier or ""
         try:
-            async with self.get_client() as client:
+            async with await self.get_client_async() as client:
                 response = await client.delete_cluster(
                     ClusterIdentifier=cluster_identifier,
                     SkipFinalClusterSnapshot=skip_final_cluster_snapshot,
@@ -70,7 +70,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         :type cluster_identifier: str
         """
         try:
-            async with self.get_client() as client:
+            async with await self.get_client_async() as client:
                 response = client.describe_cluster_snapshots(ClusterIdentifier=cluster_identifier)
                 print(response)
                 if "Snapshots" not in response:
@@ -93,7 +93,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         :type cluster_identifier: str
         """
         try:
-            async with self.get_client() as client:
+            async with await self.get_client_async() as client:
                 response = await client.pause_cluster(ClusterIdentifier=cluster_identifier)
                 print(response)
                 return response["Clusters"][0]["ClusterStatus"] if response and response["Clusters"] else None
@@ -109,7 +109,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         :param cluster_identifier: unique identifier of a cluster
         :type cluster_identifier: str
         """
-        async with self.get_client() as client:
+        async with await self.get_client_async() as client:
             try:
                 response = await client.resume_cluster(ClusterIdentifier=cluster_identifier)
                 print(response)
