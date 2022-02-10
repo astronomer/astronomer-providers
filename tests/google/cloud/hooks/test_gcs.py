@@ -29,5 +29,5 @@ from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
 @mock.patch("aiohttp.client.ClientSession")
 async def test_get_job_status(mock_session):
     hook = GCSAsyncHook()
-    result = await hook.get_storage_instance(mock_session)
+    result = await hook.get_storage_client(mock_session)
     assert isinstance(result, Storage)

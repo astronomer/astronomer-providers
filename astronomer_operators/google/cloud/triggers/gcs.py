@@ -55,17 +55,19 @@ class GCSBlobTrigger(BaseTrigger):
         """
         Simple loop until the relevant file/folder is found.
         """
-        hook = self._get_async_hook()
-        while True:
-            res = await self._object_exists(hook=hook, bucket_name=self.bucket, object_name=self.object_name)
-            if res == "success":
-                yield TriggerEvent({"status": "success", "message": res})
-                return
-            elif res == "pending":
+        try:
+            hook = self._get_async_hook()
+            while True:
+                res = await self._object_exists(
+                    hook=hook, bucket_name=self.bucket, object_name=self.object_name
+                )
+                if res == "success":
+                    yield TriggerEvent({"status": "success", "message": res})
+                    return
                 await asyncio.sleep(self.polling_period_seconds)
-            else:
-                yield TriggerEvent({"status": "error", "message": res})
-                return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return
 
     def _get_async_hook(self) -> GCSAsyncHook:
         return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id)
@@ -80,15 +82,11 @@ class GCSBlobTrigger(BaseTrigger):
         :type object_name: str
         """
         async with Session() as s:
-            try:
-                client = await hook.get_storage_instance(s)
-                bucket = client.get_bucket(bucket_name)
-                object_response = await bucket.blob_exists(blob_name=object_name)
-                if object_response:
-                    res = "success"
-                else:
-                    res = "pending"
-            except Exception as e:
-                self.log.exception("While checking for object encountered error....")
-                res = str(e)
+            client = await hook.get_storage_client(s)
+            bucket = client.get_bucket(bucket_name)
+            object_response = await bucket.blob_exists(blob_name=object_name)
+            if object_response:
+                res = "success"
+            else:
+                res = "pending"
             return res

@@ -62,30 +62,6 @@ def test_gcs_trigger_serialization():
 @pytest.mark.asyncio
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
 @mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
-async def test_gcs_trigger_running(mock_object_exists, mock_get_conenction):
-    """
-    Tests that the GCSBlobTrigger is running
-    """
-    mock_object_exists.return_value = "success"
-    trigger = GCSBlobTrigger(
-        TEST_BUCKET,
-        TEST_OBJECT,
-        TEST_POLLING_INTERVAL,
-        TEST_GCP_CONN_ID,
-    )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
-@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_success(mock_object_exists, mock_get_conenction):
     """
     Tests that the GCSBlobTrigger is success case
@@ -110,38 +86,13 @@ async def test_gcs_trigger_success(mock_object_exists, mock_get_conenction):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
 @mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
-async def test_gcs_trigger_exception(mock_conn, mock_get_connection):
-    """
-    Tests the GCSBlobTrigger does fire if there is an exception.
-    """
-    mock_conn.return_value = "Test exception"
-
-    trigger = GCSBlobTrigger(
-        TEST_BUCKET,
-        TEST_OBJECT,
-        TEST_POLLING_INTERVAL,
-        TEST_GCP_CONN_ID,
-    )
-
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(1)
-
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GCSAsyncHook.get_storage_instance")
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
-async def test_object_exists_exception(mock_get_connection, mock_trigger):
+async def test_gcs_trigger_exception(mock_get_connection, mock_object_exists):
     """
     Tests the GCSBlobTrigger does fire if there is an exception.
     """
-    mock_trigger.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+    mock_object_exists.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
     trigger = GCSBlobTrigger(
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
@@ -160,50 +111,31 @@ async def test_object_exists_exception(mock_get_connection, mock_trigger):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "exists,response",
+    [
+        (True, "success"),
+        (False, "pending"),
+    ],
+)
 @mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
-async def test_object_exists_success(mock_get_connection):
+async def test_object_exists(mock_get_connection, exists, response):
     """
-    Tests to check if a partcular object in Google Cloud Storage
-    is found successfully
+    Tests to check if a particular object in Google Cloud Storage
+    is found or not
     """
-
     hook = mock.AsyncMock(GCSAsyncHook)
     storage = mock.AsyncMock(Storage)
-    hook.get_storage_instance.return_value = storage
+    hook.get_storage_client.return_value = storage
     bucket = mock.AsyncMock(Bucket)
     storage.get_bucket.return_value = bucket
-    bucket.blob_exists.return_value = True
+    bucket.blob_exists.return_value = exists
     trigger = GCSBlobTrigger(
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
         polling_period_seconds=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
     )
-    response = await trigger._object_exists(hook, TEST_BUCKET, TEST_OBJECT)
-    assert response == "success"
-    bucket.blob_exists.assert_called_once_with(blob_name=TEST_OBJECT)
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.gcs.GoogleBaseHook.get_connection")
-async def test_object_exists_pending(mock_get_connection):
-    """
-    Tests to check if a partcular object in Google Cloud Storage
-    is not found
-    """
-
-    hook = mock.AsyncMock(GCSAsyncHook)
-    storage = mock.AsyncMock(Storage)
-    hook.get_storage_instance.return_value = storage
-    bucket = mock.AsyncMock(Bucket)
-    storage.get_bucket.return_value = bucket
-    bucket.blob_exists.return_value = False
-    trigger = GCSBlobTrigger(
-        bucket=TEST_BUCKET,
-        object_name=TEST_OBJECT,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
-        google_cloud_conn_id=TEST_GCP_CONN_ID,
-    )
-    response = await trigger._object_exists(hook, TEST_BUCKET, TEST_OBJECT)
-    assert response == "pending"
+    res = await trigger._object_exists(hook, TEST_BUCKET, TEST_OBJECT)
+    assert res == response
     bucket.blob_exists.assert_called_once_with(blob_name=TEST_OBJECT)
