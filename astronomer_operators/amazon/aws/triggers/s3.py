@@ -32,13 +32,9 @@ class S3KeyTrigger(BaseTrigger):
         """
         Checks if a key exists in a bucket asynchronously
         :param client: aiobotocore client
-        :type client: aiobotocore.client.S3
         :param bucket: Name of the bucket in which the file is stored
-        :type bucket: str
         :param key: S3 key that will point to the file
-        :type key: str
         :return: True if the key exists and False if not.
-        :rtype: bool
         """
         try:
             await client.head_object(Bucket=bucket, Key=key)
@@ -54,13 +50,9 @@ class S3KeyTrigger(BaseTrigger):
         """
         Checks that a key matching a wildcard expression exists in a bucket asynchronously
         :param client: aiobotocore client
-        :type client: aiobotocore.client.S3
         :param bucket: the name of the bucket
-        :type bucket: str
         :param wildcard_key: the path to the key
-        :type wildcard_key: str
         :return: True if a key exists and False if not.
-        :rtype: bool
         """
         prefix = re.split(r"[\[\*\?]", wildcard_key, 1)[0]
         delimiter = ""
@@ -77,15 +69,10 @@ class S3KeyTrigger(BaseTrigger):
         """
         Checks if key exists or a key matching a wildcard expression exists in a bucket asynchronously
         :param client: aiobotocore client
-        :type client: aiobotocore.client.S3
         :param bucket: the name of the bucket
-        :type bucket: str
         :param key: S3 key that will point to the file
-        :type key: str
         :param wildcard_key: the path to the key
-        :type wildcard_key: str
         :return: True if a key exists and False if not.
-        :rtype: bool
         """
         if wildcard:
             return await self._check_wildcard_key(client, bucket, key)
