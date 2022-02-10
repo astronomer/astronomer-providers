@@ -21,7 +21,7 @@ def test_s3_key_trigger_serialization():
         "bucket_key": "s3://test_bucket/file",
         "wildcard_match": True,
         "aws_conn_id": "aws_default",
-        "verify": None,
+        "hook_params": {},
     }
 
 

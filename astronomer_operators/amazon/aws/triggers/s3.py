@@ -1,7 +1,7 @@
 import fnmatch
 import logging
 import re
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from botocore.exceptions import ClientError
@@ -18,14 +18,14 @@ class S3KeyTrigger(BaseTrigger):
         bucket_key: str,
         wildcard_match: bool = False,
         aws_conn_id: str = "aws_default",
-        verify: Optional[Union[str, bool]] = None,
+        **hook_params,
     ):
         super().__init__()
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
         self.aws_conn_id = aws_conn_id
-        self.verify = verify
+        self.hook_params = hook_params
 
     @staticmethod
     async def _check_exact_key(client, bucket, key) -> bool:
@@ -90,7 +90,7 @@ class S3KeyTrigger(BaseTrigger):
                 "bucket_key": self.bucket_key,
                 "wildcard_match": self.wildcard_match,
                 "aws_conn_id": self.aws_conn_id,
-                "verify": self.verify,
+                "hook_params": self.hook_params,
             },
         )
 
@@ -106,4 +106,4 @@ class S3KeyTrigger(BaseTrigger):
                     yield TriggerEvent(True)
 
     def _get_async_hook(self) -> S3HookAsync:
-        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
+        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
