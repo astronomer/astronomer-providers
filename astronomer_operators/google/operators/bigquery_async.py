@@ -27,7 +27,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from google.api_core.exceptions import Conflict
 
 from astronomer_operators.google.hooks.bigquery import BigQueryHook
-from astronomer_operators.google.triggers.bigquery_async import BigQueryTrigger
+from astronomer_operators.google.triggers.bigquery_async import BigQueryInsertJobTrigger
 
 if TYPE_CHECKING:
     from airflow.utils.context import Context
@@ -150,7 +150,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
         self.defer(
             timeout=self.execution_timeout,
-            trigger=BigQueryTrigger(
+            trigger=BigQueryInsertJobTrigger(
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
                 project_id=self.project_id,

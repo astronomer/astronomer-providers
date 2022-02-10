@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 from airflow.triggers.base import TriggerEvent
 
-from astronomer_operators.google.triggers.bigquery_async import BigQueryTrigger
+from astronomer_operators.google.triggers.bigquery_async import BigQueryInsertJobTrigger
 
 TEST_CONN_ID = "bq_default"
 # TASK_ID = "databricks_check"
@@ -22,10 +22,10 @@ POLLING_PERIOD_SECONDS = 4.0
 
 def test_bigquery_trigger_serialization():
     """
-    Asserts that the BigQueryTrigger correctly serializes its arguments
+    Asserts that the BigQueryInsertJobTrigger correctly serializes its arguments
     and classpath.
     """
-    trigger = BigQueryTrigger(
+    trigger = BigQueryInsertJobTrigger(
         TEST_CONN_ID,
         TEST_JOB_ID,
         TEST_GCP_PROJECT_ID,
@@ -34,7 +34,7 @@ def test_bigquery_trigger_serialization():
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.google.triggers.bigquery_async.BigQueryTrigger"
+    assert classpath == "astronomer_operators.google.triggers.bigquery_async.BigQueryInsertJobTrigger"
     assert kwargs == {
         "conn_id": TEST_CONN_ID,
         "job_id": TEST_JOB_ID,
@@ -49,11 +49,11 @@ def test_bigquery_trigger_serialization():
 @mock.patch("astronomer_operators.google.hooks.bigquery_async.BigQueryHookAsync.get_job_status")
 async def test_bigquery_trigger_success(mock_job_status):
     """
-    Tests the BigQueryTrigger only fires once the query execution reaches a successful state.
+    Tests the BigQueryInsertJobTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
 
-    trigger = BigQueryTrigger(
+    trigger = BigQueryInsertJobTrigger(
         TEST_CONN_ID,
         TEST_JOB_ID,
         TEST_GCP_PROJECT_ID,
@@ -76,12 +76,12 @@ async def test_bigquery_trigger_success(mock_job_status):
 @mock.patch("astronomer_operators.google.hooks.bigquery_async.BigQueryHookAsync.get_job_status")
 async def test_bigquery_trigger_running(mock_job_status, caplog):
     """
-    Tests the BigQueryTrigger does not fire while a query is still running.
+    Tests the BigQueryInsertJobTrigger does not fire while a query is still running.
     """
     mock_job_status.return_value = "pending"
     caplog.set_level(logging.INFO)
 
-    trigger = BigQueryTrigger(
+    trigger = BigQueryInsertJobTrigger(
         TEST_CONN_ID,
         TEST_JOB_ID,
         TEST_GCP_PROJECT_ID,
@@ -108,12 +108,12 @@ async def test_bigquery_trigger_running(mock_job_status, caplog):
 @mock.patch("astronomer_operators.google.hooks.bigquery_async.BigQueryHookAsync.get_job_status")
 async def test_bigquery_trigger_terminated(mock_job_status):
     """
-    Tests the BigQueryTrigger does not fire if it reaches a failed state.
+    Tests the BigQueryInsertJobTrigger does not fire if it reaches a failed state.
     """
     # Set the status to a value other than success or pending
     mock_job_status.return_value = "error"
 
-    trigger = BigQueryTrigger(
+    trigger = BigQueryInsertJobTrigger(
         TEST_CONN_ID,
         TEST_JOB_ID,
         TEST_GCP_PROJECT_ID,
@@ -138,12 +138,12 @@ async def test_bigquery_trigger_terminated(mock_job_status):
 @mock.patch("astronomer_operators.google.hooks.bigquery_async.BigQueryHookAsync.get_job_status")
 async def test_bigquery_trigger_exception(mock_job_status, caplog):
     """
-    Tests the BigqueryTrigger does not fire if there is an exception.
+    Tests the BigQueryInsertJobTrigger does not fire if there is an exception.
     """
     mock_job_status.side_effect = Exception("Test exception")
     caplog.set_level(logging.DEBUG)
 
-    trigger = BigQueryTrigger(
+    trigger = BigQueryInsertJobTrigger(
         TEST_CONN_ID,
         TEST_JOB_ID,
         TEST_GCP_PROJECT_ID,

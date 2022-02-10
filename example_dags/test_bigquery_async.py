@@ -52,17 +52,15 @@ location = LOCATION
 dag_id = "example_async_bigquery_insert_job"
 DATASET = DATASET_NAME
 INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
-# [START howto_operator_bigquery_query]
 INSERT_ROWS_QUERY = (
     f"INSERT {DATASET}.{TABLE_1} VALUES "
     f"(42, 'monthy python', '{INSERT_DATE}'), "
     f"(42, 'fishy fish', '{INSERT_DATE}');"
 )
-# [END howto_operator_bigquery_query]
 
 with models.DAG(
     dag_id,
-    schedule_interval="@once",  # Override to match your needs
+    schedule_interval="@once",
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=["example"],
@@ -96,7 +94,6 @@ with models.DAG(
         task_id="delete_dataset", dataset_id=DATASET, delete_contents=True
     )
 
-    # [START howto_operator_bigquery_insert_job]
     insert_query_job = BigQueryInsertJobOperatorAsync(
         task_id="insert_query_job",
         configuration={
@@ -107,9 +104,7 @@ with models.DAG(
         },
         location=location,
     )
-    # [END howto_operator_bigquery_insert_job]
 
-    # [START howto_operator_bigquery_select_job]
     select_query_job = BigQueryInsertJobOperatorAsync(
         task_id="select_query_job",
         configuration={
@@ -120,24 +115,12 @@ with models.DAG(
         },
         location=location,
     )
-    # [END howto_operator_bigquery_select_job]
-
-    execute_insert_query = BigQueryInsertJobOperatorAsync(
-        task_id="execute_insert_query",
-        configuration={
-            "query": {
-                "query": INSERT_ROWS_QUERY,
-                "useLegacySql": False,
-            }
-        },
-        location=location,
-    )
 
     # [START howto_operator_bigquery_value_check]
     check_value = BigQueryValueCheckOperator(
         task_id="check_value",
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
-        pass_value=4,
+        pass_value=2,
         use_legacy_sql=False,
         location=location,
     )
@@ -205,10 +188,7 @@ with models.DAG(
     )
 
     [create_table_1, create_table_2] >> insert_query_job >> select_query_job
-
-    insert_query_job >> execute_insert_query
-    execute_insert_query >> delete_dataset
-    execute_insert_query >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
-    execute_insert_query >> check_value >> execute_long_running_query >> delete_dataset
+    insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
+    insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
 
 globals()[dag_id] = dag_with_locations

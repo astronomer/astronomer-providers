@@ -6,7 +6,7 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer_operators.google.hooks.bigquery_async import BigQueryHookAsync
 
 
-class BigQueryTrigger(BaseTrigger):
+class BigQueryInsertJobTrigger(BaseTrigger):
     def __init__(
         self,
         conn_id: str,
@@ -29,11 +29,11 @@ class BigQueryTrigger(BaseTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Serializes BigQueryTrigger arguments and classpath.
+        Serializes BigQueryInsertJobTrigger arguments and classpath.
         """
         print("serializing the trigger...")
         return (
-            "astronomer_operators.google.triggers.bigquery_async.BigQueryTrigger",
+            "astronomer_operators.google.triggers.bigquery_async.BigQueryInsertJobTrigger",
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,

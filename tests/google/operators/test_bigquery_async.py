@@ -10,7 +10,7 @@ from google.cloud.exceptions import Conflict
 from astronomer_operators.google.operators.bigquery_async import (
     BigQueryInsertJobOperatorAsync,
 )
-from astronomer_operators.google.triggers.bigquery_async import BigQueryTrigger
+from astronomer_operators.google.triggers.bigquery_async import BigQueryInsertJobTrigger
 
 TEST_DATASET_LOCATION = "EU"
 TEST_GCP_PROJECT_ID = "test-project"
@@ -28,7 +28,7 @@ def context():
 @mock.patch("astronomer_operators.google.operators.bigquery_async.BigQueryHook")
 def test_bigquery_insert_job_operator_async(mock_hook):
     """
-    Asserts that a task is deferred and a BigQueryTrigger will be fired
+    Asserts that a task is deferred and a BigQueryInsertJobTrigger will be fired
     when the BigQueryInsertJobOperatorAsync is executed.
     """
     job_id = "123456"
@@ -54,7 +54,9 @@ def test_bigquery_insert_job_operator_async(mock_hook):
     with pytest.raises(TaskDeferred) as exc:
         op.execute(context)
 
-    assert isinstance(exc.value.trigger, BigQueryTrigger), "Trigger is not a BigQueryTrigger"
+    assert isinstance(
+        exc.value.trigger, BigQueryInsertJobTrigger
+    ), "Trigger is not a BigQueryInsertJobTrigger"
 
 
 def test_bigquery_insert_job_operator_execute_failure(context):
