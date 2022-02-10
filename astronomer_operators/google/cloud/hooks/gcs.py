@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 60
 
 
 class GCSAsyncHook(GoogleBaseHook):
-    _conn = None  # type: Optional[Storage]
+    _client = None  # type: Optional[Storage]
 
     def __init__(
         self,

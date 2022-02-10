@@ -25,22 +25,17 @@ from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 
 
 class GCSObjectExistenceSensorAsync(BaseOperator):
-    # """
-    # Checks for the existence of a file in Google Cloud Storage.
-    # :param bucket: The Google Cloud Storage bucket where the object is.
-    # :type bucket: str
-    # :param object: The name of the object to check in the Google cloud
-    #     storage bucket.
-    # :type object: str
-    # :param google_cloud_conn_id: The connection ID to use when
-    #     connecting to Google Cloud Storage.
-    # :type google_cloud_conn_id: str
-    # :param bucket: The bucket name where the objects in GCS will be present
-    # :type bucket: str
-    # :param object: the object name of the file or folder present in the google
-    #       cloud storage
-    # :type object: str
-    # """
+    """
+    Checks for the existence of a file in Google Cloud Storage.
+    :param bucket: The Google Cloud Storage bucket where the object is.
+    :param object: The name of the object to check in the Google cloud
+        storage bucket.
+    :param google_cloud_conn_id: The connection ID to use when
+        connecting to Google Cloud Storage.
+    :param bucket: The bucket name where the objects in GCS will be present
+    :param object: the object name of the file or folder present in the google
+          cloud storage
+    """
 
     template_fields = ("bucket", "object", "google_cloud_conn_id")
     ui_color = "#f0eee4"

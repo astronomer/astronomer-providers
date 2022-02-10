@@ -15,13 +15,9 @@ class GCSBlobTrigger(BaseTrigger):
     A trigger that fires and it finds the requested file or folder present in the given bucket.
 
     :param bucket: the bucket in the google cloud storage where the objects are residing.
-    :type bucket: str
     :param object_name: the file or folder present in the bucket
-    :type object_name: str
     :param google_cloud_conn_id: reference to the Google Connection
-    :type google_cloud_conn_id: str
     :param polling_period_seconds: polling period in seconds to check for file/folder
-    :type polling_period_seconds: float
     """
 
     def __init__(
@@ -76,10 +72,8 @@ class GCSBlobTrigger(BaseTrigger):
         """
         Checks for the existence of a file in Google Cloud Storage.
         :param bucket_name: The Google Cloud Storage bucket where the object is.
-        :type bucket_name: str
         :param object_name: The name of the blob_name to check in the Google cloud
             storage bucket.
-        :type object_name: str
         """
         async with Session() as s:
             client = await hook.get_storage_client(s)
