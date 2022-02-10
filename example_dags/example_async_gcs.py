@@ -47,8 +47,6 @@ with models.DAG(
         google_cloud_conn_id=CONNECTION_ID,
     )
     # [END howto_sensor_object_exists_task]
-    # [START howto_sensor_object_with_prefix_exists_task]
-    gcs_object_exists
 
 if __name__ == "__main__":
     dag.run()
