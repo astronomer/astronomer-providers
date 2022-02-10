@@ -72,18 +72,6 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         self.delegate_to = delegate_to
         self.impersonation_chain = impersonation_chain
 
-    """
-    Waits for a file or folder to land in a google cloud storage using async.
-    If the path given is a directory then this sensor will only return true
-    :param google_cloud_conn_id: reference to the Google Connection
-    :type google_cloud_conn_id: str
-    :param bucket: Bucket name (relative to the base path set within the connection), can
-        be a glob.
-    :type bucket: str
-    :param object: the object name which will be looked for in the google cloud storage
-    :type object: str
-    """
-
     def execute(self, context):
         self.defer(
             timeout=self.execution_timeout,

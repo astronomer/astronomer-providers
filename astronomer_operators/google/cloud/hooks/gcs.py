@@ -27,7 +27,7 @@ from gcloud.aio.storage import Storage
 DEFAULT_TIMEOUT = 60
 
 
-class GCSAsyncHook(BaseHook):
+class GCSHookAsync(BaseHook):
     _client = None  # type: Optional[Storage]
 
     def __init__(self, **kwargs):
@@ -36,7 +36,7 @@ class GCSAsyncHook(BaseHook):
 
     async def get_gcs_hook_sync(self):
         """
-        Sync version of the GCSHook amkes blocking call in ``__init__`` so we dont
+        Sync version of the GCSHook makes blocking call in ``__init__`` so we dont
         inherit from it
         """
         if not self._gcs_hook_sync:

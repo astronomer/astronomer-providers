@@ -24,7 +24,7 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 from gcloud.aio.storage import Bucket, Storage
 
-from astronomer_operators.google.cloud.hooks.gcs import GCSAsyncHook
+from astronomer_operators.google.cloud.hooks.gcs import GCSHookAsync
 from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
 
 TEST_BUCKET = "TEST_BUCKET"
@@ -127,7 +127,7 @@ async def test_object_exists(exists, response):
     Tests to check if a particular object in Google Cloud Storage
     is found or not
     """
-    hook = mock.AsyncMock(GCSAsyncHook)
+    hook = mock.AsyncMock(GCSHookAsync)
     storage = mock.AsyncMock(Storage)
     hook.get_storage_client.return_value = storage
     bucket = mock.AsyncMock(Bucket)
