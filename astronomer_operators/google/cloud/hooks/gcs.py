@@ -17,40 +17,39 @@
 # under the License.
 #
 """This module contains a Google Cloud Storage hook."""
-import warnings
 from typing import Optional
 
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from airflow.hooks.base import BaseHook
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from asgiref.sync import sync_to_async
 from gcloud.aio.storage import Storage
 
 DEFAULT_TIMEOUT = 60
 
 
-class GCSAsyncHook(GoogleBaseHook):
+class GCSAsyncHook(BaseHook):
     _client = None  # type: Optional[Storage]
 
-    def __init__(
-        self,
-        gcp_conn_id: str = "google_cloud_default",
-        google_cloud_storage_conn_id: Optional[str] = None,
-    ) -> None:
-        # To preserve backward compatibility
-        # TODO: remove one day
-        if google_cloud_storage_conn_id:
-            warnings.warn(
-                "The google_cloud_storage_conn_id parameter has been deprecated. You should pass "
-                "the gcp_conn_id parameter.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            gcp_conn_id = google_cloud_storage_conn_id
-        super().__init__(
-            gcp_conn_id=gcp_conn_id,
-        )
+    def __init__(self, **kwargs):
+        self._hook_kwargs = kwargs
+        self._gcs_hook_sync = None
+
+    async def get_gcs_hook_sync(self):
+        """
+        Sync version of the GCSHook amkes blocking call in ``__init__`` so we dont
+        inherit from it
+        """
+        if not self._gcs_hook_sync:
+            self._gcs_hook_sync = await sync_to_async(GCSHook)(**self._hook_kwargs)
+        return self._gcs_hook_sync
+
+    async def service_file_as_context(self):
+        sync_hook = await self.get_gcs_hook_sync()
+        return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
 
     async def get_storage_client(self, session) -> Storage:
-        """Returns a Google Cloud Storage service object."""
-        with await sync_to_async(self.provide_gcp_credential_file_as_context)() as file:
-            self._client = Storage(service_file=file, session=session)
-        return self._client
+        """
+        Returns a Google Cloud Storage service object.
+        """
+        with await self.service_file_as_context() as file:
+            return Storage(service_file=file, session=session)
