@@ -26,12 +26,14 @@ class GCSBlobTrigger(BaseTrigger):
         object_name: str,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
+        hook_params: dict,
     ):
         super().__init__()
         self.bucket = bucket
         self.object_name = object_name
         self.polling_period_seconds = polling_period_seconds
         self.google_cloud_conn_id: str = google_cloud_conn_id
+        self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
@@ -44,6 +46,7 @@ class GCSBlobTrigger(BaseTrigger):
                 "object_name": self.object_name,
                 "polling_period_seconds": self.polling_period_seconds,
                 "google_cloud_conn_id": self.google_cloud_conn_id,
+                "hook_params": self.hook_params,
             },
         )
 
@@ -66,7 +69,7 @@ class GCSBlobTrigger(BaseTrigger):
             return
 
     def _get_async_hook(self) -> GCSAsyncHook:
-        return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id)
+        return GCSAsyncHook(gcp_conn_id=self.google_cloud_conn_id, **self.hook_params)
 
     async def _object_exists(self, hook: GCSAsyncHook, bucket_name: str, object_name: str) -> str:
         """

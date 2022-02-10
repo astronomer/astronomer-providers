@@ -37,6 +37,8 @@ TEST_POLLING_INTERVAL = 3.0
 
 TEST_DAG_ID = "unit_tests_gcs_sensor"
 
+TEST_HOOK_PARAMS = {}
+
 
 def test_gcs_trigger_serialization():
     """
@@ -48,6 +50,7 @@ def test_gcs_trigger_serialization():
         TEST_OBJECT,
         TEST_POLLING_INTERVAL,
         TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger"
@@ -56,6 +59,7 @@ def test_gcs_trigger_serialization():
         "object_name": TEST_OBJECT,
         "polling_period_seconds": TEST_POLLING_INTERVAL,
         "google_cloud_conn_id": TEST_GCP_CONN_ID,
+        "hook_params": TEST_HOOK_PARAMS,
     }
 
 
@@ -72,6 +76,7 @@ async def test_gcs_trigger_success(mock_object_exists):
         TEST_OBJECT,
         TEST_POLLING_INTERVAL,
         TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
@@ -96,6 +101,7 @@ async def test_gcs_trigger_exception(mock_object_exists):
         object_name=TEST_OBJECT,
         polling_period_seconds=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
@@ -132,6 +138,7 @@ async def test_object_exists(exists, response):
         object_name=TEST_OBJECT,
         polling_period_seconds=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
     )
     res = await trigger._object_exists(hook, TEST_BUCKET, TEST_OBJECT)
     assert res == response
