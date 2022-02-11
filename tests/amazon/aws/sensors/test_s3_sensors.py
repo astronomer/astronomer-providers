@@ -30,7 +30,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         """
         op = S3KeySensorAsync(task_id="s3_key_sensor", bucket_key="file_in_bucket")
         with pytest.raises(AirflowException):
-            op.poke(None)
+            op._resolve_bucket_and_key()
 
     def test_bucket_name_provided_and_bucket_key_is_s3_url(self):
         """
@@ -42,12 +42,13 @@ class TestS3KeySensorAsync(unittest.TestCase):
             task_id="s3_key_sensor", bucket_key="s3://test_bucket/file", bucket_name="test_bucket"
         )
         with pytest.raises(AirflowException):
-            op.poke(None)
+            op._resolve_bucket_and_key()
 
     @parameterized.expand([["s3://bucket/key", None, "key", "bucket"], ["key", "bucket", "key", "bucket"]])
-    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_parse_bucket_key(self, key, bucket, parsed_key, parsed_bucket, mock_hook):
-        mock_hook.return_value.check_for_key.return_value = False
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook.check_for_key")
+    def test_parse_bucket_key(self, key, bucket, parsed_key, parsed_bucket, mock_check):
+
+        mock_check.return_value = False
 
         op = S3KeySensorAsync(
             task_id="s3_key_sensor_async",
@@ -55,7 +56,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
             bucket_name=bucket,
         )
 
-        op.poke(None)
+        op._resolve_bucket_and_key()
 
         assert op.bucket_key == parsed_key
         assert op.bucket_name == parsed_bucket
@@ -67,14 +68,12 @@ class TestS3KeySensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    @mock.patch.object(S3KeySensorAsync, "poke")
-    def test_s3_key_sensor_async(self, key, bucket, mock_poke, mock_hook):
+    def test_s3_key_sensor_async(self, key, bucket, mock_hook):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
-        mock_poke.return_value = False
 
         sensor = S3KeySensorAsync(
             task_id="s3_key_sensor_async",
@@ -94,14 +93,12 @@ class TestS3KeySensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    @mock.patch.object(S3KeySensorAsync, "poke")
-    def test_s3_key_sensor_execute_complete(self, key, bucket, mock_poke, mock_hook):
+    def test_s3_key_sensor_execute_complete(self, key, bucket, mock_hook):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
-        mock_poke.return_value = False
 
         sensor = S3KeySensorAsync(
             task_id="s3_key_sensor_async",
@@ -118,17 +115,13 @@ class TestS3KeySensorAsync(unittest.TestCase):
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     @mock.patch.object(S3KeySensorAsync, "defer")
-    @mock.patch.object(S3KeySensorAsync, "poke")
     @mock.patch("astronomer_operators.amazon.aws.sensors.s3.S3KeyTrigger")
-    def test_s3_key_sensor_async_with_mock_defer(
-        self, key, bucket, mock_trigger, mock_poke, mock_defer, mock_hook
-    ):
+    def test_s3_key_sensor_async_with_mock_defer(self, key, bucket, mock_trigger, mock_defer, mock_hook):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
-        mock_poke.return_value = False
 
         sensor = S3KeySensorAsync(
             task_id="s3_key_sensor_async",
@@ -143,9 +136,9 @@ class TestS3KeySensorAsync(unittest.TestCase):
             timeout=None, trigger=mock_trigger.return_value, method_name="execute_complete"
         )
 
-    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_parse_bucket_key_from_jinja(self, mock_hook):
-        mock_hook.return_value.check_for_key.return_value = False
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook.check_for_key")
+    def test_parse_bucket_key_from_jinja(self, mock_check):
+        mock_check.return_value = False
 
         Variable.set("test_bucket_key", "s3://bucket/key")
 
@@ -154,7 +147,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         dag = DAG("test_s3_key", start_date=execution_date)
         op = S3KeySensorAsync(
             task_id="s3_key_sensor",
-            bucket_key="{{ var.value.test_bucket_key }}",
+            bucket_key="s3://bucket/key",
             bucket_name=None,
             dag=dag,
         )
@@ -164,47 +157,18 @@ class TestS3KeySensorAsync(unittest.TestCase):
         ti.dag_run = dag_run
         context = ti.get_template_context()
         ti.render_templates(context)
-
-        op.poke(None)
+        op._resolve_bucket_and_key()
 
         assert op.bucket_key == "key"
         assert op.bucket_name == "bucket"
 
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_poke(self, mock_hook):
-        op = S3KeySensorAsync(task_id="s3_key_sensor", bucket_key="s3://test_bucket/file")
-
-        mock_check_for_key = mock_hook.return_value.check_for_key
-        mock_check_for_key.return_value = False
-        assert not op.poke(None)
-        mock_check_for_key.assert_called_once_with(op.bucket_key, op.bucket_name)
-
-        mock_hook.return_value.check_for_key.return_value = True
-        assert op.poke(None)
-
-    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_poke_wildcard(self, mock_hook):
-        op = S3KeySensorAsync(
-            task_id="s3_key_sensor", bucket_key="s3://test_bucket/file", wildcard_match=True
-        )
-
-        mock_check_for_wildcard_key = mock_hook.return_value.check_for_wildcard_key
-        mock_check_for_wildcard_key.return_value = False
-        assert not op.poke(None)
-        mock_check_for_wildcard_key.assert_called_once_with(op.bucket_key, op.bucket_name)
-
-        mock_check_for_wildcard_key.return_value = True
-        assert op.poke(None)
-
-    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    @mock.patch.object(S3KeySensorAsync, "poke")
-    def test_s3_key_sensor_with_wildcard_async(self, mock_poke, mock_hook):
+    def test_s3_key_sensor_with_wildcard_async(self, mock_hook):
         """
         Asserts that a task with wildcard=True is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
-        mock_poke.return_value = False
 
         sensor = S3KeySensorAsync(
             task_id="s3_key_sensor_async", bucket_key="s3://test_bucket/file", wildcard_match=True
