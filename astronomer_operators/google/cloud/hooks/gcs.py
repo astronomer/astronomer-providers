@@ -17,35 +17,17 @@
 # under the License.
 #
 """This module contains a Google Cloud Storage hook."""
-from typing import Optional
 
-from airflow.hooks.base import BaseHook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from asgiref.sync import sync_to_async
 from gcloud.aio.storage import Storage
+
+from astronomer_operators.google.common.base_google_async import GoogleBaseHookAsync
 
 DEFAULT_TIMEOUT = 60
 
 
-class GCSHookAsync(BaseHook):
-    _client = None  # type: Optional[Storage]
-
-    def __init__(self, **kwargs):
-        self._hook_kwargs = kwargs
-        self._gcs_hook_sync = None
-
-    async def get_gcs_hook_sync(self):
-        """
-        Sync version of the GCSHook makes blocking call in ``__init__`` so we dont
-        inherit from it
-        """
-        if not self._gcs_hook_sync:
-            self._gcs_hook_sync = await sync_to_async(GCSHook)(**self._hook_kwargs)
-        return self._gcs_hook_sync
-
-    async def service_file_as_context(self):
-        sync_hook = await self.get_gcs_hook_sync()
-        return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
+class GCSHookAsync(GoogleBaseHookAsync):
+    sync_hook_class = GCSHook
 
     async def get_storage_client(self, session) -> Storage:
         """
