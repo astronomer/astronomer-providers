@@ -26,7 +26,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from google.api_core.exceptions import Conflict
 
-from astronomer_operators.google.hooks.bigquery import BigQueryHook
+from astronomer_operators.google.hooks.bigquery_async import _BigQueryHook
 from astronomer_operators.google.triggers.bigquery_async import BigQueryInsertJobTrigger
 
 if TYPE_CHECKING:
@@ -92,7 +92,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
     def _submit_job(
         self,
-        hook: BigQueryHook,
+        hook: _BigQueryHook,
         job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
@@ -101,11 +101,11 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             project_id=self.project_id,
             location=self.location,
             job_id=job_id,
-            is_async=True,
+            nowait=True,
         )
 
     def execute(self, context: "Context"):
-        hook = BigQueryHook(
+        hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
             delegate_to=self.delegate_to,
             location=self.location,
