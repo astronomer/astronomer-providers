@@ -31,7 +31,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         """
         Serializes BigQueryInsertJobTrigger arguments and classpath.
         """
-        print("serializing the trigger...")
         return (
             "astronomer_operators.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger",
             {
