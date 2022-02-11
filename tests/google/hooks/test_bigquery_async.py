@@ -3,7 +3,10 @@ from unittest import mock
 import pytest
 from gcloud.aio.bigquery import Job
 
-from astronomer_operators.google.hooks.bigquery_async import BigQueryHookAsync
+from astronomer_operators.google.hooks.bigquery_async import (
+    BigQueryHookAsync,
+    _BigQueryHook,
+)
 
 PROJECT_ID = "bq-project"
 CREDENTIALS = "bq-credentials"
@@ -18,6 +21,50 @@ TABLE_REFERENCE_REPR = {
     "datasetId": DATASET_ID,
     "projectId": PROJECT_ID,
 }
+
+
+class MockedBigQueryHook(_BigQueryHook):
+    def _get_credentials_and_project_id(self):
+        return CREDENTIALS, PROJECT_ID
+
+
+hook = MockedBigQueryHook()
+
+
+@pytest.mark.parametrize("nowait", [True, False])
+@mock.patch("astronomer_operators.google.hooks.bigquery_async.QueryJob")
+@mock.patch("astronomer_operators.google.hooks.bigquery_async._BigQueryHook.get_client")
+def test_insert_job(mock_client, mock_query_job, nowait):
+    job_conf = {
+        "query": {
+            "query": "SELECT * FROM test",
+            "useLegacySql": "False",
+        }
+    }
+    mock_query_job._JOB_TYPE = "query"
+
+    hook.insert_job(
+        configuration=job_conf, job_id=JOB_ID, project_id=PROJECT_ID, location=LOCATION, nowait=nowait
+    )
+
+    mock_client.assert_called_once_with(
+        project_id=PROJECT_ID,
+        location=LOCATION,
+    )
+
+    mock_query_job.from_api_repr.assert_called_once_with(
+        {
+            "configuration": job_conf,
+            "jobReference": {"jobId": JOB_ID, "projectId": PROJECT_ID, "location": LOCATION},
+        },
+        mock_client.return_value,
+    )
+    if nowait:
+        mock_query_job.from_api_repr.return_value._begin.assert_called_once()
+        mock_query_job.from_api_repr.return_value.result.assert_not_called()
+    else:
+        mock_query_job.from_api_repr.return_value._begin.assert_not_called()
+        mock_query_job.from_api_repr.return_value.result.assert_called_once()
 
 
 @pytest.mark.asyncio
