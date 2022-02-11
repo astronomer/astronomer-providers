@@ -28,7 +28,7 @@ from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
-from astronomer_operators.google.common.base_google_async import GoogleBaseHookAsync
+from astronomer_operators.google.common.hooks.base_google import GoogleBaseHookAsync
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 

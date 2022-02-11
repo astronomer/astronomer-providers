@@ -31,7 +31,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperator,
 )
 
-from astronomer_operators.google.operators.bigquery_async import (
+from astronomer_operators.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
 )
 

@@ -26,8 +26,8 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from google.api_core.exceptions import Conflict
 
-from astronomer_operators.google.hooks.bigquery_async import _BigQueryHook
-from astronomer_operators.google.triggers.bigquery_async import BigQueryInsertJobTrigger
+from astronomer_operators.google.cloud.hooks.bigquery import _BigQueryHook
+from astronomer_operators.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
 
 if TYPE_CHECKING:
     from airflow.utils.context import Context

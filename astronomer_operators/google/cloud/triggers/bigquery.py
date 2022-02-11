@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer_operators.google.hooks.bigquery_async import BigQueryHookAsync
+from astronomer_operators.google.cloud.hooks.bigquery import BigQueryHookAsync
 
 
 class BigQueryInsertJobTrigger(BaseTrigger):
@@ -33,7 +33,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         """
         print("serializing the trigger...")
         return (
-            "astronomer_operators.google.triggers.bigquery_async.BigQueryInsertJobTrigger",
+            "astronomer_operators.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger",
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
