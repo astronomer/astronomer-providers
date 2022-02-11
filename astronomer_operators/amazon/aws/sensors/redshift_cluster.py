@@ -27,7 +27,7 @@ class RedshiftClusterSensorAsync(AwsRedshiftClusterSensor):
 
     template_fields: Sequence[str] = ("cluster_identifier", "target_status")
 
-    def execute(self, context: Context):
+    def execute(self, context: "Context"):
         if not self.poke(context=context):
             self.defer(
                 timeout=self.execution_timeout,
@@ -41,7 +41,7 @@ class RedshiftClusterSensorAsync(AwsRedshiftClusterSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event=None):  # pylint: disable=unused-argument
+    def execute_complete(self, context: "Context", event=None):  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

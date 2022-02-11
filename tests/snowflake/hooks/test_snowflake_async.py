@@ -90,5 +90,5 @@ class TestPytestSnowflakeHookAsync:
         conn.is_still_running.return_value = False
         conn.get_query_status.return_value = expected_state
         result = await hook.get_query_status(query_ids=query_ids)
-        print("Test case")
+        print("Test case", result)
         assert result == expected_result

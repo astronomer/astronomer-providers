@@ -49,7 +49,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         while True:
             try:
                 if self.operation_type == "resume_cluster":
-                    response = await hook.resume_cluster(ClusterIdentifier=self.cluster_identifier)
+                    response = await hook.resume_cluster(cluster_identifier=self.cluster_identifier)
                     if response:
                         yield TriggerEvent(response)
                         return
@@ -57,7 +57,7 @@ class RedshiftClusterTrigger(BaseTrigger):
                         error_message = f"{self.task_id} failed"
                         raise AirflowException(error_message)
                 else:
-                    response = await hook.pause_cluster(ClusterIdentifier=self.cluster_identifier)
+                    response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
                     if response:
                         yield TriggerEvent(response)
                         return

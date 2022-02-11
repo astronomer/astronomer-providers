@@ -30,10 +30,12 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
         *,
         cluster_identifier: str,
         aws_conn_id: str = "aws_default",
+        poll_interval: float = 5,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.cluster_identifier = cluster_identifier
+        self.poll_interval = poll_interval
         self.aws_conn_id = aws_conn_id
 
     def execute(self, context: "Context"):
@@ -85,11 +87,13 @@ class RedshiftPauseClusterOperatorAsync(BaseOperator):
         *,
         cluster_identifier: str,
         aws_conn_id: str = "aws_default",
+        poll_interval: float = 5,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.cluster_identifier = cluster_identifier
         self.aws_conn_id = aws_conn_id
+        self.poll_interval = poll_interval
 
     def execute(self, context: "Context"):
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)

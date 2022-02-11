@@ -9,13 +9,11 @@ log = logging.getLogger(__name__)
 class RedshiftHookAsync(AwsBaseHookAsync):
     """
     Interact with AWS Redshift using aiobotocore python library
-
-    :param aws_conn_id: The Airflow connection used for AWS credentials.
-    :type aws_conn_id: str
     """
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs["client_type"] = "redshift"
+        kwargs["resource_type"] = "redshift"
         super().__init__(*args, **kwargs)
 
     async def cluster_status(self, cluster_identifier: str) -> str:
@@ -28,8 +26,8 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_clusters(ClusterIdentifier=cluster_identifier)
-                print(response)
+                response = client.describe_clusters(ClusterIdentifier=cluster_identifier)
+                response = await response
                 return response["Clusters"][0]["ClusterStatus"] if response and response["Clusters"] else None
             except Exception as error:
                 print(error)
@@ -53,11 +51,12 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         final_cluster_snapshot_identifier = final_cluster_snapshot_identifier or ""
         try:
             async with await self.get_client_async() as client:
-                response = await client.delete_cluster(
+                response = client.delete_cluster(
                     ClusterIdentifier=cluster_identifier,
                     SkipFinalClusterSnapshot=skip_final_cluster_snapshot,
                     FinalClusterSnapshotIdentifier=final_cluster_snapshot_identifier,
                 )
+                response = await response
                 return response["Cluster"] if response["Cluster"] else None
         except Exception as error:
             print(error)
@@ -72,7 +71,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         try:
             async with await self.get_client_async() as client:
                 response = client.describe_cluster_snapshots(ClusterIdentifier=cluster_identifier)
-                print(response)
+                response = await response
                 if "Snapshots" not in response:
                     print(None)
                 snapshots = response["Snapshots"]
@@ -94,9 +93,9 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         """
         try:
             async with await self.get_client_async() as client:
-                response = await client.pause_cluster(ClusterIdentifier=cluster_identifier)
-                print(response)
-                return response["Clusters"][0]["ClusterStatus"] if response and response["Clusters"] else None
+                response = client.pause_cluster(ClusterIdentifier=cluster_identifier)
+                response = await response
+                return response["Cluster"][0]["ClusterStatus"] if response and response["Cluster"] else None
         except Exception as error:
             print(error)
             raise error
@@ -111,9 +110,9 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.resume_cluster(ClusterIdentifier=cluster_identifier)
-                print(response)
-                return response["Clusters"][0]["ClusterStatus"] if response and response["Clusters"] else None
+                response = client.resume_cluster(ClusterIdentifier=cluster_identifier)
+                response = await response
+                return response["Cluster"][0]["ClusterStatus"] if response and response["Cluster"] else None
             except Exception as error:
                 print(error)
                 raise error
