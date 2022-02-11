@@ -22,33 +22,17 @@ This module contains a BigQueryHookAsync
 from typing import Optional, Union
 
 from aiohttp import ClientSession as Session
-from airflow.hooks.base import BaseHook
-from asgiref.sync import sync_to_async
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
+from astronomer_operators.google.common.base_google_async import GoogleBaseHookAsync
 from astronomer_operators.google.hooks.bigquery import BigQueryHook
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
 
-class BigQueryHookAsync(BaseHook):
-    def __init__(self, **kwargs):
-        self._hook_kwargs = kwargs
-        self._bigquery_hook_sync = None
-
-    async def get_bigquery_hook_sync(self):
-        """
-        Sync version of the BigQueryHook makes blocking calls in ``__init__`` so we don't inherit
-        from it.
-        """
-        if not self._bigquery_hook_sync:
-            self._bigquery_hook_sync = await sync_to_async(BigQueryHook)(**self._hook_kwargs)
-        return self._bigquery_hook_sync
-
-    async def service_file_as_context(self):
-        sync_hook = await self.get_bigquery_hook_sync()
-        return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
+class BigQueryHookAsync(GoogleBaseHookAsync):
+    sync_hook_class = BigQueryHook
 
     async def get_job_instance(self, project_id, job_id, session) -> Job:
         """Get the specified job resource by job ID and project ID."""

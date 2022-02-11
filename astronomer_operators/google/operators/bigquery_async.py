@@ -65,27 +65,20 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param configuration: The configuration parameter maps directly to BigQuery's
         configuration field in the job  object. For more details see
         https://cloud.google.com/bigquery/docs/reference/v2/jobs
-    :type configuration: Dict[str, Any]
     :param job_id: The ID of the job. It will be suffixed with hash of job configuration
         unless ``force_rerun`` is True.
         The ID must contain only letters (a-z, A-Z), numbers (0-9), underscores (_), or
         dashes (-). The maximum length is 1,024 characters. If not provided then uuid will
         be generated.
-    :type job_id: str
     :param force_rerun: If True then operator will use hash of uuid as job id suffix
-    :type force_rerun: bool
     :param reattach_states: Set of BigQuery job's states in case of which we should reattach
         to the job. Should be other than final states.
     :param project_id: Google Cloud Project where the job is running
-    :type project_id: str
     :param location: location the job is running
-    :type location: str
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
-    :type gcp_conn_id: str
     :param delegate_to: The account to impersonate using domain-wide delegation of authority,
         if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
-    :type delegate_to: str
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or chained list of accounts required to get the access_token
         of the last account in the list, which will be impersonated in the request.
@@ -94,9 +87,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         If set as a sequence, the identities from the list must grant
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
-    :type impersonation_chain: Union[str, Sequence[str]]
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
-    :type cancel_on_kill: bool
     """
 
     def _submit_job(
