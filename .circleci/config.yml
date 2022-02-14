@@ -10,19 +10,16 @@ jobs:
     description: Test & Lint
     docker:
       - image: cimg/python:3.9
-    resource_class: large
     steps:
       - checkout
       - run:
           name: Install dependencies
-          no_output_timeout: 2200m
           command: pip install -U -r scripts/ci/requirements.txt && pip install .[tests]
       - run:
           name: Static checks
           command: pre-commit run --all-files || { git --no-pager diff && false ; }
       - run:
           name: Run tests
-          no_output_timeout: 2200m
           command: |
             coverage run -m pytest --junit-xml=test-report/report.xml
             coverage report
