@@ -3,15 +3,15 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.sensors.base import BaseSensorOperator
 
 from astronomer_operators.amazon.aws.triggers.s3 import S3KeyTrigger
 
 log = logging.getLogger(__name__)
 
 
-class S3KeySensorAsync(BaseSensorOperator):
+class S3KeySensorAsync(BaseOperator):
     """
     Waits for a key (a file-like instance on S3) to be present in a S3 bucket
     asynchronously. S3 being a key/value it does not support folders. The path
