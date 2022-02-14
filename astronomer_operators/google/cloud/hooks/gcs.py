@@ -21,7 +21,7 @@
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from gcloud.aio.storage import Storage
 
-from astronomer_operators.google.common.base_google_async import GoogleBaseHookAsync
+from astronomer_operators.google.common.hooks.base_google import GoogleBaseHookAsync
 
 DEFAULT_TIMEOUT = 60
 
