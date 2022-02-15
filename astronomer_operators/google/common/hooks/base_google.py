@@ -13,7 +13,7 @@ class GoogleBaseHookAsync(BaseHook):
 
     async def get_sync_hook(self):
         """
-        Sync version of the BigQueryHook makes blocking calls in ``__init__`` so we don't inherit
+        Sync version of the Google Cloud Hooks makes blocking calls in ``__init__`` so we don't inherit
         from it.
         """
         if not self._sync_hook:
