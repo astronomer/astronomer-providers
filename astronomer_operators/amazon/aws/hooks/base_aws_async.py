@@ -19,6 +19,7 @@ class AwsBaseHookAsync(AwsBaseHook):
 
         aws_access_key_id = None
         aws_secret_access_key = None
+        aws_session_token = None
         if connection_object.login:
             aws_access_key_id = connection_object.login
             aws_secret_access_key = connection_object.password
@@ -26,7 +27,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         elif "aws_access_key_id" in extra_config and "aws_secret_access_key" in extra_config:
             aws_access_key_id = extra_config["aws_access_key_id"]
             aws_secret_access_key = extra_config["aws_secret_access_key"]
-            region_name = extra_config["region_name"]
+            aws_session_token = extra_config.get("aws_session_token")
             self.log.info("Credentials retrieved from extra_config")
         elif "s3_config_file" in extra_config:
             aws_access_key_id, aws_secret_access_key = await sync_to_async(_parse_s3_config)(
@@ -38,10 +39,18 @@ class AwsBaseHookAsync(AwsBaseHook):
         else:
             self.log.info("No credentials retrieved from Connection")
 
+        region_name = self.region_name
+        if self.region_name is None and "region_name" in extra_config:
+            self.log.info("Retrieving region_name from Connection.extra_config['region_name']")
+            region_name = extra_config["region_name"]
+
         async_connection = get_session()
         return async_connection.create_client(
-            self.resource_type,
+            service_name=self.client_type,
             region_name=region_name,
             aws_secret_access_key=aws_secret_access_key,
             aws_access_key_id=aws_access_key_id,
+            aws_session_token=aws_session_token,
+            verify=self.verify,
+            config=self.config,
         )
