@@ -114,7 +114,14 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
                             "status": "success",
                             "message": response_from_hook,
                             "data": hook.get_result_from_big_query(response_data),
-                        }
+                        })
+                response_from_hook, response_data = await hook.get_job_data(
+                    job_id=self.job_id, project_id=self.project_id
+                )
+                self.log.debug("Response from hook: %s", response_from_hook)
+                if response_from_hook == "success":
+                    yield TriggerEvent(
+                        {"status": "error", "message": response_from_hook, "data": response_data}
                     )
                     return
                 elif response_from_hook == "pending":
