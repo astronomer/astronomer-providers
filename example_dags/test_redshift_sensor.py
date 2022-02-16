@@ -1,7 +1,7 @@
 import airflow
 from airflow.utils.dates import days_ago
 
-from astronomer_operators.amazon.aws.sensors.redshift_cluster import (
+from astronomer_operators.amazon.aws.sensors.redshift_cluster_sensor import (
     RedshiftClusterSensorAsync,
 )
 

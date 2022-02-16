@@ -95,7 +95,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             async with await self.get_client_async() as client:
                 response = client.pause_cluster(ClusterIdentifier=cluster_identifier)
                 response = await response
-                return response["Cluster"][0]["ClusterStatus"] if response and response["Cluster"] else None
+                return response["Cluster"]["ClusterStatus"] if response and response["Cluster"] else None
         except Exception as error:
             print(error)
             raise error
@@ -112,7 +112,8 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             try:
                 response = client.resume_cluster(ClusterIdentifier=cluster_identifier)
                 response = await response
-                return response["Cluster"][0]["ClusterStatus"] if response and response["Cluster"] else None
+                print("response ", response)
+                return response["Cluster"]["ClusterStatus"] if response and response["Cluster"] else None
             except Exception as error:
                 print(error)
                 raise error

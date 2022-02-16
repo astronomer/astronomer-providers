@@ -41,6 +41,7 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
     def execute(self, context: "Context"):
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
+        print("cluster_state ", cluster_state)
         if cluster_state == "paused":
             self.defer(
                 timeout=self.execution_timeout,
