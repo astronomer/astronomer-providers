@@ -17,13 +17,17 @@
 # under the License.
 
 
-"""This module contains Google BigQueryAsync providers."""
-from typing import TYPE_CHECKING
+"""This module contains Google BigQueryAsync operators."""
+import enum
+from typing import TYPE_CHECKING, Dict, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryGetDataOperator,
+    BigQueryInsertJobOperator,
+)
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
@@ -37,6 +41,15 @@ BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={jo
 _DEPRECATION_MSG = (
     "The bigquery_conn_id parameter has been deprecated. You should pass the gcp_conn_id parameter."
 )
+
+
+class BigQueryUIColors(enum.Enum):
+    """Hex colors for BigQuery operators"""
+
+    CHECK = "#C0D7FF"
+    QUERY = "#A1BBFF"
+    TABLE = "#81A0FF"
+    DATASET = "#5F86FF"
 
 
 class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
@@ -158,3 +171,125 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             event["message"],
         )
         return event["message"]
+
+
+class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryInsertJobOperator):
+    """
+    Fetches the data from a BigQuery table using Job API (alternatively fetch data for selected columns)
+    and returns data in a python list. The number of elements in the returned list will
+    be equal to the number of rows fetched. Each element in the list will again be a list
+    where element would represent the columns values for that row.
+    **Example Result**: ``[['Tony', '10'], ['Mike', '20'], ['Steve', '15']]``
+    .. seealso::
+        For more information on how to use this operator, take a look at the guide:
+        :ref:`howto/operator:BigQueryGetDataOperator`
+    .. note::
+        If you pass fields to ``selected_fields`` which are in different order than the
+        order of columns already in
+        BQ table, the data will still be in the order of BQ table.
+        For example if the BQ table has 3 columns as
+        ``[A,B,C]`` and you pass 'B,A' in the ``selected_fields``
+        the data would still be of the form ``'A,B'``.
+    **Example**: ::
+        get_data = BigQueryGetDataOperatorAsync(
+            task_id='get_data_from_bq',
+            dataset_id='test_dataset',
+            table_id='Transaction_partitions',
+            max_results=100,
+            selected_fields='DATE',
+            gcp_conn_id='airflow-conn-id'
+        )
+    :param dataset_id: The dataset ID of the requested table. (templated)
+    :param table_id: The table ID of the requested table. (templated)
+    :param max_results: The maximum number of records (rows) to be fetched
+        from the table. (templated)
+    :param selected_fields: List of fields to return (comma-separated). If
+        unspecified, all fields are returned.
+    :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
+    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
+        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
+    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
+        if any. For this to work, the service account making the request must have
+        domain-wide delegation enabled.
+    :param location: The location used for the operation.
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account (templated).
+    """
+
+    template_fields: Sequence[str] = (
+        "dataset_id",
+        "table_id",
+        "max_results",
+        "selected_fields",
+        "impersonation_chain",
+    )
+    ui_color = BigQueryUIColors.QUERY.value
+
+    def execute(self, context: "Context"):
+        get_query = "select "
+        if self.selected_fields:
+            get_query += self.selected_fields
+        else:
+            get_query += "*"
+        get_query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
+
+        hook = _BigQueryHook(
+            gcp_conn_id=self.gcp_conn_id,
+            delegate_to=self.delegate_to,
+            location=self.location,
+            impersonation_chain=self.impersonation_chain,
+            configuration=Dict(query=get_query, useLegacySql=False),
+        )
+
+        self.hook = hook
+        job_id = self._job_id(context)
+
+        try:
+            job = self._submit_job(hook, job_id)
+            self._handle_job_error(job)
+        except Conflict:
+            # If the job already exists retrieve it
+            job = hook.get_job(
+                project_id=self.project_id,
+                location=self.location,
+                job_id=job_id,
+            )
+            if job.state in self.reattach_states:
+                # We are reattaching to a job
+                job._begin()
+                self._handle_job_error(job)
+            else:
+                # Same job configuration so we need force_rerun
+                raise AirflowException(
+                    f"Job with id: {job_id} already exists and is in {job.state} state. If you "
+                    f"want to force rerun it consider setting `force_rerun=True`."
+                    f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
+                )
+
+        self.job_id = job.job_id
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryInsertJobTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=self.job_id,
+                project_id=self.project_id,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
+        )
+        return event["data"]

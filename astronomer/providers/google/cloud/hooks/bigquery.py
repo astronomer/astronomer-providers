@@ -124,3 +124,25 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 self.log.info("Query execution finished with errors...")
                 job_status = str(e)
             return job_status
+
+    async def get_job_data(
+        self,
+        job_id: str,
+        project_id: Optional[str] = None,
+    ):
+        """Polls for job status asynchronously using gcloud-aio.
+        Note that an OSError is raised when Job results are still pending.
+        Exception means that Job finished with errors"""
+        async with Session() as s:
+            try:
+                self.log.info("Executing get_job_status...")
+                job_client = await self.get_job_instance(project_id, job_id, s)
+                job_status_response = await job_client.result(s)
+                if job_status_response:
+                    job_status = "success"
+            except OSError:
+                job_status = "pending"
+            except Exception as e:
+                self.log.info("Query execution finished with errors...")
+                job_status = str(e)
+            return job_status, job_status_response
