@@ -1,7 +1,6 @@
 import asyncio
 from unittest import mock
 
-import botocore
 import pytest
 from airflow.triggers.base import TriggerEvent
 
@@ -178,14 +177,18 @@ async def test_redshift_cluster_pause_trigger_success(mock_pause_cluster, expect
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "expected_result",
+    [
+        ({"status": "success", "cluster_state": "paused"}),
+    ],
+)
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
-async def test_redshift_cluster_pause_trigger_failure(mock_client, mock_pause_cluster):
+async def test_redshift_cluster_pause_trigger_failure(mock_pause_cluster, expected_result):
     """
     Tests RedshiftClusterTrigger to test the pause status
     """
-    mock_client.pause_cluster.side_effect = botocore.exceptions
-    mock_pause_cluster.side_effect = Exception("Test exception")
+    mock_pause_cluster.return_value = expected_result
     trigger = RedshiftClusterTrigger(
         task_id=TASK_ID,
         polling_period_seconds=POLLING_PERIOD_SECONDS,
@@ -199,12 +202,7 @@ async def test_redshift_cluster_pause_trigger_failure(mock_client, mock_pause_cl
 
     # TriggerEvent was returned
     assert task.done() is True
-    assert task.result() == TriggerEvent(
-        {
-            "status": "error",
-            "message": "Test exception",
-        }
-    )
+    assert task.result() == TriggerEvent(expected_result)
 
 
 def test_redshift_cluster_sensor_trigger_serialization():
