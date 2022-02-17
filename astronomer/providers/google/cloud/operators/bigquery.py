@@ -18,16 +18,24 @@
 
 
 """This module contains Google BigQueryAsync providers."""
-from typing import TYPE_CHECKING
+import enum
+import warnings
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperator,
+    BigQueryInsertJobOperator,
+)
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
-from astronomer.providers.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
+from astronomer.providers.google.cloud.triggers.bigquery import (
+    BigQueryCheckTrigger,
+    BigQueryInsertJobTrigger,
+)
 
 if TYPE_CHECKING:
     from airflow.utils.context import Context
@@ -145,6 +153,128 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
                 project_id=self.project_id,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
+        )
+        return event["message"]
+
+
+class BigQueryUIColors(enum.Enum):
+    """Hex colors for BigQuery operators"""
+
+    CHECK = "#C0D7FF"
+    QUERY = "#A1BBFF"
+    TABLE = "#81A0FF"
+    DATASET = "#5F86FF"
+
+
+class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
+    template_fields: Sequence[str] = (
+        "sql",
+        "gcp_conn_id",
+        "impersonation_chain",
+        "labels",
+    )
+    template_ext: Sequence[str] = (".sql",)
+    ui_color = BigQueryUIColors.CHECK.value
+
+    def __init__(
+        self,
+        *,
+        sql: str,
+        gcp_conn_id: str = "google_cloud_default",
+        bigquery_conn_id: Optional[str] = None,
+        use_legacy_sql: bool = True,
+        location: Optional[str] = None,
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        labels: Optional[dict] = None,
+        **kwargs,
+    ) -> None:
+        print("In __init__ of BigQueryCheckOperatorAsync")
+        super().__init__(sql=sql, **kwargs)
+        print("########kwargs is...@@@@@@@@@")
+        print(kwargs)
+        if bigquery_conn_id:
+            warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=3)
+            gcp_conn_id = bigquery_conn_id
+
+        self.gcp_conn_id = gcp_conn_id
+        self.sql = sql
+        self.use_legacy_sql = use_legacy_sql
+        self.location = location
+        self.impersonation_chain = impersonation_chain
+        self.labels = labels
+        # self.project_id = project_id
+
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Trigger."""
+        print("In _submit_job of BigQueryCheckOperatorAsync")
+        configuration = {"query": {"query": self.sql}}
+
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context: "Context"):
+        print("In execute method of BigQueryCheckOperatorAsync")
+        hook = _BigQueryHook(
+            gcp_conn_id=self.gcp_conn_id,
+            location=self.location,
+            impersonation_chain=self.impersonation_chain,
+        )
+
+        self.hook = hook
+        job_id = ""  # self._job_id(context)
+
+        # try:
+        job = self._submit_job(hook, job_id)
+        # self._handle_job_error(job)
+        # except Conflict:
+        #     # If the job already exists retrieve it
+        #     job = hook.get_job(
+        #         project_id=self.project_id,
+        #         location=self.location,
+        #         job_id=job_id,
+        #     )
+        #     if job.state in self.reattach_states:
+        #         # We are reattaching to a job
+        #         job._begin()
+        #         self._handle_job_error(job)
+        #     else:
+        #         # Same job configuration so we need force_rerun
+        #         raise AirflowException(
+        #             f"Job with id: {job_id} already exists and is in {job.state} state. If you "
+        #             f"want to force rerun it consider setting `force_rerun=True`."
+        #             f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
+        #         )
+
+        self.job_id = job.job_id
+
+        print("job_id is ...####", self.job_id)
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryCheckTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=self.job_id,
+                project_id=hook.project_id,
             ),
             method_name="execute_complete",
         )
