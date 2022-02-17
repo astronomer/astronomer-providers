@@ -1,5 +1,16 @@
 .PHONY: dev clean stop build-run restart restart-all run-tests run-static-checks help
 
+# If the first argument is "run"...
+ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifndef RUN_ARGS
+  RUN_ARGS := .
+  endif
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 dev: ## Create a development Environment using `docker-compose` file.
 	docker-compose -f dev/docker-compose.yaml up -d
 
@@ -33,6 +44,12 @@ run-static-checks: ## Run CI static code checks
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
 		--rm -it astronomer-providers-dev -- pre-commit run --all-files --show-diff-on-failure
+
+run-mypy: ## Run MyPy in Container
+	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
+	 	-w /usr/local/airflow/astronomer_providers \
+		--rm -it astronomer-providers-dev -- mypy --install-types $(RUN_ARGS)
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

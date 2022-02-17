@@ -201,7 +201,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         second_job_id: str,
         project_id: Optional[str],
         table: str,
-        metrics_thresholds: dict,
+        metrics_thresholds: Dict[str, int],
         date_filter_column: str = "ds",
         days_back: SupportsAbs[int] = -7,
         ratio_formula: Optional[str] = "max_over_min",

@@ -84,7 +84,9 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             except botocore.exceptions.ClientError as error:
                 return {"status": "error", "message": str(error)}
 
-    async def get_cluster_status(self, cluster_identifier, expected_state, flag) -> Dict[str, Any]:
+    async def get_cluster_status(
+        self, cluster_identifier: str, expected_state: str, flag: asyncio.Event
+    ) -> Dict[str, Any]:
         """
         make call self.cluster_status to know the status and run till the expected_state is met and set the flag
 

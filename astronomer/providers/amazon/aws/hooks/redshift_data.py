@@ -64,7 +64,7 @@ class RedshiftDataHook(AwsBaseHook):
 
         return conn_params
 
-    def execute_query(self, sql: Optional[Union[Dict, Iterable]], params: Optional[Dict]):
+    def execute_query(self, sql: Union[str, Iterable[str]], params: Optional[Dict]):
         """
         Runs an SQL statement, which can be data manipulation language (DML)
         or data definition language (DDL)
