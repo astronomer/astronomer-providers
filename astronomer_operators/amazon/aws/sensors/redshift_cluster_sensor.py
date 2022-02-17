@@ -18,10 +18,8 @@ class RedshiftClusterSensorAsync(BaseOperator):
     """
     Waits for a Redshift cluster to reach a specific status.
 
-    :param cluster_identifier: The identifier for the cluster being pinged.
-    :type cluster_identifier: str
+    :param cluster_identifier: The identifier for the cluster being pinged.\
     :param target_status: The cluster status desired.
-    :type target_status: str
     """
 
     template_fields: Sequence[str] = ("cluster_identifier", "target_status")
@@ -38,8 +36,8 @@ class RedshiftClusterSensorAsync(BaseOperator):
         super().__init__(**kwargs)
         self.cluster_identifier = cluster_identifier
         self.target_status = target_status
-        self.poll_interval = poll_interval
         self.aws_conn_id = aws_conn_id
+        self.poll_interval = poll_interval
 
     def execute(self, context: "Context"):
         self.defer(
@@ -49,7 +47,7 @@ class RedshiftClusterSensorAsync(BaseOperator):
                 aws_conn_id=self.aws_conn_id,
                 cluster_identifier=self.cluster_identifier,
                 target_status=self.target_status,
-                polling_period_seconds=self.poke_interval,
+                polling_period_seconds=self.poll_interval,
             ),
             method_name="execute_complete",
         )
@@ -60,6 +58,15 @@ class RedshiftClusterSensorAsync(BaseOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
+        if event:
+            if "status" in event and event["status"] == "error":
+                msg = "{0}: {1}".format(event["status"], event["message"])
+                raise AirflowException(msg)
+            if "status" in event and event["status"] == "success":
+                self.log.info("%s completed successfully.", self.task_id)
+                self.log.info(
+                    "Cluster Identifier %s is in %s state", self.cluster_identifier, self.target_status
+                )
+                return None
+        self.log.info("%s completed successfully.", self.task_id)
         return None

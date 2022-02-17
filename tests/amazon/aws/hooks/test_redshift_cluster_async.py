@@ -9,11 +9,41 @@ from astronomer_operators.amazon.aws.hooks.redshift_cluster import RedshiftHookA
 @pytest.mark.parametrize(
     "mock_cluster_identifier, cluster_state, expected_result",
     [
-        ("astro-redshift-cluster-1", "available", {"Clusters": [{"ClusterStatus": "available"}]}),
-        ("astro-redshift-cluster-1", "paused", {"Clusters": [{"ClusterStatus": "paused"}]}),
-        ("astro-redshift-cluster-1", "pausing", {"Clusters": [{"ClusterStatus": "pausing"}]}),
-        ("astro-redshift-cluster-1", "resuming", {"Clusters": [{"ClusterStatus": "resuming"}]}),
+        (
+            "astro-redshift-cluster-1",
+            {"status": "success", "cluster_state": "available"},
+            {"Clusters": [{"ClusterStatus": "available"}]},
+        ),
+        (
+            "astro-redshift-cluster-1",
+            {"status": "success", "cluster_state": "paused"},
+            {"Clusters": [{"ClusterStatus": "paused"}]},
+        ),
+        (
+            "astro-redshift-cluster-1",
+            {"status": "success", "cluster_state": "pausing"},
+            {"Clusters": [{"ClusterStatus": "pausing"}]},
+        ),
+        (
+            "astro-redshift-cluster-1",
+            {"status": "success", "cluster_state": "resuming"},
+            {"Clusters": [{"ClusterStatus": "resuming"}]},
+        ),
         ("astro-redshift-cluster-1", None, {"Clusters": []}),
+        (
+            "astro-redshift-cluster-1",
+            {
+                "status": "error",
+                "message": "ClusterNotFoundFault('An error occurred "
+                "(ClusterNotFound) when calling the "
+                "DescribeClusters "
+                "operation: Cluster test111 not found.",
+            },
+            "ClusterNotFoundFault('An error occurred "
+            "(ClusterNotFound) when calling the "
+            "DescribeClusters "
+            "operation: Cluster test111 not found.",
+        ),
     ],
 )
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
@@ -25,6 +55,7 @@ async def test_redshift_cluster_status(
     mock_client.return_value.describe_clusters.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.cluster_status(cluster_identifier=mock_cluster_identifier)
+    print("test_redshift_cluster_status result =====>", result)
     assert result == cluster_state
 
 
@@ -34,8 +65,18 @@ async def test_redshift_cluster_status(
     [
         (
             "astro-redshift-cluster-1",
-            "pausing",
+            {"status": "success", "cluster_state": "paused"},
             {"Cluster": {"ClusterIdentifier": "astro-redshift-cluster-1", "ClusterStatus": "pausing"}},
+        ),
+        (
+            "astro-redshift-cluster-1",
+            {
+                "status": "error",
+                "message": "An error occurred (InvalidClusterState) when calling "
+                "the PauseCluster operation: You can only pause an ACTIVE Cluster",
+            },
+            "An error occurred (InvalidClusterState) when calling the PauseCluster operation:"
+            " You can only pause an ACTIVE Cluster",
         ),
     ],
 )
@@ -48,6 +89,7 @@ async def test_pause_cluster(
     mock_client.pause_cluster.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.pause_cluster(cluster_identifier=mock_cluster_identifier)
+    print("test_pause_cluster result =====>", result)
     assert result == cluster_state
 
 
@@ -57,8 +99,20 @@ async def test_pause_cluster(
     [
         (
             "astro-redshift-cluster-1",
-            "resuming",
+            {"status": "success", "cluster_state": "available"},
             {"Cluster": {"ClusterIdentifier": "astro-redshift-cluster-1", "ClusterStatus": "resuming"}},
+        ),
+        (
+            "astro-redshift-cluster-1",
+            {
+                "status": "error",
+                "message": "An error occurred (InvalidClusterState) when "
+                "calling the ResumeCluster operation: You can only resume a "
+                "PAUSED Cluster",
+            },
+            "An error occurred (InvalidClusterState) when "
+            "calling the ResumeCluster operation: You can only resume a "
+            "PAUSED Cluster",
         ),
     ],
 )
@@ -71,4 +125,5 @@ async def test_resume_cluster(
     mock_client.resume_cluster.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.resume_cluster(cluster_identifier=mock_cluster_identifier)
+    print("test_resume_cluster result =====>", result)
     assert result == cluster_state

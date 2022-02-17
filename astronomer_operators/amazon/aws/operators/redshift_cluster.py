@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Sequence
 
+from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.amazon.aws.hooks.redshift_cluster import RedshiftHook
 
@@ -16,9 +17,7 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
     Resume a paused AWS Redshift Cluster
 
     :param cluster_identifier: id of the AWS Redshift Cluster
-    :type cluster_identifier: str
     :param aws_conn_id: aws connection to use
-    :type aws_conn_id: str
     """
 
     template_fields: Sequence[str] = ("cluster_identifier",)
@@ -41,7 +40,6 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
     def execute(self, context: "Context"):
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
-        print("cluster_state ", cluster_state)
         if cluster_state == "paused":
             self.defer(
                 timeout=self.execution_timeout,
@@ -65,8 +63,17 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        self.log.info("%s completed successfully.", self.task_id)
-        return None
+        if event:
+            if "status" in event and event["status"] == "error":
+                msg = "{0}: {1}".format(event["status"], event["message"])
+                raise AirflowException(msg)
+            elif "status" in event and event["status"] == "success":
+                self.log.info("%s completed successfully.", self.task_id)
+                self.log.info("Resumed cluster successfully, now its in available state")
+                return None
+        else:
+            self.log.info("%s completed successfully.", self.task_id)
+            return None
 
 
 class RedshiftPauseClusterOperatorAsync(BaseOperator):
@@ -74,9 +81,7 @@ class RedshiftPauseClusterOperatorAsync(BaseOperator):
     Pause an AWS Redshift Cluster if cluster status is in `available` state
 
     :param cluster_identifier: id of the AWS Redshift Cluster
-    :type cluster_identifier: str
     :param aws_conn_id: aws connection to use
-    :type aws_conn_id: str
     """
 
     template_fields: Sequence[str] = ("cluster_identifier",)
@@ -122,5 +127,14 @@ class RedshiftPauseClusterOperatorAsync(BaseOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        self.log.info("%s completed successfully.", self.task_id)
-        return None
+        if event:
+            if "status" in event and event["status"] == "error":
+                msg = "{0}: {1}".format(event["status"], event["message"])
+                raise AirflowException(msg)
+            elif "status" in event and event["status"] == "success":
+                self.log.info("%s completed successfully.", self.task_id)
+                self.log.info("Paused cluster successfully")
+                return None
+        else:
+            self.log.info("%s completed successfully.", self.task_id)
+            return None

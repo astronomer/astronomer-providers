@@ -103,10 +103,16 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         """
         Simple async function run until the cluster status match the target status.
         """
-        hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
-        while True:
-            res = await hook.cluster_status(self.cluster_identifier)
-            if res and res == self.target_status:
-                yield TriggerEvent(res)
-                return
-            await asyncio.sleep(self.poll_interval)
+        try:
+            hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
+            while True:
+                res = await hook.cluster_status(self.cluster_identifier)
+                if (res["status"] == "success" and res["cluster_state"] == self.target_status) or res[
+                    "status"
+                ] == "error":
+                    yield TriggerEvent(res)
+                    return
+                await asyncio.sleep(self.polling_period_seconds)
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return

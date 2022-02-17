@@ -1,68 +1,147 @@
 from unittest import mock
 
+import pytest
+from airflow.exceptions import AirflowException, TaskDeferred
+
 from astronomer_operators.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
+from astronomer_operators.amazon.aws.triggers.redshift_cluster import (
+    RedshiftClusterTrigger,
+)
 
 
-def test_init_resume_operators():
+@pytest.fixture
+def context():
+    """
+    Creates an empty context.
+    """
+    context = {}
+    yield context
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+def test_resume_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
+    mock_sync_cluster_statue.return_value = "paused"
+    mock_async_client.return_value.resume_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "resuming"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "available"}
+
     redshift_operator = RedshiftResumeClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    assert redshift_operator.task_id == "task_test"
-    assert redshift_operator.cluster_identifier == "test_cluster"
-    assert redshift_operator.aws_conn_id == "aws_conn_test"
+
+    with pytest.raises(TaskDeferred) as exc:
+        redshift_operator.execute(context)
+
+    assert isinstance(exc.value.trigger, RedshiftClusterTrigger), "Trigger is not a RedshiftClusterTrigger"
 
 
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
-def test_resume_cluster_async_in_paused_state(mock_client, mock_cluster_status):
-    mock_cluster_status.return_value = "paused"
+def test_resume_cluster_failure(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
+    mock_sync_cluster_statue.return_value = "paused"
+    mock_async_client.return_value.resume_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "resuming"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "available"}
+
     redshift_operator = RedshiftResumeClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    redshift_operator.execute(None)
-    mock_client.return_value.resume_cluster.assert_called_once_with(ClusterIdentifier="test_cluster")
+
+    with pytest.raises(AirflowException):
+        redshift_operator.execute_complete(
+            context=None, event={"status": "error", "message": "test failure message"}
+        )
 
 
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
-def test_resume_cluster_async_in_available_state(mock_client, mock_cluster_status):
-    mock_cluster_status.return_value = "available"
+def test_resume_cluster_execute_complete(
+    mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue
+):
+    mock_sync_cluster_statue.return_value = "paused"
+    mock_async_client.return_value.resume_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "resuming"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "available"}
+
     redshift_operator = RedshiftResumeClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    redshift_operator.execute(None)
-    mock_client.return_value.resume_cluster.assert_not_called()
+
+    with mock.patch.object(redshift_operator.log, "info") as mock_log_info:
+        redshift_operator.execute_complete(
+            context=None, event={"status": "success", "cluster_state": "available"}
+        )
+    mock_log_info.assert_called_with("Resumed cluster successfully, now its in available state")
 
 
-def test_init_pause_operators():
-    redshift_operator = RedshiftPauseClusterOperatorAsync(
-        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
-    )
-    assert redshift_operator.task_id == "task_test"
-    assert redshift_operator.cluster_identifier == "test_cluster"
-    assert redshift_operator.aws_conn_id == "aws_conn_test"
-
-
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
-def test_pause_cluster_is_called_when_cluster_is_available(mock_client, mock_cluster_status):
-    mock_cluster_status.return_value = "available"
+def test_pause_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
+    mock_sync_cluster_statue.return_value = "available"
+    mock_async_client.return_value.pause_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "pausing"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "paused"}
+
     redshift_operator = RedshiftPauseClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    redshift_operator.execute(None)
-    mock_client.return_value.pause_cluster.assert_called_once_with(ClusterIdentifier="test_cluster")
+
+    with pytest.raises(TaskDeferred) as exc:
+        redshift_operator.execute(context)
+
+    assert isinstance(exc.value.trigger, RedshiftClusterTrigger), "Trigger is not a RedshiftClusterTrigger"
 
 
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
 @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
-def test_pause_cluster_not_called_when_cluster_is_not_available(mock_client, mock_cluster_status):
-    mock_cluster_status.return_value = "paused"
+def test_pause_cluster_failure(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
+    mock_sync_cluster_statue.return_value = "available"
+    mock_async_client.return_value.pause_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "pausing"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "paused"}
+
     redshift_operator = RedshiftPauseClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    redshift_operator.execute(None)
-    mock_client.return_value.pause_cluster.assert_not_called()
+
+    with pytest.raises(AirflowException):
+        redshift_operator.execute_complete(
+            context=None, event={"status": "error", "message": "test failure message"}
+        )
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+def test_pause_cluster_execute_complete(
+    mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue
+):
+    mock_sync_cluster_statue.return_value = "available"
+    mock_async_client.return_value.pause_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "pausing"}
+    }
+    mock_async_resume_cluster.return_value = {"status": "success", "cluster_state": "paused"}
+
+    redshift_operator = RedshiftPauseClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+
+    with mock.patch.object(redshift_operator.log, "info") as mock_log_info:
+        redshift_operator.execute_complete(
+            context=None, event={"status": "success", "cluster_state": "paused"}
+        )
+    mock_log_info.assert_called_with("Paused cluster successfully")

@@ -19,3 +19,6 @@ __pycache__/
 dev/logs/
 dev/connections.yaml
 dev/dags/
+
+# test reports
+test-report/
