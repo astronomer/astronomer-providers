@@ -133,16 +133,27 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """Polls for job status asynchronously using gcloud-aio.
         Note that an OSError is raised when Job results are still pending.
         Exception means that Job finished with errors"""
-        async with Session() as s:
-            try:
-                self.log.info("Executing get_job_status...")
-                job_client = await self.get_job_instance(project_id, job_id, s)
-                job_status_response = await job_client.result(s)
-                if job_status_response:
-                    job_status = "success"
-            except OSError:
-                job_status = "pending"
-            except Exception as e:
-                self.log.info("Query execution finished with errors...")
-                job_status = str(e)
-            return job_status, job_status_response
+        async with Session() as session:
+            job_status_response = dict
+            self.log.info("Executing get_job_data..")
+            job_client = await self.get_job_instance(project_id, job_id, session)
+            job_status_response = await job_client.get_query_results(session)
+            return job_status_response
+
+    def _bq_cast(string_field: str, bq_type: str) -> Union[None, int, float, bool, str]:
+        """
+        Helper method that casts a BigQuery row to the appropriate data types.
+        This is useful because BigQuery returns all fields as strings.
+        """
+        if string_field is None:
+            return None
+        elif bq_type == "INTEGER":
+            return int(string_field)
+        elif bq_type in ("FLOAT", "TIMESTAMP"):
+            return float(string_field)
+        elif bq_type == "BOOLEAN":
+            if string_field not in ["true", "false"]:
+                raise ValueError(f"{string_field} must have value 'true' or 'false'")
+            return string_field == "true"
+        else:
+            return string_field

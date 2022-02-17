@@ -38,10 +38,6 @@ if TYPE_CHECKING:
 
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 
-_DEPRECATION_MSG = (
-    "The bigquery_conn_id parameter has been deprecated. You should pass the gcp_conn_id parameter."
-)
-
 
 class BigQueryUIColors(enum.Enum):
     """Hex colors for BigQuery operators"""
@@ -173,7 +169,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         return event["message"]
 
 
-class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryInsertJobOperator):
+class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     """
     Fetches the data from a BigQuery table using Job API (alternatively fetch data for selected columns)
     and returns data in a python list. The number of elements in the returned list will
@@ -231,6 +227,21 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryInsertJobOpe
     )
     ui_color = BigQueryUIColors.QUERY.value
 
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
+        configuration: Dict,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Triggerer."""
+        return hook.insert_job(
+            configuration=configuration,
+            location=self.location,
+            project_id=hook.project_id,
+            job_id=job_id,
+            nowait=True,
+        )
+
     def execute(self, context: "Context"):
         get_query = "select "
         if self.selected_fields:
@@ -238,48 +249,26 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryInsertJobOpe
         else:
             get_query += "*"
         get_query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
-
+        configuration = {"query": {"query": get_query}}
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
             delegate_to=self.delegate_to,
             location=self.location,
             impersonation_chain=self.impersonation_chain,
-            configuration=Dict(query=get_query, useLegacySql=False),
         )
 
         self.hook = hook
-        job_id = self._job_id(context)
-
-        try:
-            job = self._submit_job(hook, job_id)
-            self._handle_job_error(job)
-        except Conflict:
-            # If the job already exists retrieve it
-            job = hook.get_job(
-                project_id=self.project_id,
-                location=self.location,
-                job_id=job_id,
-            )
-            if job.state in self.reattach_states:
-                # We are reattaching to a job
-                job._begin()
-                self._handle_job_error(job)
-            else:
-                # Same job configuration so we need force_rerun
-                raise AirflowException(
-                    f"Job with id: {job_id} already exists and is in {job.state} state. If you "
-                    f"want to force rerun it consider setting `force_rerun=True`."
-                    f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
-                )
-
+        job_id = ""
+        job = self._submit_job(hook, job_id, configuration)
         self.job_id = job.job_id
-
         self.defer(
             timeout=self.execution_timeout,
-            trigger=BigQueryInsertJobTrigger(
+            trigger=BigQueryGetDataTrigger(
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
-                project_id=self.project_id,
+                dataset_id=self.dataset_id,
+                table_id=self.table_id,
+                project_id=hook.project_id,
             ),
             method_name="execute_complete",
         )

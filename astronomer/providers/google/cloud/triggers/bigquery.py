@@ -17,7 +17,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         poll_interval: float = 4.0,
     ):
         self.log.info("Using the connection  %s .", conn_id)
-        print("job_id", job_id)
         super().__init__()
         self.conn_id = conn_id
         self.job_id = job_id
@@ -81,6 +80,22 @@ class BigQueryInsertJobTrigger(BaseTrigger):
 
 
 class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Serializes BigQueryInsertJobTrigger arguments and classpath.
+        """
+        return (
+            "astronomer_operators.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
+            {
+                "conn_id": self.conn_id,
+                "job_id": self.job_id,
+                "dataset_id": self.dataset_id,
+                "project_id": self.project_id,
+                "table_id": self.table_id,
+                "poll_interval": self.poll_interval,
+            },
+        )
+
     async def run(self):
         """
         Gets current job execution status and yields a TriggerEvent with response data
@@ -89,14 +104,25 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
         hook = self._get_async_hook()
         while True:
             try:
+                query_response_data = list
                 # Poll for job execution status
-                response_from_hook, response_data = await hook.get_job_data(
-                    job_id=self.job_id, project_id=self.project_id
-                )
-                self.log.debug("Response from hook: %s", response_from_hook)
+                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
                 if response_from_hook == "success":
+                    response_data = await hook.get_job_data(job_id=self.job_id, project_id=self.project_id)
+                    if "rows" in response_data and response_data["rows"]:
+                        fields = response_data["schema"]["fields"]
+                        col_types = [field["type"] for field in fields]
+                        rows = response_data["rows"]
+                    print(rows)
+                    for dict_row in rows:
+                        typed_row = [
+                            hook._bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])
+                        ]
+                        query_response_data(typed_row)
+
+                    self.log.debug("Response from hook: %s", response_from_hook)
                     yield TriggerEvent(
-                        {"status": "error", "message": response_from_hook, "data": response_data}
+                        {"status": "success", "message": response_from_hook, "data": query_response_data}
                     )
                     return
                 elif response_from_hook == "pending":
