@@ -47,16 +47,6 @@ class BigQueryUIColors(enum.Enum):
     TABLE = "#81A0FF"
     DATASET = "#5F86FF"
 
-
-class BigQueryUIColors(enum.Enum):
-    """Hex colors for BigQuery operators"""
-
-    CHECK = "#C0D7FF"
-    QUERY = "#A1BBFF"
-    TABLE = "#81A0FF"
-    DATASET = "#5F86FF"
-
-
 class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
     Starts a BigQuery job asynchronously, and returns job id.
@@ -281,40 +271,20 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
                 project_id=hook.project_id,
             configuration=Dict(query=get_query, useLegacySql=False),
         )
+        )
 
         self.hook = hook
-        job_id = self._job_id(context)
-
-        try:
-            job = self._submit_job(hook, job_id)
-            self._handle_job_error(job)
-        except Conflict:
-            # If the job already exists retrieve it
-            job = hook.get_job(
-                project_id=self.project_id,
-                location=self.location,
-                job_id=job_id,
-            )
-            if job.state in self.reattach_states:
-                # We are reattaching to a job
-                job._begin()
-                self._handle_job_error(job)
-            else:
-                # Same job configuration so we need force_rerun
-                raise AirflowException(
-                    f"Job with id: {job_id} already exists and is in {job.state} state. If you "
-                    f"want to force rerun it consider setting `force_rerun=True`."
-                    f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
-                )
-
+        job_id = ""
+        job = self._submit_job(hook, job_id, configuration)
         self.job_id = job.job_id
-
         self.defer(
             timeout=self.execution_timeout,
-            trigger=BigQueryInsertJobTrigger(
+            trigger=BigQueryGetDataTrigger(
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
-                project_id=self.project_id,
+                dataset_id=self.dataset_id,
+                table_id=self.table_id,
+                project_id=hook.project_id,
             ),
             method_name="execute_complete",
         )

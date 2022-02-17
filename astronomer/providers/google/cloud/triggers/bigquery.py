@@ -104,24 +104,25 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
         hook = self._get_async_hook()
         while True:
             try:
+                query_response_data = list
                 # Poll for job execution status
                 response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
                 if response_from_hook == "success":
                     response_data = await hook.get_job_data(job_id=self.job_id, project_id=self.project_id)
+                    if "rows" in response_data and response_data["rows"]:
+                        fields = response_data["schema"]["fields"]
+                        col_types = [field["type"] for field in fields]
+                        rows = response_data["rows"]
+                    print(rows)
+                    for dict_row in rows:
+                        typed_row = [
+                            hook._bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])
+                        ]
+                        query_response_data(typed_row)
+
                     self.log.debug("Response from hook: %s", response_from_hook)
                     yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "message": response_from_hook,
-                            "data": hook.get_result_from_big_query(response_data),
-                        })
-                response_from_hook, response_data = await hook.get_job_data(
-                    job_id=self.job_id, project_id=self.project_id
-                )
-                self.log.debug("Response from hook: %s", response_from_hook)
-                if response_from_hook == "success":
-                    yield TriggerEvent(
-                        {"status": "error", "message": response_from_hook, "data": response_data}
+                        {"status": "success", "message": response_from_hook, "data": query_response_data}
                     )
                     return
                 elif response_from_hook == "pending":
