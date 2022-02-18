@@ -129,18 +129,23 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         self,
         job_id: str,
         project_id: Optional[str] = None,
-    ):
-        """Polls for job status asynchronously using gcloud-aio.
-        Note that an OSError is raised when Job results are still pending.
-        Exception means that Job finished with errors"""
+    ) -> Dict:
+        """
+        Get the job result for the given job id
+        asynchronously using gcloud-aio.
+        """
         async with Session() as session:
-            job_status_response = dict
             self.log.info("Executing get_job_data..")
             job_client = await self.get_job_instance(project_id, job_id, session)
-            job_status_response = await job_client.get_query_results(session)
-            return job_status_response
+            job_query_response = await job_client.get_query_results(session)
+            return job_query_response
 
-    def get_result_from_big_query(self, response_data):
+    def get_result_from_big_query(self, response_data: Dict) -> list:
+        """
+        Given the output query response from gcloud aio bigquery
+        BigQuery row to the appropriate data types.
+        This is useful because BigQuery returns all fields as strings.
+        """
         final_response_data = []
         if "rows" in response_data and response_data["rows"]:
             fields = response_data["schema"]["fields"]
