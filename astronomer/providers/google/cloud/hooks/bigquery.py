@@ -23,7 +23,7 @@ from typing import Dict, Optional, Union
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
@@ -126,54 +126,36 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 job_status = str(e)
             return job_status
 
-    def _bq_cast(self, string_field: str, bq_type: str) -> Union[None, int, float, bool, str]:
-        """
-        Helper method that casts a BigQuery row to the appropriate data types.
-        This is useful because BigQuery returns all fields as strings.
-        """
-        if string_field is None:
-            return None
-        elif bq_type == "INTEGER":
-            return int(string_field)
-        elif bq_type in ("FLOAT", "TIMESTAMP"):
-            return float(string_field)
-        elif bq_type == "BOOLEAN":
-            if string_field not in ["true", "false"]:
-                raise ValueError(f"{string_field} must have value 'true' or 'false'")
-            return string_field == "true"
-        else:
-            return string_field
-
-    async def get_job_data(
+    async def get_job_output(
         self,
         job_id: str,
         project_id: Optional[str] = None,
-    ):
-        """Polls for job status asynchronously using gcloud-aio.
-        Note that an OSError is raised when Job results are still pending.
-        Exception means that Job finished with errors"""
+    ) -> Dict:
+        """
+        Get the big query job output for the given job id
+        asynchronously using gcloud-aio.
+        """
+        async with Session() as session:
+            self.log.info("Executing get_job_output..")
+            job_client = await self.get_job_instance(project_id, job_id, session)
+            job_query_response = await job_client.get_query_results(session)
+            return job_query_response
+
+    def get_records(self, query_results: Dict, nocast: bool = True) -> list:
+        """
+        Given the output query response from gcloud aio bigquery,
+        convert the response to records.
+        nocast: indicates whether casting to bq data type is required or not
+        """
         buffer = []
-
-        async with Session() as s:
-            try:
-                self.log.info("Executing get_job_data...")
-                job_client = await self.get_job_instance(project_id, job_id, s)
-                query_results = await job_client.get_query_results(session=s)
-
-                if "rows" in query_results and query_results["rows"]:
-                    fields = query_results["schema"]["fields"]
-                    col_types = [field["type"] for field in fields]
-                    rows = query_results["rows"]
-
-                    for dict_row in rows:
-                        typed_row = [
-                            self._bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])
-                        ]
-                        buffer.append(typed_row)
-
-                print("Job data is @@@@@@@@@@", buffer)
-
-                return buffer.pop(0)
-            except Exception as e:
-                self.log.info("Query execution finished with errors...")
-                return str(e)
+        if "rows" in query_results and query_results["rows"]:
+            fields = query_results["schema"]["fields"]
+            col_types = [field["type"] for field in fields]
+            rows = query_results["rows"]
+            for dict_row in rows:
+                if nocast:
+                    typed_row = [vs["v"] for vs in dict_row["f"]]
+                else:
+                    typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
+                buffer.append(typed_row)
+        return buffer
