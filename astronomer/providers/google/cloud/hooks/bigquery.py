@@ -20,6 +20,7 @@
 This module contains a BigQueryHookAsync
 """
 from typing import Dict, Optional, Union
+from xmlrpc.client import Boolean
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
@@ -125,33 +126,36 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 job_status = str(e)
             return job_status
 
-    async def get_job_data(
+    async def get_job_output(
         self,
         job_id: str,
         project_id: Optional[str] = None,
     ) -> Dict:
         """
-        Get the job result for the given job id
+        Get the big query job output for the given job id
         asynchronously using gcloud-aio.
         """
         async with Session() as session:
-            self.log.info("Executing get_job_data..")
+            self.log.info("Executing get_job_output..")
             job_client = await self.get_job_instance(project_id, job_id, session)
             job_query_response = await job_client.get_query_results(session)
             return job_query_response
 
-    def get_result_from_big_query(self, response_data: Dict) -> list:
+    def get_records(self, query_results: Dict, nocast: Boolean = True) -> list:
         """
-        Given the output query response from gcloud aio bigquery
-        BigQuery row to the appropriate data types.
-        This is useful because BigQuery returns all fields as strings.
+        Given the output query response from gcloud aio bigquery,
+        convert the response to records.
+        nocast: indicates whether casting to bq data type is required or not
         """
-        final_response_data = []
-        if "rows" in response_data and response_data["rows"]:
-            fields = response_data["schema"]["fields"]
+        buffer = []
+        if "rows" in query_results and query_results["rows"]:
+            fields = query_results["schema"]["fields"]
             col_types = [field["type"] for field in fields]
-            rows = response_data["rows"]
-        for dict_row in rows:
-            typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
-            final_response_data.append(typed_row)
-        return final_response_data
+            rows = query_results["rows"]
+            for dict_row in rows:
+                if nocast:
+                    typed_row = [vs["v"] for vs in dict_row["f"]]
+                else:
+                    typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
+                buffer.append(typed_row)
+        return buffer

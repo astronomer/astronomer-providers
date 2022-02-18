@@ -261,6 +261,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         job_id = ""
         job = self._submit_job(hook, job_id, configuration)
         self.job_id = job.job_id
+        self.log.info(
+            "Fetching Data from %s.%s max results: %s", self.dataset_id, self.table_id, self.max_results
+        )
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryGetDataTrigger(
@@ -290,11 +293,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         )
 
     def execute_complete(self, context, event=None):
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-        self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["message"],
-        )
-        return event["data"]
+        if event["status"] == "success":
+            self.log.info("Total extracted rows: %s", len(event["records"]))
+            return event["records"]
+        raise AirflowException(event["message"])
