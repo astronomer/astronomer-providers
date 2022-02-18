@@ -25,6 +25,7 @@ from datetime import datetime
 
 from airflow import models
 from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperator,
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
     BigQueryDeleteDatasetOperator,
@@ -140,6 +141,13 @@ with models.DAG(
         location=location,
     )
 
+    check_count = BigQueryCheckOperator(
+        task_id="check_count",
+        sql=f"SELECT * FROM {DATASET}.{TABLE_1}",
+        use_legacy_sql=False,
+        location=location,
+    )
+
     execute_query_save = BigQueryInsertJobOperatorAsync(
         task_id="execute_query_save",
         configuration={
@@ -187,7 +195,7 @@ with models.DAG(
         location=location,
     )
 
-    [create_table_1, create_table_2] >> insert_query_job >> select_query_job
+    [create_table_1, create_table_2] >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
     insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
 

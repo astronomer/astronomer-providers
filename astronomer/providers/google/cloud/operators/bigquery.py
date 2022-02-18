@@ -213,7 +213,6 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         self.location = location
         self.impersonation_chain = impersonation_chain
         self.labels = labels
-        # self.project_id = project_id
 
     def _submit_job(
         self,
@@ -221,7 +220,6 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Trigger."""
-        print("In _submit_job of BigQueryCheckOperatorAsync")
         configuration = {"query": {"query": self.sql}}
 
         return hook.insert_job(
@@ -233,38 +231,15 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         )
 
     def execute(self, context: "Context"):
-        print("In execute method of BigQueryCheckOperatorAsync")
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
             location=self.location,
             impersonation_chain=self.impersonation_chain,
         )
-
         self.hook = hook
-        job_id = ""  # self._job_id(context)
+        job_id = ""
 
-        # try:
         job = self._submit_job(hook, job_id)
-        # self._handle_job_error(job)
-        # except Conflict:
-        #     # If the job already exists retrieve it
-        #     job = hook.get_job(
-        #         project_id=self.project_id,
-        #         location=self.location,
-        #         job_id=job_id,
-        #     )
-        #     if job.state in self.reattach_states:
-        #         # We are reattaching to a job
-        #         job._begin()
-        #         self._handle_job_error(job)
-        #     else:
-        #         # Same job configuration so we need force_rerun
-        #         raise AirflowException(
-        #             f"Job with id: {job_id} already exists and is in {job.state} state. If you "
-        #             f"want to force rerun it consider setting `force_rerun=True`."
-        #             f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
-        #         )
-
         self.job_id = job.job_id
 
         print("job_id is ...####", self.job_id)
@@ -280,11 +255,15 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         )
 
     def execute_complete(self, context, event=None):
+        self.log.info("Record: %s", event["records"])
+        records = event["records"]
+        if not records:
+            raise AirflowException("The query returned None")
+        elif not all(bool(r) for r in records):
+            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records!s}")
+        self.log.info("Success.")
+
         if event["status"] == "error":
             raise AirflowException(event["message"])
-        self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["message"],
-        )
-        return event["message"]
+
+        return event["status"]

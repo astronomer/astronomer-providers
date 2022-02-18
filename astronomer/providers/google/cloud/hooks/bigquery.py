@@ -126,6 +126,24 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 job_status = str(e)
             return job_status
 
+    def _bq_cast(self, string_field: str, bq_type: str) -> Union[None, int, float, bool, str]:
+        """
+        Helper method that casts a BigQuery row to the appropriate data types.
+        This is useful because BigQuery returns all fields as strings.
+        """
+        if string_field is None:
+            return None
+        elif bq_type == "INTEGER":
+            return int(string_field)
+        elif bq_type in ("FLOAT", "TIMESTAMP"):
+            return float(string_field)
+        elif bq_type == "BOOLEAN":
+            if string_field not in ["true", "false"]:
+                raise ValueError(f"{string_field} must have value 'true' or 'false'")
+            return string_field == "true"
+        else:
+            return string_field
+
     async def get_job_data(
         self,
         job_id: str,
@@ -134,14 +152,28 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """Polls for job status asynchronously using gcloud-aio.
         Note that an OSError is raised when Job results are still pending.
         Exception means that Job finished with errors"""
+        buffer = []
 
         async with Session() as s:
             try:
                 self.log.info("Executing get_job_data...")
                 job_client = await self.get_job_instance(project_id, job_id, s)
-                job_data = await job_client.get_query_results(session=s)
-                print("Job data is @@@@@@@@@@", job_data)
-                return job_data["rows"][0]
+                query_results = await job_client.get_query_results(session=s)
+
+                if "rows" in query_results and query_results["rows"]:
+                    fields = query_results["schema"]["fields"]
+                    col_types = [field["type"] for field in fields]
+                    rows = query_results["rows"]
+
+                    for dict_row in rows:
+                        typed_row = [
+                            self._bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])
+                        ]
+                        buffer.append(typed_row)
+
+                print("Job data is @@@@@@@@@@", buffer)
+
+                return buffer.pop(0)
             except Exception as e:
                 self.log.info("Query execution finished with errors...")
                 return str(e)
