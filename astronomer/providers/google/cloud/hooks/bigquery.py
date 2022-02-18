@@ -155,14 +155,3 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
             final_response_data.append(typed_row)
         return final_response_data
-
-    def get_result_from_big_query(self, response_data):
-        final_response_data = []
-        if "rows" in response_data and response_data["rows"]:
-            fields = response_data["schema"]["fields"]
-            col_types = [field["type"] for field in fields]
-            rows = response_data["rows"]
-        for dict_row in rows:
-            typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
-            final_response_data.append(typed_row)
-        return final_response_data
