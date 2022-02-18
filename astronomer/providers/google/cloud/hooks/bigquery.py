@@ -23,7 +23,7 @@ from typing import Dict, Optional, Union
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
@@ -140,20 +140,13 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             job_status_response = await job_client.get_query_results(session)
             return job_status_response
 
-    def _bq_cast(string_field: str, bq_type: str) -> Union[None, int, float, bool, str]:
-        """
-        Helper method that casts a BigQuery row to the appropriate data types.
-        This is useful because BigQuery returns all fields as strings.
-        """
-        if string_field is None:
-            return None
-        elif bq_type == "INTEGER":
-            return int(string_field)
-        elif bq_type in ("FLOAT", "TIMESTAMP"):
-            return float(string_field)
-        elif bq_type == "BOOLEAN":
-            if string_field not in ["true", "false"]:
-                raise ValueError(f"{string_field} must have value 'true' or 'false'")
-            return string_field == "true"
-        else:
-            return string_field
+    def get_result_from_big_query(self, response_data):
+        final_response_data = []
+        if "rows" in response_data and response_data["rows"]:
+            fields = response_data["schema"]["fields"]
+            col_types = [field["type"] for field in fields]
+            rows = response_data["rows"]
+        for dict_row in rows:
+            typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
+            final_response_data.append(typed_row)
+        return final_response_data
