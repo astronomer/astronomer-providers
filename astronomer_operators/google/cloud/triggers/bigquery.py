@@ -114,7 +114,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                     yield TriggerEvent(
                         {
                             "status": "success",
-                            "message": response_from_hook,
+                            "records": response_from_hook,
                         }
                     )
                     return
