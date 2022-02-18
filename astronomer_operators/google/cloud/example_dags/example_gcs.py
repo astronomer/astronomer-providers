@@ -34,7 +34,7 @@ from astronomer_operators.google.cloud.sensors.gcs import GCSObjectExistenceSens
 
 START_DATE = datetime(2022, 1, 1)
 
-PATH_TO_UPLOAD_FILE = "dags/example_async_gcs.py"
+PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 CONNECTION_ID = "my_connection"
 PROJECT_ID = "astronomer-airflow-providers"
 BUCKET_1 = "test_bucket_for_dag"
