@@ -199,10 +199,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         labels: Optional[dict] = None,
         **kwargs,
     ) -> None:
-        print("In __init__ of BigQueryCheckOperatorAsync")
         super().__init__(sql=sql, **kwargs)
-        print("########kwargs is...@@@@@@@@@")
-        print(kwargs)
         if bigquery_conn_id:
             warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=3)
             gcp_conn_id = bigquery_conn_id
@@ -236,34 +233,27 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             location=self.location,
             impersonation_chain=self.impersonation_chain,
         )
-        self.hook = hook
-        job_id = ""
-
-        job = self._submit_job(hook, job_id)
-        self.job_id = job.job_id
-
-        print("job_id is ...####", self.job_id)
-
+        job = self._submit_job(hook, job_id="")
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryCheckTrigger(
                 conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
+                job_id=job.job_id,
                 project_id=hook.project_id,
             ),
             method_name="execute_complete",
         )
 
     def execute_complete(self, context, event=None):
-        self.log.info("Record: %s", event["records"])
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+
         records = event["records"]
         if not records:
             raise AirflowException("The query returned None")
         elif not all(bool(r) for r in records):
             raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records!s}")
+        self.log.info("Record: %s", event["records"])
         self.log.info("Success.")
-
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
 
         return event["status"]
