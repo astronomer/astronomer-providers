@@ -1,9 +1,9 @@
 FROM cimg/python:3.9
 
 # Copy this first so it's the only file that will trigger rebuild of the pip dependencies layer
-COPY .circleci/scripts/requirements.txt scripts/ci/requirements.txt
+COPY .circleci/requirements.txt ci/requirements.txt
 
-RUN pip install --no-cache-dir -U -r scripts/ci/requirements.txt
+RUN pip install --no-cache-dir -U -r ci/requirements.txt
 
 COPY . .
 

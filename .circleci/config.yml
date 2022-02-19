@@ -12,9 +12,13 @@ jobs:
       - image: cimg/python:3.9
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
-          name: Install dependencies
-          command: pip install -U -r .circleci/scripts/requirements.txt && pip install .[tests]
+          name: Install Dependencies
+          command: pip install -U -e .[tests]
       - run:
           name: Static checks
           command: pre-commit run --all-files || { git --no-pager diff && false ; }
@@ -28,3 +32,9 @@ jobs:
           path: htmlcov
       - store_test_results:
           path: test-report
+      - save_cache:
+          paths:
+            - /home/circleci/.cache/pip
+            - /home/circleci/.pyenv/versions/
+            - /home/circleci/.local/lib/
+          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
