@@ -3,11 +3,11 @@ from unittest import mock
 import pytest
 from airflow.exceptions import TaskDeferred
 
-from astronomer_operators.databricks.operators.databricks import (
+from astronomer.providers.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
     DatabricksSubmitRunOperatorAsync,
 )
-from astronomer_operators.databricks.triggers.databricks import DatabricksTrigger
+from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 
 TASK_ID = "databricks_check"
 CONN_ID = "databricks_default"
@@ -52,8 +52,8 @@ def test_databricks_submit_run_operator_async(submit_run_response, get_run_page_
     assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
 
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHook.run_now")
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.run_now")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
 def test_databricks_run_now_operator_async(
     run_now_response,
     get_run_page_url_response,

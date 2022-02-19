@@ -8,8 +8,8 @@ from airflow.models.variable import Variable
 from airflow.utils import timezone
 from parameterized import parameterized
 
-from astronomer_operators.amazon.aws.sensors.s3 import S3KeySensorAsync
-from astronomer_operators.amazon.aws.triggers.s3 import S3KeyTrigger
+from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync
+from astronomer.providers.amazon.aws.triggers.s3 import S3KeyTrigger
 
 
 @pytest.fixture
@@ -115,7 +115,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     @mock.patch.object(S3KeySensorAsync, "defer")
-    @mock.patch("astronomer_operators.amazon.aws.sensors.s3.S3KeyTrigger")
+    @mock.patch("astronomer.providers.amazon.aws.sensors.s3.S3KeyTrigger")
     def test_s3_key_sensor_async_with_mock_defer(self, key, bucket, mock_trigger, mock_defer, mock_hook):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired

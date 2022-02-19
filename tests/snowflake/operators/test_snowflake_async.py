@@ -24,14 +24,14 @@ from airflow.exceptions import TaskDeferred
 from airflow.models.dag import DAG
 from airflow.utils import timezone
 
-from astronomer_operators.snowflake.operators.snowflake import SnowflakeOperatorAsync
-from astronomer_operators.snowflake.triggers.snowflake_trigger import SnowflakeTrigger
+from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
+from astronomer.providers.snowflake.triggers.snowflake_trigger import SnowflakeTrigger
 
 DEFAULT_DATE = timezone.datetime(2015, 1, 1)
 DEFAULT_DATE_ISO = DEFAULT_DATE.isoformat()
 DEFAULT_DATE_DS = DEFAULT_DATE_ISO[:10]
 TEST_DAG_ID = "unit_test_dag"
-LONG_MOCK_PATH = "astronomer_operators.snowflake.operators.snowflake."
+LONG_MOCK_PATH = "astronomer.providers.snowflake.operators.snowflake."
 LONG_MOCK_PATH += "SnowflakeOperatorAsync.get_db_hook"
 TASK_ID = "snowflake_check"
 CONN_ID = "my_snowflake_conn"

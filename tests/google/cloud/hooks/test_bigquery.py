@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 from gcloud.aio.bigquery import Job
 
-from astronomer_operators.google.cloud.hooks.bigquery import (
+from astronomer.providers.google.cloud.hooks.bigquery import (
     BigQueryHookAsync,
     _BigQueryHook,
 )
@@ -34,8 +34,8 @@ class _BigQueryBaseTestClass:
 
 class TestBigQueryHookMethods(_BigQueryBaseTestClass):
     @pytest.mark.parametrize("nowait", [True, False])
-    @mock.patch("astronomer_operators.google.cloud.hooks.bigquery.QueryJob")
-    @mock.patch("astronomer_operators.google.cloud.hooks.bigquery._BigQueryHook.get_client")
+    @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.QueryJob")
+    @mock.patch("astronomer.providers.google.cloud.hooks.bigquery._BigQueryHook.get_client")
     def test_insert_job(self, mock_client, mock_query_job, nowait):
         job_conf = {
             "query": {
@@ -70,7 +70,7 @@ class TestBigQueryHookMethods(_BigQueryBaseTestClass):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.bigquery.Session")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
 async def test_get_job_instance(mock_session):
     hook = BigQueryHookAsync()
     result = await hook.get_job_instance(project_id=PROJECT_ID, job_id=JOB_ID, session=mock_session)
@@ -78,8 +78,8 @@ async def test_get_job_instance(mock_session):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
-@mock.patch("astronomer_operators.google.cloud.hooks.bigquery.Session")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
 async def test_get_job_status_success(mock_session, mock_job_instance):
     hook = BigQueryHookAsync()
     resp = await hook.get_job_status(job_id=JOB_ID, project_id=PROJECT_ID)
@@ -90,7 +90,7 @@ async def test_get_job_status_success(mock_session, mock_job_instance):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 async def test_get_job_status_oserror(mock_job_instance):
     """Assets that the BigQueryHookAsync returns a pending response when OSError is raised"""
     mock_job_instance.return_value.result.side_effect = OSError()
@@ -100,7 +100,7 @@ async def test_get_job_status_oserror(mock_job_instance):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 async def test_get_job_status_exception(mock_job_instance, caplog):
     """Assets that the logging is done correctly when BigQueryHookAsync raises Exception"""
     mock_job_instance.return_value.result.side_effect = Exception()

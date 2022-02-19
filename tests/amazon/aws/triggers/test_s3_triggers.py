@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 from botocore.exceptions import ClientError
 
-from astronomer_operators.amazon.aws.triggers.s3 import S3KeyTrigger
+from astronomer.providers.amazon.aws.triggers.s3 import S3KeyTrigger
 
 
 def test_s3_key_trigger_serialization():
@@ -15,7 +15,7 @@ def test_s3_key_trigger_serialization():
     """
     trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket", wildcard_match=True)
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.amazon.aws.triggers.s3.S3KeyTrigger"
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger"
     assert kwargs == {
         "bucket_name": "test_bucket",
         "bucket_key": "s3://test_bucket/file",
@@ -26,8 +26,8 @@ def test_s3_key_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3KeyTrigger._check_key")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_key")
 async def test_s3_key_trigger_run(mock_check_key, mock_client):
     """
     Test if the task is run is in triggerr successfully.
@@ -43,9 +43,9 @@ async def test_s3_key_trigger_run(mock_check_key, mock_client):
         asyncio.get_event_loop().stop()
 
 
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3KeyTrigger._check_exact_key")
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3KeyTrigger._check_wildcard_key")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_exact_key")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_wildcard_key")
 @pytest.mark.asyncio
 async def test_s3_key_trigger_check_key(mock_check_wildcard_key, mock_check_exact_key, mock_client):
     """
@@ -75,7 +75,7 @@ async def test_s3_key_trigger_check_key(mock_check_wildcard_key, mock_check_exac
     asyncio.get_event_loop().stop()
 
 
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 async def test_s3_key_trigger_check_exact_key(mock_client):
     """
@@ -88,7 +88,7 @@ async def test_s3_key_trigger_check_exact_key(mock_client):
     assert task is True
 
 
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 async def test_s3_key_trigger_check_key_with_error(mock_client):
     """
@@ -117,7 +117,7 @@ async def test_s3_key_trigger_check_key_with_error(mock_client):
     assert response is False
 
 
-@mock.patch("astronomer_operators.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 @unittest.expectedFailure
 async def test_s3_key_trigger_check_key_raise_exception(mock_client):

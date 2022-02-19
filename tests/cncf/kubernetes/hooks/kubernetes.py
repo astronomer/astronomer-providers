@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from astronomer_operators.cncf.kubernetes.hooks.kubernetes_async import (
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
     KubernetesHookAsync,
 )
 
@@ -15,7 +15,7 @@ from astronomer_operators.cncf.kubernetes.hooks.kubernetes_async import (
         (False, "/path/to/file", "my-context"),
     ],
 )
-@mock.patch("astronomer_operators.cncf.hooks.kubernetes_async.config")
+@mock.patch("astronomer.providers.cncf.hooks.kubernetes_async.config")
 @pytest.mark.xfail
 async def test_kubernetes__load_config(
     mock_config,

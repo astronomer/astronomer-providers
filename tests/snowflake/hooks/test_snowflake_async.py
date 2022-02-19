@@ -21,7 +21,7 @@ from unittest import mock
 import pytest
 from snowflake.connector.constants import QueryStatus
 
-from astronomer_operators.snowflake.hooks.snowflake import SnowflakeHookAsync
+from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 
 
 class TestPytestSnowflakeHookAsync:
@@ -42,7 +42,7 @@ class TestPytestSnowflakeHookAsync:
             ),
         ],
     )
-    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     def test_run_storing_query_ids(self, mock_conn, sql, expected_sql, expected_query_ids):
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
@@ -83,7 +83,7 @@ class TestPytestSnowflakeHookAsync:
             ),
         ],
     )
-    @mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     async def test_get_query_status(self, mock_conn, query_ids, expected_state, expected_result):
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
