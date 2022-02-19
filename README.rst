@@ -1,7 +1,7 @@
-Astronomer Operators
+Astronomer Providers
 ====================
 
-Closed-source Airflow operators for Astronomer customers.
+Airflow Providers containing Deferrable Operators & Sensors from Astronomer.
 
 Development Environment
 ------------------------
@@ -29,3 +29,8 @@ Dev Directories:
 
 - ``dev/dags/`` - DAG Files
 - ``dev/logs`` - Logs files of the Airflow containers
+
+License
+-------
+
+`Apache License 2.0 <LICENSE>`_
