@@ -32,7 +32,9 @@ repos:
     hooks:
       - id: mypy
         exclude: ^tests/
-        additional_dependencies: [types-aiofiles]
+        args:
+          - "--namespace-packages"
+          - "--explicit-package-bases"
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.1.0
