@@ -7,10 +7,10 @@ from airflow.models import DAG
 from airflow.utils.timezone import datetime
 from google.cloud.exceptions import Conflict
 
-from astronomer_operators.google.cloud.operators.bigquery import (
+from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
 )
-from astronomer_operators.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
+from astronomer.providers.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
 
 TEST_DATASET_LOCATION = "EU"
 TEST_GCP_PROJECT_ID = "test-project"
@@ -25,7 +25,7 @@ def context():
     yield context
 
 
-@mock.patch("astronomer_operators.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 def test_bigquery_insert_job_operator_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryInsertJobTrigger will be fired
@@ -128,7 +128,7 @@ def test_job_id_validity(mock_md5, test_dag_id, expected_job_id):
 
 
 @mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
-@mock.patch("astronomer_operators.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 def test_execute_reattach(mock_hook, mock_md5):
     job_id = "123456"
     hash_ = "hash"
@@ -173,7 +173,7 @@ def test_execute_reattach(mock_hook, mock_md5):
 
 
 @mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
-@mock.patch("astronomer_operators.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 def test_execute_force_rerun(mock_hook, mock_md5):
     job_id = "123456"
     hash_ = "hash"

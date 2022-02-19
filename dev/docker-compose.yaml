@@ -5,7 +5,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: astronomer-operators-dev
+  image: astronomer-providers-dev
   build:
     context: ..
     dockerfile: dev/Dockerfile
@@ -27,7 +27,7 @@ x-airflow-common:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
     - ./plugins:/usr/local/airflow/plugins
-    - ../../astronomer-operators:/usr/local/airflow/astronomer_operators
+    - ../../astronomer-providers:/usr/local/airflow/astronomer_operators
   depends_on:
     &airflow-common-depends-on
     redis:

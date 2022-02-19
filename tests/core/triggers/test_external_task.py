@@ -7,7 +7,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.utils import timezone
 from airflow.utils.state import TaskInstanceState
 
-from astronomer_operators.core.triggers.external_task import TaskStateTrigger
+from astronomer.providers.core.triggers.external_task import TaskStateTrigger
 
 DEFAULT_DATE = timezone.datetime(2015, 1, 1)
 TEST_DAG_ID = "unit_test_dag"
@@ -74,7 +74,7 @@ def test_task_state_trigger_serialization():
         TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.core.triggers.external_task.TaskStateTrigger"
+    assert classpath == "astronomer.providers.core.triggers.external_task.TaskStateTrigger"
     assert kwargs == {
         "dag_id": TEST_DAG_ID,
         "task_id": TEST_TASK_ID,

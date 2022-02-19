@@ -1,4 +1,4 @@
-from astronomer_operators.http.triggers.http import HttpTrigger
+from astronomer.providers.http.triggers.http import HttpTrigger
 
 
 def test_http_trigger_serialization():
@@ -12,7 +12,7 @@ def test_http_trigger_serialization():
         headers={"Content-Type": "application/json"},
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.http.triggers.http.HttpTrigger"
+    assert classpath == "astronomer.providers.http.triggers.http.HttpTrigger"
     assert kwargs == {
         "data": None,
         "endpoint": "test-endpoint",

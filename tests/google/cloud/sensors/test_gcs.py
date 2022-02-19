@@ -21,8 +21,8 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
-from astronomer_operators.google.cloud.sensors.gcs import GCSObjectExistenceSensorAsync
-from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
+from astronomer.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensorAsync
+from astronomer.providers.google.cloud.triggers.gcs import GCSBlobTrigger
 
 TEST_BUCKET = "TEST_BUCKET"
 

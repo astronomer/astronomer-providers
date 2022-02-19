@@ -22,7 +22,7 @@ from unittest import mock
 import pytest
 from gcloud.aio.storage import Storage
 
-from astronomer_operators.google.cloud.hooks.gcs import GCSHookAsync
+from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
 
 
 @pytest.mark.asyncio

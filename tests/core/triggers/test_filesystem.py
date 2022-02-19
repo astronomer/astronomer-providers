@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from astronomer_operators.core.triggers.filesystem import FileTrigger
+from astronomer.providers.core.triggers.filesystem import FileTrigger
 
 TEST_POLL_INTERVAL = 3.0
 
@@ -15,7 +15,7 @@ def test_filesystem_trigger_serialization():
     """
     trigger = FileTrigger(filepath="/files/dags/example_async_file.py", poll_interval=TEST_POLL_INTERVAL)
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.core.triggers.filesystem.FileTrigger"
+    assert classpath == "astronomer.providers.core.triggers.filesystem.FileTrigger"
     assert kwargs == {
         "filepath": "/files/dags/example_async_file.py",
         "poll_interval": TEST_POLL_INTERVAL,

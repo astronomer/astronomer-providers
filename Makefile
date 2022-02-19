@@ -23,11 +23,11 @@ restart-all: ## Restart all the containers
 	docker-compose -f dev/docker-compose.yaml restart
 
 run-tests: ## Run CI tests
-	docker build -f .circleci/scripts/Dockerfile . -t astronomer-operators-ci
+	docker build -f .circleci/Dockerfile . -t astronomer-operators-ci
 	docker run --rm -it astronomer-operators-ci pytest tests
 
 run-static-checks: ## Run CI static code checks
-	docker build -f .circleci/scripts/Dockerfile . -t astronomer-operators-ci
+	docker build -f .circleci/Dockerfile . -t astronomer-operators-ci
 	docker run --rm -it astronomer-operators-ci pre-commit run --all-files
 
 help: ## Prints this message
