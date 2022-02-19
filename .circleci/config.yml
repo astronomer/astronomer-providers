@@ -30,6 +30,11 @@ jobs:
             coverage html
       - store_artifacts:
           path: htmlcov
+      - run:
+          name: Generate Constraints
+          command: pip freeze > constraints.txt
+      - store_artifacts:
+          path: constraints.txt
       - store_test_results:
           path: test-report
       - save_cache:
