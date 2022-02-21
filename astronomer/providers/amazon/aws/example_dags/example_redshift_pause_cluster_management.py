@@ -1,3 +1,5 @@
+import os
+
 import airflow
 from airflow.operators.dummy import DummyOperator
 from airflow.utils.dates import days_ago
@@ -5,6 +7,8 @@ from airflow.utils.dates import days_ago
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,
 )
+
+REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-redshift-cluster-1")
 
 with airflow.DAG(
     dag_id="example_async_redshift_cluster_management",
@@ -17,7 +21,7 @@ with airflow.DAG(
 
     pause_cluster_task = RedshiftPauseClusterOperatorAsync(
         task_id="pause_redshift_cluster",
-        cluster_identifier="astro-redshift-cluster-1",
+        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id="aws_default",
     )
 
