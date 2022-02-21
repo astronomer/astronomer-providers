@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/psf/black
     rev: 22.1.0
@@ -34,3 +35,11 @@ repos:
         name: Run codespell to check for common misspellings in files
         language: python
         types: [text]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        name: Check YAML files with yamllint
+        entry: yamllint -c yamllint-config.yml --strict
+        types: [yaml]
