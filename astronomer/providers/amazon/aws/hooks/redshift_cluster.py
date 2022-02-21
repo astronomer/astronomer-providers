@@ -32,7 +32,6 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                 cluster_state = (
                     response["Clusters"][0]["ClusterStatus"] if response and response["Clusters"] else None
                 )
-                print("")
                 return {"status": "success", "cluster_state": cluster_state}
             except botocore.exceptions.ClientError as error:
                 return {"status": "error", "message": str(error)}
