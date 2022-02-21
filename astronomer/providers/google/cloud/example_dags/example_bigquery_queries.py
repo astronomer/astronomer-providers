@@ -36,6 +36,7 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
     BigQueryGetDataOperatorAsync,
     BigQueryInsertJobOperatorAsync,
+    BigQueryValueCheckOperatorAsync,
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -205,9 +206,18 @@ with models.DAG(
         location=location,
     )
 
+    long_running_value_check = BigQueryValueCheckOperatorAsync(
+        task_id="execute_value_check_query",
+        sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
+        pass_value=2,
+        use_legacy_sql=False,
+        location=location,
+    )
+
     create_table_1 >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> get_data >> get_data_result
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
     insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
+    insert_query_job >> long_running_value_check >> delete_dataset
 
 globals()[dag_id] = dag_with_locations
