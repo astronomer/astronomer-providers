@@ -1,7 +1,32 @@
 Astronomer Providers
 ====================
 
-Airflow Providers containing Deferrable Operators & Sensors from Astronomer.
+`Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
+
+Installation
+------------
+
+.. code-block:: bash
+
+    pip install astronomer-providers
+
+
+Example Usage
+-------------
+
+This repo is structured same as the Apache Airflow's source code, so for example
+if you want to import Async operators, you can import it as follows:
+
+.. code-block:: python
+
+    from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync as S3KeySensor
+
+    waiting_for_s3_key = S3KeySensor(
+        task_id="waiting_for_s3_key",
+        bucket_key="sample_key.txt",
+        wildcard_match=False,
+        bucket_name="sample-bucket",
+    )
 
 Development Environment
 ------------------------
