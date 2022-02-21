@@ -18,7 +18,9 @@
 
 
 """This module contains Google BigQueryAsync providers."""
-from typing import TYPE_CHECKING
+import enum
+import warnings
+from typing import TYPE_CHECKING, Optional, Any, Union, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
@@ -26,6 +28,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryInsertJobOperator,
+    BigQueryValueCheckOperator,
 )
 from google.api_core.exceptions import Conflict
 
@@ -33,6 +36,7 @@ from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryValueCheckTrigger,
 )
 
 if TYPE_CHECKING:
@@ -97,9 +101,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
 
     def _submit_job(
-        self,
-        hook: _BigQueryHook,
-        job_id: str,
+            self,
+            hook: _BigQueryHook,
+            job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
         return hook.insert_job(
@@ -168,9 +172,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     def _submit_job(
-        self,
-        hook: _BigQueryHook,
-        job_id: str,
+            self,
+            hook: _BigQueryHook,
+            job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Trigger."""
         configuration = {"query": {"query": self.sql}}
@@ -212,3 +216,51 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         self.log.info("Success.")
 
         return event["status"]
+
+
+class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
+    def _submit_job(
+            self,
+            hook: _BigQueryHook,
+            job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Triggerer."""
+        configuration = {"query": {"query": self.sql}}
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context: "Context"):
+        hook = _BigQueryHook(
+            gcp_conn_id=self.gcp_conn_id,
+            location=self.location,
+        )
+
+        job = self._submit_job(hook, job_id="")
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryValueCheckTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=job_id,
+                project_id=hook.project_id,
+                sql=self.sql,
+                pass_value=self.pass_value,
+                tolerance=self.tolerance
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
+        )
+        return event["message"]
