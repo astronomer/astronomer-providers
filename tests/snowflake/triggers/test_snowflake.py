@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 from airflow.triggers.base import TriggerEvent
 
-from astronomer_operators.snowflake.triggers.snowflake_trigger import SnowflakeTrigger
+from astronomer.providers.snowflake.triggers.snowflake_trigger import SnowflakeTrigger
 
 TASK_ID = "snowflake_check"
 POLLING_PERIOD_SECONDS = 1.0
@@ -23,7 +23,7 @@ def test_snowflake_trigger_serialization():
         snowflake_conn_id="test_conn",
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.snowflake.triggers.snowflake_trigger.SnowflakeTrigger"
+    assert classpath == "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeTrigger"
     assert kwargs == {
         "task_id": TASK_ID,
         "polling_period_seconds": 1.0,
@@ -33,7 +33,7 @@ def test_snowflake_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 @pytest.mark.parametrize(
     "query_ids",
     [
@@ -62,7 +62,7 @@ async def test_snowflake_trigger_running(mock_get_first, query_ids):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 @pytest.mark.parametrize(
     "query_ids",
     [
@@ -93,7 +93,7 @@ async def test_snowflake_trigger_success(mock_get_first, query_ids):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 @pytest.mark.parametrize(
     "query_ids",
     [
@@ -132,7 +132,7 @@ async def test_snowflake_trigger_failed(mock_get_first, query_ids):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
 @pytest.mark.parametrize(
     "query_ids",
     [

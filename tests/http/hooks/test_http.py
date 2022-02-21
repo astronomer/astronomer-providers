@@ -5,7 +5,7 @@ import pytest
 from airflow.exceptions import AirflowException
 from airflow.models import Connection
 
-from astronomer_operators.http.hooks.http import HttpHookAsync
+from astronomer.providers.http.hooks.http import HttpHookAsync
 
 
 @pytest.mark.asyncio
@@ -24,7 +24,7 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
 
 @pytest.mark.asyncio
 async def test_do_api_call_async_retryable_error(caplog, aioresponse):
-    caplog.set_level(logging.WARNING, logger="astronomer_operators.http.hooks.http")
+    caplog.set_level(logging.WARNING, logger="astronomer.providers.http.hooks.http")
     hook = HttpHookAsync(method="GET")
     aioresponse.get("http://httpbin.org/non_existent_endpoint", status=500, repeat=True)
 

@@ -24,8 +24,8 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 from gcloud.aio.storage import Bucket, Storage
 
-from astronomer_operators.google.cloud.hooks.gcs import GCSHookAsync
-from astronomer_operators.google.cloud.triggers.gcs import GCSBlobTrigger
+from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
+from astronomer.providers.google.cloud.triggers.gcs import GCSBlobTrigger
 
 TEST_BUCKET = "TEST_BUCKET"
 
@@ -53,7 +53,7 @@ def test_gcs_trigger_serialization():
         TEST_HOOK_PARAMS,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger"
+    assert classpath == "astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger"
     assert kwargs == {
         "bucket": TEST_BUCKET,
         "object_name": TEST_OBJECT,
@@ -64,7 +64,7 @@ def test_gcs_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_success(mock_object_exists):
     """
     Tests that the GCSBlobTrigger is success case
@@ -90,7 +90,7 @@ async def test_gcs_trigger_success(mock_object_exists):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
 async def test_gcs_trigger_exception(mock_object_exists):
     """
     Tests the GCSBlobTrigger does fire if there is an exception.

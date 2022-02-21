@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from airflow.triggers.base import TriggerEvent
 
-from astronomer_operators.amazon.aws.triggers.redshift_cluster import (
+from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
     RedshiftClusterTrigger,
 )
@@ -26,7 +26,7 @@ def test_redshift_cluster_resume_trigger_serialization():
         operation_type="resume_cluster",
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger"
+    assert classpath == "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger"
     assert kwargs == {
         "task_id": TASK_ID,
         "polling_period_seconds": POLLING_PERIOD_SECONDS,
@@ -37,7 +37,7 @@ def test_redshift_cluster_resume_trigger_serialization():
 
 
 # @pytest.mark.asyncio
-# @mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+# @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 # async def test_snowflake_trigger_running(mock_resume_cluster):
 #     """
 #     Tests that the RedshiftClusterTrigger in running state
@@ -61,7 +61,7 @@ def test_redshift_cluster_resume_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 async def test_redshift_cluster_resume_trigger_success(mock_resume_cluster):
     """
     Tests RedshiftClusterTrigger success
@@ -86,7 +86,7 @@ async def test_redshift_cluster_resume_trigger_success(mock_resume_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 async def test_redshift_cluster_resume_trigger_failure(mock_resume_cluster):
     """
     Tests RedshiftClusterTrigger success
@@ -135,7 +135,7 @@ def test_redshift_pause_resume_trigger_serialization():
         operation_type="pause_cluster",
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger"
+    assert classpath == "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger"
     assert kwargs == {
         "task_id": TASK_ID,
         "polling_period_seconds": POLLING_PERIOD_SECONDS,
@@ -152,7 +152,7 @@ def test_redshift_pause_resume_trigger_serialization():
         ({"status": "success", "cluster_state": "paused"}),
     ],
 )
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
 async def test_redshift_cluster_pause_trigger_success(mock_pause_cluster, expected_result):
     """
     Tests RedshiftClusterTrigger to test the pause status
@@ -183,7 +183,7 @@ async def test_redshift_cluster_pause_trigger_success(mock_pause_cluster, expect
         ({"status": "success", "cluster_state": "paused"}),
     ],
 )
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
 async def test_redshift_cluster_pause_trigger_failure(mock_pause_cluster, expected_result):
     """
     Tests RedshiftClusterTrigger to test the pause status
@@ -219,7 +219,7 @@ def test_redshift_cluster_sensor_trigger_serialization():
     )
     classpath, kwargs = trigger.serialize()
     assert (
-        classpath == "astronomer_operators.amazon.aws.triggers.redshift_cluster.RedshiftClusterSensorTrigger"
+        classpath == "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterSensorTrigger"
     )
     assert kwargs == {
         "task_id": TASK_ID,
@@ -237,7 +237,7 @@ def test_redshift_cluster_sensor_trigger_serialization():
         ({"status": "success", "cluster_state": "available"}),
     ],
 )
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
 async def test_redshift_cluster_sensor_trigger_success(mock_cluster_status, expected_result):
     """
     Tests RedshiftClusterSensorTrigger to test the success status
@@ -262,7 +262,7 @@ async def test_redshift_cluster_sensor_trigger_success(mock_cluster_status, expe
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
 async def test_redshift_cluster_sensor_trigger_exception(mock_cluster_status):
     """
     Tests RedshiftClusterSensorTrigger to test the exception status

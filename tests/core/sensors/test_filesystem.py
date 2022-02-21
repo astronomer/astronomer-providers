@@ -2,8 +2,8 @@ import pytest
 from airflow.exceptions import TaskDeferred
 from airflow.utils.timezone import datetime
 
-from astronomer_operators.core.sensors.filesystem import FileSensorAsync
-from astronomer_operators.core.triggers.filesystem import FileTrigger
+from astronomer.providers.core.sensors.filesystem import FileSensorAsync
+from astronomer.providers.core.triggers.filesystem import FileTrigger
 
 DEFAULT_DATE = datetime(2015, 1, 1)
 TASK_ID = "example_file_sensor_task"

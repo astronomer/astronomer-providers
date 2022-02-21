@@ -6,11 +6,11 @@ import pytest
 from airflow.models import DAG, DagRun, TaskInstance
 from airflow.utils import timezone
 
-from astronomer_operators.cncf.kubernetes.operators.kubernetes_pod import (
+from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperatorAsync,
     PodNotFoundException,
 )
-from astronomer_operators.cncf.kubernetes.triggers.wait_container import (
+from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
 )
 
@@ -48,14 +48,14 @@ def test_raise_for_trigger_status_done():
 
 
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
 )
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
 )
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
 )
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")
@@ -77,14 +77,14 @@ def test_get_logs(
 
 
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
 )
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
 )
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
 )
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")
@@ -104,11 +104,11 @@ def test_no_pod(
 
 
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
 )
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
 @mock.patch(
-    "astronomer_operators.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
 )
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")

@@ -5,8 +5,8 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.utils.timezone import datetime
 
-from astronomer_operators.core.sensors.external_task import ExternalTaskSensorAsync
-from astronomer_operators.core.triggers.external_task import (
+from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
+from astronomer.providers.core.triggers.external_task import (
     DagStateTrigger,
     TaskStateTrigger,
 )
@@ -85,7 +85,7 @@ def test_external_dag_sensor_async_falsy(dag, context):
     assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
 
-@mock.patch("astronomer_operators.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
+@mock.patch("astronomer.providers.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
 def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every task monitored by
@@ -105,7 +105,7 @@ def test_task_sensor_execute_complete_throws_exc(mocked_count, session, dag, con
     assert str(exc.value) == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
 
 
-@mock.patch("astronomer_operators.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
+@mock.patch("astronomer.providers.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
 def test_dag_sensor_execute_complete_throws_exc(mocked_count, session, dag, context):
     """
     Asserts that the correct exception is raised when not every DAG monitored by

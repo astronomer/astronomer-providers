@@ -13,7 +13,7 @@ from airflow.providers.databricks.hooks.databricks import (
 )
 from packaging import version
 
-from astronomer_operators.databricks.hooks.databricks import DatabricksHookAsync
+from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
 
 TASK_ID = "databricks_check"
 CONN_ID = "unit_test_conn_id"
@@ -29,7 +29,7 @@ if version.parse(provider_version) > version.parse("2.0.2"):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
 async def test_databricks_hook_get_run_state(mocked_response):
     """
     Asserts that a run state is returned as expected while a Databricks run

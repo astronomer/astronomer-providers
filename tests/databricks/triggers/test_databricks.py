@@ -6,7 +6,7 @@ import pytest
 from airflow import AirflowException
 from airflow.providers.databricks.hooks.databricks import RunState
 
-from astronomer_operators.databricks.triggers.databricks import DatabricksTrigger
+from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 
 TASK_ID = "databricks_check"
 CONN_ID = "databricks_default"
@@ -30,7 +30,7 @@ def test_databricks_trigger_serialization():
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer_operators.databricks.triggers.databricks.DatabricksTrigger"
+    assert classpath == "astronomer.providers.databricks.triggers.databricks.DatabricksTrigger"
     assert kwargs == {
         "conn_id": CONN_ID,
         "task_id": TASK_ID,
@@ -42,7 +42,7 @@ def test_databricks_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_success(run_state):
     """
     Tests that the DatabricksTrigger only fires once a
@@ -73,7 +73,7 @@ async def test_databricks_trigger_success(run_state):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_running(run_state, caplog):
     """
     Tests that the DatabricksTrigger does not fire while a
@@ -113,7 +113,7 @@ async def test_databricks_trigger_running(run_state, caplog):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer_operators.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
 async def test_databricks_trigger_terminated(run_state):
     """
     Tests that the DatabricksTrigger does not fire once a

@@ -3,11 +3,11 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
-from astronomer_operators.amazon.aws.operators.redshift_cluster import (
+from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
-from astronomer_operators.amazon.aws.triggers.redshift_cluster import (
+from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterTrigger,
 )
 
@@ -22,8 +22,8 @@ def context():
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_resume_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
     mock_sync_cluster_statue.return_value = "paused"
     mock_async_client.return_value.resume_cluster.return_value = {
@@ -42,8 +42,8 @@ def test_resume_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_resume_cluster_failure(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
     mock_sync_cluster_statue.return_value = "paused"
     mock_async_client.return_value.resume_cluster.return_value = {
@@ -62,8 +62,8 @@ def test_resume_cluster_failure(mock_async_client, mock_async_resume_cluster, mo
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_resume_cluster_execute_complete(
     mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue
 ):
@@ -85,8 +85,8 @@ def test_resume_cluster_execute_complete(
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_pause_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
     mock_sync_cluster_statue.return_value = "available"
     mock_async_client.return_value.pause_cluster.return_value = {
@@ -105,8 +105,8 @@ def test_pause_cluster(mock_async_client, mock_async_resume_cluster, mock_sync_c
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_pause_cluster_failure(mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue):
     mock_sync_cluster_statue.return_value = "available"
     mock_async_client.return_value.pause_cluster.return_value = {
@@ -125,8 +125,8 @@ def test_pause_cluster_failure(mock_async_client, mock_async_resume_cluster, moc
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
-@mock.patch("astronomer_operators.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 def test_pause_cluster_execute_complete(
     mock_async_client, mock_async_resume_cluster, mock_sync_cluster_statue
 ):

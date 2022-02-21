@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.triggers.base import TriggerEvent
 
-from astronomer_operators.cncf.kubernetes.triggers.wait_container import (
+from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
 
-TRIGGER_CLASS = "astronomer_operators.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger"
+TRIGGER_CLASS = "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger"
 READ_NAMESPACED_POD_PATH = "kubernetes_asyncio.client.CoreV1Api.read_namespaced_pod"
 
 
