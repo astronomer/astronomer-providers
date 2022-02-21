@@ -116,7 +116,6 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 self.log.info("Executing get_job_status...")
                 job_client = await self.get_job_instance(project_id, job_id, s)
                 job_status_response = await job_client.result(s)
-                print("Job status response is@@@@@@@", job_status_response)
                 if job_status_response:
                     job_status = "success"
             except OSError:
