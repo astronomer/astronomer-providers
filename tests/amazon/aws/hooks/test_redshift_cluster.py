@@ -55,7 +55,6 @@ async def test_redshift_cluster_status(
     mock_client.return_value.describe_clusters.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.cluster_status(cluster_identifier=mock_cluster_identifier)
-    print("test_redshift_cluster_status result =====>", result)
     assert result == cluster_state
 
 
@@ -89,7 +88,6 @@ async def test_pause_cluster(
     mock_client.pause_cluster.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.pause_cluster(cluster_identifier=mock_cluster_identifier)
-    print("test_pause_cluster result =====>", result)
     assert result == cluster_state
 
 
@@ -125,5 +123,4 @@ async def test_resume_cluster(
     mock_client.resume_cluster.return_value = expected_result
     mock_cluster_status.return_value = cluster_state
     result = await hook.resume_cluster(cluster_identifier=mock_cluster_identifier)
-    print("test_resume_cluster result =====>", result)
     assert result == cluster_state

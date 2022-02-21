@@ -51,7 +51,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                     flag = asyncio.Event()
                     while True:
                         expected_response = await asyncio.create_task(
-                            self.get_status(cluster_identifier, "paused", flag)
+                            self.get_cluster_status(cluster_identifier, "paused", flag)
                         )
                         await asyncio.sleep(10)
                         if flag.is_set():
@@ -75,7 +75,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                     flag = asyncio.Event()
                     while True:
                         expected_response = await asyncio.create_task(
-                            self.get_status(cluster_identifier, "available", flag)
+                            self.get_cluster_status(cluster_identifier, "available", flag)
                         )
                         await asyncio.sleep(10)
                         if flag.is_set():
@@ -84,7 +84,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             except botocore.exceptions.ClientError as error:
                 return {"status": "error", "message": str(error)}
 
-    async def get_status(self, cluster_identifier, expected_state, flag) -> Dict[str, Any]:
+    async def get_cluster_status(self, cluster_identifier, expected_state, flag) -> Dict[str, Any]:
         """
         make call self.cluster_status to know the status and run till the expected_state is met and set the flag
 
