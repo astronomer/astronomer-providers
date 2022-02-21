@@ -86,7 +86,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
         Serializes BigQueryCheckTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.google.cloud.triggers.bigquery.BigQueryCheckTrigger",
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger",
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
