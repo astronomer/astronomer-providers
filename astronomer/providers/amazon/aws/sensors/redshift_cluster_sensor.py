@@ -1,8 +1,8 @@
 import logging
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
+from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
 
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class RedshiftClusterSensorAsync(BaseOperator):
+class RedshiftClusterSensorAsync(RedshiftClusterSensor):
     """
     Waits for a Redshift cluster to reach a specific status.
 
@@ -22,22 +22,14 @@ class RedshiftClusterSensorAsync(BaseOperator):
     :param target_status: The cluster status desired.
     """
 
-    template_fields: Sequence[str] = ("cluster_identifier", "target_status")
-
     def __init__(
         self,
         *,
-        cluster_identifier: str,
-        target_status: str = "available",
-        aws_conn_id: str = "aws_default",
         poll_interval: float = 5,
         **kwargs,
     ):
-        super().__init__(**kwargs)
-        self.cluster_identifier = cluster_identifier
-        self.target_status = target_status
-        self.aws_conn_id = aws_conn_id
         self.poll_interval = poll_interval
+        super().__init__(**kwargs)
 
     def execute(self, context: "Context"):
         self.defer(

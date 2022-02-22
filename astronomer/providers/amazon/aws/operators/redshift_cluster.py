@@ -1,8 +1,11 @@
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException
-from airflow.models import BaseOperator
 from airflow.providers.amazon.aws.hooks.redshift_cluster import RedshiftHook
+from airflow.providers.amazon.aws.operators.redshift_cluster import (
+    RedshiftPauseClusterOperator,
+    RedshiftResumeClusterOperator,
+)
 
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterTrigger,
@@ -12,7 +15,7 @@ if TYPE_CHECKING:
     from airflow.utils.context import Context
 
 
-class RedshiftResumeClusterOperatorAsync(BaseOperator):
+class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
     """
     Resume a paused AWS Redshift Cluster
 
@@ -20,22 +23,14 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
     :param aws_conn_id: aws connection to use
     """
 
-    template_fields: Sequence[str] = ("cluster_identifier",)
-    ui_color = "#eeaa11"
-    ui_fgcolor = "#ffffff"
-
     def __init__(
         self,
         *,
-        cluster_identifier: str,
-        aws_conn_id: str = "aws_default",
         poll_interval: float = 5,
         **kwargs,
     ):
-        super().__init__(**kwargs)
-        self.cluster_identifier = cluster_identifier
         self.poll_interval = poll_interval
-        self.aws_conn_id = aws_conn_id
+        super().__init__(**kwargs)
 
     def execute(self, context: "Context"):
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
@@ -76,7 +71,7 @@ class RedshiftResumeClusterOperatorAsync(BaseOperator):
             return None
 
 
-class RedshiftPauseClusterOperatorAsync(BaseOperator):
+class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
     """
     Pause an AWS Redshift Cluster if cluster status is in `available` state
 
@@ -84,22 +79,14 @@ class RedshiftPauseClusterOperatorAsync(BaseOperator):
     :param aws_conn_id: aws connection to use
     """
 
-    template_fields: Sequence[str] = ("cluster_identifier",)
-    ui_color = "#eeaa11"
-    ui_fgcolor = "#ffffff"
-
     def __init__(
         self,
         *,
-        cluster_identifier: str,
-        aws_conn_id: str = "aws_default",
         poll_interval: float = 5,
         **kwargs,
     ):
-        super().__init__(**kwargs)
-        self.cluster_identifier = cluster_identifier
-        self.aws_conn_id = aws_conn_id
         self.poll_interval = poll_interval
+        super().__init__(**kwargs)
 
     def execute(self, context: "Context"):
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
