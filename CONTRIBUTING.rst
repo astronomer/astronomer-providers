@@ -139,27 +139,27 @@ This will mount your local sources to make them immediately visible in the envir
 
 7. Run the following commands from the root of the repository:
 
-    - ``make dev`` - To create a development Environment using `docker-compose` file.
-    - ``make logs`` - To view the logs of the all the containers
-    - ``make stop`` - To stop all the containers
-    - ``make clean`` - To remove all the containers along with volumes
-    - ``make help`` - To view the available commands
-    - ``make build-run`` - To build the docker image and then run containers
-    - ``make restart`` - To restart Scheduler & Triggerer containers
-    - ``make restart-all`` - To restart all the containers
-    - ``make run-tests`` - Run CI tests
-    - ``make run-static-checks`` - Run CI static code checks
+- ``make dev`` - To create a development Environment using `docker-compose` file.
+- ``make logs`` - To view the logs of the all the containers
+- ``make stop`` - To stop all the containers
+- ``make clean`` - To remove all the containers along with volumes
+- ``make help`` - To view the available commands
+- ``make build-run`` - To build the docker image and then run containers
+- ``make restart`` - To restart Scheduler & Triggerer containers
+- ``make restart-all`` - To restart all the containers
+- ``make run-tests`` - Run CI tests
+- ``make run-static-checks`` - Run CI static code checks
 
-   Following ports are accessible from the host machine:
+Following ports are accessible from the host machine:
 
-    - ``8080`` - Webserver
-    - ``5555`` - Flower
-    - ``5432`` - Postgres
+- ``8080`` - Webserver
+- ``5555`` - Flower
+- ``5432`` - Postgres
 
-   Dev Directories:
+Dev Directories:
 
-    - ``dev/dags/`` - DAG Files
-    - ``dev/logs`` - Logs files of the Airflow containers
+- ``dev/dags/`` - DAG Files
+- ``dev/logs`` - Logs files of the Airflow containers
 
 Step 3: Prepare PR
 ------------------
@@ -410,7 +410,6 @@ or to time but not send a metric:
 
     log.info("Code took %.3f seconds", timer.duration)
 
-For full docs on ``timer()`` check out `airflow/stats.py`_.
 
 If the start_date of a duration calculation needs to be stored in a database, then this has to be done using
 datetime objects. In all other cases, using datetime for duration calculation MUST be avoided as creating and
@@ -419,14 +418,14 @@ diffing datetime operations are (comparatively) slow.
 Naming Conventions for provider packages
 ----------------------------------------
 
-* Provider packages are all placed in 'astronomer.providers'
+* Provider packages are all placed in ``astronomer.providers``
 
-* Providers are usually direct sub-packages of the 'astronomer.providers' package but in some cases they can be
+* Providers are usually direct sub-packages of the ``astronomer.providers`` package but in some cases they can be
   further split into sub-packages. This is the case when the providers are connected under common umbrella but
   very loosely coupled on the code level.
 
 * In some cases the package can have sub-packages but they are all delivered as single provider
-  package (for example 'google' package may contains 'ads', 'cloud' etc. sub-packages). This is in case
+  package (for example ``google`` package may contains ``ads``, ``cloud`` etc. sub-packages). This is in case
   the providers are connected under common umbrella and they are also tightly coupled on the code level.
 
 * Typical structure of provider package:
@@ -436,8 +435,8 @@ Naming Conventions for provider packages
     * triggers -> triggers are stored here
     * sensors -> sensors are stored here
 
-* Module names do not contain word "hooks", "operators" etc. The right type comes from
-  the package. For example 'hooks.databricks' module contains DatabricksHookAsync and 'operators.databricks'
+* Module names do not contain word ``hooks``, ``operators`` etc. The right type comes from
+  the package. For example ``hooks.databricks`` module contains DatabricksHookAsync and ``operators.databricks``
   contains DatabricksSubmitRunOperatorAsync operator.
 
 * Class names contain 'Operator', 'Hook', 'Sensor', 'Trigger' - for example BigQueryInsertJobOperatorAsync, BigQueryHookAsync
@@ -446,10 +445,10 @@ Naming Conventions for provider packages
   (BigQueryInsertJobOperatorAsync) is a good example
 
 * Tests are grouped in parallel packages under "tests" top level package. Module name is usually
-  ``test_<object_to_test>.py``,
+  ``test_<object_to_test>.py``
 
 * System test DAGs (not yet fully automated but allowing to run e2e testing of particular provider) are
-  placed under example_dags folder within respective provider.
+  placed under example_dags folder within respective provider package.
 
 Test Infrastructure
 ===================
