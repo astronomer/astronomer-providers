@@ -123,9 +123,9 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
                     self.log.info("Sleeping for %s seconds.", self.poll_interval)
                     await asyncio.sleep(self.poll_interval)
                 else:
-                    yield TriggerEvent({"status": "error", "message": response_from_hook, "records": None})
+                    yield TriggerEvent({"status": "error", "message": response_from_hook})
                     return
             except Exception as e:
                 self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e), "records": None})
+                yield TriggerEvent({"status": "error", "message": str(e)})
                 return
