@@ -47,7 +47,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         """
         Gets current job execution status and yields a TriggerEvent
         """
-        self.log.info("In BigQueryTrigger run method...")
         hook = self._get_async_hook()
         while True:
             try:
@@ -101,7 +100,6 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
         """
         Gets current job execution status and yields a TriggerEvent
         """
-        self.log.info("In BigQueryCheckTrigger run method...")
         hook = self._get_async_hook()
         while True:
             try:
@@ -109,10 +107,8 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
                 if response_from_hook == "success":
                     query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-
                     # Extract records after casting a BigQuery row to the appropriate data types.
                     records = hook.get_records(query_results, nocast=False)
-
                     # If empty list, then no records are available
                     if not records:
                         yield TriggerEvent(
