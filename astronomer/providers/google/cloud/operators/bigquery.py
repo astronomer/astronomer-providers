@@ -20,7 +20,7 @@
 """This module contains Google BigQueryAsync operators."""
 import enum
 import warnings
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, SupportsAbs, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
@@ -28,6 +28,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryInsertJobOperator,
+    BigQueryIntervalCheckOperator,
 )
 from google.api_core.exceptions import Conflict
 
@@ -35,6 +36,7 @@ from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryIntervalCheckOperatorTrigger,
 )
 
 if TYPE_CHECKING:
@@ -257,3 +259,142 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         self.log.info("Success.")
 
         return event["status"]
+
+
+class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
+    """
+    Checks asynchronously that the values of metrics given as SQL expressions are within
+    a certain tolerance of the ones from days_back before.
+    This method constructs a query like so ::
+        SELECT {metrics_threshold_dict_key} FROM {table}
+        WHERE {date_filter_column}=<date>
+    .. seealso::
+        For more information on how to use this operator, take a look at the guide:
+        :ref:`howto/operator:BigQueryIntervalCheckOperator`
+    :param table: the table name
+    :param days_back: number of days between ds and the ds we want to check
+        against. Defaults to 7 days
+    :param metrics_thresholds: a dictionary of ratios indexed by metrics, for
+        example 'COUNT(*)': 1.5 would require a 50 percent or less difference
+        between the current day, and the prior days_back.
+    :param use_legacy_sql: Whether to use legacy SQL (true)
+        or standard SQL (false).
+    :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
+    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
+        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
+    :param location: The geographic location of the job. See details at:
+        https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account (templated).
+    :param labels: a dictionary containing labels for the table, passed to BigQuery
+    """
+
+    template_fields: Sequence[str] = (
+        "table",
+        "gcp_conn_id",
+        "sql1",
+        "sql2",
+        "impersonation_chain",
+        "labels",
+    )
+    ui_color = BigQueryUIColors.CHECK.value
+
+    def __init__(
+        self,
+        *,
+        table: str,
+        metrics_thresholds: dict,
+        date_filter_column: str = "ds",
+        days_back: SupportsAbs[int] = -7,
+        gcp_conn_id: str = "google_cloud_default",
+        bigquery_conn_id: Optional[str] = None,
+        use_legacy_sql: bool = True,
+        location: Optional[str] = None,
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        labels: Optional[Dict] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            table=table,
+            metrics_thresholds=metrics_thresholds,
+            date_filter_column=date_filter_column,
+            days_back=days_back,
+            **kwargs,
+        )
+
+        if bigquery_conn_id:
+            warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=3)
+            gcp_conn_id = bigquery_conn_id
+
+        self.table = table
+        self.metrics_thresholds = metrics_thresholds
+        self.date_filter_column = date_filter_column
+        self.days_back = days_back
+        self.gcp_conn_id = gcp_conn_id
+        self.use_legacy_sql = use_legacy_sql
+        self.location = location
+        self.impersonation_chain = impersonation_chain
+        self.labels = labels
+
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        sql: str,
+        job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Triggerer."""
+        configuration = {"query": {"query": sql}}
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context=None):
+        hook = _BigQueryHook(
+            gcp_conn_id=self.gcp_conn_id,
+            location=self.location,
+            impersonation_chain=self.impersonation_chain,
+        )
+        self.log.info("Using ratio formula: %s", self.ratio_formula)
+
+        self.log.info("Executing SQL check: %s", self.sql1)
+        job_1 = self._submit_job(hook, sql=self.sql1, job_id="")
+
+        self.log.info("Executing SQL check: %s", self.sql2)
+        job_2 = self._submit_job(hook, sql=self.sql2, job_id="")
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryIntervalCheckOperatorTrigger(
+                conn_id=self.gcp_conn_id,
+                first_job_id=job_1.job_id,
+                second_job_id=job_2.job_id,
+                project_id=hook.project_id,
+                table=self.table,
+                metrics_thresholds=self.metrics_thresholds,
+                date_filter_column=self.date_filter_column,
+                days_back=self.days_back,
+                ratio_formula=self.ratio_formula,
+                ignore_zero=self.ignore_zero,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
+        )
+        return event["message"]
