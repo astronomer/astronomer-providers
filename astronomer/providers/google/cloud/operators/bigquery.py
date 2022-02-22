@@ -36,7 +36,7 @@ from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryInsertJobTrigger,
-    BigQueryIntervalCheckOperatorTrigger,
+    BigQueryIntervalCheckTrigger,
 )
 
 if TYPE_CHECKING:
@@ -374,7 +374,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
         self.defer(
             timeout=self.execution_timeout,
-            trigger=BigQueryIntervalCheckOperatorTrigger(
+            trigger=BigQueryIntervalCheckTrigger(
                 conn_id=self.gcp_conn_id,
                 first_job_id=job_1.job_id,
                 second_job_id=job_2.job_id,
