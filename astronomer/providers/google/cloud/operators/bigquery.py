@@ -31,7 +31,10 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
-from astronomer.providers.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
+from astronomer.providers.google.cloud.triggers.bigquery import (
+    BigQueryGetDataTrigger,
+    BigQueryInsertJobTrigger,
+)
 
 if TYPE_CHECKING:
     from airflow.utils.context import Context
@@ -46,6 +49,7 @@ class BigQueryUIColors(enum.Enum):
     QUERY = "#A1BBFF"
     TABLE = "#81A0FF"
     DATASET = "#5F86FF"
+
 
 class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
@@ -258,27 +262,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         )
 
         self.hook = hook
-        job_id = ""
-        job = self._submit_job(hook, job_id, configuration)
-        self.job_id = job.job_id
-        self.log.info(
-            "Fetching Data from %s.%s max results: %s", self.dataset_id, self.table_id, self.max_results
-        )
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryGetDataTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                dataset_id=self.dataset_id,
-                table_id=self.table_id,
-                project_id=hook.project_id,
-            configuration=Dict(query=get_query, useLegacySql=False),
-        )
-        )
-
-        self.hook = hook
-        job_id = ""
-        job = self._submit_job(hook, job_id, configuration)
+        job = self._submit_job(hook, job_id="", configuration=configuration)
         self.job_id = job.job_id
         self.defer(
             timeout=self.execution_timeout,

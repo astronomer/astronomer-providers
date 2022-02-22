@@ -85,7 +85,7 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
         Serializes BigQueryInsertJobTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,

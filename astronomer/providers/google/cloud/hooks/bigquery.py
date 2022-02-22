@@ -20,7 +20,6 @@
 This module contains a BigQueryHookAsync
 """
 from typing import Dict, Optional, Union
-from xmlrpc.client import Boolean
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
@@ -141,7 +140,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             job_query_response = await job_client.get_query_results(session)
             return job_query_response
 
-    def get_records(self, query_results: Dict, nocast: Boolean = True) -> list:
+    def get_records(self, query_results: Dict, nocast: bool = True) -> list:
         """
         Given the output query response from gcloud aio bigquery,
         convert the response to records.
