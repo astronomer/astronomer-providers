@@ -113,7 +113,7 @@ replicate CI failures locally and work on solving them locally rather by pushing
 
 You can configure the Docker-based development environment as follows:
 
-1. Install the latest versions of the `Docker Community Edition`_ and `Docker Compose`_ and add them to the PATH.
+1. Install the latest versions of the `Docker Community Edition` and `Docker Compose` and add them to the PATH.
 
 This will mount your local sources to make them immediately visible in the environment.
 
@@ -137,29 +137,29 @@ This will mount your local sources to make them immediately visible in the envir
 6. Run pre-commit install with `pre-commit install` to ensure that pre-commit hooks are executed
    on every commit
 
-7. Run the following commands from the root of the repository
+7. Run the following commands from the root of the repository:
 
-    make dev - To create a development Environment using docker-compose file.
-    make logs - To view the logs of the all the containers
-    make stop - To stop all the containers
-    make clean - To remove all the containers along with volumes
-    make help - To view the available commands
-    make build-run - To build the docker image and then run containers
-    make restart - To restart Scheduler & Triggerer containers
-    make restart-all - To restart all the containers
-    make run-tests - Run CI tests
-    make run-static-checks - Run CI static code checks
+- ``make dev`` - To create a development Environment using `docker-compose` file.
+- ``make logs`` - To view the logs of the all the containers
+- ``make stop`` - To stop all the containers
+- ``make clean`` - To remove all the containers along with volumes
+- ``make help`` - To view the available commands
+- ``make build-run`` - To build the docker image and then run containers
+- ``make restart`` - To restart Scheduler & Triggerer containers
+- ``make restart-all`` - To restart all the containers
+- ``make run-tests`` - Run CI tests
+- ``make run-static-checks`` - Run CI static code checks
 
-  Following ports are accessible from the host machine:
+Following ports are accessible from the host machine:
 
-      8080 - Webserver
-      5555 - Flower
-      5432 - Postgres
+- ``8080`` - Webserver
+- ``5555`` - Flower
+- ``5432`` - Postgres
 
-  Dev Directories:
+Dev Directories:
 
-      dev/dags/ - DAG Files
-      dev/logs - Logs files of the Airflow containers
+- ``dev/dags/`` - DAG Files
+- ``dev/logs`` - Logs files of the Airflow containers
 
 Step 3: Prepare PR
 ------------------
@@ -475,39 +475,6 @@ way to sync your fork in GitHub's web UI with the `Fetch upstream feature
 This will force-push the ``main`` branch from ``astronomer/astronomer-providers`` to the ``main`` branch
 in your fork. Note that in case you modified the main in your fork, you might loose those changes.
 
-
-How to communicate
-==================
-
-Apache Airflow is a Community within Apache Software Foundation. As the motto of
-the Apache Software Foundation states "Community over Code" - people in the
-community are far more important than their contribution.
-
-This means that communication plays a big role in it, and this chapter is all about it.
-
-In our communication, everyone is expected to follow the `ASF Code of Conduct <https://www.apache.org/foundation/policies/conduct>`_.
-
-We have various channels of communication - starting from the official devlist, comments
-in the Pull Requests, Slack, wiki.
-
-All those channels can be used for different purposes.
-You can join the channels via links at the `Airflow Community page <https://airflow.apache.org/community/>`_
-
-* The `Apache Airflow devlist <https://lists.apache.org/list.html?dev@airflow.apache.org>`_ for:
-   * official communication
-   * general issues, asking community for opinion
-   * discussing proposals
-   * voting
-* The `Airflow CWiki <https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+Home?src=breadcrumbs>`_ for:
-   * detailed discussions on big proposals (Airflow Improvement Proposals also name AIPs)
-   * helpful, shared resources (for example Apache Airflow logos
-   * information that can be re-used by others (for example instructions on preparing workshops)
-* GitHub `Pull Requests (PRs) <https://github.com/apache/airflow/pulls>`_ for:
-   * discussing implementation details of PRs
-   * not for architectural discussions (use the devlist for that)
-* The deprecated `JIRA issues <https://issues.apache.org/jira/projects/AIRFLOW/issues/AIRFLOW-4470?filter=allopenissues>`_ for:
-   * checking out old but still valuable issues that are not on GitHub yet
-   * mentioning the JIRA issue number in the title of the related PR you would like to open on GitHub
 
 Commit Policy
 =============
