@@ -19,3 +19,20 @@ __pycache__/
 dev/logs/
 dev/connections.yaml
 dev/dags/
+
+# OSX
+.DS_Store
+
+.pypirc
+
+# virtualenv
+.venv*
+venv*
+ENV/
+
+# Sphinx documentation
+docs/_build/
+docs/rtd-deprecation/_build/
+docs/_doctrees/
+docs/_inventory_cache/
+docs/*/_api/

@@ -1,6 +1,13 @@
 Astronomer Providers
 ====================
 
+.. image:: https://badge.fury.io/py/astronomer-providers.svg
+    :target: https://badge.fury.io/py/astronomer-providers
+    :alt: PyPI Version
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+    :alt: Code style: black
+
 `Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
 
 Installation
