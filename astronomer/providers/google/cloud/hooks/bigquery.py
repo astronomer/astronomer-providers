@@ -158,3 +158,97 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                     typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
                 buffer.append(typed_row)
         return buffer
+
+    async def get_first_row(
+        self,
+        job_id: str,
+        project_id: Optional[str] = None,
+    ):
+        """
+        Get the first resulting row of a query execution job
+        :param job_id: Job ID of the query job
+        :type job_id: str
+        :project_id: Project ID of the query job
+        :type project_id: Optional[str]
+        """
+        async with Session() as s:
+            self.log.info("Executing get_first_row method...")
+            job_client = await self.get_job_instance(project_id, job_id, s)
+            job_query_response = await job_client.get_query_results(s)
+            rows = job_query_response.get("rows")
+            records = []
+            if rows:
+                records = [field.get("v") for field in rows[0].get("f")]
+            return records
+
+    def interval_check(
+        self, row1: str, row2: str, metrics_thresholds: dict, ignore_zero: bool, ratio_formula: str
+    ):
+        """
+        Checks that the values of metrics given as SQL expressions are within a certain tolerance of the ones from
+        days_back before.
+        """
+        if not row2:
+            raise AirflowException(f"The query {self.sql2} returned None")
+        if not row1:
+            raise AirflowException(f"The query {self.sql1} returned None")
+
+        ratio_formulas = {
+            "max_over_min": lambda cur, ref: float(max(cur, ref)) / min(cur, ref),
+            "relative_diff": lambda cur, ref: float(abs(cur - ref)) / ref,
+        }
+
+        metrics_sorted = sorted(metrics_thresholds.keys())
+
+        current = dict(zip(metrics_sorted, row1))
+        reference = dict(zip(metrics_sorted, row2))
+        ratios = {}
+        test_results = {}
+
+        for metric in metrics_sorted:
+            cur = float(current[metric])
+            ref = float(reference[metric])
+            threshold = float(metrics_thresholds[metric])
+
+            if cur == 0 or ref == 0:
+                ratios[metric] = None
+                test_results[metric] = ignore_zero
+            else:
+                ratios[metric] = ratio_formulas[ratio_formula](
+                    float(current[metric]), float(reference[metric])
+                )
+                test_results[metric] = float(ratios[metric]) < threshold
+
+            self.log.info(
+                (
+                    "Current metric for %s: %s\n"
+                    "Past metric for %s: %s\n"
+                    "Ratio for %s: %s\n"
+                    "Threshold: %s\n"
+                ),
+                metric,
+                cur,
+                metric,
+                ref,
+                metric,
+                ratios[metric],
+                threshold,
+            )
+
+        if not all(test_results.values()):
+            failed_tests = [it[0] for it in test_results.items() if not it[1]]
+            self.log.warning(
+                "The following %s tests out of %s failed:",
+                len(failed_tests),
+                len(self.metrics_sorted),
+            )
+            for k in failed_tests:
+                self.log.warning(
+                    "'%s' check failed. %s is above %s",
+                    k,
+                    ratios[k],
+                    self.metrics_thresholds[k],
+                )
+            raise AirflowException(f"The following tests have failed:\n {', '.join(sorted(failed_tests))}")
+
+        self.log.info("All tests have passed")
