@@ -229,9 +229,16 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             raise AirflowException(error_msg)
 
     @staticmethod
-    def _get_numeric_matches(records, pass_value, tolerance):
+    def _get_numeric_matches(records: list[float], pass_value: float, tolerance: float = None):
         """
         A helper function to match numeric pass_value, tolerance with records value
+
+        :param records: List of value to match against
+        :type records: list[float]
+        :param pass_value: Expected value
+        :type pass_value: float
+        :param tolerance: Allowed tolerance for match to succeed
+        :type tolerance: float
         """
         if tolerance:
             return [

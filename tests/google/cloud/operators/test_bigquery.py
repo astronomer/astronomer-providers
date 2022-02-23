@@ -10,10 +10,12 @@ from google.cloud.exceptions import Conflict
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
     BigQueryInsertJobOperatorAsync,
+    BigQueryValueCheckOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryValueCheckTrigger,
 )
 
 TEST_DATASET_LOCATION = "EU"
@@ -326,3 +328,47 @@ def test_bigquery_conn_id_deprecation_warning(operator_class, kwargs):
             task_id="test-bq-generic-operator", bigquery_conn_id=bigquery_conn_id, **kwargs
         )
         assert bigquery_conn_id == operator.gcp_conn_id
+
+def _get_value_check_async_operator():
+    """Helper function to initialise BigQueryValueCheckOperatorAsync operator"""
+    query = f"SELECT COUNT(*) FROM Any"
+    pass_val = 2
+
+    return BigQueryValueCheckOperatorAsync(
+        task_id="check_value",
+        sql=query,
+        pass_value=pass_val,
+        use_legacy_sql=False,
+    )
+
+
+def test_bigquery_value_check_async():
+    """
+    Asserts that a task is deferred and a BigQueryValueCheckTrigger will be fired
+    when the BigQueryValueCheckOperatorAsync is executed.
+    """
+    operator = _get_value_check_async_operator()
+
+    with pytest.raises(TaskDeferred) as exc:
+        operator.execute(context)
+
+    assert isinstance(
+        exc.value.trigger, BigQueryValueCheckTrigger
+    ), "Trigger is not a BigQueryValueCheckTrigger"
+
+
+def test_bigquery_value_check_operator_execute_complete_success():
+    """Tests log message in case of success event"""
+    message = "Job completed!"
+    operator = _get_value_check_async_operator()
+
+    response = operator.execute_complete(context=None, event={"status": "success", "message": "Job completed!"})
+    assert message == response
+
+
+def test_bigquery_value_check_operator_execute_complete_failure():
+    """Tests that an AirflowException is raised in case of error event"""
+    operator = _get_value_check_async_operator()
+
+    with pytest.raises(AirflowException):
+        operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})

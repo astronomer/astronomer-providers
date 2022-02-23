@@ -8,6 +8,7 @@ from airflow.triggers.base import TriggerEvent
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryValueCheckTrigger,
 )
 
 TEST_CONN_ID = "bq_default"
@@ -20,6 +21,8 @@ TEST_GCP_PROJECT_ID = "test-project"
 TEST_DATASET_ID = "bq_dataset"
 TEST_TABLE_ID = "bq_table"
 POLLING_PERIOD_SECONDS = 4.0
+TEST_SQL_QUERY = "SELECT count(*) from Any"
+TEST_PASS_VALUE = 2
 
 
 def test_bigquery_insert_job_op_trigger_serialization():
@@ -294,3 +297,28 @@ async def test_bigquery_check_op_trigger_success_without_data(mock_job_output, m
 
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_value_check_trigger_exception(mock_job_status, caplog):
+    """
+    Tests the BigQueryInsertJobTrigger does not fire if there is an exception.
+    """
+    mock_job_status.side_effect = Exception("Test exception")
+    caplog.set_level(logging.DEBUG)
+
+    trigger = BigQueryValueCheckTrigger(
+        conn_id=TEST_CONN_ID,
+        sql=TEST_SQL_QUERY,
+        pass_value=TEST_PASS_VALUE,
+        tolerance=1,
+        job_id=TEST_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(1)
+
+    assert task.done() is False
+    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})

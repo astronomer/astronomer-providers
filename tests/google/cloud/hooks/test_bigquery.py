@@ -1,5 +1,6 @@
 from unittest import mock
 
+from airflow.exceptions import AirflowException
 import pytest
 from gcloud.aio.bigquery import Job
 
@@ -107,3 +108,105 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     hook = BigQueryHookAsync()
     await hook.get_job_status(job_id=JOB_ID, project_id=PROJECT_ID)
     assert "Query execution finished with errors..." in caplog.text
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
+async def test_get_first_row(mock_get_first_row):
+    mock_get_first_row.return_value = []
+    hook = BigQueryHookAsync()
+    response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
+    assert [] == response
+
+    mock_get_first_row.return_value = [2]
+    response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
+    assert [2] == response
+
+
+def test_value_check_success():
+    """
+    Assert that check return None
+    """
+    hook = BigQueryHookAsync()
+    query = "SELECT COUNT(*) from Any"
+
+    # string response
+    records, pass_value, tolerance = ["str"], "str", None
+    response = hook.value_check(query, pass_value, records, tolerance)
+    assert response is None
+
+    records, pass_value, tolerance = [2], 2, None
+    response = hook.value_check(query, pass_value, records, tolerance)
+    assert response is None
+
+    records, pass_value, tolerance = [0], 2, 1
+    response = hook.value_check(query, pass_value, records, tolerance)
+    assert response is None
+
+    records, pass_value, tolerance = [4], 2, 1
+    response = hook.value_check(query, pass_value, records, tolerance)
+    assert response is None
+
+
+def test_value_check_fail():
+    """Assert that check raise AirflowException"""
+    hook = BigQueryHookAsync()
+    query = "SELECT COUNT(*) from Any"
+
+    with pytest.raises(AirflowException, match="The query returned None"):
+        records, pass_value, tolerance = [], "", None
+        hook.value_check(query, pass_value, records, tolerance)
+
+    with pytest.raises(AirflowException):
+        records, pass_value, tolerance = ["str"], "str1", None
+        hook.value_check(query, pass_value, records, tolerance)
+
+    with pytest.raises(Exception):
+        records, pass_value, tolerance = [2], 21, None
+        hook.value_check(query, pass_value, records, tolerance)
+
+    with pytest.raises(AirflowException):
+        records, pass_value, tolerance = [5], 2, 1
+        hook.value_check(query, pass_value, records, tolerance)
+
+
+def test_get_numeric_matches():
+    """Assert the response list have all element is true or not"""
+    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.0, None)
+    assert all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.1, None)
+    assert not all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.0, 0.5)
+    assert all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([1.0], 2.0, 0.5)
+    assert all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([3.0], 2.0, 0.5)
+    assert all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([0.9], 2.0, 0.5)
+    assert not all(response)
+
+    response = BigQueryHookAsync._get_numeric_matches([3.1], 2.0, 0.5)
+    assert not all(response)
+
+
+def test_convert_to_float_if_possible():
+    """
+    Assert that type casting succeed for the possible value
+    Otherwise return the same value
+    """
+    response = BigQueryHookAsync._convert_to_float_if_possible(5.0)
+    assert response == 5.0
+
+    response = BigQueryHookAsync._convert_to_float_if_possible(5)
+    assert response == 5.0
+
+    response = BigQueryHookAsync._convert_to_float_if_possible("5")
+    assert response == 5.0
+
+    response = BigQueryHookAsync._convert_to_float_if_possible("str")
+    assert response == "str"

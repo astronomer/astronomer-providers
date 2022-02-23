@@ -18,9 +18,7 @@
 
 
 """This module contains Google BigQueryAsync providers."""
-import enum
-import warnings
-from typing import TYPE_CHECKING, Optional, Any, Union, Sequence
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
@@ -225,7 +223,15 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
-        configuration = {"query": {"query": self.sql}}
+        configuration = {
+            "query": {
+                "query": self.sql,
+                "useLegacySql": False,
+            }
+        }
+        if self.use_legacy_sql:
+            configuration["query"]["useLegacySql"] = self.use_legacy_sql
+
         return hook.insert_job(
             configuration=configuration,
             project_id=hook.project_id,
@@ -250,7 +256,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
                 project_id=hook.project_id,
                 sql=self.sql,
                 pass_value=self.pass_value,
-                tolerance=self.tolerance
+                tolerance=self.tol
             ),
             method_name="execute_complete",
         )
