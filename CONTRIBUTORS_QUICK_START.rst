@@ -75,11 +75,6 @@ Create a local virtualenv, for example:
 Setup and develop using PyCharm
 ###############################
 
-.. raw:: html
-
-  <details>
-    <summary>Setup and develop using PyCharm</summary>
-
 
 Setting up Astronomer Providers
 -------------------------------
