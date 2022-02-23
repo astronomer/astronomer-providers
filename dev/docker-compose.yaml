@@ -24,7 +24,7 @@ x-airflow-common:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
     - ./plugins:/usr/local/airflow/plugins
-    - ../../astronomer-providers:/usr/local/airflow/astronomer_operators
+    - ../../astronomer-providers:/usr/local/airflow/astronomer_providers
   depends_on:
     &airflow-common-depends-on
     redis:
