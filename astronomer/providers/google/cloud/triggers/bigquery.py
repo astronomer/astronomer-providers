@@ -220,7 +220,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         Serializes BigQueryValueCheckTrigger arguments and classpath.
         """
         return (
-            "astronomer_operators.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger",
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger",
             {
                 "conn_id": self.conn_id,
                 "pass_value": self.pass_value,
