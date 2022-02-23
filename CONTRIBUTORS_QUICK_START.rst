@@ -45,19 +45,9 @@ Docker Desktop Community Edition
 - Configure the Docker daemon by modifying the json Docker daemon configuration file,
   navigate to Preferences > Docker Engine  on the Docker Desktop and change the JSON file as below
 
-```yaml
-    {
-      "builder": {
-        "gc": {
-          "enabled": true,
-          "defaultKeepStorage": "20GB"
-        }
-      },
-      "experimental": false,
-      "features": {
-        "buildkit": false
-      }
-    }
+```json
+{'builder': {"gc": {"enabled": true,"defaultKeepStorage": "20GB"}},"experimental": false,"features": {"buildkit": false
+}}
 ```
 
 - Restart Docker Desktop
