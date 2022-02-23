@@ -17,11 +17,9 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
     def __init__(
         self,
         *,
-        cluster_identifier: str,
         poll_interval: float = 5,
         **kwargs,
     ) -> None:
-        self.cluster_identifier = cluster_identifier
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
@@ -32,8 +30,8 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
                 task_id=self.task_id,
                 polling_period_seconds=self.poll_interval,
                 redshift_conn_id=self.redshift_conn_id,
-                cluster_identifier=self.cluster_identifier,
                 sql=self.sql,
+                parameters=self.parameters,
             ),
             method_name="execute_complete",
         )
@@ -46,7 +44,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["type"], event["message"])
+                msg = "{0}".format(event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
