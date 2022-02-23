@@ -20,7 +20,7 @@
 """This module contains Google BigQueryAsync operators."""
 import enum
 import warnings
-from typing import TYPE_CHECKING, Dict, Optional, Sequence, SupportsAbs, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
@@ -294,53 +294,6 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         account from the list granting this role to the originating account (templated).
     :param labels: a dictionary containing labels for the table, passed to BigQuery
     """
-
-    template_fields: Sequence[str] = (
-        "table",
-        "gcp_conn_id",
-        "sql1",
-        "sql2",
-        "impersonation_chain",
-        "labels",
-    )
-    ui_color = BigQueryUIColors.CHECK.value
-
-    def __init__(
-        self,
-        *,
-        table: str,
-        metrics_thresholds: dict,
-        date_filter_column: str = "ds",
-        days_back: SupportsAbs[int] = -7,
-        gcp_conn_id: str = "google_cloud_default",
-        bigquery_conn_id: Optional[str] = None,
-        use_legacy_sql: bool = True,
-        location: Optional[str] = None,
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
-        labels: Optional[Dict] = None,
-        **kwargs,
-    ) -> None:
-        super().__init__(
-            table=table,
-            metrics_thresholds=metrics_thresholds,
-            date_filter_column=date_filter_column,
-            days_back=days_back,
-            **kwargs,
-        )
-
-        if bigquery_conn_id:
-            warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=3)
-            gcp_conn_id = bigquery_conn_id
-
-        self.table = table
-        self.metrics_thresholds = metrics_thresholds
-        self.date_filter_column = date_filter_column
-        self.days_back = days_back
-        self.gcp_conn_id = gcp_conn_id
-        self.use_legacy_sql = use_legacy_sql
-        self.location = location
-        self.impersonation_chain = impersonation_chain
-        self.labels = labels
 
     def _submit_job(
         self,
