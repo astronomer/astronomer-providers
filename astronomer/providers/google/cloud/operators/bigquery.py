@@ -18,8 +18,7 @@
 
 
 """This module contains Google BigQueryAsync providers."""
-import enum
-from typing import TYPE_CHECKING, Dict, Sequence
+from typing import TYPE_CHECKING, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
@@ -46,15 +45,6 @@ BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={jo
 _DEPRECATION_MSG = (
     "The bigquery_conn_id parameter has been deprecated. You should pass the gcp_conn_id parameter."
 )
-
-
-class BigQueryUIColors(enum.Enum):
-    """Hex colors for BigQuery operators"""
-
-    CHECK = "#C0D7FF"
-    QUERY = "#A1BBFF"
-    TABLE = "#81A0FF"
-    DATASET = "#5F86FF"
 
 
 class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
@@ -275,15 +265,6 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         account from the list granting this role to the originating account (templated).
     """
 
-    template_fields: Sequence[str] = (
-        "dataset_id",
-        "table_id",
-        "max_results",
-        "selected_fields",
-        "impersonation_chain",
-    )
-    ui_color = BigQueryUIColors.QUERY.value
-
     def _submit_job(
         self,
         hook: _BigQueryHook,
@@ -299,13 +280,17 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             nowait=True,
         )
 
-    def execute(self, context: "Context"):
+    def generate_query(self):
         get_query = "select "
         if self.selected_fields:
             get_query += self.selected_fields
         else:
             get_query += "*"
         get_query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
+        return get_query
+
+    def execute(self, context: "Context"):
+        get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
 
         hook = _BigQueryHook(

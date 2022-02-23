@@ -83,7 +83,7 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_op_trigger_running(mock_job_status, caplog, trigger_class):
     """
-    Tests that the  BigQueryInsertJobTrigger and BigQueryCheckTrigger do not fire while a query is still running.
+    Test that BigQuery Triggers do not fire while a query is still running.
     """
     mock_job_status.return_value = "pending"
     caplog.set_level(logging.INFO)
@@ -119,7 +119,7 @@ async def test_bigquery_op_trigger_running(mock_job_status, caplog, trigger_clas
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
     """
-    Tests the BigQueryInsertJobTrigger and BigQueryCheckTrigger fires the correct event in case of an error.
+    Test that BigQuery Triggers fire the correct event in case of an error.
     """
     # Set the status to a value other than success or pending
     mock_job_status.return_value = "error"
@@ -153,7 +153,7 @@ async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_op_trigger_exception(mock_job_status, caplog, trigger_class):
     """
-    Tests that the BigQueryInsertJobTrigger and BigQueryCheckTrigger fires the correct event in case of an error.
+    Test that BigQuery Triggers fire the correct event in case of an error.
     """
     mock_job_status.side_effect = Exception("Test exception")
     caplog.set_level(logging.DEBUG)
@@ -204,7 +204,7 @@ def test_bigquery_check_op_trigger_serialization():
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
 async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock_job_status):
     """
-    Tests that the BigQueryCheckTrigger only fires once the query execution reaches a successful state.
+    Test the BigQueryCheckTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
     mock_job_output.return_value = {
@@ -252,7 +252,7 @@ async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
 async def test_bigquery_check_op_trigger_success_without_data(mock_job_output, mock_job_status):
     """
-    Tests that the BigQueryCheckTrigger sends TriggerEvent as  { "status": "success", "records": None}
+    Tests that BigQueryCheckTrigger sends TriggerEvent as  { "status": "success", "records": None}
     when no rows are available in the query result.
     """
     mock_job_status.return_value = "success"
@@ -325,9 +325,9 @@ def test_bigquery_get_data_trigger_serialization():
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
-async def test_bigquery_get_data_trigger_success_with_data(mock_job_status, mock_job_output):
+async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock_job_status):
     """
-    Tests that the BigQueryCheckTrigger only fires once the query execution reaches a successful state.
+    Tests that BigQueryGetDataTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
     mock_job_output.return_value = {

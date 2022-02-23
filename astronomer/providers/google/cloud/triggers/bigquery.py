@@ -161,7 +161,6 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
         """
         Gets current job execution status and yields a TriggerEvent with response data
         """
-        self.log.info("In BigQueryTrigger run method...")
         hook = self._get_async_hook()
         while True:
             try:
