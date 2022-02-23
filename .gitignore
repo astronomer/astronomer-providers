@@ -36,3 +36,6 @@ docs/rtd-deprecation/_build/
 docs/_doctrees/
 docs/_inventory_cache/
 docs/*/_api/
+
+# test reports
+test-report/
