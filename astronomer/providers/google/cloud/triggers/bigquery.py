@@ -186,7 +186,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         Serializes BigQueryCheckTrigger arguments and classpath.
         """
         return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckOperatorTrigger",
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger",
             {
                 "conn_id": self.conn_id,
                 "first_job_id": self.first_job_id,
