@@ -143,7 +143,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 yield TriggerEvent({"status": "error", "message": str(e)})
                 return
 
-              
+
 class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
     def __init__(
         self,

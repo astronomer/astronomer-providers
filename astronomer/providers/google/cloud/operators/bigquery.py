@@ -18,9 +18,7 @@
 
 
 """This module contains Google BigQueryAsync operators."""
-import enum
-import warnings
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
