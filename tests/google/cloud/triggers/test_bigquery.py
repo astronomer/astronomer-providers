@@ -6,6 +6,7 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
+    BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryInsertJobTrigger,
 )
@@ -76,7 +77,7 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger],
+    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
@@ -112,13 +113,13 @@ async def test_bigquery_op_trigger_running(mock_job_status, caplog, trigger_clas
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger],
+    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
     """
-    Tests the BigQueryInsertJobTrigger and BigQueryGetDataTrigger fires the correct event in case of an error.
+    Tests the BigQueryInsertJobTrigger and BigQueryCheckTrigger fires the correct event in case of an error.
     """
     # Set the status to a value other than success or pending
     mock_job_status.return_value = "error"
@@ -146,7 +147,7 @@ async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger],
+    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
@@ -171,6 +172,129 @@ async def test_bigquery_op_trigger_exception(mock_job_status, caplog, trigger_cl
 
     assert task.done() is True
     assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
+
+
+def test_bigquery_check_op_trigger_serialization():
+    """
+    Asserts that the BigQueryCheckTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = BigQueryCheckTrigger(
+        TEST_CONN_ID,
+        TEST_JOB_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        POLLING_PERIOD_SECONDS,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger"
+    assert kwargs == {
+        "conn_id": TEST_CONN_ID,
+        "job_id": TEST_JOB_ID,
+        "dataset_id": TEST_DATASET_ID,
+        "project_id": TEST_GCP_PROJECT_ID,
+        "table_id": TEST_TABLE_ID,
+        "poll_interval": POLLING_PERIOD_SECONDS,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
+async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock_job_status):
+    """
+    Tests that the BigQueryCheckTrigger only fires once the query execution reaches a successful state.
+    """
+    mock_job_status.return_value = "success"
+    mock_job_output.return_value = {
+        "kind": "bigquery#getQueryResultsResponse",
+        "etag": "test_etag",
+        "schema": {"fields": [{"name": "f0_", "type": "INTEGER", "mode": "NULLABLE"}]},
+        "jobReference": {
+            "projectId": "test_astronomer-airflow-providers",
+            "jobId": "test_jobid",
+            "location": "US",
+        },
+        "totalRows": "1",
+        "rows": [{"f": [{"v": "22"}]}],
+        "totalBytesProcessed": "0",
+        "jobComplete": True,
+        "cacheHit": False,
+    }
+
+    trigger = BigQueryCheckTrigger(
+        TEST_CONN_ID,
+        TEST_JOB_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is True
+
+    # The extracted row will be parsed and formatted to retrieve the value [22] from the
+    # structure - 'rows': [{'f': [{'v': '22'}]}]
+
+    assert task.result() == TriggerEvent({"status": "success", "records": [22]})
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
+async def test_bigquery_check_op_trigger_success_without_data(mock_job_output, mock_job_status):
+    """
+    Tests that the BigQueryCheckTrigger sends TriggerEvent as  { "status": "success", "records": None}
+    when no rows are available in the query result.
+    """
+    mock_job_status.return_value = "success"
+    mock_job_output.return_value = {
+        "kind": "bigquery#getQueryResultsResponse",
+        "etag": "test_etag",
+        "schema": {
+            "fields": [
+                {"name": "value", "type": "INTEGER", "mode": "NULLABLE"},
+                {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+                {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
+            ]
+        },
+        "jobReference": {
+            "projectId": "test_astronomer-airflow-providers",
+            "jobId": "test_jobid",
+            "location": "US",
+        },
+        "totalRows": "0",
+        "totalBytesProcessed": "0",
+        "jobComplete": True,
+        "cacheHit": False,
+    }
+
+    trigger = BigQueryCheckTrigger(
+        TEST_CONN_ID,
+        TEST_JOB_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is True
+    assert task.result() == TriggerEvent({"status": "success", "records": None})
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
 
 
 def test_bigquery_get_data_trigger_serialization():
@@ -198,9 +322,7 @@ def test_bigquery_get_data_trigger_serialization():
     }
 
 
-pytest.mark.asyncio
-
-
+@pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
 async def test_bigquery_get_data_trigger_success_with_data(mock_job_status, mock_job_output):
