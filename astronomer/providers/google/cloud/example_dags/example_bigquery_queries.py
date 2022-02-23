@@ -18,7 +18,7 @@
 
 """
 Example Airflow DAG for Google BigQuery service.
-Uses Async version of BigQueryInsertJobOperator.
+Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
 """
 import os
 from datetime import datetime
@@ -32,6 +32,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 from astronomer.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperatorAsync,
     BigQueryInsertJobOperatorAsync,
 )
 
@@ -49,7 +50,7 @@ SCHEMA = [
 ]
 
 location = LOCATION
-dag_id = "example_async_bigquery_insert_job"
+dag_id = "example_async_bigquery_queries"
 DATASET = DATASET_NAME
 INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
 INSERT_ROWS_QUERY = (
@@ -80,15 +81,7 @@ with models.DAG(
         location=location,
     )
 
-    create_table_2 = BigQueryCreateEmptyTableOperator(
-        task_id="create_table_2",
-        dataset_id=DATASET,
-        table_id=TABLE_2,
-        schema_fields=SCHEMA,
-        location=location,
-    )
-
-    create_dataset >> [create_table_1, create_table_2]
+    create_dataset >> create_table_1
 
     delete_dataset = BigQueryDeleteDatasetOperator(
         task_id="delete_dataset", dataset_id=DATASET, delete_contents=True
@@ -140,6 +133,13 @@ with models.DAG(
         location=location,
     )
 
+    check_count = BigQueryCheckOperatorAsync(
+        task_id="check_count",
+        sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
+        use_legacy_sql=False,
+        location=location,
+    )
+
     execute_query_save = BigQueryInsertJobOperatorAsync(
         task_id="execute_query_save",
         configuration={
@@ -187,7 +187,7 @@ with models.DAG(
         location=location,
     )
 
-    [create_table_1, create_table_2] >> insert_query_job >> select_query_job
+    create_table_1 >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
     insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
 

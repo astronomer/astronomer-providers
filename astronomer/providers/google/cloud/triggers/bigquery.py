@@ -47,7 +47,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         """
         Gets current job execution status and yields a TriggerEvent
         """
-        self.log.info("In BigQueryTrigger run method...")
         hook = self._get_async_hook()
         while True:
             try:
@@ -78,3 +77,66 @@ class BigQueryInsertJobTrigger(BaseTrigger):
 
     def _get_async_hook(self) -> BigQueryHookAsync:
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
+
+
+class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Serializes BigQueryCheckTrigger arguments and classpath.
+        """
+        return (
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger",
+            {
+                "conn_id": self.conn_id,
+                "job_id": self.job_id,
+                "dataset_id": self.dataset_id,
+                "project_id": self.project_id,
+                "table_id": self.table_id,
+                "poll_interval": self.poll_interval,
+            },
+        )
+
+    async def run(self):
+        """
+        Gets current job execution status and yields a TriggerEvent
+        """
+        hook = self._get_async_hook()
+        while True:
+            try:
+                # Poll for job execution status
+                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+                if response_from_hook == "success":
+                    query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
+                    # Extract records after casting a BigQuery row to the appropriate data types.
+                    records = hook.get_records(query_results, nocast=False)
+                    # If empty list, then no records are available
+                    if not records:
+                        yield TriggerEvent(
+                            {
+                                "status": "success",
+                                "records": None,
+                            }
+                        )
+                    else:
+                        # Extract only first record from the query results
+                        first_record = records.pop(0)
+                        yield TriggerEvent(
+                            {
+                                "status": "success",
+                                "records": first_record,
+                            }
+                        )
+                    return
+
+                elif response_from_hook == "pending":
+                    self.log.info("Query is still running...")
+                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
+                    await asyncio.sleep(self.poll_interval)
+                else:
+                    yield TriggerEvent({"status": "error", "message": response_from_hook})
+                    return
+
+            except Exception as e:
+                self.log.exception("Exception occurred while checking for query completion")
+                yield TriggerEvent({"status": "error", "message": str(e)})
+                return

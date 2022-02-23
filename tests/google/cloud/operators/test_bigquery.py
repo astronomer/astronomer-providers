@@ -8,9 +8,13 @@ from airflow.utils.timezone import datetime
 from google.cloud.exceptions import Conflict
 
 from astronomer.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperatorAsync,
     BigQueryInsertJobOperatorAsync,
 )
-from astronomer.providers.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
+from astronomer.providers.google.cloud.triggers.bigquery import (
+    BigQueryCheckTrigger,
+    BigQueryInsertJobTrigger,
+)
 
 TEST_DATASET_LOCATION = "EU"
 TEST_GCP_PROJECT_ID = "test-project"
@@ -221,3 +225,104 @@ def test_execute_force_rerun(mock_hook, mock_md5):
         job_id=real_job_id,
         project_id=TEST_GCP_PROJECT_ID,
     )
+
+
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+def test_bigquery_check_operator_async(mock_hook):
+    """
+    Asserts that a task is deferred and a BigQueryCheckTrigger will be fired
+    when the BigQueryCheckOperatorAsync is executed.
+    """
+    job_id = "123456"
+    hash_ = "hash"
+    real_job_id = f"{job_id}_{hash_}"
+
+    mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
+
+    op = BigQueryCheckOperatorAsync(
+        task_id="bq_check_operator_job",
+        sql="SELECT * FROM any",
+        location=TEST_DATASET_LOCATION,
+    )
+
+    with pytest.raises(TaskDeferred) as exc:
+        op.execute(context)
+
+    assert isinstance(exc.value.trigger, BigQueryCheckTrigger), "Trigger is not a BigQueryCheckTrigger"
+
+
+def test_bigquery_check_operator_execute_failure(context):
+    """Tests that an AirflowException is raised in case of error event"""
+
+    operator = BigQueryCheckOperatorAsync(
+        task_id="bq_check_operator_execute_failure", sql="SELECT * FROM any", location=TEST_DATASET_LOCATION
+    )
+
+    with pytest.raises(AirflowException):
+        operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+
+
+def test_bigquery_check_op_execute_complete_with_no_records():
+    """Asserts that exception is raised with correct expected exception message"""
+
+    operator = BigQueryCheckOperatorAsync(
+        task_id="bq_check_operator_execute_complete", sql="SELECT * FROM any", location=TEST_DATASET_LOCATION
+    )
+
+    with pytest.raises(AirflowException) as exc:
+        operator.execute_complete(context=None, event={"status": "success", "records": None})
+
+    expected_exception_msg = "The query returned None"
+
+    assert str(exc.value) == expected_exception_msg
+
+
+def test_bigquery_check_op_execute_complete_with_non_boolean_records():
+    """Executing a sql which returns a non-boolean value should raise exception"""
+
+    test_sql = "SELECT * FROM any"
+
+    operator = BigQueryCheckOperatorAsync(
+        task_id="bq_check_operator_execute_complete", sql=test_sql, location=TEST_DATASET_LOCATION
+    )
+
+    expected_exception_msg = f"Test failed.\nQuery:\n{test_sql}\nResults:\n{[20, False]!s}"
+
+    with pytest.raises(AirflowException) as exc:
+        operator.execute_complete(context=None, event={"status": "success", "records": [20, False]})
+
+    assert str(exc.value) == expected_exception_msg
+
+
+def test_bigquery_check_operator_execute_complete():
+    """Asserts that logging occurs as expected"""
+
+    operator = BigQueryCheckOperatorAsync(
+        task_id="bq_check_operator_execute_complete", sql="SELECT * FROM any", location=TEST_DATASET_LOCATION
+    )
+
+    with mock.patch.object(operator.log, "info") as mock_log_info:
+        operator.execute_complete(context=None, event={"status": "success", "records": [20]})
+    mock_log_info.assert_called_with("Success.")
+
+
+@pytest.mark.parametrize(
+    "operator_class, kwargs",
+    [
+        (BigQueryCheckOperatorAsync, dict(sql="Select * from test_table")),
+    ],
+)
+def test_bigquery_conn_id_deprecation_warning(operator_class, kwargs):
+    """When bigquery_conn_id is passed to the Operator, raises a warning and asserts that gcp_conn_id is used"""
+    bigquery_conn_id = "google_cloud_default"
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            "The bigquery_conn_id parameter has been deprecated. "
+            "You should pass the gcp_conn_id parameter."
+        ),
+    ):
+        operator = operator_class(
+            task_id="test-bq-generic-operator", bigquery_conn_id=bigquery_conn_id, **kwargs
+        )
+        assert bigquery_conn_id == operator.gcp_conn_id

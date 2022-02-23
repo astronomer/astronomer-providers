@@ -23,11 +23,17 @@ from typing import TYPE_CHECKING
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperator,
+    BigQueryInsertJobOperator,
+)
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
-from astronomer.providers.google.cloud.triggers.bigquery import BigQueryInsertJobTrigger
+from astronomer.providers.google.cloud.triggers.bigquery import (
+    BigQueryCheckTrigger,
+    BigQueryInsertJobTrigger,
+)
 
 if TYPE_CHECKING:
     from airflow.utils.context import Context
@@ -158,3 +164,51 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             event["message"],
         )
         return event["message"]
+
+
+class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Trigger."""
+        configuration = {"query": {"query": self.sql}}
+
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context: "Context"):
+        hook = _BigQueryHook(
+            gcp_conn_id=self.gcp_conn_id,
+            location=self.location,
+        )
+        job = self._submit_job(hook, job_id="")
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryCheckTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=job.job_id,
+                project_id=hook.project_id,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+
+        records = event["records"]
+        if not records:
+            raise AirflowException("The query returned None")
+        elif not all(bool(r) for r in records):
+            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records!s}")
+        self.log.info("Record: %s", event["records"])
+        self.log.info("Success.")
+
+        return event["status"]
