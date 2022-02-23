@@ -6,6 +6,15 @@ Hi there! We're thrilled that you'd like to contribute to this project. Your hel
 Please note that this project is released with a `Contributor Code of Conduct <CODE_OF_CONDUCT.md>`_.
 By participating in this project you agree to abide by its terms.
 
+Principle
+---------
+
+We will only create Async operators for the "sync-version" of operators that do some level of polling
+(take more than a few seconds to complete).
+
+For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
+for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
+
 Issues and PRs
 ---------------
 
@@ -94,8 +103,8 @@ You can configure the Docker-based development environment as follows:
    - ``dev/dags/`` - DAG Files
    - ``dev/logs/`` - Logs files of the Airflow containers
 
-Step 3: Prepare PR
-------------------
+Prepare PR
+----------
 
 1. Update the local sources to address the issue you are working on.
 
@@ -127,7 +136,7 @@ Step 3: Prepare PR
    Create Pull Request!
 
 Pull Request Guidelines
-=======================
+-----------------------
 
 Before you submit a pull request (PR), check that it meets these guidelines:
 
@@ -164,7 +173,7 @@ Naming Conventions
 * System/Example test DAGs are placed under ``example_dags`` folder within respective folders.
 
 Setting up Debug
-~~~~~~~~~~~~~~~~
+----------------
 
 1. Debugging an example DAG
 
@@ -181,7 +190,7 @@ Setting up Debug
 - Now this example DAG should be picked up by the local instance of Airflow.
 
 Testing
-~~~~~~~
+-------
 
 All tests are inside ``./tests`` directory.
 

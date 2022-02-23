@@ -19,9 +19,12 @@ Astronomer Providers
 Installation
 ------------
 
+Install and update using `pip <https://pip.pypa.io/en/stable/getting-started/>`_:
+
 .. code-block:: bash
 
     pip install astronomer-providers
+
 
 Example Usage
 -------------
@@ -39,6 +42,15 @@ if you want to import Async operators, you can import it as follows:
         wildcard_match=False,
         bucket_name="sample-bucket",
     )
+
+Principle
+---------
+
+We will only create Async operators for the "sync-version" of operators that do some level of polling
+(take more than a few seconds to complete).
+
+For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
+for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
 
 Contributing Guide
 ------------------
