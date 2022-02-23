@@ -23,7 +23,6 @@ Installation
 
     pip install astronomer-providers
 
-
 Example Usage
 -------------
 
@@ -41,32 +40,14 @@ if you want to import Async operators, you can import it as follows:
         bucket_name="sample-bucket",
     )
 
-Development Environment
-------------------------
+Contributing Guide
+------------------
 
-Run the following commands from the root of the repository:
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-- ``make dev`` - To create a development Environment using `docker-compose` file.
-- ``make logs`` - To view the logs of the all the containers
-- ``make stop`` - To stop all the containers
-- ``make clean`` - To remove all the containers along with volumes
-- ``make help`` - To view the available commands
-- ``make build-run`` - To build the docker image and then run containers
-- ``make restart`` - To restart Scheduler & Triggerer containers
-- ``make restart-all`` - To restart all the containers
-- ``make run-tests`` - Run CI tests
-- ``make run-static-checks`` - Run CI static code checks
+A detailed overview on how to contribute can be found in the `Contributing Guide <CONTRIBUTING.rst>`_.
 
-Following ports are accessible from the host machine:
-
-- ``8080`` - Webserver
-- ``5555`` - Flower
-- ``5432`` - Postgres
-
-Dev Directories:
-
-- ``dev/dags/`` - DAG Files
-- ``dev/logs`` - Logs files of the Airflow containers
+As contributors and maintainers to this project, you are expected to abide by the `Contributor Code of Conduct <CODE_OF_CONDUCT.md>`_.
 
 License
 -------
