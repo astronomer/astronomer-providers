@@ -46,7 +46,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         """
         Gets current job execution status and yields a TriggerEvent
         """
-        self.log.info("In BigQueryTrigger run method...")
         hook = self._get_async_hook()
         while True:
             try:
@@ -144,7 +143,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 yield TriggerEvent({"status": "error", "message": str(e)})
                 return
 
-
+              
 class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
     def __init__(
         self,

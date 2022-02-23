@@ -144,7 +144,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """
         Given the output query response from gcloud aio bigquery,
         convert the response to records.
-        nocast: indicates whether casting to bq data type is required or not
+        :param query_results: the results from a SQL query
+        :param nocast: indicates whether casting to bq data type is required or not
         """
         buffer = []
         if "rows" in query_results and query_results["rows"]:

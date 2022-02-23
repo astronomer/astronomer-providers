@@ -170,49 +170,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         return event["message"]
 
 
-class BigQueryUIColors(enum.Enum):
-    """Hex colors for BigQuery operators"""
-
-    CHECK = "#C0D7FF"
-    QUERY = "#A1BBFF"
-    TABLE = "#81A0FF"
-    DATASET = "#5F86FF"
-
-
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
-    template_fields: Sequence[str] = (
-        "sql",
-        "gcp_conn_id",
-        "impersonation_chain",
-        "labels",
-    )
-    template_ext: Sequence[str] = (".sql",)
-    ui_color = BigQueryUIColors.CHECK.value
-
-    def __init__(
-        self,
-        *,
-        sql: str,
-        gcp_conn_id: str = "google_cloud_default",
-        bigquery_conn_id: Optional[str] = None,
-        use_legacy_sql: bool = True,
-        location: Optional[str] = None,
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
-        labels: Optional[dict] = None,
-        **kwargs,
-    ) -> None:
-        super().__init__(sql=sql, **kwargs)
-        if bigquery_conn_id:
-            warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=3)
-            gcp_conn_id = bigquery_conn_id
-
-        self.gcp_conn_id = gcp_conn_id
-        self.sql = sql
-        self.use_legacy_sql = use_legacy_sql
-        self.location = location
-        self.impersonation_chain = impersonation_chain
-        self.labels = labels
-
     def _submit_job(
         self,
         hook: _BigQueryHook,
