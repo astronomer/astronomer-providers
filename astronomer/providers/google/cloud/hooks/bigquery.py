@@ -187,6 +187,17 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """
         Checks that the values of metrics given as SQL expressions are within a certain tolerance of the ones from
         days_back before.
+        :param row1: first resulting row of a query execution job for first SQL query
+        :param row2: first resulting row of a query execution job for second SQL query
+        :metrics_thresholds: a dictionary of ratios indexed by metrics, for
+            example 'COUNT(*)': 1.5 would require a 50 percent or less difference
+            between the current day, and the prior days_back.
+        :ignore_zero: whether we should ignore zero metrics
+        :ratio_formula: which formula to use to compute the ratio between
+            the two metrics. Assuming cur is the metric of today and ref is
+            the metric to today - days_back.
+            max_over_min: computes max(cur, ref) / min(cur, ref)
+            relative_diff: computes abs(cur-ref) / ref
         """
         if not row2:
             raise AirflowException(f"The query {self.sql2} returned None")
