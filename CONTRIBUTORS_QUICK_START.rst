@@ -46,7 +46,6 @@ Docker Desktop Community Edition
   navigate to Preferences > Docker Engine  on the Docker Desktop and change the JSON file as below
 
   ```yaml
-
     {
       "builder": {
         "gc": {
@@ -59,7 +58,6 @@ Docker Desktop Community Edition
         "buildkit": false
       }
     }
-```
 
 - Restart Docker Desktop
 - Once Docker is installed, please install Docker Compose.Please refer to [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
