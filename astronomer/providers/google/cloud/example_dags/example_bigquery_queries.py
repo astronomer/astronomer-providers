@@ -34,6 +34,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
     BigQueryInsertJobOperatorAsync,
+    BigQueryIntervalCheckOperatorAsync,
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -119,6 +120,17 @@ with models.DAG(
     )
     # [END howto_operator_bigquery_value_check]
 
+    # [START howto_operator_bigquery_interval_check_async]
+    check_interval = BigQueryIntervalCheckOperatorAsync(
+        task_id="check_interval",
+        table=f"{DATASET}.{TABLE_1}",
+        days_back=1,
+        metrics_thresholds={"COUNT(*)": 1.5},
+        use_legacy_sql=False,
+        location=location,
+    )
+    # [START howto_operator_bigquery_interval_check_async]
+
     bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
         task_id="execute_multi_query",
         configuration={
@@ -189,6 +201,6 @@ with models.DAG(
 
     create_table_1 >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
-    insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
+    insert_query_job >> execute_long_running_query >> check_value >> check_interval >> delete_dataset
 
 globals()[dag_id] = dag_with_locations
