@@ -156,7 +156,7 @@ Setting up Debug
 
 - In PyCharm IDE open the project, directory ``/dev/dags`` of local machine is by default mounted to docker
   machine when airflow is started. So any DAG file present in this directory will be picked automatically by
-  scheduler running in docker machine and same can be seen on ``http://127.0.0.1:28080``.
+  scheduler running in docker machine and same can be seen on ``http://127.0.0.1:8080``.
 
 - Copy any example DAG that you would have developed  to ``/dev/dags/``.
 
