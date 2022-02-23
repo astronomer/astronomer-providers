@@ -65,14 +65,15 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
         POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
 
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    assert TriggerEvent({"status": "success", "message": "Job completed"}) in task
 
 
 @pytest.mark.parametrize(
@@ -133,16 +134,15 @@ async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
 
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    assert task.result() == TriggerEvent({"status": "error", "message": "error"})
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    assert TriggerEvent({"status": "error", "message": "error"}) in task
 
 
 @pytest.mark.parametrize(
@@ -167,11 +167,14 @@ async def test_bigquery_op_trigger_exception(mock_job_status, caplog, trigger_cl
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(1)
-
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
 def test_bigquery_check_op_trigger_serialization():
@@ -232,19 +235,18 @@ async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock
         POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was returned
-    assert task.done() is True
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
 
     # The extracted row will be parsed and formatted to retrieve the value [22] from the
     # structure - 'rows': [{'f': [{'v': '22'}]}]
 
-    assert task.result() == TriggerEvent({"status": "success", "records": [22]})
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    assert TriggerEvent({"status": "success", "records": [22]}) in task
 
 
 @pytest.mark.asyncio
@@ -285,16 +287,14 @@ async def test_bigquery_check_op_trigger_success_without_data(mock_job_output, m
         TEST_TABLE_ID,
         POLLING_PERIOD_SECONDS,
     )
-
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was returned
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "success", "records": None})
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success", "records": None}) in task
 
 
 def test_bigquery_get_data_trigger_serialization():
@@ -355,22 +355,23 @@ async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock
         POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
+    # # The extracted row will be parsed and formatted to retrieve the value from the
+    # # structure - 'rows":[{"f":[{"v":"42"},{"v":"monthy python"}]},{"f":[{"v":"42"},{"v":"fishy fish"}]}]
 
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    # The extracted row will be parsed and formatted to retrieve the value from the
-    # structure - 'rows":[{"f":[{"v":"42"},{"v":"monthy python"}]},{"f":[{"v":"42"},{"v":"fishy fish"}]}]
-
-    assert task.result() == TriggerEvent(
-        {
-            "status": "success",
-            "message": "success",
-            "records": [["42", "monthy python"], ["42", "fishy fish"]],
-        }
+    assert (
+        TriggerEvent(
+            {
+                "status": "success",
+                "message": "success",
+                "records": [["42", "monthy python"], ["42", "fishy fish"]],
+            }
+        )
+        in task
     )
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
