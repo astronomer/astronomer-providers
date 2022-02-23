@@ -40,8 +40,7 @@ Docker Desktop
 Docker Desktop Community Edition
 --------------------------------
 
-- Install Docker Desktop on your machine, based on the Operating System.
-Please refer [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/) .
+- Install Docker Desktop on your machine, based on the Operating System.Please refer [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/) .
 - Confirm that the Docker Desktop installation completed successfully.
 - Configure the Docker daemon by modifying the json Docker daemon configuration file,
   navigate to Preferences > Docker Engine  on the Docker Desktop and change the JSON file as below
@@ -67,7 +66,7 @@ Please refer to [https://docs.docker.com/compose/install/](https://docs.docker.c
 
 
 
-Setting up virtual-env
+Virtual Environment
 --------------------------------
 Create a local virtualenv, for example:
 
