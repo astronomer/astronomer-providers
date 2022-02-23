@@ -91,7 +91,8 @@ Setup and develop using PyCharm
     <summary>Setup and develop using PyCharm</summary>
 
 
-
+Setting up Astronomer Providers
+-------------------------------
 
 Forking and cloning Project
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
