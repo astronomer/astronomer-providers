@@ -256,7 +256,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
                 project_id=hook.project_id,
                 sql=self.sql,
                 pass_value=self.pass_value,
-                tolerance=self.tol
+                tolerance=self.tol,
             ),
             method_name="execute_complete",
         )
@@ -265,8 +265,6 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["message"],
+            "%s completed with response %s ", self.task_id, event["message"],
         )
         return event["message"]

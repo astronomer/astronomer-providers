@@ -178,10 +178,10 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             self.log.info("Executing get_first method...")
             job_client = await self.get_job_instance(project_id, job_id, s)
             job_query_response = await job_client.get_query_results(s)
-            rows = job_query_response.get('rows')
+            rows = job_query_response.get("rows")
             records = []
             if rows:
-                records = [field.get('v') for field in rows[0].get('f')]
+                records = [field.get("v") for field in rows[0].get("f")]
             return records
 
     def value_check(
@@ -208,10 +208,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             "Tolerance:{tolerance_pct_str}\n"
             "Query:\n{sql}\nResults:\n{records!s}"
         ).format(
-            pass_value_conv=pass_value_conv,
-            tolerance_pct_str=tolerance_pct_str,
-            sql=sql,
-            records=records,
+            pass_value_conv=pass_value_conv, tolerance_pct_str=tolerance_pct_str, sql=sql, records=records,
         )
 
         if not is_numeric_value_check:
@@ -242,8 +239,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """
         if tolerance:
             return [
-                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance)
-                for record in records
+                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance) for record in records
             ]
 
         return [record == pass_value for record in records]

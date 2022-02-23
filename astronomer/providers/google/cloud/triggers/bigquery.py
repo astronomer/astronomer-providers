@@ -160,7 +160,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
             project_id=project_id,
             dataset_id=dataset_id,
             table_id=table_id,
-            poll_interval=poll_interval
+            poll_interval=poll_interval,
         )
         self.sql = sql
         self.pass_value = pass_value
@@ -197,13 +197,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
                 if response_from_hook == "success":
                     records = await hook.get_first_row(job_id=self.job_id, project_id=self.project_id)
                     hook.value_check(self.sql, self.pass_value, records, self.tolerance)
-                    yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "message": "Job completed",
-                            "data": records
-                        }
-                    )
+                    yield TriggerEvent({"status": "success", "message": "Job completed", "data": records})
                     return
                 elif response_from_hook == "pending":
                     self.log.info("Query is still running...")
