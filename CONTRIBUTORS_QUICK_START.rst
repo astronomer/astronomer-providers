@@ -45,7 +45,7 @@ Docker Desktop Community Edition
 - Configure the Docker daemon by modifying the json Docker daemon configuration file,
   navigate to Preferences > Docker Engine  on the Docker Desktop and change the JSON file as below
 
-  . code-block:: bash
+  ```yaml
 
     {
       "builder": {
@@ -59,10 +59,10 @@ Docker Desktop Community Edition
         "buildkit": false
       }
     }
+```
 
 - Restart Docker Desktop
-- Once Docker is installed, please install Docker Compose.
-Please refer to [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
+- Once Docker is installed, please install Docker Compose.Please refer to [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 
 
 
