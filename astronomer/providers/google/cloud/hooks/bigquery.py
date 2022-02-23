@@ -201,9 +201,9 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             relative_diff: computes abs(cur-ref) / ref
         """
         if not row2:
-            raise AirflowException(f"The query {self.sql2} returned None")
+            raise AirflowException("The second SQL query returned None")
         if not row1:
-            raise AirflowException(f"The query {self.sql1} returned None")
+            raise AirflowException("The first SQL query returned None")
 
         ratio_formulas = {
             "max_over_min": lambda cur, ref: float(max(cur, ref)) / min(cur, ref),
@@ -221,7 +221,6 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             cur = float(current[metric])
             ref = float(reference[metric])
             threshold = float(metrics_thresholds[metric])
-
             if cur == 0 or ref == 0:
                 ratios[metric] = None
                 test_results[metric] = ignore_zero
@@ -252,14 +251,14 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             self.log.warning(
                 "The following %s tests out of %s failed:",
                 len(failed_tests),
-                len(self.metrics_sorted),
+                len(metrics_sorted),
             )
             for k in failed_tests:
                 self.log.warning(
                     "'%s' check failed. %s is above %s",
                     k,
                     ratios[k],
-                    self.metrics_thresholds[k],
+                    metrics_thresholds[k],
                 )
             raise AirflowException(f"The following tests have failed:\n {', '.join(sorted(failed_tests))}")
 

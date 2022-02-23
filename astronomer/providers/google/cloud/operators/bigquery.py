@@ -301,9 +301,10 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     def execute_complete(self, context, event=None):
         if event["status"] == "error":
             raise AirflowException(event["message"])
+
         self.log.info(
             "%s completed with response %s ",
             self.task_id,
-            event["message"],
+            event["status"],
         )
-        return event["message"]
+        return event["status"]
