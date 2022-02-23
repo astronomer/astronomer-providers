@@ -110,8 +110,6 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     assert "Query execution finished with errors..." in caplog.text
 
 
-@pytest.mark.asyncio
-<<<<<<< HEAD
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 async def test_get_job_output(mock_job_instance):
     """
@@ -140,7 +138,8 @@ async def test_get_job_output(mock_job_instance):
     resp = await hook.get_job_output(job_id=JOB_ID, project_id=PROJECT_ID)
     assert resp == response
 
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
+
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 async def test_get_first_row(mock_get_first_row):
     mock_get_first_row.return_value = []
     hook = BigQueryHookAsync()
@@ -154,12 +153,11 @@ async def test_get_first_row(mock_get_first_row):
 
 def test_value_check_success():
     """
-    Assert that check return None
+    Assert that value_check method execution succeed
     """
     hook = BigQueryHookAsync()
     query = "SELECT COUNT(*) from Any"
 
-    # string response
     records, pass_value, tolerance = ["str"], "str", None
     response = hook.value_check(query, pass_value, records, tolerance)
     assert response is None

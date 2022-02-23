@@ -17,13 +17,13 @@ TEST_JOB_ID = "1234"
 RUN_ID = "1"
 RETRY_LIMIT = 2
 RETRY_DELAY = 1.0
-POLLING_PERIOD_SECONDS = 1.0
 TEST_GCP_PROJECT_ID = "test-project"
 TEST_DATASET_ID = "bq_dataset"
 TEST_TABLE_ID = "bq_table"
 POLLING_PERIOD_SECONDS = 4.0
 TEST_SQL_QUERY = "SELECT count(*) from Any"
 TEST_PASS_VALUE = 2
+TEST_TOLERANCE = 1
 
 
 def test_bigquery_insert_job_op_trigger_serialization():
@@ -382,14 +382,154 @@ async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock
     asyncio.get_event_loop().stop()
 
 
+def test_bigquery_value_check_op_trigger_serialization():
+    """
+    Asserts that the BigQueryValueCheckTrigger correctly serializes its arguments
+    and classpath.
+    """
+
+    trigger = BigQueryValueCheckTrigger(
+        TEST_CONN_ID,
+        TEST_PASS_VALUE,
+        TEST_JOB_ID,
+        TEST_DATASET_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_SQL_QUERY,
+        TEST_TABLE_ID,
+        TEST_TOLERANCE,
+        POLLING_PERIOD_SECONDS,
+    )
+    classpath, kwargs = trigger.serialize()
+
+    assert (
+        classpath
+        == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger"
+    )
+    assert kwargs == {
+        "conn_id": TEST_CONN_ID,
+        "pass_value": TEST_PASS_VALUE,
+        "job_id": TEST_JOB_ID,
+        "dataset_id": TEST_DATASET_ID,
+        "project_id": TEST_GCP_PROJECT_ID,
+        "sql": TEST_SQL_QUERY,
+        "table_id": TEST_TABLE_ID,
+        "tolerance": TEST_TOLERANCE,
+        "poll_interval": POLLING_PERIOD_SECONDS,
+    }
+
+
+# TODO: test locally
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
-async def test_bigquery_value_check_trigger_exception(mock_job_status, caplog):
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
+async def test_bigquery_value_check_op_trigger_success(mock_get_first_row, mock_job_status):
     """
-    Tests the BigQueryInsertJobTrigger does not fire if there is an exception.
+    Tests that the BigQueryValueCheckTrigger only fires once the query execution reaches a successful state.
+    """
+    mock_job_status.return_value = "success"
+    mock_get_first_row.return_value = [2]
+
+    trigger = BigQueryValueCheckTrigger(
+        TEST_CONN_ID,
+        TEST_PASS_VALUE,
+        TEST_JOB_ID,
+        TEST_DATASET_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_SQL_QUERY,
+        TEST_TABLE_ID,
+        TEST_TOLERANCE,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is True
+
+    assert task.result() == TriggerEvent({"status": "success", "records": [2]})
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+# TODO run locally
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_value_check_op_trigger_pending(mock_job_status, caplog):
+    """
+    Tests that the BigQueryValueCheckTrigger only fires once the query execution reaches a successful state.
+    """
+    mock_job_status.return_value = "pending"
+    caplog.set_level(logging.INFO)
+
+    trigger = BigQueryValueCheckTrigger(
+        TEST_CONN_ID,
+        TEST_PASS_VALUE,
+        TEST_JOB_ID,
+        TEST_DATASET_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_SQL_QUERY,
+        TEST_TABLE_ID,
+        TEST_TOLERANCE,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is False
+
+    # TODO: assert info
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+# TODO run locally
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_value_check_op_trigger_fail(mock_job_status):
+    """
+    Tests that the BigQueryValueCheckTrigger only fires once the query execution reaches a successful state.
+    """
+    mock_job_status.return_value = "dummy"
+
+    trigger = BigQueryValueCheckTrigger(
+        TEST_CONN_ID,
+        TEST_PASS_VALUE,
+        TEST_JOB_ID,
+        TEST_DATASET_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_SQL_QUERY,
+        TEST_TABLE_ID,
+        TEST_TOLERANCE,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was returned
+    assert task.done() is False
+
+    assert task.result() == TriggerEvent(
+        {"status": "error", "message": "dummy", "records": None}
+    )
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+# TODO run locally
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_value_check_trigger_exception(mock_job_status):
+    """
+    Tests the BigQueryValueCheckTrigger does not fire if there is an exception.
     """
     mock_job_status.side_effect = Exception("Test exception")
-    caplog.set_level(logging.DEBUG)
 
     trigger = BigQueryValueCheckTrigger(
         conn_id=TEST_CONN_ID,
@@ -404,4 +544,6 @@ async def test_bigquery_value_check_trigger_exception(mock_job_status, caplog):
     await asyncio.sleep(1)
 
     assert task.done() is False
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
+    assert task.result() == TriggerEvent(
+        {"status": "error", "message": "Test exception"}
+    )

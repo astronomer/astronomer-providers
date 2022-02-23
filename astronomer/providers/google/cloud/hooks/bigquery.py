@@ -161,6 +161,32 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 buffer.append(typed_row)
         return buffer
 
+<<<<<<< HEAD
+=======
+    async def get_first_row(
+            self,
+            job_id: str,
+            project_id: Optional[str] = None,
+    ):
+        """
+        Get the first resulting row of a query execution job
+
+        :param job_id: Job ID of the query job
+        :type job_id: str
+        :project_id: Project ID of the query job
+        :type project_id: Optional[str]
+        """
+        async with Session() as s:
+            self.log.info("Executing get_first method...")
+            job_client = await self.get_job_instance(project_id, job_id, s)
+            job_query_response = await job_client.get_query_results(s)
+            rows = job_query_response.get("rows")
+            records = []
+            if rows:
+                records = [field.get("v") for field in rows[0].get("f")]
+            return records
+
+>>>>>>> 932df9d (Add negative test for BigQueryValueCheckOperatorAsync)
     def value_check(
         self,
         sql: str,
@@ -185,10 +211,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             "Tolerance:{tolerance_pct_str}\n"
             "Query:\n{sql}\nResults:\n{records!s}"
         ).format(
-            pass_value_conv=pass_value_conv,
-            tolerance_pct_str=tolerance_pct_str,
-            sql=sql,
-            records=records,
+            pass_value_conv=pass_value_conv, tolerance_pct_str=tolerance_pct_str, sql=sql, records=records,
         )
 
         if not is_numeric_value_check:
@@ -219,8 +242,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """
         if tolerance:
             return [
-                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance)
-                for record in records
+                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance) for record in records
             ]
 
         return [record == pass_value for record in records]
