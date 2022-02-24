@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from airflow.exceptions import AirflowException
 from gcloud.aio.bigquery import Job
 
 from astronomer.providers.google.cloud.hooks.bigquery import (
@@ -107,6 +108,71 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     hook = BigQueryHookAsync()
     await hook.get_job_status(job_id=JOB_ID, project_id=PROJECT_ID)
     assert "Query execution finished with errors..." in caplog.text
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
+async def test_get_job_output_assert_once_with(mock_session, mock_job_instance):
+    hook = BigQueryHookAsync()
+    await hook.get_job_output(job_id=JOB_ID, project_id=PROJECT_ID)
+    mock_job_instance.assert_called_once_with(
+        PROJECT_ID, JOB_ID, mock_session.return_value.__aenter__.return_value
+    )
+
+
+def test_interval_check_for_airflow_exception():
+    """
+    Assert that check return AirflowException
+    """
+    hook = BigQueryHookAsync()
+
+    row1, row2, metrics_thresholds, ignore_zero, ratio_formula = (
+        None,
+        "0",
+        {"COUNT(*)": 1.5},
+        True,
+        "max_over_min",
+    )
+    with pytest.raises(AirflowException):
+        hook.interval_check(row1, row2, metrics_thresholds, ignore_zero, ratio_formula)
+
+    row1, row2, metrics_thresholds, ignore_zero, ratio_formula = (
+        "0",
+        None,
+        {"COUNT(*)": 1.5},
+        True,
+        "max_over_min",
+    )
+    with pytest.raises(AirflowException):
+        hook.interval_check(row1, row2, metrics_thresholds, ignore_zero, ratio_formula)
+
+    row1, row2, metrics_thresholds, ignore_zero, ratio_formula = (
+        "1",
+        "1",
+        {"COUNT(*)": 0},
+        True,
+        "max_over_min",
+    )
+    with pytest.raises(AirflowException):
+        hook.interval_check(row1, row2, metrics_thresholds, ignore_zero, ratio_formula)
+
+
+def test_interval_check_for_success():
+    """
+    Assert that check return None
+    """
+    hook = BigQueryHookAsync()
+
+    row1, row2, metrics_thresholds, ignore_zero, ratio_formula = (
+        "0",
+        "0",
+        {"COUNT(*)": 1.5},
+        True,
+        "max_over_min",
+    )
+    response = hook.interval_check(row1, row2, metrics_thresholds, ignore_zero, ratio_formula)
+    assert response is None
 
 
 @pytest.mark.asyncio

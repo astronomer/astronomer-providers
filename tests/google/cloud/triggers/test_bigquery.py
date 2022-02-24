@@ -9,6 +9,7 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryIntervalCheckTrigger,
 )
 
 TEST_CONN_ID = "bq_default"
@@ -21,6 +22,13 @@ TEST_GCP_PROJECT_ID = "test-project"
 TEST_DATASET_ID = "bq_dataset"
 TEST_TABLE_ID = "bq_table"
 POLLING_PERIOD_SECONDS = 4.0
+TEST_FIRST_JOB_ID = "5678"
+TEST_SECOND_JOB_ID = "6789"
+TEST_METRIC_THRESHOLDS = {}
+TEST_DATE_FILTER_COLUMN = "ds"
+TEST_DAYS_BACK = -7
+TEST_RATIO_FORMULA = "max_over_min"
+TEST_IGNORE_ZERO = True
 
 
 def test_bigquery_insert_job_op_trigger_serialization():
@@ -375,3 +383,203 @@ async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock
         )
         in task
     )
+
+
+def test_bigquery_interval_check_trigger_serialization():
+    """
+    Asserts that the BigQueryIntervalCheckTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = BigQueryIntervalCheckTrigger(
+        TEST_CONN_ID,
+        TEST_FIRST_JOB_ID,
+        TEST_SECOND_JOB_ID,
+        TEST_GCP_PROJECT_ID,
+        TEST_TABLE_ID,
+        TEST_METRIC_THRESHOLDS,
+        TEST_DATE_FILTER_COLUMN,
+        TEST_DAYS_BACK,
+        TEST_RATIO_FORMULA,
+        TEST_IGNORE_ZERO,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        POLLING_PERIOD_SECONDS,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger"
+    assert kwargs == {
+        "conn_id": TEST_CONN_ID,
+        "first_job_id": TEST_FIRST_JOB_ID,
+        "second_job_id": TEST_SECOND_JOB_ID,
+        "project_id": TEST_GCP_PROJECT_ID,
+        "table": TEST_TABLE_ID,
+        "metrics_thresholds": TEST_METRIC_THRESHOLDS,
+        "date_filter_column": TEST_DATE_FILTER_COLUMN,
+        "days_back": TEST_DAYS_BACK,
+        "ratio_formula": TEST_RATIO_FORMULA,
+        "ignore_zero": TEST_IGNORE_ZERO,
+    }
+
+
+@pytest.mark.parametrize(
+    "get_output_value",
+    ["0", "1"],
+)
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
+async def test_bigquery_interval_check_trigger_success(
+    mock_get_job_output, mock_job_status, get_output_value
+):
+    """
+    Tests the BigQueryIntervalCheckTrigger only fires once the query execution reaches a successful state.
+    """
+    mock_job_status.return_value = "success"
+    mock_get_job_output.return_value = get_output_value
+
+    trigger = BigQueryIntervalCheckTrigger(
+        conn_id=TEST_CONN_ID,
+        first_job_id=TEST_FIRST_JOB_ID,
+        second_job_id=TEST_SECOND_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        table=TEST_TABLE_ID,
+        metrics_thresholds=TEST_METRIC_THRESHOLDS,
+        date_filter_column=TEST_DATE_FILTER_COLUMN,
+        days_back=TEST_DAYS_BACK,
+        ratio_formula=TEST_RATIO_FORMULA,
+        ignore_zero=TEST_IGNORE_ZERO,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=POLLING_PERIOD_SECONDS,
+    )
+
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+
+    assert len(task) == 1
+
+
+@pytest.mark.parametrize(
+    "trigger_class",
+    [BigQueryIntervalCheckTrigger],
+)
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_interval_check_trigger_pending(mock_job_status, caplog, trigger_class):
+    """
+    Tests that the BigQueryIntervalCheckTrigger do not fire while a query is still running.
+    """
+    mock_job_status.return_value = "pending"
+    caplog.set_level(logging.INFO)
+
+    trigger = trigger_class(
+        conn_id=TEST_CONN_ID,
+        first_job_id=TEST_FIRST_JOB_ID,
+        second_job_id=TEST_SECOND_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        table=TEST_TABLE_ID,
+        metrics_thresholds=TEST_METRIC_THRESHOLDS,
+        date_filter_column=TEST_DATE_FILTER_COLUMN,
+        days_back=TEST_DAYS_BACK,
+        ratio_formula=TEST_RATIO_FORMULA,
+        ignore_zero=TEST_IGNORE_ZERO,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=POLLING_PERIOD_SECONDS,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+
+    assert f"Using the connection  {TEST_CONN_ID} ." in caplog.text
+
+    assert "Query is still running..." in caplog.text
+    assert f"Sleeping for {POLLING_PERIOD_SECONDS} seconds." in caplog.text
+
+    # Prevents error when task is destroyed while in "pending" state
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.parametrize(
+    "trigger_class",
+    [BigQueryIntervalCheckTrigger],
+)
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_interval_check_trigger_terminated(mock_job_status, trigger_class):
+    """
+    Tests the BigQueryIntervalCheckTrigger fires the correct event in case of an error.
+    """
+    # Set the status to a value other than success or pending
+    mock_job_status.return_value = "error"
+    trigger = trigger_class(
+        conn_id=TEST_CONN_ID,
+        first_job_id=TEST_FIRST_JOB_ID,
+        second_job_id=TEST_SECOND_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        table=TEST_TABLE_ID,
+        metrics_thresholds=TEST_METRIC_THRESHOLDS,
+        date_filter_column=TEST_DATE_FILTER_COLUMN,
+        days_back=TEST_DAYS_BACK,
+        ratio_formula=TEST_RATIO_FORMULA,
+        ignore_zero=TEST_IGNORE_ZERO,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=POLLING_PERIOD_SECONDS,
+    )
+
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
+
+    assert TriggerEvent({"status": "error", "message": "error", "data": None}) in task
+
+
+@pytest.mark.parametrize(
+    "trigger_class",
+    [BigQueryIntervalCheckTrigger],
+)
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_interval_check_trigger_exception(mock_job_status, caplog, trigger_class):
+    """
+    Tests that the BigQueryIntervalCheckTrigger fires the correct event in case of an error.
+    """
+    mock_job_status.side_effect = Exception("Test exception")
+    caplog.set_level(logging.DEBUG)
+
+    trigger = trigger_class(
+        conn_id=TEST_CONN_ID,
+        first_job_id=TEST_FIRST_JOB_ID,
+        second_job_id=TEST_SECOND_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        table=TEST_TABLE_ID,
+        metrics_thresholds=TEST_METRIC_THRESHOLDS,
+        date_filter_column=TEST_DATE_FILTER_COLUMN,
+        days_back=TEST_DAYS_BACK,
+        ratio_formula=TEST_RATIO_FORMULA,
+        ignore_zero=TEST_IGNORE_ZERO,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=POLLING_PERIOD_SECONDS,
+    )
+
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task

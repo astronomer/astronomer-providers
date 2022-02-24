@@ -27,6 +27,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryGetDataOperator,
     BigQueryInsertJobOperator,
+    BigQueryIntervalCheckOperator,
 )
 from google.api_core.exceptions import Conflict
 
@@ -35,6 +36,7 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryInsertJobTrigger,
+    BigQueryIntervalCheckTrigger,
 )
 
 if TYPE_CHECKING:
@@ -113,12 +115,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         )
 
     def execute(self, context: "Context"):
-        hook = _BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
-            location=self.location,
-            impersonation_chain=self.impersonation_chain,
-        )
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
         job_id = self._job_id(context)
@@ -188,7 +185,8 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     def execute(self, context: "Context"):
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            location=self.location,
+            # location=self.location,
+            # impersonation_chain=self.impersonation_chain,
         )
         job = self._submit_job(hook, job_id="")
         self.defer(
@@ -223,7 +221,6 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     be equal to the number of rows fetched. Each element in the list will again be a list
     where element would represent the columns values for that row.
     **Example Result**: ``[['Tony', '10'], ['Mike', '20'], ['Steve', '15']]``
-
     .. note::
         If you pass fields to ``selected_fields`` which are in different order than the
         order of columns already in
@@ -231,7 +228,6 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         For example if the BQ table has 3 columns as
         ``[A,B,C]`` and you pass 'B,A' in the ``selected_fields``
         the data would still be of the form ``'A,B'``.
-
     **Example**: ::
         get_data = BigQueryGetDataOperatorAsync(
             task_id='get_data_from_bq',
@@ -241,7 +237,6 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             selected_fields='DATE',
             gcp_conn_id='airflow-conn-id'
         )
-
     :param dataset_id: The dataset ID of the requested table. (templated)
     :param table_id: The table ID of the requested table. (templated)
     :param max_results: The maximum number of records (rows) to be fetched
@@ -324,3 +319,92 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             self.log.info("Total extracted rows: %s", len(event["records"]))
             return event["records"]
         raise AirflowException(event["message"])
+
+
+class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
+    """
+    Checks asynchronously that the values of metrics given as SQL expressions are within
+    a certain tolerance of the ones from days_back before.
+    This method constructs a query like so ::
+        SELECT {metrics_threshold_dict_key} FROM {table}
+        WHERE {date_filter_column}=<date>
+    .. seealso::
+        For more information on how to use this operator, take a look at the guide:
+        :ref:`howto/operator:BigQueryIntervalCheckOperator`
+    :param table: the table name
+    :param days_back: number of days between ds and the ds we want to check
+        against. Defaults to 7 days
+    :param metrics_thresholds: a dictionary of ratios indexed by metrics, for
+        example 'COUNT(*)': 1.5 would require a 50 percent or less difference
+        between the current day, and the prior days_back.
+    :param use_legacy_sql: Whether to use legacy SQL (true)
+        or standard SQL (false).
+    :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
+    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
+        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
+    :param location: The geographic location of the job. See details at:
+        https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account (templated).
+    :param labels: a dictionary containing labels for the table, passed to BigQuery
+    """
+
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        sql: str,
+        job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Triggerer."""
+        configuration = {"query": {"query": sql}}
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context=None):
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
+        self.log.info("Using ratio formula: %s", self.ratio_formula)
+
+        self.log.info("Executing SQL check: %s", self.sql1)
+        job_1 = self._submit_job(hook, sql=self.sql1, job_id="")
+
+        self.log.info("Executing SQL check: %s", self.sql2)
+        job_2 = self._submit_job(hook, sql=self.sql2, job_id="")
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryIntervalCheckTrigger(
+                conn_id=self.gcp_conn_id,
+                first_job_id=job_1.job_id,
+                second_job_id=job_2.job_id,
+                project_id=hook.project_id,
+                table=self.table,
+                metrics_thresholds=self.metrics_thresholds,
+                date_filter_column=self.date_filter_column,
+                days_back=self.days_back,
+                ratio_formula=self.ratio_formula,
+                ignore_zero=self.ignore_zero,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["status"],
+        )
+        return event["status"]
