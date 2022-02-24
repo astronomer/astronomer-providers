@@ -1,8 +1,6 @@
-import asyncio
 from typing import Any, Dict, Iterable, Tuple, Union
 
 from airflow import Optional
-from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHookAsync
@@ -45,14 +43,15 @@ class RedshiftSQLTrigger(BaseTrigger):
         the Amazon Redshift Data API to interact with Amazon Redshift clusters
         """
         hook = RedshiftSQLHookAsync(redshift_conn_id=self.redshift_conn_id)
-        while True:
-            try:
-                response = await hook.execute_query(sql=self.sql, params=self.parameters)
-                if response:
-                    yield TriggerEvent(response)
-                    return
-                else:
-                    error_message = f"{self.task_id} failed"
-                    raise AirflowException(error_message)
-            except AirflowException:
-                await asyncio.sleep(self.polling_period_seconds)
+        try:
+            response = await hook.execute_query(sql=self.sql, params=self.parameters)
+            if response:
+                yield TriggerEvent(response)
+                return
+            else:
+                error_message = f"{self.task_id} failed"
+                yield TriggerEvent({"status": "error", "message": error_message})
+                return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return

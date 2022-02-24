@@ -38,12 +38,12 @@ with airflow.DAG(
 
     task_get_all_table_data = RedshiftSQLOperatorAsync(
         task_id="task_get_all_table_data",
-        sql="CREATE TABLE more_fruit AS SELECT * FROM fruit;",
+        sql="SELECT * FROM fruit;",
     )
 
     task_get_with_filter = RedshiftSQLOperatorAsync(
         task_id="task_get_with_filter",
-        sql="CREATE TABLE filtered_fruit AS SELECT * FROM fruit WHERE color = '{{ params.color }}';",
+        sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
         params={"color": "Red"},
     )
 

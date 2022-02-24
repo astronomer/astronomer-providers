@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Optional, Union
 
 import botocore.exceptions
 from aiobotocore.session import get_session
+from airflow import AirflowException
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from asgiref.sync import sync_to_async
 from async_timeout import asyncio
@@ -29,16 +30,15 @@ class RedshiftSQLHookAsync(RedshiftSQLHook):
 
         conn_params: Dict[str, Union[str, int]] = {}
 
-        if connection_object.login:
-            conn_params["user"] = connection_object.login
-        if connection_object.password:
-            conn_params["password"] = connection_object.password
-        if connection_object.host:
-            conn_params["host"] = connection_object.host
-        if connection_object.port:
-            conn_params["port"] = connection_object.port
-        if connection_object.schema:
+        if "db_user" in extra_config:
+            conn_params["db_user"] = extra_config.get("db_user", None)
+
+        if "database" in extra_config:
+            conn_params["database"] = extra_config.get("database", None)
+        elif connection_object.schema:
             conn_params["database"] = connection_object.schema
+        else:
+            raise AirflowException("Required Database name ")
 
         if "access_key_id" in extra_config or "aws_access_key_id" in extra_config:
             conn_params["aws_access_key_id"] = (
@@ -57,10 +57,14 @@ class RedshiftSQLHookAsync(RedshiftSQLHook):
             conn_params["region_name"] = (
                 extra_config["region"] if "region" in extra_config else extra_config["region_name"]
             )
+        else:
+            raise AirflowException("Required Region name")
 
         if "cluster_identifier" in extra_config:
             self.log.info("Retrieving cluster_identifier from Connection.extra_config['cluster_identifier']")
             conn_params["cluster_identifier"] = extra_config["cluster_identifier"]
+        else:
+            raise AirflowException("Required Cluster identifier")
 
         return conn_params
 
@@ -91,6 +95,7 @@ class RedshiftSQLHookAsync(RedshiftSQLHook):
         if isinstance(sql, str):
             split_statements_tuple = split_statements(StringIO(sql))
             sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
+
         connection_params = await self.get_redshift_connection_params()
         query_ids: List[str] = []
         async with await self.get_redshift_client_async(connection_params) as client:
@@ -101,7 +106,7 @@ class RedshiftSQLHookAsync(RedshiftSQLHook):
                         response = await client.execute_statement(
                             Database=connection_params["database"],
                             ClusterIdentifier=connection_params["cluster_identifier"],
-                            DbUser=connection_params["user"],
+                            DbUser=connection_params["db_user"],
                             Sql=sql_statement,
                             Parameters=params,
                             WithEvent=True,
@@ -110,13 +115,13 @@ class RedshiftSQLHookAsync(RedshiftSQLHook):
                         response = await client.execute_statement(
                             Database=connection_params["database"],
                             ClusterIdentifier=connection_params["cluster_identifier"],
-                            DbUser=connection_params["user"],
+                            DbUser=connection_params["db_user"],
                             Sql=sql_statement,
                             WithEvent=True,
                         )
                     query_ids.append(response["Id"])
-                res = await self.get_query_status(query_ids=query_ids)
-                return res
+                # res = await self.get_query_status(query_ids=query_ids)
+                return query_ids
             except botocore.exceptions.ClientError as error:
                 return {"status": "error", "message": str(error)}
 
