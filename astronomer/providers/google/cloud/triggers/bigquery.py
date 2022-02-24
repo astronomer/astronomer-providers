@@ -8,13 +8,13 @@ from astronomer.providers.google.cloud.hooks.bigquery import BigQueryHookAsync
 
 class BigQueryInsertJobTrigger(BaseTrigger):
     def __init__(
-            self,
-            conn_id: str,
-            job_id: Optional[str],
-            project_id: Optional[str],
-            dataset_id: Optional[str] = None,
-            table_id: Optional[str] = None,
-            poll_interval: float = 4.0,
+        self,
+        conn_id: str,
+        job_id: Optional[str],
+        project_id: Optional[str],
+        dataset_id: Optional[str] = None,
+        table_id: Optional[str] = None,
+        poll_interval: float = 4.0,
     ):
         self.log.info("Using the connection  %s .", conn_id)
         print("job_id", job_id)
@@ -92,7 +92,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
-                "poll_interval": self.poll_interval
+                "poll_interval": self.poll_interval,
             },
         )
 
@@ -144,16 +144,16 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
 
 class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
     def __init__(
-            self,
-            conn_id: str,
-            sql: str,
-            pass_value: Any,
-            job_id: Optional[str],
-            project_id: Optional[str],
-            tolerance: Any = None,
-            dataset_id: Optional[str] = None,
-            table_id: Optional[str] = None,
-            poll_interval: float = 4.0,
+        self,
+        conn_id: str,
+        sql: str,
+        pass_value: Any,
+        job_id: Optional[str],
+        project_id: Optional[str],
+        tolerance: Any = None,
+        dataset_id: Optional[str] = None,
+        table_id: Optional[str] = None,
+        poll_interval: float = 4.0,
     ):
         super().__init__(
             conn_id=conn_id,

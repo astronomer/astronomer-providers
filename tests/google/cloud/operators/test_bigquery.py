@@ -378,21 +378,29 @@ def test_bigquery_value_check_operator_execute_complete_failure():
     operator = _get_value_check_async_operator()
 
     with pytest.raises(AirflowException):
-        operator.execute_complete(
-            context=None, event={"status": "error", "message": "test failure message"}
-        )
+        operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
 
 
 @pytest.mark.parametrize(
     "kwargs, expected",
     [
-        (dict(), "Argument ['sql', 'pass_value'] is required"),
         (dict(sql="SELECT COUNT(*) from Any"), "Argument ['pass_value'] is required"),
         (dict(pass_value="Any"), "Argument ['sql'] is required"),
-    ]
+    ],
 )
 def test_bigquery_value_check_missing_param(kwargs, expected):
     """Assert the exception if require param not pass to BigQueryValueCheckOperatorAsync operator"""
     with pytest.raises(AirflowException) as missing_param:
         BigQueryValueCheckOperatorAsync(**kwargs)
     assert missing_param.value.args[0] == expected
+
+
+def test_bigquery_value_check_empty():
+    """Assert the exception if require param not pass to BigQueryValueCheckOperatorAsync operator"""
+    expected, expected1 = (
+        "Argument ['sql', 'pass_value'] is required",
+        "Argument ['pass_value', 'sql'] is required",
+    )
+    with pytest.raises(AirflowException) as missing_param:
+        BigQueryValueCheckOperatorAsync(kwargs={})
+    assert (missing_param.value.args[0] == expected) or (missing_param.value.args[0] == expected1)

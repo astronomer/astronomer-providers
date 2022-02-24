@@ -19,7 +19,7 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Dict, Optional, Union, Any
+from typing import Any, Dict, Optional, Union
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
@@ -185,7 +185,10 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             "Tolerance:{tolerance_pct_str}\n"
             "Query:\n{sql}\nResults:\n{records!s}"
         ).format(
-            pass_value_conv=pass_value_conv, tolerance_pct_str=tolerance_pct_str, sql=sql, records=records,
+            pass_value_conv=pass_value_conv,
+            tolerance_pct_str=tolerance_pct_str,
+            sql=sql,
+            records=records,
         )
 
         if not is_numeric_value_check:
