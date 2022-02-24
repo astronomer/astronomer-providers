@@ -214,12 +214,33 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
                 )
 
                 if first_job_response_from_hook == "success" and second_job_response_from_hook == "success":
-                    first_job_row = await hook.get_first_row(
+                    first_query_results = await hook.get_job_output(
                         job_id=self.first_job_id, project_id=self.project_id
                     )
-                    second_job_row = await hook.get_first_row(
+
+                    second_query_results = await hook.get_job_output(
                         job_id=self.second_job_id, project_id=self.project_id
                     )
+
+                    # Extract records after casting a BigQuery row to the appropriate data types.
+                    first_records = hook.get_records(first_query_results, nocast=False)
+
+                    # Extract records after casting a BigQuery row to the appropriate data types.
+                    second_records = hook.get_records(second_query_results, nocast=False)
+
+                    # If empty list, then no records are available
+                    if not first_records:
+                        first_job_row = None
+                    else:
+                        # Extract only first record from the query results
+                        first_job_row = first_records.pop(0)
+
+                    # If empty list, then no records are available
+                    if not second_records:
+                        second_job_row = None
+                    else:
+                        # Extract only first record from the query results
+                        second_job_row = second_records.pop(0)
 
                     hook.interval_check(
                         first_job_row,
