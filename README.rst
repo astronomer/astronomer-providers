@@ -19,6 +19,8 @@ Astronomer Providers
 Installation
 ------------
 
+Install and update using `pip <https://pip.pypa.io/en/stable/getting-started/>`_:
+
 .. code-block:: bash
 
     pip install astronomer-providers
@@ -41,32 +43,23 @@ if you want to import Async operators, you can import it as follows:
         bucket_name="sample-bucket",
     )
 
-Development Environment
-------------------------
+Principle
+---------
 
-Run the following commands from the root of the repository:
+We will only create Async operators for the "sync-version" of operators that do some level of polling
+(take more than a few seconds to complete).
 
-- ``make dev`` - To create a development Environment using `docker-compose` file.
-- ``make logs`` - To view the logs of the all the containers
-- ``make stop`` - To stop all the containers
-- ``make clean`` - To remove all the containers along with volumes
-- ``make help`` - To view the available commands
-- ``make build-run`` - To build the docker image and then run containers
-- ``make restart`` - To restart Scheduler & Triggerer containers
-- ``make restart-all`` - To restart all the containers
-- ``make run-tests`` - Run CI tests
-- ``make run-static-checks`` - Run CI static code checks
+For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
+for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
 
-Following ports are accessible from the host machine:
+Contributing Guide
+------------------
 
-- ``8080`` - Webserver
-- ``5555`` - Flower
-- ``5432`` - Postgres
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Dev Directories:
+A detailed overview on how to contribute can be found in the `Contributing Guide <CONTRIBUTING.rst>`_.
 
-- ``dev/dags/`` - DAG Files
-- ``dev/logs`` - Logs files of the Airflow containers
+As contributors and maintainers to this project, you are expected to abide by the `Contributor Code of Conduct <CODE_OF_CONDUCT.md>`_.
 
 License
 -------

@@ -4,13 +4,43 @@ version: 2.1
 workflows:
   test:
     jobs:
-      - test
+      - static-checks
+      - test:
+          requires:
+            - static-checks
 
-jobs:
-  test:
-    description: Test & Lint
+executors:
+  docker-executor:
     docker:
       - image: cimg/python:3.9
+
+jobs:
+  static-checks:
+    description: "Static checks"
+    executor: docker-executor
+    steps:
+      - checkout
+      - run:
+          command: |
+            cp .pre-commit-config.yaml pre-commit-cache-key.txt
+            python --version --version >> pre-commit-cache-key.txt
+      - restore_cache:
+          keys:
+            - v1-pc-cache-{{ checksum "pre-commit-cache-key.txt" }}-
+      - run:
+          name: Run pre-commit
+          command: |
+            pip install pre-commit
+            pre-commit run --all-files || { git --no-pager diff && false ; }
+      - save_cache:
+          key: v1-pc-cache-{{ checksum "pre-commit-cache-key.txt" }}-
+          paths:
+            - ~/.cache/pre-commit
+            - ~/.pyenv/versions/
+
+  test:
+    description: Test
+    executor: docker-executor
     steps:
       - checkout
       - restore_cache:
@@ -20,9 +50,6 @@ jobs:
       - run:
           name: Install Dependencies
           command: pip install -U -e .[tests]
-      - run:
-          name: Static checks
-          command: pre-commit run --all-files || { git --no-pager diff && false ; }
       - run:
           name: Run tests
           command: |
@@ -40,7 +67,6 @@ jobs:
           path: test-report
       - save_cache:
           paths:
-            - /home/circleci/.cache/pip
-            - /home/circleci/.pyenv/versions/
-            - /home/circleci/.local/lib/
+            - ~/.cache/pip
+            - ~/.pyenv/versions/
           key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}

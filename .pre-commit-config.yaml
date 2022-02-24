@@ -4,7 +4,6 @@ repos:
     rev: 22.1.0
     hooks:
       - id: black
-        args: ["--target-version=py39", "--line-length=110"]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
