@@ -448,16 +448,15 @@ async def test_bigquery_interval_check_trigger_terminated(mock_job_status, trigg
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+  # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
+    assert len(task) == 1
 
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    assert task.result() == TriggerEvent({"status": "error", "message": "error", "data": None})
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    assert TriggerEvent({"status": "error", "message": "error", "data": None}) in task
 
 
 @pytest.mark.parametrize(
