@@ -1,7 +1,7 @@
 import asyncio
-from typing import Any, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Tuple
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
@@ -17,7 +17,6 @@ class DatabricksTrigger(BaseTrigger):
         retry_delay: int,
         polling_period_seconds: int,
     ):
-        super().__init__()
         self.conn_id = conn_id
         self.task_id = task_id
         self.run_id = run_id
@@ -41,7 +40,7 @@ class DatabricksTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Makes a series of asynchronous http calls via a Databrick hook. It yields a Trigger if
         response is a 200 and run_state is successful, will retry the call up to the retry limit

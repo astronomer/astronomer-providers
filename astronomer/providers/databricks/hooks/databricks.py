@@ -1,5 +1,6 @@
 import asyncio
 import base64
+from typing import Any, Dict, Tuple, cast
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -31,7 +32,9 @@ class DatabricksHookAsync(DatabricksHook):
 
         return RunState(life_cycle_state, result_state, state_message)
 
-    async def _do_api_call_async(self, endpoint_info, json):
+    async def _do_api_call_async(
+        self, endpoint_info: Tuple[str, str], json: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Utility function to perform an asynchronous API call with retries
         :param endpoint_info: Tuple of method and endpoint
@@ -91,13 +94,13 @@ class DatabricksHookAsync(DatabricksHook):
                         timeout=self.timeout_seconds,
                     )
                     response.raise_for_status()
-                    return await response.json()
+                    return cast(Dict[str, Any], await response.json())
                 except ClientResponseError as e:
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry.
                         raise AirflowException(f"Response: {e.message}, Status Code: {e.status}")
-                    self._log_request_error(attempt_num, e)
+                    self._log_request_error(attempt_num, str(e))
 
                 if attempt_num == self.retry_limit:
                     raise AirflowException(
