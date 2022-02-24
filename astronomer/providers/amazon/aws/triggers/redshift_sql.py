@@ -1,6 +1,5 @@
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
-from airflow import Optional
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHookAsync
@@ -11,16 +10,14 @@ class RedshiftSQLTrigger(BaseTrigger):
         self,
         task_id: str,
         polling_period_seconds: float,
-        redshift_conn_id: str,
-        sql: Optional[Union[Dict, Iterable]],
-        parameters=Optional[Dict],
+        aws_conn_id: str,
+        query_ids: List[str],
     ):
         super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
-        self.redshift_conn_id = redshift_conn_id
-        self.sql = sql
-        self.parameters = parameters
+        self.aws_conn_id = aws_conn_id
+        self.query_ids = query_ids
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
@@ -31,9 +28,8 @@ class RedshiftSQLTrigger(BaseTrigger):
             {
                 "task_id": self.task_id,
                 "polling_period_seconds": self.polling_period_seconds,
-                "redshift_conn_id": self.redshift_conn_id,
-                "sql": self.sql,
-                "parameters": self.parameters,
+                "aws_conn_id": self.aws_conn_id,
+                "query_ids": self.query_ids,
             },
         )
 
@@ -42,9 +38,9 @@ class RedshiftSQLTrigger(BaseTrigger):
         Make async connection to redshiftSQL and execute query using
         the Amazon Redshift Data API to interact with Amazon Redshift clusters
         """
-        hook = RedshiftSQLHookAsync(redshift_conn_id=self.redshift_conn_id)
+        hook = RedshiftSQLHookAsync(aws_conn_id=self.aws_conn_id)
         try:
-            response = await hook.execute_query(sql=self.sql, params=self.parameters)
+            response = await hook.get_query_status(self.query_ids)
             if response:
                 yield TriggerEvent(response)
                 return
