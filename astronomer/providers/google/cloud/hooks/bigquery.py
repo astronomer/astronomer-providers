@@ -162,6 +162,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         return buffer
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     async def get_first_row(
             self,
@@ -185,6 +186,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         return records
 
 >>>>>>> 932df9d (Add negative test for BigQueryValueCheckOperatorAsync)
+=======
+>>>>>>> 7f7e216 (remove get_first_row method from hook and test parametrize)
     def value_check(
         self,
         sql: str,
@@ -232,11 +235,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         A helper function to match numeric pass_value, tolerance with records value
 
         :param records: List of value to match against
-        :type records: list[float]
         :param pass_value: Expected value
-        :type pass_value: float
         :param tolerance: Allowed tolerance for match to succeed
-        :type tolerance: float
         """
         if tolerance:
             return [

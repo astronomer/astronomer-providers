@@ -245,7 +245,10 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
                 # Poll for job execution status
                 response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
                 if response_from_hook == "success":
-                    records = await hook.get_first_row(job_id=self.job_id, project_id=self.project_id)
+                    query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
+                    # Extract records after casting a BigQuery row to the appropriate data types.
+                    records = hook.get_records(query_results, nocast=False)
+                    records = records.pop(0) if records else None
                     hook.value_check(self.sql, self.pass_value, records, self.tolerance)
                     yield TriggerEvent(
                         {

@@ -155,50 +155,44 @@ async def test_get_first_row(mock_get_first_row):
     assert response == ["2"]
 
 
-def test_value_check_success():
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance",
+    [
+        ( ["str"], "str", None),
+        ([2], 2, None),
+        ([0], 2, 1),
+        ([4], 2, 1)
+    ]
+)
+def test_value_check_success(records, pass_value, tolerance):
     """
     Assert that value_check method execution succeed
     """
     hook = BigQueryHookAsync()
     query = "SELECT COUNT(*) from Any"
 
-    records, pass_value, tolerance = ["str"], "str", None
     response = hook.value_check(query, pass_value, records, tolerance)
-    assert response is None
 
-    records, pass_value, tolerance = [2], 2, None
-    response = hook.value_check(query, pass_value, records, tolerance)
-    assert response is None
-
-    records, pass_value, tolerance = [0], 2, 1
-    response = hook.value_check(query, pass_value, records, tolerance)
-    assert response is None
-
-    records, pass_value, tolerance = [4], 2, 1
-    response = hook.value_check(query, pass_value, records, tolerance)
     assert response is None
 
 
-def test_value_check_fail():
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance",
+    [
+        ([], "", None),
+        (["str"], "str1", None),
+        ([2], 21, None),
+        ([5], 2, 1)
+    ]
+)
+def test_value_check_fail(records, pass_value, tolerance):
     """Assert that check raise AirflowException"""
     hook = BigQueryHookAsync()
     query = "SELECT COUNT(*) from Any"
 
-    with pytest.raises(AirflowException, match="The query returned None"):
-        records, pass_value, tolerance = [], "", None
+    with pytest.raises(AirflowException) as ex:
         hook.value_check(query, pass_value, records, tolerance)
-
-    with pytest.raises(AirflowException):
-        records, pass_value, tolerance = ["str"], "str1", None
-        hook.value_check(query, pass_value, records, tolerance)
-
-    with pytest.raises(Exception):
-        records, pass_value, tolerance = [2], 21, None
-        hook.value_check(query, pass_value, records, tolerance)
-
-    with pytest.raises(AirflowException):
-        records, pass_value, tolerance = [5], 2, 1
-        hook.value_check(query, pass_value, records, tolerance)
+    assert isinstance(ex.value, AirflowException)
 
 
 @pytest.mark.parametrize(
