@@ -24,6 +24,7 @@ import os
 from datetime import datetime
 
 from airflow import models
+from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
@@ -33,6 +34,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
+    BigQueryGetDataOperatorAsync,
     BigQueryInsertJobOperatorAsync,
 )
 
@@ -133,6 +135,22 @@ with models.DAG(
         location=location,
     )
 
+    # [START howto_operator_bigquery_get_data]
+    get_data = BigQueryGetDataOperatorAsync(
+        task_id="get_data",
+        dataset_id=DATASET,
+        table_id=TABLE_1,
+        max_results=10,
+        selected_fields="value,name",
+        location=location,
+    )
+    # [END howto_operator_bigquery_get_data]
+
+    get_data_result = BashOperator(
+        task_id="get_data_result",
+        bash_command=f"echo {get_data.output}",
+    )
+
     check_count = BigQueryCheckOperatorAsync(
         task_id="check_count",
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
@@ -188,6 +206,7 @@ with models.DAG(
     )
 
     create_table_1 >> insert_query_job >> select_query_job >> check_count
+    insert_query_job >> get_data >> get_data_result
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
     insert_query_job >> execute_long_running_query >> check_value >> delete_dataset
 
