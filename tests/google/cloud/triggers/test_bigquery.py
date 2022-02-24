@@ -542,7 +542,5 @@ async def test_bigquery_value_check_trigger_exception(mock_job_status):
     # at any given point there should be one trigger event returned to the task
     # so we validate for length of task to be 1
 
-    assert task.done() is True
-
     assert len(task) == 1
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task

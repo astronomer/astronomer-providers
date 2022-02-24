@@ -161,33 +161,6 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 buffer.append(typed_row)
         return buffer
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    async def get_first_row(
-            self,
-            job_id: str,
-            project_id: Optional[str] = None,
-    ):
-        """
-        Get the first resulting row of a query execution job
-
-        :param job_id: Job ID of the query job
-        :type job_id: str
-        :project_id: Project ID of the query job
-        :type project_id: Optional[str]
-        """
-        self.log.info("Executing get_first method...")
-        job_query_response = await self.get_job_output(project_id, job_id)
-        rows = job_query_response.get("rows")
-        records = []
-        if rows:
-            records = [field.get("v") for field in rows[0].get("f")]
-        return records
-
->>>>>>> 932df9d (Add negative test for BigQueryValueCheckOperatorAsync)
-=======
->>>>>>> 7f7e216 (remove get_first_row method from hook and test parametrize)
     def value_check(
         self,
         sql: str,

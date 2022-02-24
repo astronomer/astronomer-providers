@@ -139,22 +139,6 @@ async def test_get_job_output(mock_job_instance):
     assert resp == response
 
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
-async def test_get_first_row(mock_get_first_row):
-    mock_get_first_row.return_value = {}  # {"rows": []}
-    hook = BigQueryHookAsync()
-    response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
-    assert [] == response
-
-    rows = {"rows": [{"f": [{"v": "2"}]}]}
-
-    mock_get_first_row.return_value = rows
-    response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
-    assert response == ["2"]
-
-
 @pytest.mark.parametrize(
     "records,pass_value,tolerance", [(["str"], "str", None), ([2], 2, None), ([0], 2, 1), ([4], 2, 1)]
 )
