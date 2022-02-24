@@ -160,28 +160,6 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 buffer.append(typed_row)
         return buffer
 
-    async def get_first_row(
-        self,
-        job_id: str,
-        project_id: Optional[str] = None,
-    ):
-        """
-        Get the first resulting row of a query execution job
-        :param job_id: Job ID of the query job
-        :type job_id: str
-        :project_id: Project ID of the query job
-        :type project_id: Optional[str]
-        """
-        async with Session() as s:
-            self.log.info("Executing get_first_row method...")
-            job_client = await self.get_job_instance(project_id, job_id, s)
-            job_query_response = await job_client.get_query_results(s)
-            rows = job_query_response.get("rows")
-            records = []
-            if rows:
-                records = [field.get("v") for field in rows[0].get("f")]
-            return records
-
     def interval_check(
         self, row1: str, row2: str, metrics_thresholds: dict, ignore_zero: bool, ratio_formula: str
     ):
