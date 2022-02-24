@@ -415,7 +415,7 @@ def test_bigquery_get_data_op_execute_complete_with_records():
     mock_log_info.assert_called_with("Total extracted rows: %s", 1)
 
 
-def _get_value_check_async_operator():
+def _get_value_check_async_operator(use_legacy_sql: bool = False):
     """Helper function to initialise BigQueryValueCheckOperatorAsync operator"""
     query = "SELECT COUNT(*) FROM Any"
     pass_val = 2
@@ -424,7 +424,7 @@ def _get_value_check_async_operator():
         task_id="check_value",
         sql=query,
         pass_value=pass_val,
-        use_legacy_sql=False,
+        use_legacy_sql=use_legacy_sql,
     )
 
 
@@ -434,7 +434,7 @@ def test_bigquery_value_check_async(mock_hook):
     Asserts that a task is deferred and a BigQueryValueCheckTrigger will be fired
     when the BigQueryValueCheckOperatorAsync is executed.
     """
-    operator = _get_value_check_async_operator()
+    operator = _get_value_check_async_operator(True)
     job_id = "123456"
     hash_ = "hash"
     real_job_id = f"{job_id}_{hash_}"
