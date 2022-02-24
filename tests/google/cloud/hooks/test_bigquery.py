@@ -1,7 +1,7 @@
 from unittest import mock
 
-from airflow.exceptions import AirflowException
 import pytest
+from airflow.exceptions import AirflowException
 from gcloud.aio.bigquery import Job
 
 from astronomer.providers.google.cloud.hooks.bigquery import (
@@ -156,13 +156,7 @@ async def test_get_first_row(mock_get_first_row):
 
 
 @pytest.mark.parametrize(
-    "records,pass_value,tolerance",
-    [
-        ( ["str"], "str", None),
-        ([2], 2, None),
-        ([0], 2, 1),
-        ([4], 2, 1)
-    ]
+    "records,pass_value,tolerance", [(["str"], "str", None), ([2], 2, None), ([0], 2, 1), ([4], 2, 1)]
 )
 def test_value_check_success(records, pass_value, tolerance):
     """
@@ -177,13 +171,7 @@ def test_value_check_success(records, pass_value, tolerance):
 
 
 @pytest.mark.parametrize(
-    "records,pass_value,tolerance",
-    [
-        ([], "", None),
-        (["str"], "str1", None),
-        ([2], 21, None),
-        ([5], 2, 1)
-    ]
+    "records,pass_value,tolerance", [([], "", None), (["str"], "str1", None), ([2], 21, None), ([5], 2, 1)]
 )
 def test_value_check_fail(records, pass_value, tolerance):
     """Assert that check raise AirflowException"""
@@ -208,7 +196,7 @@ def test_value_check_fail(records, pass_value, tolerance):
     ],
 )
 def test_get_numeric_matches(records, pass_value, tolerance, expected):
-    """Assert the response list have all element is true or not"""
+    """Assert the if response list have all element match with pass_value with tolerance"""
 
     assert BigQueryHookAsync._get_numeric_matches(records, pass_value, tolerance) == expected
 

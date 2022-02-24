@@ -101,9 +101,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
 
     def _submit_job(
-            self,
-            hook: _BigQueryHook,
-            job_id: str,
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
         return hook.insert_job(
@@ -172,9 +172,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     def _submit_job(
-            self,
-            hook: _BigQueryHook,
-            job_id: str,
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Trigger."""
         configuration = {"query": {"query": self.sql}}
@@ -377,6 +377,8 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(
-            "%s completed with response %s ", self.task_id, event["message"],
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
         )
         return event["status"]
