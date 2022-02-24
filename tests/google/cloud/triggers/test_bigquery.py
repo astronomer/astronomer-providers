@@ -23,7 +23,6 @@ TEST_TABLE_ID = "bq_table"
 POLLING_PERIOD_SECONDS = 4.0
 TEST_FIRST_JOB_ID = "5678"
 TEST_SECOND_JOB_ID = "6789"
-TEST_TABLE = "bq_table"
 TEST_METRIC_THRESHOLDS = {}
 TEST_DATE_FILTER_COLUMN = "ds"
 TEST_DAYS_BACK = -7
@@ -315,7 +314,7 @@ def test_bigquery_interval_check_trigger_serialization():
         TEST_FIRST_JOB_ID,
         TEST_SECOND_JOB_ID,
         TEST_GCP_PROJECT_ID,
-        TEST_TABLE,
+        TEST_TABLE_ID,
         TEST_METRIC_THRESHOLDS,
         TEST_DATE_FILTER_COLUMN,
         TEST_DAYS_BACK,
@@ -332,7 +331,7 @@ def test_bigquery_interval_check_trigger_serialization():
         "first_job_id": TEST_FIRST_JOB_ID,
         "second_job_id": TEST_SECOND_JOB_ID,
         "project_id": TEST_GCP_PROJECT_ID,
-        "table": TEST_TABLE,
+        "table": TEST_TABLE_ID,
         "metrics_thresholds": TEST_METRIC_THRESHOLDS,
         "date_filter_column": TEST_DATE_FILTER_COLUMN,
         "days_back": TEST_DAYS_BACK,
@@ -356,7 +355,7 @@ async def test_bigquery_interval_check_trigger_success(mock_get_first_row, mock_
         first_job_id=TEST_FIRST_JOB_ID,
         second_job_id=TEST_SECOND_JOB_ID,
         project_id=TEST_GCP_PROJECT_ID,
-        table=TEST_TABLE,
+        table=TEST_TABLE_ID,
         metrics_thresholds=TEST_METRIC_THRESHOLDS,
         date_filter_column=TEST_DATE_FILTER_COLUMN,
         days_back=TEST_DAYS_BACK,
@@ -395,7 +394,7 @@ async def test_bigquery_interval_check_trigger_pending(mock_job_status, caplog, 
         first_job_id=TEST_FIRST_JOB_ID,
         second_job_id=TEST_SECOND_JOB_ID,
         project_id=TEST_GCP_PROJECT_ID,
-        table=TEST_TABLE,
+        table=TEST_TABLE_ID,
         metrics_thresholds=TEST_METRIC_THRESHOLDS,
         date_filter_column=TEST_DATE_FILTER_COLUMN,
         days_back=TEST_DAYS_BACK,
@@ -437,7 +436,7 @@ async def test_bigquery_interval_check_trigger_terminated(mock_job_status, trigg
         first_job_id=TEST_FIRST_JOB_ID,
         second_job_id=TEST_SECOND_JOB_ID,
         project_id=TEST_GCP_PROJECT_ID,
-        table=TEST_TABLE,
+        table=TEST_TABLE_ID,
         metrics_thresholds=TEST_METRIC_THRESHOLDS,
         date_filter_column=TEST_DATE_FILTER_COLUMN,
         days_back=TEST_DAYS_BACK,
@@ -477,7 +476,7 @@ async def test_bigquery_interval_check_trigger_exception(mock_job_status, caplog
         first_job_id=TEST_FIRST_JOB_ID,
         second_job_id=TEST_SECOND_JOB_ID,
         project_id=TEST_GCP_PROJECT_ID,
-        table=TEST_TABLE,
+        table=TEST_TABLE_ID,
         metrics_thresholds=TEST_METRIC_THRESHOLDS,
         date_filter_column=TEST_DATE_FILTER_COLUMN,
         days_back=TEST_DAYS_BACK,
