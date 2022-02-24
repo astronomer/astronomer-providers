@@ -126,7 +126,8 @@ def test_value_check_success(records, pass_value, tolerance):
 
 
 @pytest.mark.parametrize(
-    "records,pass_value,tolerance", [([], "", None), (["str"], "str1", None), ([2], 21, None), ([5], 2, 1)]
+    "records,pass_value,tolerance",
+    [([], "", None), (["str"], "str1", None), ([2], 21, None), ([5], 2, 1), (["str"], 2, None)],
 )
 def test_value_check_fail(records, pass_value, tolerance):
     """Assert that check raise AirflowException"""
@@ -136,6 +137,16 @@ def test_value_check_fail(records, pass_value, tolerance):
     with pytest.raises(AirflowException) as ex:
         hook.value_check(query, pass_value, records, tolerance)
     assert isinstance(ex.value, AirflowException)
+
+
+# def test_value_check_type_mismatch():
+#     """Assert the ValueError if"""
+#     hook = BigQueryHookAsync()
+#     query = "SELECT COUNT(*) from Any"
+#
+#     with pytest.raises(ValueError) as ex:
+#         hook.value_check(query, 5, ["dummy"], None)
+#     assert isinstance(ex.value, ValueError)
 
 
 @pytest.mark.parametrize(

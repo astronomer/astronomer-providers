@@ -193,14 +193,12 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
 
         if not is_numeric_value_check:
             tests = [str(record) == pass_value_conv for record in records]
-        elif is_numeric_value_check:
+        else:
             try:
                 numeric_records = [float(record) for record in records]
             except (ValueError, TypeError):
                 raise AirflowException(f"Converting a result to float failed.\n{error_msg}")
             tests = self._get_numeric_matches(numeric_records, pass_value_conv, tolerance)
-        else:
-            tests = []
 
         if not all(tests):
             raise AirflowException(error_msg)
