@@ -351,7 +351,7 @@ async def test_bigquery_interval_check_trigger_success(
     mock_get_job_output, mock_job_status, get_output_value
 ):
     """
-    Tests the BigQueryInsertJobTrigger only fires once the query execution reaches a successful state.
+    Tests the BigQueryIntervalCheckTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
     mock_get_job_output.return_value = get_output_value

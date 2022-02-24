@@ -113,12 +113,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         )
 
     def execute(self, context: "Context"):
-        hook = _BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
-            location=self.location,
-            impersonation_chain=self.impersonation_chain,
-        )
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
         job_id = self._job_id(context)
@@ -188,8 +183,8 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     def execute(self, context: "Context"):
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            location=self.location,
-            impersonation_chain=self.impersonation_chain,
+            # location=self.location,
+            # impersonation_chain=self.impersonation_chain,
         )
         job = self._submit_job(hook, job_id="")
         self.defer(
@@ -268,11 +263,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         )
 
     def execute(self, context=None):
-        hook = _BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            location=self.location,
-            impersonation_chain=self.impersonation_chain,
-        )
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         self.log.info("Using ratio formula: %s", self.ratio_formula)
 
         self.log.info("Executing SQL check: %s", self.sql1)
