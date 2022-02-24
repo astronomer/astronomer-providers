@@ -367,14 +367,14 @@ async def test_bigquery_interval_check_trigger_success(mock_get_first_row, mock_
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
 
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    assert len(task) == 1
 
 
 @pytest.mark.parametrize(
@@ -488,8 +488,12 @@ async def test_bigquery_interval_check_trigger_exception(mock_job_status, caplog
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(1)
+    # trigger event is yielded so it creates a generator object
+    # so i have used async for to get all the values and added it to task
+    task = [i async for i in trigger.run()]
+    # since we use return as soon as we yield the trigger event
+    # at any given point there should be one trigger event returned to the task
+    # so we validate for length of task to be 1
 
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
