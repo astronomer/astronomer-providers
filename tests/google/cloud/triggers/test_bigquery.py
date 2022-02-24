@@ -448,7 +448,7 @@ async def test_bigquery_interval_check_trigger_terminated(mock_job_status, trigg
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-  # trigger event is yielded so it creates a generator object
+    # trigger event is yielded so it creates a generator object
     # so i have used async for to get all the values and added it to task
     task = [i async for i in trigger.run()]
     # since we use return as soon as we yield the trigger event
