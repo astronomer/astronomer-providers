@@ -340,15 +340,21 @@ def test_bigquery_interval_check_trigger_serialization():
     }
 
 
+@pytest.mark.parametrize(
+    "get_output_value",
+    ["0", "1"],
+)
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
-async def test_bigquery_interval_check_trigger_success(mock_get_first_row, mock_job_status):
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
+async def test_bigquery_interval_check_trigger_success(
+    mock_get_job_output, mock_job_status, get_output_value
+):
     """
     Tests the BigQueryInsertJobTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
-    mock_get_first_row.return_value = "0"
+    mock_get_job_output.return_value = get_output_value
 
     trigger = BigQueryIntervalCheckTrigger(
         conn_id=TEST_CONN_ID,
