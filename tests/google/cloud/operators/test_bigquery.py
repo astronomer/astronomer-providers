@@ -427,13 +427,17 @@ def _get_value_check_async_operator():
     )
 
 
-def test_bigquery_value_check_async():
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+def test_bigquery_value_check_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryValueCheckTrigger will be fired
     when the BigQueryValueCheckOperatorAsync is executed.
     """
     operator = _get_value_check_async_operator()
-
+    job_id = "123456"
+    hash_ = "hash"
+    real_job_id = f"{job_id}_{hash_}"
+    mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
     with pytest.raises(TaskDeferred) as exc:
         operator.execute(context)
 
