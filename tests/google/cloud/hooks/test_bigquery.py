@@ -184,16 +184,6 @@ def test_value_check_fail(records, pass_value, tolerance):
     assert isinstance(ex.value, AirflowException)
 
 
-# def test_value_check_type_mismatch():
-#     """Assert the ValueError if"""
-#     hook = BigQueryHookAsync()
-#     query = "SELECT COUNT(*) from Any"
-#
-#     with pytest.raises(ValueError) as ex:
-#         hook.value_check(query, 5, ["dummy"], None)
-#     assert isinstance(ex.value, ValueError)
-
-
 @pytest.mark.parametrize(
     "records,pass_value,tolerance, expected",
     [
