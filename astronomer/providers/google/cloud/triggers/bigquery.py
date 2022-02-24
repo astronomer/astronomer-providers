@@ -92,6 +92,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
+                "poll_interval": self.poll_interval
             },
         )
 
@@ -197,14 +198,14 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
                 if response_from_hook == "success":
                     records = await hook.get_first_row(job_id=self.job_id, project_id=self.project_id)
                     hook.value_check(self.sql, self.pass_value, records, self.tolerance)
-                    yield TriggerEvent({"status": "success", "message": "Job completed", "data": records})
+                    yield TriggerEvent({"status": "success", "message": "Job completed", "records": records})
                     return
                 elif response_from_hook == "pending":
                     self.log.info("Query is still running...")
                     self.log.info("Sleeping for %s seconds.", self.poll_interval)
                     await asyncio.sleep(self.poll_interval)
                 else:
-                    yield TriggerEvent({"status": "error", "message": response_from_hook, "data": None})
+                    yield TriggerEvent({"status": "error", "message": response_from_hook, "records": None})
                     return
 
             except Exception as e:

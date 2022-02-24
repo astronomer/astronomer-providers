@@ -174,15 +174,13 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         :project_id: Project ID of the query job
         :type project_id: Optional[str]
         """
-        async with Session() as s:
-            self.log.info("Executing get_first method...")
-            job_client = await self.get_job_instance(project_id, job_id, s)
-            job_query_response = await job_client.get_query_results(s)
-            rows = job_query_response.get("rows")
-            records = []
-            if rows:
-                records = [field.get("v") for field in rows[0].get("f")]
-            return records
+        self.log.info("Executing get_first method...")
+        job_query_response = await self.get_job_output(project_id, job_id)
+        rows = job_query_response.get("rows")
+        records = []
+        if rows:
+            records = [field.get("v") for field in rows[0].get("f")]
+        return records
 
     def value_check(
         self,

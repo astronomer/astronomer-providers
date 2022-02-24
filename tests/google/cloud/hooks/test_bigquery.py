@@ -110,18 +110,19 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     assert "Query execution finished with errors..." in caplog.text
 
 
-# TODO run locally
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
 async def test_get_first_row(mock_get_first_row):
-    mock_get_first_row.return_value = []
+    mock_get_first_row.return_value = {}  # {"rows": []}
     hook = BigQueryHookAsync()
     response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
     assert [] == response
 
-    mock_get_first_row.return_value = [2]
+    rows = {"rows": [{"f": [{"v": "2"}]}]}
+
+    mock_get_first_row.return_value = rows
     response = await hook.get_first_row(job_id=JOB_ID, project_id=PROJECT_ID)
-    assert [2] == response
+    assert response == ["2"]
 
 
 def test_value_check_success():
@@ -170,43 +171,29 @@ def test_value_check_fail():
         hook.value_check(query, pass_value, records, tolerance)
 
 
-def test_get_numeric_matches():
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance, expected",
+    [
+        ([2.0], 2.0, None, [True]),
+        ([2.0], 2.1, None, [False]),
+        ([2.0], 2.0, 0.5, [True]),
+        ([1.0], 2.0, 0.5, [True]),
+        ([3.0], 2.0, 0.5, [True]),
+        ([0.9], 2.0, 0.5, [False]),
+        ([3.1], 2.0, 0.5, [False]),
+    ],
+)
+def test_get_numeric_matches(records, pass_value, tolerance, expected):
     """Assert the response list have all element is true or not"""
-    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.0, None)
-    assert all(response)
 
-    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.1, None)
-    assert not all(response)
-
-    response = BigQueryHookAsync._get_numeric_matches([2.0], 2.0, 0.5)
-    assert all(response)
-
-    response = BigQueryHookAsync._get_numeric_matches([1.0], 2.0, 0.5)
-    assert all(response)
-
-    response = BigQueryHookAsync._get_numeric_matches([3.0], 2.0, 0.5)
-    assert all(response)
-
-    response = BigQueryHookAsync._get_numeric_matches([0.9], 2.0, 0.5)
-    assert not all(response)
-
-    response = BigQueryHookAsync._get_numeric_matches([3.1], 2.0, 0.5)
-    assert not all(response)
+    assert BigQueryHookAsync._get_numeric_matches(records, pass_value, tolerance) == expected
 
 
-def test_convert_to_float_if_possible():
+@pytest.mark.parametrize("test_input,expected", [(5.0, 5.0), (5, 5.0), ("5", 5), ("str", "str")])
+def test_convert_to_float_if_possible(test_input, expected):
     """
     Assert that type casting succeed for the possible value
     Otherwise return the same value
     """
-    response = BigQueryHookAsync._convert_to_float_if_possible(5.0)
-    assert response == 5.0
 
-    response = BigQueryHookAsync._convert_to_float_if_possible(5)
-    assert response == 5.0
-
-    response = BigQueryHookAsync._convert_to_float_if_possible("5")
-    assert response == 5.0
-
-    response = BigQueryHookAsync._convert_to_float_if_possible("str")
-    assert response == "str"
+    assert BigQueryHookAsync._convert_to_float_if_possible(test_input) == expected

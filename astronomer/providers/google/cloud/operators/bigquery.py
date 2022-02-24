@@ -252,7 +252,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             timeout=self.execution_timeout,
             trigger=BigQueryValueCheckTrigger(
                 conn_id=self.gcp_conn_id,
-                job_id=job_id,
+                job_id=job.job_id,
                 project_id=hook.project_id,
                 sql=self.sql,
                 pass_value=self.pass_value,

@@ -306,15 +306,15 @@ def test_bigquery_value_check_op_trigger_serialization():
     """
 
     trigger = BigQueryValueCheckTrigger(
-        TEST_CONN_ID,
-        TEST_PASS_VALUE,
-        TEST_JOB_ID,
-        TEST_DATASET_ID,
-        TEST_GCP_PROJECT_ID,
-        TEST_SQL_QUERY,
-        TEST_TABLE_ID,
-        TEST_TOLERANCE,
-        POLLING_PERIOD_SECONDS,
+        conn_id=TEST_CONN_ID,
+        pass_value=TEST_PASS_VALUE,
+        job_id=TEST_JOB_ID,
+        dataset_id=TEST_DATASET_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        sql=TEST_SQL_QUERY,
+        table_id=TEST_TABLE_ID,
+        tolerance=TEST_TOLERANCE,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
 
@@ -335,7 +335,6 @@ def test_bigquery_value_check_op_trigger_serialization():
     }
 
 
-# TODO: test locally
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
@@ -347,15 +346,15 @@ async def test_bigquery_value_check_op_trigger_success(mock_get_first_row, mock_
     mock_get_first_row.return_value = [2]
 
     trigger = BigQueryValueCheckTrigger(
-        TEST_CONN_ID,
-        TEST_PASS_VALUE,
-        TEST_JOB_ID,
-        TEST_DATASET_ID,
-        TEST_GCP_PROJECT_ID,
-        TEST_SQL_QUERY,
-        TEST_TABLE_ID,
-        TEST_TOLERANCE,
-        POLLING_PERIOD_SECONDS,
+        conn_id=TEST_CONN_ID,
+        pass_value=TEST_PASS_VALUE,
+        job_id=TEST_JOB_ID,
+        dataset_id=TEST_DATASET_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        sql=TEST_SQL_QUERY,
+        table_id=TEST_TABLE_ID,
+        tolerance=TEST_TOLERANCE,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
@@ -364,13 +363,12 @@ async def test_bigquery_value_check_op_trigger_success(mock_get_first_row, mock_
     # TriggerEvent was returned
     assert task.done() is True
 
-    assert task.result() == TriggerEvent({"status": "success", "records": [2]})
+    assert task.result() == TriggerEvent({"status": "success", "message": "Job completed", "records": [2]})
 
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
 
 
-# TODO run locally
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_value_check_op_trigger_pending(mock_job_status, caplog):
@@ -398,13 +396,14 @@ async def test_bigquery_value_check_op_trigger_pending(mock_job_status, caplog):
     # TriggerEvent was returned
     assert task.done() is False
 
-    # TODO: assert info
+    assert "Query is still running..." in caplog.text
+
+    assert f"Sleeping for {POLLING_PERIOD_SECONDS} seconds." in caplog.text
 
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
 
 
-# TODO run locally
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_value_check_op_trigger_fail(mock_job_status):
@@ -429,7 +428,7 @@ async def test_bigquery_value_check_op_trigger_fail(mock_job_status):
     await asyncio.sleep(0.5)
 
     # TriggerEvent was returned
-    assert task.done() is False
+    assert task.done() is True
 
     assert task.result() == TriggerEvent(
         {"status": "error", "message": "dummy", "records": None}
@@ -439,7 +438,6 @@ async def test_bigquery_value_check_op_trigger_fail(mock_job_status):
     asyncio.get_event_loop().stop()
 
 
-# TODO run locally
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
 async def test_bigquery_value_check_trigger_exception(mock_job_status):
@@ -460,7 +458,7 @@ async def test_bigquery_value_check_trigger_exception(mock_job_status):
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(1)
 
-    assert task.done() is False
+    assert task.done() is True
     assert task.result() == TriggerEvent(
         {"status": "error", "message": "Test exception"}
     )
