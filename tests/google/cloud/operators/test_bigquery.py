@@ -312,6 +312,7 @@ def test_bigquery_check_operator_execute_complete():
     "operator_class, kwargs",
     [
         (BigQueryCheckOperatorAsync, dict(sql="Select * from test_table")),
+        (BigQueryValueCheckOperatorAsync, dict(sql="Select * from test_tabl", pass_value="Any")),
     ],
 )
 def test_bigquery_conn_id_deprecation_warning(operator_class, kwargs):
@@ -364,13 +365,12 @@ def test_bigquery_value_check_async(mock_hook):
 
 def test_bigquery_value_check_operator_execute_complete_success():
     """Tests response message in case of success event"""
-    message = "Job completed!"
     operator = _get_value_check_async_operator()
 
     response = operator.execute_complete(
         context=None, event={"status": "success", "message": "Job completed!"}
     )
-    assert message == response
+    assert response == "success"
 
 
 def test_bigquery_value_check_operator_execute_complete_failure():
@@ -383,25 +383,16 @@ def test_bigquery_value_check_operator_execute_complete_failure():
         )
 
 
-def test_bigquery_value_check_conn_id_deprecation_warning():
-    """Assert the deprecation warning if args bigquery_conn_id pass to the operator"""
-    kwargs = {
-        "pass_value": 2,
-        "sql": "any",
-    }
-    test_bigquery_conn_id_deprecation_warning(BigQueryValueCheckOperatorAsync, kwargs)
-
-
-def test_bigquery_value_check_missing_param():
+@pytest.mark.parametrize(
+    "kwargs, expected",
+    [
+        (dict(), "Argument ['sql', 'pass_value'] is required"),
+        (dict(sql="SELECT COUNT(*) from Any"), "Argument ['pass_value'] is required"),
+        (dict(pass_value="Any"), "Argument ['sql'] is required"),
+    ]
+)
+def test_bigquery_value_check_missing_param(kwargs, expected):
     """Assert the exception if require param not pass to BigQueryValueCheckOperatorAsync operator"""
     with pytest.raises(AirflowException) as missing_param:
-        BigQueryValueCheckOperatorAsync()
-    assert missing_param.value.args[0] == "Argument ['sql', 'pass_value'] is required"
-
-    with pytest.raises(AirflowException) as missing_param:
-        BigQueryValueCheckOperatorAsync(sql="SELECT COUNT(*) from Any")
-    assert missing_param.value.args[0] == "Argument ['pass_value'] is required"
-
-    with pytest.raises(AirflowException) as missing_param:
-        BigQueryValueCheckOperatorAsync(pass_value="Any")
-    assert missing_param.value.args[0] == "Argument ['sql'] is required"
+        BigQueryValueCheckOperatorAsync(**kwargs)
+    assert missing_param.value.args[0] == expected

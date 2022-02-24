@@ -336,14 +336,16 @@ def test_bigquery_value_check_op_trigger_serialization():
 
 
 @pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_records")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_output")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_first_row")
-async def test_bigquery_value_check_op_trigger_success(mock_get_first_row, mock_job_status):
+async def test_bigquery_value_check_op_trigger_success(mock_job_status, get_job_output, get_records):
     """
     Tests that the BigQueryValueCheckTrigger only fires once the query execution reaches a successful state.
     """
     mock_job_status.return_value = "success"
-    mock_get_first_row.return_value = [2]
+    get_job_output.return_value = {}
+    get_records.return_value = [[2], [4]]
 
     trigger = BigQueryValueCheckTrigger(
         conn_id=TEST_CONN_ID,

@@ -267,4 +267,4 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
         self.log.info(
             "%s completed with response %s ", self.task_id, event["message"],
         )
-        return event["message"]
+        return event["status"]
