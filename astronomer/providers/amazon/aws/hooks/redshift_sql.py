@@ -5,12 +5,12 @@ import botocore.exceptions
 from asgiref.sync import sync_to_async
 from async_timeout import asyncio
 
-from astronomer.providers.amazon.aws.hooks.redshift_data import RedshitDataHook
+from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 
 log = logging.getLogger(__name__)
 
 
-class RedshiftSQLHookAsync(RedshitDataHook):
+class RedshiftSQLHookAsync(RedshiftDataHook):
     async def get_query_status(self, query_ids: List[str]):
         """
         Async function to get the Query status by query Ids, this function

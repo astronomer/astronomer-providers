@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from airflow import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 
-from astronomer.providers.amazon.aws.hooks.redshift_data import RedshitDataHook
+from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         super().__init__(**kwargs)
 
     def execute(self, context: "Context"):
-        redshift_data_hook = RedshitDataHook(aws_conn_id=self.redshift_conn_id)
+        redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
         query_ids = redshift_data_hook.execute_query(sql=self.sql, params=self.params)
         self.defer(
             timeout=self.execution_timeout,

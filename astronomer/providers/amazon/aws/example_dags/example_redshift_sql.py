@@ -6,26 +6,24 @@ from astronomer.providers.amazon.aws.operators.redshift_sql import (
 )
 
 with airflow.DAG(
-    dag_id="example_async_redshift_SQL",
+    dag_id="example_async_redshift_sql",
     start_date=days_ago(1),
     tags=["example", "async"],
     schedule_interval="@once",
     catchup=False,
 ) as dag:
-    setup__task_create_table = (
-        RedshiftSQLOperatorAsync(
-            task_id="setup__create_table",
-            sql="""
+    task_create_table = RedshiftSQLOperatorAsync(
+        task_id='task_create_table',
+        sql="""
             CREATE TABLE IF NOT EXISTS fruit (
             fruit_id INTEGER,
             name VARCHAR NOT NULL,
             color VARCHAR NOT NULL
             );
         """,
-        ),
     )
     task_insert_data = RedshiftSQLOperatorAsync(
-        task_id="task_insert_data",
+        task_id='task_insert_data',
         sql=[
             "INSERT INTO fruit VALUES ( 1, 'Banana', 'Yellow');",
             "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
@@ -36,15 +34,15 @@ with airflow.DAG(
         ],
     )
 
-    task_get_all_table_data = RedshiftSQLOperatorAsync(
-        task_id="task_get_all_table_data",
+    task_get_all_data = RedshiftSQLOperatorAsync(
+        task_id='task_get_all_data',
         sql="SELECT * FROM fruit;",
     )
 
-    task_get_with_filter = RedshiftSQLOperatorAsync(
-        task_id="task_get_with_filter",
+    task_get_data_with_filter = RedshiftSQLOperatorAsync(
+        task_id='task_get_with_filter',
         sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
-        params={"color": "Red"},
+        params={'color': 'Red'},
     )
 
-    setup__task_create_table >> task_insert_data >> task_get_all_table_data >> task_get_with_filter
+    task_create_table >> task_insert_data >> task_get_all_data >> task_get_data_with_filter

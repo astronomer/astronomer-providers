@@ -43,16 +43,16 @@ def test_redhsift_sqltrigger_serialization():
         (["uuid", "uuid"], False, TriggerEvent({"status": "error", "message": f"{TEST_TASK_ID} failed"})),
     ],
 )
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.execute_query")
-async def test_redshiftsql_trigger_run(mock_execute_query, query_ids, return_value, response):
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.get_query_status")
+async def test_redshiftsql_trigger_run(mock_get_query_status, query_ids, return_value, response):
     """
     Tests that RedshiftSQLTrigger only fires once the query execution reaches a successful state.
     """
-    mock_execute_query.return_value = return_value
+    mock_get_query_status.return_value = return_value
     trigger = RedshiftSQLTrigger(
         task_id=TEST_TASK_ID,
         polling_period_seconds=POLLING_PERIOD_SECONDS,
-        redshift_conn_id=TEST_CONN_ID,
+        aws_conn_id=TEST_CONN_ID,
         query_ids=query_ids,
     )
     task = [i async for i in trigger.run()]
@@ -67,17 +67,17 @@ async def test_redshiftsql_trigger_run(mock_execute_query, query_ids, return_val
         (["uuid", "uuid"]),
     ],
 )
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.execute_query")
-async def test_redshiftsql_trigger_exception(mock_execute_query, query_ids):
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.get_query_status")
+async def test_redshiftsql_trigger_exception(mock_get_query_status, query_ids):
     """
     Test that RedshiftSQLTrigger fires the correct event in case of an error.
     """
-    mock_execute_query.side_effect = Exception("Test exception")
+    mock_get_query_status.side_effect = Exception("Test exception")
 
     trigger = RedshiftSQLTrigger(
         task_id=TEST_TASK_ID,
         polling_period_seconds=POLLING_PERIOD_SECONDS,
-        redshift_conn_id=TEST_CONN_ID,
+        aws_conn_id=TEST_CONN_ID,
         query_ids=query_ids,
     )
     task = [i async for i in trigger.run()]

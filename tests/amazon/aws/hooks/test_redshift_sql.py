@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from airflow.models.connection import Connection
 
-from astronomer.providers.amazon.aws.hooks.redshift_data import RedshitDataHook
+from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHookAsync
 
 
@@ -74,10 +74,10 @@ async def test_is_still_running(mock_client, query_id, describe_statement_respon
         ("select * from table", {"Id": "uuid"}, ["uuid"]),
     ],
 )
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshitDataHook.get_conn_params")
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshitDataHook.get_conn")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn_params")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
 def test_execute_query(mock_conn, mock_params, sql, expected_response, expected_query_ids):
-    hook = RedshitDataHook()
+    hook = RedshiftDataHook()
     mock_params.return_value = {
         "db_user": "test",
         "database": "test",
@@ -132,11 +132,11 @@ def test_execute_query(mock_conn, mock_params, sql, expected_response, expected_
         ),
     ],
 )
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshitDataHook.get_connection")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_connection")
 def test_get_conn_params(mock_get_connection, connection_details, expected_output):
     mock_conn = Connection(extra=json.dumps(connection_details))
     mock_get_connection.return_value = mock_conn
 
-    hook = RedshitDataHook(client_type="redshift-data")
+    hook = RedshiftDataHook(client_type="redshift-data")
     response = hook.get_conn_params()
     assert response == expected_output

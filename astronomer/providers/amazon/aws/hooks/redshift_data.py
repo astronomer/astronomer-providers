@@ -7,7 +7,7 @@ from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from snowflake.connector.util_text import split_statements
 
 
-class RedshitDataHook(AwsBaseHook):
+class RedshiftDataHook(AwsBaseHook):
     def __init__(self, *args, **kwargs) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"
@@ -81,23 +81,13 @@ class RedshitDataHook(AwsBaseHook):
             query_ids: List[str] = []
             for sql_statement in sql:
                 self.log.info(f"Executing statement: {sql_statement}")
-                if params:
-                    response = client.execute_statement(
-                        Database=conn_params["database"],
-                        ClusterIdentifier=conn_params["cluster_identifier"],
-                        DbUser=conn_params["db_user"],
-                        Sql=sql_statement,
-                        Parameters=params,
-                        WithEvent=True,
-                    )
-                else:
-                    response = client.execute_statement(
-                        Database=conn_params["database"],
-                        ClusterIdentifier=conn_params["cluster_identifier"],
-                        DbUser=conn_params["db_user"],
-                        Sql=sql_statement,
-                        WithEvent=True,
-                    )
+                response = client.execute_statement(
+                    Database=conn_params["database"],
+                    ClusterIdentifier=conn_params["cluster_identifier"],
+                    DbUser=conn_params["db_user"],
+                    Sql=sql_statement,
+                    WithEvent=True,
+                )
                 query_ids.append(response["Id"])
             return query_ids
         except botocore.exceptions.ClientError as error:
