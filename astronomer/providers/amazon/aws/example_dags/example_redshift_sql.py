@@ -12,6 +12,22 @@ with airflow.DAG(
     schedule_interval="@once",
     catchup=False,
 ) as dag:
+    task_create_func = RedshiftSQLOperatorAsync(
+        task_id='task_create_func',
+        sql="""
+            CREATE OR REPLACE FUNCTION janky_sleep (x float) RETURNS bool IMMUTABLE as $$
+                from time import sleep
+                sleep(x)
+                return True
+            $$ LANGUAGE plpythonu;
+            """,
+    )
+
+    task_long_running_query_sleep = RedshiftSQLOperatorAsync(
+        task_id='task_long_running_query_sleep',
+        sql="select janky_sleep(10.0);",
+    )
+
     task_create_table = RedshiftSQLOperatorAsync(
         task_id='task_create_table',
         sql="""
@@ -29,7 +45,7 @@ with airflow.DAG(
             "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
             "INSERT INTO fruit VALUES ( 3, 'Lemon', 'Yellow');",
             "INSERT INTO fruit VALUES ( 4, 'Grape', 'Purple');",
-            "INSERT INTO fruit VALUES ( 5, 'Pear', 'Green');",
+            "INSERT INTO  VALUES ( 5, 'Pear', 'Green');",
             "INSERT INTO fruit VALUES ( 6, 'Strawberry', 'Red');",
         ],
     )

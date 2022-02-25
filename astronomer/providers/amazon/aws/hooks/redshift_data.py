@@ -25,14 +25,14 @@ class RedshiftDataHook(AwsBaseHook):
         if "db_user" in extra_config:
             conn_params["db_user"] = extra_config.get("db_user", None)
         else:
-            raise AirflowException("Required db user")
+            raise AirflowException("Required db user is missing !")
 
         if "database" in extra_config:
             conn_params["database"] = extra_config.get("database", None)
         elif connection_object.schema:
             conn_params["database"] = connection_object.schema
         else:
-            raise AirflowException("Required Database name")
+            raise AirflowException("Required Database name is missing !")
 
         if "access_key_id" in extra_config or "aws_access_key_id" in extra_config:
             conn_params["aws_access_key_id"] = (
@@ -54,13 +54,13 @@ class RedshiftDataHook(AwsBaseHook):
                 extra_config["region"] if "region" in extra_config else extra_config["region_name"]
             )
         else:
-            raise AirflowException("Required Region name")
+            raise AirflowException("Required Region name is missing !")
 
         if "cluster_identifier" in extra_config:
             self.log.info("Retrieving cluster_identifier from Connection.extra_config['cluster_identifier']")
             conn_params["cluster_identifier"] = extra_config["cluster_identifier"]
         else:
-            raise AirflowException("Required Cluster identifier")
+            raise AirflowException("Required Cluster identifier is missing !")
 
         return conn_params
 
