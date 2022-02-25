@@ -65,7 +65,6 @@ async def test_is_still_running(mock_client, query_id, describe_statement_respon
     hook = RedshiftSQLHookAsync()
     mock_client.return_value.describe_statement.return_value = describe_statement_response
     response = await hook.is_still_running(query_id)
-    print(response)
     assert response == expected_result
 
 

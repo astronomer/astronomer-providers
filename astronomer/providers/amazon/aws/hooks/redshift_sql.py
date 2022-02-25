@@ -49,7 +49,6 @@ class RedshiftSQLHookAsync(RedshitDataHook):
         return False
         """
         try:
-            print("inside still running")
             client = await sync_to_async(self.get_conn)()
             desc = client.describe_statement(Id=id)
             if desc["Status"] in ["PICKED", "STARTED", "SUBMITTED"]:
