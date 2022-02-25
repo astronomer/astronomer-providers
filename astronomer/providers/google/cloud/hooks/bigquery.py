@@ -19,7 +19,7 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
@@ -159,6 +159,78 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                     typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
                 buffer.append(typed_row)
         return buffer
+
+    def value_check(
+        self,
+        sql: str,
+        pass_value: Any,
+        records: Any,
+        tolerance: Any = None,
+    ):
+        """
+        Match a single query resulting row and tolerance with pass_value
+        :return: If Match fail,
+            we throw an AirflowException.
+        """
+        if not records:
+            raise AirflowException("The query returned None")
+        pass_value_conv = self._convert_to_float_if_possible(pass_value)
+        is_numeric_value_check = isinstance(pass_value_conv, float)
+        has_tolerance = tolerance is not None
+        tolerance_pct_str = str(tolerance * 100) + "%" if has_tolerance else None
+
+        error_msg = (
+            "Test failed.\nPass value:{pass_value_conv}\n"
+            "Tolerance:{tolerance_pct_str}\n"
+            "Query:\n{sql}\nResults:\n{records!s}"
+        ).format(
+            pass_value_conv=pass_value_conv,
+            tolerance_pct_str=tolerance_pct_str,
+            sql=sql,
+            records=records,
+        )
+
+        if not is_numeric_value_check:
+            tests = [str(record) == pass_value_conv for record in records]
+        else:
+            try:
+                numeric_records = [float(record) for record in records]
+            except (ValueError, TypeError):
+                raise AirflowException(f"Converting a result to float failed.\n{error_msg}")
+            tests = self._get_numeric_matches(numeric_records, pass_value_conv, tolerance)
+
+        if not all(tests):
+            raise AirflowException(error_msg)
+
+    @staticmethod
+    def _get_numeric_matches(records: list[float], pass_value: float, tolerance: float = None):
+        """
+        A helper function to match numeric pass_value, tolerance with records value
+
+        :param records: List of value to match against
+        :param pass_value: Expected value
+        :param tolerance: Allowed tolerance for match to succeed
+        """
+        if tolerance:
+            return [
+                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance) for record in records
+            ]
+
+        return [record == pass_value for record in records]
+
+    @staticmethod
+    def _convert_to_float_if_possible(s):
+        """
+        A small helper function to convert a string to a numeric value
+        if appropriate
+
+        :param s: the string to be converted
+        """
+        try:
+            ret = float(s)
+        except (ValueError, TypeError):
+            ret = s
+        return ret
 
     def interval_check(
         self, row1: str, row2: str, metrics_thresholds: dict, ignore_zero: bool, ratio_formula: str

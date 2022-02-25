@@ -28,6 +28,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryGetDataOperator,
     BigQueryInsertJobOperator,
     BigQueryIntervalCheckOperator,
+    BigQueryValueCheckOperator,
 )
 from google.api_core.exceptions import Conflict
 
@@ -37,6 +38,7 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryGetDataTrigger,
     BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
+    BigQueryValueCheckTrigger,
 )
 
 if TYPE_CHECKING:
@@ -406,5 +408,58 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             "%s completed with response %s ",
             self.task_id,
             event["status"],
+        )
+        return event["status"]
+
+
+class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
+    def _submit_job(
+        self,
+        hook: _BigQueryHook,
+        job_id: str,
+    ) -> BigQueryJob:
+        """Submit a new job and get the job id for polling the status using Triggerer."""
+        configuration = {
+            "query": {
+                "query": self.sql,
+                "useLegacySql": False,
+            }
+        }
+        if self.use_legacy_sql:
+            configuration["query"]["useLegacySql"] = self.use_legacy_sql
+
+        return hook.insert_job(
+            configuration=configuration,
+            project_id=hook.project_id,
+            location=self.location,
+            job_id=job_id,
+            nowait=True,
+        )
+
+    def execute(self, context: "Context"):
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
+
+        job = self._submit_job(hook, job_id="")
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryValueCheckTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=job.job_id,
+                project_id=hook.project_id,
+                sql=self.sql,
+                pass_value=self.pass_value,
+                tolerance=self.tol,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(
+            "%s completed with response %s ",
+            self.task_id,
+            event["message"],
         )
         return event["status"]

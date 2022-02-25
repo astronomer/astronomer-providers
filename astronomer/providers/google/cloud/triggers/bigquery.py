@@ -323,3 +323,78 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
                 self.log.exception("Exception occurred while checking for query completion")
                 yield TriggerEvent({"status": "error", "message": str(e)})
                 return
+
+
+class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
+    def __init__(
+        self,
+        conn_id: str,
+        sql: str,
+        pass_value: Any,
+        job_id: Optional[str],
+        project_id: Optional[str],
+        tolerance: Any = None,
+        dataset_id: Optional[str] = None,
+        table_id: Optional[str] = None,
+        poll_interval: float = 4.0,
+    ):
+        super().__init__(
+            conn_id=conn_id,
+            job_id=job_id,
+            project_id=project_id,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            poll_interval=poll_interval,
+        )
+        self.sql = sql
+        self.pass_value = pass_value
+        self.tolerance = tolerance
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Serializes BigQueryValueCheckTrigger arguments and classpath.
+        """
+        return (
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger",
+            {
+                "conn_id": self.conn_id,
+                "pass_value": self.pass_value,
+                "job_id": self.job_id,
+                "dataset_id": self.dataset_id,
+                "project_id": self.project_id,
+                "sql": self.sql,
+                "table_id": self.table_id,
+                "tolerance": self.tolerance,
+                "poll_interval": self.poll_interval,
+            },
+        )
+
+    async def run(self):
+        """
+        Gets current job execution status and yields a TriggerEvent
+        """
+        hook = self._get_async_hook()
+        while True:
+            try:
+                # Poll for job execution status
+                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+                if response_from_hook == "success":
+                    query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
+                    # Extract records after casting a BigQuery row to the appropriate data types.
+                    records = hook.get_records(query_results, nocast=False)
+                    records = records.pop(0) if records else None
+                    hook.value_check(self.sql, self.pass_value, records, self.tolerance)
+                    yield TriggerEvent({"status": "success", "message": "Job completed", "records": records})
+                    return
+                elif response_from_hook == "pending":
+                    self.log.info("Query is still running...")
+                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
+                    await asyncio.sleep(self.poll_interval)
+                else:
+                    yield TriggerEvent({"status": "error", "message": response_from_hook, "records": None})
+                    return
+
+            except Exception as e:
+                self.log.exception("Exception occurred while checking for query completion")
+                yield TriggerEvent({"status": "error", "message": str(e)})
+                return

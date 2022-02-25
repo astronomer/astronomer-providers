@@ -110,7 +110,6 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     assert "Query execution finished with errors..." in caplog.text
 
 
-@pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
 async def test_get_job_output_assert_once_with(mock_session, mock_job_instance):
@@ -203,3 +202,60 @@ async def test_get_job_output(mock_job_instance):
     mock_job_client.get_query_results.return_value = response
     resp = await hook.get_job_output(job_id=JOB_ID, project_id=PROJECT_ID)
     assert resp == response
+
+
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance", [(["str"], "str", None), ([2], 2, None), ([0], 2, 1), ([4], 2, 1)]
+)
+def test_value_check_success(records, pass_value, tolerance):
+    """
+    Assert that value_check method execution succeed
+    """
+    hook = BigQueryHookAsync()
+    query = "SELECT COUNT(*) from Any"
+
+    response = hook.value_check(query, pass_value, records, tolerance)
+
+    assert response is None
+
+
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance",
+    [([], "", None), (["str"], "str1", None), ([2], 21, None), ([5], 2, 1), (["str"], 2, None)],
+)
+def test_value_check_fail(records, pass_value, tolerance):
+    """Assert that check raise AirflowException"""
+    hook = BigQueryHookAsync()
+    query = "SELECT COUNT(*) from Any"
+
+    with pytest.raises(AirflowException) as ex:
+        hook.value_check(query, pass_value, records, tolerance)
+    assert isinstance(ex.value, AirflowException)
+
+
+@pytest.mark.parametrize(
+    "records,pass_value,tolerance, expected",
+    [
+        ([2.0], 2.0, None, [True]),
+        ([2.0], 2.1, None, [False]),
+        ([2.0], 2.0, 0.5, [True]),
+        ([1.0], 2.0, 0.5, [True]),
+        ([3.0], 2.0, 0.5, [True]),
+        ([0.9], 2.0, 0.5, [False]),
+        ([3.1], 2.0, 0.5, [False]),
+    ],
+)
+def test_get_numeric_matches(records, pass_value, tolerance, expected):
+    """Assert the if response list have all element match with pass_value with tolerance"""
+
+    assert BigQueryHookAsync._get_numeric_matches(records, pass_value, tolerance) == expected
+
+
+@pytest.mark.parametrize("test_input,expected", [(5.0, 5.0), (5, 5.0), ("5", 5), ("str", "str")])
+def test_convert_to_float_if_possible(test_input, expected):
+    """
+    Assert that type casting succeed for the possible value
+    Otherwise return the same value
+    """
+
+    assert BigQueryHookAsync._convert_to_float_if_possible(test_input) == expected

@@ -29,7 +29,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
     BigQueryDeleteDatasetOperator,
-    BigQueryValueCheckOperator,
 )
 
 from astronomer.providers.google.cloud.operators.bigquery import (
@@ -37,6 +36,7 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryGetDataOperatorAsync,
     BigQueryInsertJobOperatorAsync,
     BigQueryIntervalCheckOperatorAsync,
+    BigQueryValueCheckOperatorAsync,
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -112,15 +112,15 @@ with models.DAG(
         location=location,
     )
 
-    # [START howto_operator_bigquery_value_check]
-    check_value = BigQueryValueCheckOperator(
+    # [START howto_operator_bigquery_value_check_async]
+    check_value = BigQueryValueCheckOperatorAsync(
         task_id="check_value",
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
         pass_value=2,
         use_legacy_sql=False,
         location=location,
     )
-    # [END howto_operator_bigquery_value_check]
+    # [END howto_operator_bigquery_value_check_async]
 
     # [START howto_operator_bigquery_interval_check_async]
     check_interval = BigQueryIntervalCheckOperatorAsync(
