@@ -23,12 +23,16 @@ restart-all: ## Restart all the containers
 	docker-compose -f dev/docker-compose.yaml restart
 
 run-tests: ## Run CI tests
-	docker build -f .circleci/Dockerfile . -t astronomer-operators-ci
-	docker run --rm -it astronomer-operators-ci pytest tests
+	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
+	 	-w /usr/local/airflow/astronomer_providers \
+		--rm -it astronomer-providers-dev -- pytest tests
 
 run-static-checks: ## Run CI static code checks
-	docker build -f .circleci/Dockerfile . -t astronomer-operators-ci
-	docker run --rm -it astronomer-operators-ci pre-commit run --all-files
+	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
+	 	-w /usr/local/airflow/astronomer_providers \
+		--rm -it astronomer-providers-dev -- pre-commit run --all-files --show-diff-on-failure
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
