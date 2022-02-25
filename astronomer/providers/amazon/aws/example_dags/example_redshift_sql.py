@@ -45,4 +45,15 @@ with airflow.DAG(
         params={'color': 'Red'},
     )
 
-    task_create_table >> task_insert_data >> task_get_all_data >> task_get_data_with_filter
+    task_delete_table = RedshiftSQLOperatorAsync(
+        task_id='task_delete_table',
+        sql="drop table fruit;",
+    )
+
+    (
+        task_create_table
+        >> task_insert_data
+        >> task_get_all_data
+        >> task_get_data_with_filter
+        >> task_delete_table
+    )
