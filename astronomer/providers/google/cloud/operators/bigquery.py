@@ -437,10 +437,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
         )
 
     def execute(self, context: "Context"):
-        hook = _BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            location=self.location,
-        )
+        hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         job = self._submit_job(hook, job_id="")
 
