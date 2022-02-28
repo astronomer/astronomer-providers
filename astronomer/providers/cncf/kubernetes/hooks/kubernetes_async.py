@@ -1,11 +1,13 @@
-import aiofiles
-from airflow import AirflowException
+from typing import Any
+
+import aiofiles  # type: ignore[import]
+from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
 
 
 class KubernetesHookAsync(KubernetesHook):
-    async def _load_config(self):
+    async def _load_config(self) -> Any:
         """
         cluster_context: Optional[str] = None,
         config_file: Optional[str] = None,
@@ -19,13 +21,13 @@ class KubernetesHookAsync(KubernetesHook):
             extras = {}
         in_cluster = self._coalesce_param(
             self.in_cluster, extras.get("extra__kubernetes__in_cluster") or None
-        )
+        )  # type: ignore[no-untyped-call]
         cluster_context = self._coalesce_param(
             self.cluster_context, extras.get("extra__kubernetes__cluster_context") or None
-        )
+        )  # type: ignore[no-untyped-call]
         kubeconfig_path = self._coalesce_param(
             self.config_file, extras.get("extra__kubernetes__kube_config_path") or None
-        )
+        )  # type: ignore[no-untyped-call]
         kubeconfig = extras.get("extra__kubernetes__kube_config") or None
         num_selected_configuration = len([o for o in [in_cluster, kubeconfig, kubeconfig_path] if o])
 

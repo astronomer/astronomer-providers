@@ -1,7 +1,10 @@
-from airflow import AirflowException
+from typing import Any, Optional
+
+from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
@@ -20,12 +23,14 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     :param poll_interval: interval in seconds to sleep between checking pod status
     """
 
-    def __init__(self, *, poll_interval: int = 5, **kwargs):
+    def __init__(self, *, poll_interval: int = 5, **kwargs: Any):
+        self.pod = None
+        self.pod_request_obj = None
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
     @staticmethod
-    def raise_for_trigger_status(event):
+    def raise_for_trigger_status(event: Any) -> Optional[AirflowException]:
         if event["status"] == "error":
             error_type = event["error_type"]
             description = event["description"]
@@ -33,9 +38,10 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                 raise PodLaunchTimeoutException(description)
             else:
                 raise AirflowException(description)
+        return None
 
-    def execute(self, context):
-        self.pod_request_obj = self.build_pod_request_obj(context)
+    def execute(self, context: Context) -> None:
+        self.pod_request_obj = self.build_pod_request_obj(context)  # type: ignore[no-untyped-call]
         self.pod = self.get_or_create_pod(self.pod_request_obj, context)
         self.defer(
             trigger=WaitContainerTrigger(
@@ -54,10 +60,10 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             method_name=self.execute_complete.__name__,
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         remote_pod = None
         try:
-            self.pod_request_obj = self.build_pod_request_obj(context)
+            self.pod_request_obj = self.build_pod_request_obj(context)  # type: ignore[no-untyped-call]
             self.pod = self.find_pod(
                 namespace=self.namespace or self.pod_request_obj.metadata.namespace,
                 context=context,
@@ -75,7 +81,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                     container_name=self.BASE_CONTAINER_NAME,
                 )
             if self.do_xcom_push:
-                result = self.extract_xcom(pod=self.pod)
+                result = self.extract_xcom(pod=self.pod)  # type: ignore[no-untyped-call]
             remote_pod = self.pod_manager.await_pod_completion(self.pod)
         finally:
             self.cleanup(

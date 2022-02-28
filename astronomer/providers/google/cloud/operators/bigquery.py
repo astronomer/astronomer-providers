@@ -1,9 +1,9 @@
 """This module contains Google BigQueryAsync providers."""
-from typing import TYPE_CHECKING, Dict
+from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryGetDataOperator,
@@ -11,6 +11,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryIntervalCheckOperator,
     BigQueryValueCheckOperator,
 )
+from airflow.utils.context import Context
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.hooks.bigquery import _BigQueryHook
@@ -22,9 +23,6 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryValueCheckTrigger,
 )
 
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
-
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 
 _DEPRECATION_MSG = (
@@ -32,7 +30,7 @@ _DEPRECATION_MSG = (
 )
 
 
-class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
+class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):  # type: ignore[misc]
     """
     Starts a BigQuery job asynchronously, and returns job id.
     This operator works in the following way:
@@ -85,7 +83,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
     def _submit_job(
         self,
-        hook: _BigQueryHook,
+        hook: BigQueryHook,
         job_id: str,
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
@@ -97,11 +95,11 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             nowait=True,
         )
 
-    def execute(self, context: "Context"):
+    def execute(self, context: Context) -> Any:
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
-        job_id = self._job_id(context)
+        job_id = self._job_id(context)  # type: ignore[no-untyped-call]
 
         try:
             job = self._submit_job(hook, job_id)
@@ -137,7 +135,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(
@@ -165,11 +163,9 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: "Context"):
+    def execute(self, context: Context) -> Any:  # type: ignore[override]
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            # location=self.location,
-            # impersonation_chain=self.impersonation_chain,
         )
         job = self._submit_job(hook, job_id="")
         self.defer(
@@ -182,7 +178,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
@@ -251,7 +247,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         self,
         hook: _BigQueryHook,
         job_id: str,
-        configuration: Dict,
+        configuration: Dict[str, Any],
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
         return hook.insert_job(
@@ -262,7 +258,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             nowait=True,
         )
 
-    def generate_query(self):
+    def generate_query(self) -> str:
         """
         Generate a select query if selected fields are given or with *
         for the given dataset and table id
@@ -275,7 +271,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
         return query
 
-    def execute(self, context: "Context"):
+    def execute(self, context: Context) -> Any:
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
 
@@ -301,7 +297,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         if event["status"] == "success":
             self.log.info("Total extracted rows: %s", len(event["records"]))
             return event["records"]
@@ -358,7 +354,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context=None):
+    def execute(self, context: Context) -> Any:  # type: ignore[override]
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         self.log.info("Using ratio formula: %s", self.ratio_formula)
 
@@ -385,7 +381,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
@@ -421,7 +417,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: "Context"):
+    def execute(self, context: Context) -> Any:  # type: ignore[override]
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         job = self._submit_job(hook, job_id="")
@@ -439,7 +435,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Any) -> Any:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(
