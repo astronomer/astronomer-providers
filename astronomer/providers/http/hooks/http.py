@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -7,17 +7,18 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
 
+if TYPE_CHECKING:
+    from aiohttp.client_reqrep import ClientResponse
+
 
 class HttpHookAsync(BaseHook):
     """
     Interact with HTTP servers using Python Async.
 
     :param method: the API method to be called
-    :type method: str
     :param http_conn_id: :ref:`http connection<howto/connection:http>` that has the base
         API url i.e https://www.google.com/ and optional authentication credentials. Default
         headers can also be specified in the Extra field in json format.
-    :type http_conn_id: str
     :param auth_type: The auth type for the service
     :type auth_type: AuthBase of python aiohttp lib
     """
@@ -35,7 +36,6 @@ class HttpHookAsync(BaseHook):
         retry_limit: int = 3,
         retry_delay: float = 1.0,
     ) -> None:
-        super().__init__()
         self.http_conn_id = http_conn_id
         self.method = method.upper()
         self.base_url: str = ""
@@ -52,7 +52,7 @@ class HttpHookAsync(BaseHook):
         data: Optional[Union[Dict[str, Any], str]] = None,
         headers: Optional[Dict[str, Any]] = None,
         extra_options: Optional[Dict[str, Any]] = None,
-    ) -> Any:
+    ) -> "ClientResponse":
         r"""
         Performs an asynchronous HTTP request call
 

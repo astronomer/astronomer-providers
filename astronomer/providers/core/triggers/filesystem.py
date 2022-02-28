@@ -46,7 +46,7 @@ class FileTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> None:
         """
         Simple loop until the relevant files are found.
         """

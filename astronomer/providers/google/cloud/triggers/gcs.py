@@ -28,7 +28,7 @@ class GCSBlobTrigger(BaseTrigger):
         object_name: str,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
-        hook_params: dict[str, Any],
+        hook_params: Dict[str, Any],
     ):
         self.bucket = bucket
         self.object_name = object_name
