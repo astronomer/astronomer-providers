@@ -26,7 +26,7 @@ def context():
     """
     Creates a context with default execution date.
     """
-    context = {"execution_date": DEFAULT_DATE}
+    context = {"execution_date": DEFAULT_DATE, "logical_date": DEFAULT_DATE}
     yield context
 
 
