@@ -28,9 +28,8 @@ class GCSBlobTrigger(BaseTrigger):
         object_name: str,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
-        hook_params: dict,
+        hook_params: dict[str, Any],
     ):
-        super().__init__()
         self.bucket = bucket
         self.object_name = object_name
         self.polling_period_seconds = polling_period_seconds
@@ -52,7 +51,7 @@ class GCSBlobTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Simple loop until the relevant file/folder is found.
         """
