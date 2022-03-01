@@ -43,6 +43,11 @@ if you want to import Async operators, you can import it as follows:
         bucket_name="sample-bucket",
     )
 
+**Example DAGs** for each provider is within the respective provider's folder. For example,
+the Kubernetes provider's DAGs are within the
+`astronomer/providers/cncf/kubernetes/example_dags <https://github.com/astronomer/astronomer-providers/tree/main/astronomer/providers/cncf/kubernetes/example_dags>`_
+folder.
+
 Principle
 ---------
 
