@@ -8,7 +8,7 @@ from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
-from astronomer.providers.amazon.aws.sensors.redshift_cluster_sensor import (
+from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
     RedshiftClusterSensorAsync,
 )
 
