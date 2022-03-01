@@ -55,7 +55,7 @@ You can configure the Docker-based development environment as follows:
 
 7. Put the DAGs you want to run in the ``dev/dags`` directory:
 
-8. If you want to add Connections, create a ``connections.yaml`` file in the `dev` directory.
+8. If you want to add Connections, create a ``connections.yaml`` file in the ``dev`` directory.
 
    See the `Connections Guide <https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html>`_ for more information.
 

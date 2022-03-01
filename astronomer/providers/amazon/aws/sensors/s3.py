@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
@@ -75,7 +75,7 @@ class S3KeySensorAsync(BaseOperator):
         self.defer(
             timeout=self.execution_timeout,
             trigger=S3KeyTrigger(
-                bucket_name=self.bucket_name,  # type: ignore
+                bucket_name=cast(str, self.bucket_name),
                 bucket_key=self.bucket_key,
                 wildcard_match=self.wildcard_match,
                 aws_conn_id=self.aws_conn_id,
