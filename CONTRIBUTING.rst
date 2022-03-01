@@ -15,8 +15,8 @@ We will only create Async operators for the "sync-version" of operators that do 
 For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
 for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
 
-Issues and PRs
----------------
+Issues, PRs & Discussions
+-------------------------
 
 If you have suggestions for how this project could be improved, or want to
 report a bug, open an issue! We'd love all and any contributions. If you have questions, too, we'd love to hear them.
@@ -24,6 +24,7 @@ report a bug, open an issue! We'd love all and any contributions. If you have qu
 We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it,
 though! Look at the links below if you're not sure how to open a PR.
 
+If you have other questions, use `Github Discussions <https://github.com/astronomer/astronomer-providers/discussions/>`_
 
 Dev Environment
 ---------------
@@ -89,6 +90,7 @@ You can configure the Docker-based development environment as follows:
    - ``make build-run`` - To build the docker image and then run containers
    - ``make restart`` - To restart Scheduler & Triggerer containers
    - ``make restart-all`` - To restart all the containers
+   - ``make run-mypy`` - Run MyPy checks
    - ``make run-tests`` - Run CI tests
    - ``make run-static-checks`` - Run CI static code checks
 
