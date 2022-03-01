@@ -19,7 +19,7 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from aiohttp import ClientSession as Session
 from airflow.exceptions import AirflowException
@@ -203,7 +203,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             raise AirflowException(error_msg)
 
     @staticmethod
-    def _get_numeric_matches(records: list[float], pass_value: float, tolerance: float = None):
+    def _get_numeric_matches(records: List[float], pass_value: float, tolerance: float = None):
         """
         A helper function to match numeric pass_value, tolerance with records value
 
