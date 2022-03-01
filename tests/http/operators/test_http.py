@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 from airflow.exceptions import TaskDeferred
 
-from astronomer.providers.http.operators.http import HttpSensorAsync
+from astronomer.providers.http.sensors.http import HttpSensorAsync
 from astronomer.providers.http.triggers.http import HttpTrigger
 
 
@@ -35,9 +35,9 @@ def test_http_response_check_does_not_run_async():
         response_check=lambda response: "httpbin" in response.text,
     )
 
-    with mock.patch(
-        "astronomer.providers.http.operators.http.HttpSensorAsync.defer"
-    ) as mock_defer, mock.patch("airflow.sensors.base.BaseSensorOperator.execute"):
+    with mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer") as mock_defer, mock.patch(
+        "airflow.sensors.base.BaseSensorOperator.execute"
+    ):
         operator.execute({})
 
     mock_defer.assert_not_called()
@@ -47,6 +47,6 @@ def test_http_response_check_does_not_run_async():
         endpoint="test-endpoint",
     )
 
-    with mock.patch("astronomer.providers.http.operators.http.HttpSensorAsync.defer") as mock_defer:
+    with mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer") as mock_defer:
         operator.execute({})
         mock_defer.assert_called_once_with(timeout=None, trigger=mock.ANY, method_name="execute_complete")

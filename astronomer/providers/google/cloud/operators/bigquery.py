@@ -222,7 +222,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     and returns data in a python list. The number of elements in the returned list will
     be equal to the number of rows fetched. Each element in the list will again be a list
     where element would represent the columns values for that row.
+
     **Example Result**: ``[['Tony', '10'], ['Mike', '20'], ['Steve', '15']]``
+
     .. note::
         If you pass fields to ``selected_fields`` which are in different order than the
         order of columns already in
@@ -230,6 +232,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         For example if the BQ table has 3 columns as
         ``[A,B,C]`` and you pass 'B,A' in the ``selected_fields``
         the data would still be of the form ``'A,B'``.
+
     **Example**: ::
         get_data = BigQueryGetDataOperatorAsync(
             task_id='get_data_from_bq',
@@ -239,6 +242,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             selected_fields='DATE',
             gcp_conn_id='airflow-conn-id'
         )
+
     :param dataset_id: The dataset ID of the requested table. (templated)
     :param table_id: The table ID of the requested table. (templated)
     :param max_results: The maximum number of records (rows) to be fetched
