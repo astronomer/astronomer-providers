@@ -72,7 +72,7 @@ jobs:
           command: |
             pytest --junit-xml=test-report/report.xml
       - codecov/upload:
-          file: htmlcov/index.html
+          file: htmlcov
       - run:
           name: Generate Constraints
           command: pip freeze > constraints-<<parameters.python_version>>.txt
