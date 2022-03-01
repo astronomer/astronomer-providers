@@ -57,14 +57,10 @@ class HttpHookAsync(BaseHook):
         Performs an asynchronous HTTP request call
 
         :param endpoint: the endpoint to be called i.e. resource/v1/query?
-        :type endpoint: str
         :param data: payload to be uploaded or request parameters
-        :type data: dict
         :param headers: additional headers to be passed through as a dictionary
-        :type headers: dict
         :param extra_options: Additional kwargs to pass when creating a request.
             For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
-        :type extra_options: dict
         """
         extra_options = extra_options or {}
 
@@ -140,7 +136,7 @@ class HttpHookAsync(BaseHook):
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
 
-    def _retryable_error_async(self, exception) -> bool:
+    def _retryable_error_async(self, exception: ClientResponseError) -> bool:
         """
         Determines whether or not an exception that was thrown might be successful
         on a subsequent attempt.

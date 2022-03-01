@@ -67,6 +67,6 @@ class KubernetesHookAsync(KubernetesHook):
             context=cluster_context,
         )
 
-    async def get_api_client_async(self):
+    async def get_api_client_async(self) -> client.ApiClient:
         await self._load_config()
         return client.ApiClient()

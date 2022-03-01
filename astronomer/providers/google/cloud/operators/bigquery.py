@@ -21,7 +21,7 @@
 from typing import TYPE_CHECKING, Dict
 
 from airflow.exceptions import AirflowException
-from airflow.models import BaseOperator
+from airflow.models.baseoperator import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,

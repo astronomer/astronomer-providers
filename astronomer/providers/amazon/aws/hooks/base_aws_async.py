@@ -1,6 +1,6 @@
 import logging
 
-from aiobotocore.session import get_session
+from aiobotocore.session import ClientCreatorContext, get_session
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook, _parse_s3_config
 from asgiref.sync import sync_to_async
 
@@ -12,7 +12,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     Interacts with AWS using aiobotocore asynchronously
     """
 
-    async def get_client_async(self):
+    async def get_client_async(self) -> ClientCreatorContext:
         # Fetch the Airflow connection object
         connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
         extra_config = connection_object.extra_dejson

@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
-from airflow.models import BaseOperator
+from airflow.models.baseoperator import BaseOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 from astronomer.providers.amazon.aws.triggers.s3 import S3KeyTrigger
@@ -61,7 +61,7 @@ class S3KeySensorAsync(BaseOperator):
         self.verify = verify
         self.hook: Optional[S3Hook] = None
 
-    def _resolve_bucket_and_key(self):
+    def _resolve_bucket_and_key(self) -> None:
         """If key is URI, parse bucket"""
         if self.bucket_name is None:
             self.bucket_name, self.bucket_key = S3Hook.parse_s3_url(self.bucket_key)
