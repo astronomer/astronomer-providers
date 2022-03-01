@@ -61,16 +61,19 @@ Changelog
 ---------
 
 We follow `Semantic Versioning <https://semver.org/>`_ for releases.
-Check `CHANGELOG.rst <CHANGELOG.rst>`_ for the latest changes.
+Check `CHANGELOG.rst <https://github.com/astronomer/astronomer-providers/blob/main/CHANGELOG.rst>`_
+for the latest changes.
 
 Contributing Guide
 ------------------
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-A detailed overview on how to contribute can be found in the `Contributing Guide <CONTRIBUTING.rst>`_.
+A detailed overview on how to contribute can be found in the
+`Contributing Guide <https://github.com/astronomer/astronomer-providers/blob/main/CONTRIBUTING.rst>`_.
 
-As contributors and maintainers to this project, you are expected to abide by the `Contributor Code of Conduct <CODE_OF_CONDUCT.md>`_.
+As contributors and maintainers to this project, you are expected to abide by the
+`Contributor Code of Conduct <https://github.com/astronomer/astronomer-providers/blob/main/CODE_OF_CONDUCT.md>`_.
 
 License
 -------
