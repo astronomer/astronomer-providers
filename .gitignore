@@ -40,3 +40,5 @@ docs/*/_api/
 
 # test reports
 test-report/
+.coverage
+coverage.xml
