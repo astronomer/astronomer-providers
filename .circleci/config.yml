@@ -74,7 +74,7 @@ jobs:
           path: htmlcov
       - run:
           name: Generate Constraints
-          command: pip freeze > constraints.txt
+          command: pip freeze > constraints-<<parameters.python_version>>.txt
       - store_artifacts:
           path: constraints-<<parameters.python_version>>.txt
       - store_test_results:
