@@ -6,13 +6,21 @@ workflows:
     jobs:
       - static-checks
       - test:
+          name: test-python<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: ["3.8", "3.9"]
           requires:
             - static-checks
 
 executors:
   docker-executor:
+    parameters:
+      python_version:
+        type: string
+        default: "3.7"
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:<<parameters.python_version>>
 
 jobs:
   static-checks:
@@ -39,8 +47,14 @@ jobs:
             - ~/.pyenv/versions/
 
   test:
-    description: Test
-    executor: docker-executor
+    parameters:
+      python_version:
+        description: "Python Version"
+        type: string
+    description: Test Python-<<parameters.python_version>>
+    executor:
+      name: docker-executor
+      python_version: "<<parameters.python_version>>"
     steps:
       - checkout
       - restore_cache:
@@ -62,7 +76,7 @@ jobs:
           name: Generate Constraints
           command: pip freeze > constraints.txt
       - store_artifacts:
-          path: constraints.txt
+          path: constraints-<<parameters.python_version>>.txt
       - store_test_results:
           path: test-report
       - save_cache:
