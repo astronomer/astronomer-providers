@@ -22,7 +22,7 @@ Changelog
      - ``from astronomer.providers.amazon.aws.operators.redshift_cluster import RedshiftResumeClusterOperatorAsync``
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/1.0.0/astronomer/providers/amazon/aws/example_dags/example_redshift_cluster_management.py>`_
    * - ``RedshiftClusterSensorAsync``
-     - ``from astronomer.providers.amazon.aws.sensors.redshift_cluster_sensor import RedshiftClusterSensorAsync``
+     - ``from astronomer.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensorAsync``
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/1.0.0/astronomer/providers/amazon/aws/example_dags/example_redshift_cluster_management.py>`_
    * - ``S3KeySensorAsync``
      - ``from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync``

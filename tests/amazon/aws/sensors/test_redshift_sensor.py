@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException
 
-from astronomer.providers.amazon.aws.sensors.redshift_cluster_sensor import (
+from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
     RedshiftClusterSensorAsync,
 )
 
