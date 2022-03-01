@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import pytest
 from aioresponses import aioresponses
@@ -19,8 +18,8 @@ from airflow.models import (
     XCom,
 )
 from airflow.utils import db
-from airflow.utils.dates import days_ago
 from airflow.utils.session import create_session
+from airflow.utils.timezone import datetime
 
 TEST_DAG_ID = "unit_test_dag"
 
@@ -62,8 +61,7 @@ def dag():
     """
     Creates a test DAG with default arguments.
     """
-    args = {"owner": "airflow", "start_date": days_ago(0)}
-    dag = DAG(TEST_DAG_ID, default_args=args)
+    dag = DAG(TEST_DAG_ID, start_date=datetime(2022, 1, 1))
     yield dag
 
 

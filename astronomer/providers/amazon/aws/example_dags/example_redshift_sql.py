@@ -1,13 +1,13 @@
-import airflow
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
 )
 
-with airflow.DAG(
+with DAG(
     dag_id="example_async_redshift_sql",
-    start_date=days_ago(1),
+    start_date=datetime(2021, 1, 1),
     tags=["example", "async"],
     schedule_interval="@once",
     catchup=False,

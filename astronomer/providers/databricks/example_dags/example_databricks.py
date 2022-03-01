@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from airflow import DAG
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
@@ -21,7 +21,7 @@ default_args = {
 
 with DAG(
     "databricks_dag",
-    start_date=days_ago(0),
+    start_date=datetime(2022, 1, 1),
     schedule_interval="@daily",
     catchup=False,
     default_args=default_args,

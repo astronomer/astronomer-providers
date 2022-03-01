@@ -18,8 +18,8 @@
 """
 Example use of SnowflakeAsync related providers.
 """
-from airflow import DAG
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
@@ -42,7 +42,7 @@ SNOWFLAKE_SLACK_MESSAGE = (
 
 dag = DAG(
     "example_snowflake",
-    start_date=days_ago(0),
+    start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     default_args={"snowflake_conn_id": SNOWFLAKE_CONN_ID},
     tags=["example"],

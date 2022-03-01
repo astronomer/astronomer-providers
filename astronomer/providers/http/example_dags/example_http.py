@@ -1,9 +1,9 @@
-from airflow import DAG
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.http.sensors.http import HttpSensorAsync
 
-with DAG("example_async_http_sensor", tags=["example", "async"], start_date=days_ago(2)) as dag:
+with DAG("example_async_http_sensor", tags=["example", "async"], start_date=datetime(2022, 1, 1)) as dag:
     # This task will continue to defer as it will receive 404 every time
     async_http_sensor = HttpSensorAsync(
         task_id="async_http_sensor",

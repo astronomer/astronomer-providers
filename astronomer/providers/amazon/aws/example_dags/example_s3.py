@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from airflow import DAG
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync
 
@@ -13,7 +13,7 @@ default_args = {
 with DAG(
     dag_id="example_s3_key_sensor",
     schedule_interval="@daily",
-    start_date=days_ago(3),
+    start_date=datetime(2021, 1, 1),
     catchup=False,
     default_args=default_args,
     tags=["async"],

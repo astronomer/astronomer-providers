@@ -10,13 +10,12 @@ until the second DAG is complete.
        successfully completes, then resumes execution and finishes without issue.
 """
 
-from airflow import DAG
-from airflow.utils.dates import days_ago
+from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
 
-default_args = {"start_date": days_ago(0)}
-with DAG("test_external_task_async", schedule_interval="@daily", default_args=default_args) as dag:
+with DAG("test_external_task_async", schedule_interval="@daily", start_date=datetime(2022, 1, 1)) as dag:
     ext_task_sensor = ExternalTaskSensorAsync(
         task_id="external_task_async",
         external_task_id="wait_for_me",

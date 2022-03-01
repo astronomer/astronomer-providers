@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from airflow import DAG
 from airflow.configuration import conf
+from airflow.models.dag import DAG
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperatorAsync,
