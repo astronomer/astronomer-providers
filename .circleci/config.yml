@@ -1,6 +1,9 @@
 ---
 version: 2.1
 
+orbs:
+  codecov: codecov/codecov@3.2.2
+
 workflows:
   test:
     jobs:
@@ -67,11 +70,9 @@ jobs:
       - run:
           name: Run tests
           command: |
-            coverage run -m pytest --junit-xml=test-report/report.xml
-            coverage report
-            coverage html
-      - store_artifacts:
-          path: htmlcov
+            pytest --junit-xml=test-report/report.xml
+      - codecov/upload:
+          file: coverage.xml
       - run:
           name: Generate Constraints
           command: pip freeze > constraints-<<parameters.python_version>>.txt
