@@ -75,7 +75,7 @@ jobs:
           file: coverage.xml
       - run:
           name: Generate Constraints
-          command: pip freeze > constraints-<<parameters.python_version>>.txt
+          command: pip freeze | sort | grep -v "@" > constraints-<<parameters.python_version>>.txt
       - store_artifacts:
           path: constraints-<<parameters.python_version>>.txt
       - store_test_results:
