@@ -1,9 +1,11 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow.models.dag import DAG
-from airflow.utils.timezone import datetime
 
-from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync
+from astronomer.providers.amazon.aws.sensors.s3 import (
+    S3KeySensorAsync,
+    S3KeySizeSensorAsync,
+)
 
 default_args = {
     "retry": 5,
@@ -32,3 +34,20 @@ with DAG(
         wildcard_match=True,
         bucket_name="sample-bucket",
     )
+
+    check_if_key_with_size_without_wildcard = S3KeySizeSensorAsync(
+        task_id="check_if_key_with_size_without_wildcard",
+        bucket_key="sample_key.txt",
+        wildcard_match=False,
+        bucket_name="test-team-providers-ankit",
+    )
+
+    check_if_key_with_size_with_wildcard = S3KeySizeSensorAsync(
+        task_id="check_if_key_with_size_with_wildcard",
+        bucket_key="sample*",
+        wildcard_match=True,
+        bucket_name="test-team-providers-ankit",
+    )
+
+    waiting_for_s3_key >> check_if_wildcard_exists >> check_if_key_with_size_without_wildcard
+    check_if_key_with_size_without_wildcard >> check_if_key_with_size_with_wildcard
