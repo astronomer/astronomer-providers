@@ -1,7 +1,7 @@
 import fnmatch
 import logging
 import re
-from typing import Any
+from typing import Any, List, Optional
 
 from aiobotocore.session import ClientCreatorContext
 from botocore.exceptions import ClientError
@@ -80,3 +80,25 @@ class S3HookAsync(AwsBaseHookAsync):
             return await self._check_wildcard_key(client, bucket, key)
         else:
             return await self._check_exact_key(client, bucket, key)
+
+    async def get_files(
+        self,
+        client: ClientCreatorContext,
+        bucket: str,
+        key: str,
+        wildcard_match: bool,
+        delimiter: Optional[str] = '/',
+    ) -> List[Any]:
+        """Gets a list of files in the bucket"""
+        prefix = key
+        if wildcard_match:
+            prefix = re.split(r'[\[\*\?]', key, 1)[0]
+
+        paginator = client.get_paginator('list_objects_v2')
+        response = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
+        keys: List[Any] = []
+        async for page in response:
+            if 'Contents' in page:
+                _temp = [k for k in page['Contents'] if isinstance(k.get('Size', None), (int, float))]
+                keys = keys + _temp
+        return keys
