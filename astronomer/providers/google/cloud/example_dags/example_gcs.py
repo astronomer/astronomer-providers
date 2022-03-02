@@ -1,6 +1,6 @@
 """Example Airflow DAG for Google Cloud Storage operators."""
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
@@ -21,15 +21,18 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 BUCKET_1 = os.environ.get("GCP_TEST_BUCKET", "test-gcs-bucket-astronomer-providers")
+GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 BUCKET_FILE_LOCATION = "example_gcs.py"
+
+
 with DAG(
     "example_async_gcs_sensors",
-    start_date=datetime(2021, 1, 1),
+    start_date=datetime(2022, 1, 1),
+    schedule_interval=None,
     catchup=False,
-    schedule_interval="@once",
-    tags=["example"],
+    tags=["example", "async", "gcs"],
 ) as dag:
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
@@ -43,6 +46,7 @@ with DAG(
                 },
             },
         },
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_create_bucket_task]
     # [START delay_bash_operator_task]
@@ -54,6 +58,7 @@ with DAG(
         src=PATH_TO_UPLOAD_FILE,
         dst=BUCKET_FILE_LOCATION,
         bucket=BUCKET_1,
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_upload_file_task]
     # [START howto_sensor_object_exists_task]
@@ -61,6 +66,8 @@ with DAG(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_exists_task",
+        execution_timeout=timedelta(seconds=60),
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_exists_task]
     # [START howto_sensor_object_with_prefix_exists_task]
@@ -68,6 +75,8 @@ with DAG(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
         task_id="gcs_object_with_prefix_exists_task",
+        execution_timeout=timedelta(seconds=60),
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_with_prefix_exists_task]
     # [START howto_sensor_gcs_upload_session_complete_task]
@@ -79,6 +88,8 @@ with DAG(
         allow_delete=True,
         previous_objects=set(),
         task_id="gcs_upload_session_complete_task",
+        execution_timeout=timedelta(seconds=60),
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_gcs_upload_session_complete_task]
     # [START howto_sensor_object_update_exists_task]
@@ -86,10 +97,16 @@ with DAG(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_update_sensor_task_async",
+        execution_timeout=timedelta(seconds=60),
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_update_exists_task]
     # [START howto_delete_buckettask]
-    delete_bucket = GCSDeleteBucketOperator(task_id="delete_bucket", bucket_name=BUCKET_1)
+    delete_bucket = GCSDeleteBucketOperator(
+        task_id="delete_bucket",
+        bucket_name=BUCKET_1,
+        gcp_conn_id=GCP_CONN_ID,
+    )
     # [END howto_delete_buckettask]
     (
         create_bucket
@@ -112,6 +129,7 @@ with DAG(
             gcs_update_object_exists,
         ]
     )
+
 if __name__ == "__main__":
     dag.clear()
     dag.run()

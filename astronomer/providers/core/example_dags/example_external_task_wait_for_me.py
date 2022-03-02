@@ -1,18 +1,19 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from airflow.models.dag import DAG
-from airflow.operators.dummy import DummyOperator
+from airflow import DAG
 from airflow.sensors.time_sensor import TimeSensorAsync
-from airflow.utils.timezone import datetime, utcnow
 
 with DAG(
-    "test_external_task_async_waits_for_me",
-    schedule_interval="@daily",
+    dag_id="test_external_task_async_waits_for_me",
     start_date=datetime(2022, 1, 1),
+    schedule_interval=None,
+    catchup=False,
+    tags=["example", "async", "core"],
 ) as dag:
+    # [START howto_operator_time_sensor_async]
     wait_for_me = TimeSensorAsync(
         task_id="wait_for_me",
-        target_time=utcnow() + timedelta(seconds=3),
+        target_time=(datetime.utcnow() + timedelta(seconds=3)).time(),
+        execution_timeout=timedelta(seconds=60),
     )
-    complete = DummyOperator(task_id="complete")
-    wait_for_me >> complete
+    # [START howto_operator_time_sensor_async]

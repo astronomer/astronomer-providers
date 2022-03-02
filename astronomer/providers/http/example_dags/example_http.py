@@ -1,26 +1,31 @@
-from airflow.models.dag import DAG
+import os
+from datetime import timedelta
+
+from airflow import DAG
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.http.sensors.http import HttpSensorAsync
 
-with DAG("example_async_http_sensor", tags=["example", "async"], start_date=datetime(2022, 1, 1)) as dag:
-    # This task will continue to defer as it will receive 404 every time
+HTTP_CONN_ID = os.environ.get("ASTRO_HTTP_CONN_ID", "http_default")
+
+with DAG(
+    dag_id="example_async_http_sensor",
+    start_date=datetime(2022, 1, 1),
+    schedule_interval=None,
+    catchup=False,
+    tags=["example", "async", "http"],
+) as dag:
+    # [START howto_operator_http_sensor_async]
     async_http_sensor = HttpSensorAsync(
         task_id="async_http_sensor",
-        http_conn_id="http_default",
-        endpoint="non_existent_endpoint",
+        http_conn_id=HTTP_CONN_ID,
+        endpoint="",
         request_params={},
         # TODO response_check is currently not supported
         # response_check=lambda response: "httpbin" in response.text,
         poke_interval=5,
+        execution_timeout=timedelta(seconds=60),
     )
+    # [START howto_operator_file_sensor_async]
 
-    # When passing 'response_check' it behaves same as 'HttpSensor'
-    http_sensor_check = HttpSensorAsync(
-        task_id="http_sensor_check",
-        http_conn_id="http_default",
-        endpoint="",
-        request_params={},
-        response_check=lambda response: "httpbin" in response.text,
-        poke_interval=5,
-    )
+    async_http_sensor
