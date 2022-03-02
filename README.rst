@@ -13,6 +13,9 @@ Astronomer Providers
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
     :alt: Code style: black
+.. image:: https://codecov.io/gh/astronomer/astronomer-providers/branch/main/graph/badge.svg?token=LPHFRC3CB3
+    :target: https://codecov.io/gh/astronomer/astronomer-providers
+    :alt: CodeCov
 
 `Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
 
