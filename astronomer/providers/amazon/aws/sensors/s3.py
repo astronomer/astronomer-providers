@@ -241,3 +241,65 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
+
+
+class S3KeySizeSensorAsync(S3KeySensorAsync):
+    """
+    Waits for a key (a file-like instance on S3) to be present and be more than
+    some size in a S3 bucket asynchronously.
+    S3 being a key/value it does not support folders. The path is just a key
+    a resource.
+    :param bucket_key: The key being waited on. Supports full s3:// style url
+        or relative path from root level. When it's specified as a full s3://
+        url, please leave bucket_name as `None`.
+    :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
+        is not provided as a full s3:// url.
+    :param wildcard_match: whether the bucket_key should be interpreted as a
+        Unix wildcard pattern
+    :param aws_conn_id: a reference to the s3 connection
+    :param verify: Whether or not to verify SSL certificates for S3 connection.
+        By default SSL certificates are verified.
+        You can provide the following values:
+        - ``False``: do not validate SSL certificates. SSL will still be used
+                 (unless use_ssl is False), but SSL certificates will not be
+                 verified.
+        - ``path/to/cert/bundle.pem``: A filename of the CA cert bundle to uses.
+                 You can specify this argument if you want to use a different
+                 CA cert bundle than the one used by botocore.
+    :param check_fn: Function that receives the list of the S3 objects,
+        and returns the boolean:
+        - ``True``: a certain criteria is met
+        - ``False``: the criteria isn't met
+        **Example**: Wait for any S3 object size more than 1 megabyte  ::
+            def check_fn(self, data: List) -> bool:
+                return any(f.get('Size', 0) > 1048576 for f in data if isinstance(f, dict))
+    """
+
+    def __init__(
+        self,
+        *,
+        check_fn: Optional[Callable[..., bool]] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self.check_fn_user = check_fn
+
+    def execute(self, context: Dict[Any, Any]) -> None:
+        self._resolve_bucket_and_key()
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=S3KeySizeTrigger(
+                bucket_name=cast(str, self.bucket_name),
+                bucket_key=self.bucket_key,
+                wildcard_match=self.wildcard_match,
+                aws_conn_id=self.aws_conn_id,
+                verify=self.verify,
+                check_fn_user=self.check_fn_user,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(
+        self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
+    ) -> None:  # pylint: disable=unused-argument
+        return None
