@@ -50,7 +50,7 @@ class S3KeySensorAsync(BaseOperator):
         wildcard_match: bool = False,
         aws_conn_id: str = "aws_default",
         verify: Optional[Union[str, bool]] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         super().__init__(**kwargs)
 
@@ -70,7 +70,7 @@ class S3KeySensorAsync(BaseOperator):
             if parsed_url.scheme != "" or parsed_url.netloc != "":
                 raise AirflowException("If bucket_name provided, bucket_key must be relative path, not URI.")
 
-    def execute(self, context: Dict) -> Any:
+    def execute(self, context: Dict[Any, Any]) -> None:
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -84,5 +84,7 @@ class S3KeySensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict, event=None):  # pylint: disable=unused-argument
+    def execute_complete(
+        self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
+    ) -> None:  # pylint: disable=unused-argument
         return None
