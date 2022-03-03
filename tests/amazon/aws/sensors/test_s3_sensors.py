@@ -108,7 +108,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
             bucket_key=key,
             bucket_name=bucket,
         )
-        assert sensor.execute_complete(context) is None
+        assert sensor.execute_complete(context={}, event={"status": "success"}) is None
 
     @parameterized.expand(
         [
@@ -255,7 +255,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_execute_complete(self, key, bucket, mock_hook):
+    def test_s3_key_size_sensor_execute_complete(self, key, bucket, mock_hook):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySizeSensorAsync is executed.
@@ -267,7 +267,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
             bucket_key=key,
             bucket_name=bucket,
         )
-        assert sensor.execute_complete(context) is None
+        assert sensor.execute_complete(context={}, event={"status": "success"}) is None
 
     @parameterized.expand(
         [

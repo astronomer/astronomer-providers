@@ -87,6 +87,8 @@ class S3KeySensorAsync(BaseOperator):
     def execute_complete(
         self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
     ) -> None:  # pylint: disable=unused-argument
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
         return None
 
 
@@ -149,4 +151,6 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
     def execute_complete(
         self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
     ) -> None:  # pylint: disable=unused-argument
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
         return None

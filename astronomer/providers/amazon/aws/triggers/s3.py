@@ -42,12 +42,15 @@ class S3KeyTrigger(BaseTrigger):
         """
         Make an asynchronous connection using S3HookAsync.
         """
-        hook = self._get_async_hook()
-        async with await hook.get_client_async() as client:
-            while True:
-                self.log.info("Poking for key : s3://%s/%s", self.bucket_name, self.bucket_key)
-                if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
-                    yield TriggerEvent(True)
+        try:
+            hook = self._get_async_hook()
+            async with await hook.get_client_async() as client:
+                while True:
+                    self.log.info("Poking for key : s3://%s/%s", self.bucket_name, self.bucket_key)
+                    if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
+                        yield TriggerEvent({"status": "success"})
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
 
     def _get_async_hook(self) -> S3HookAsync:
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
@@ -98,23 +101,26 @@ class S3KeySizeTrigger(BaseTrigger):
         """
         Make an asynchronous connection using S3HookAsync.
         """
-        hook = self._get_async_hook()
-        async with await hook.get_client_async() as client:
-            while True:
-                self.log.info("Poking for key : s3://%s/%s", self.bucket_name, self.bucket_key)
-                if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
-                    s3_objects = await hook.get_files(
-                        client, self.bucket_name, self.bucket_key, self.wildcard_match
-                    )
+        try:
+            hook = self._get_async_hook()
+            async with await hook.get_client_async() as client:
+                while True:
+                    self.log.info("Poking for key : s3://%s/%s", self.bucket_name, self.bucket_key)
+                    if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
+                        s3_objects = await hook.get_files(
+                            client, self.bucket_name, self.bucket_key, self.wildcard_match
+                        )
 
-                    if self.check_fn_user is not None:
-                        if self.check_fn_user(s3_objects):
-                            yield TriggerEvent(True)
+                        if self.check_fn_user is not None:
+                            if self.check_fn_user(s3_objects):
+                                yield TriggerEvent({"status": "success"})
+                                return
+
+                        if self._check_fn(s3_objects):
+                            yield TriggerEvent({"status": "success"})
                             return
-
-                    if self._check_fn(s3_objects):
-                        yield TriggerEvent(True)
-                        return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
 
     def _get_async_hook(self) -> S3HookAsync:
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
