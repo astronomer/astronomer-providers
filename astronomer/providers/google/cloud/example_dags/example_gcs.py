@@ -40,7 +40,7 @@ START_DATE = datetime(2021, 1, 1)
 PROJECT_ID = "astronomer-airflow-providers"
 BUCKET_1 = "test-gcs-example-bucket"
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
-PATH_TO_UPLOAD_FILE_PREFIX = "exmaple_"
+PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 
 BUCKET_FILE_LOCATION = "example_gcs.py"
 
