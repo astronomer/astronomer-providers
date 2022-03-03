@@ -1,6 +1,6 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -142,7 +142,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(BaseOperator):
         self.delegate_to = delegate_to
         self.impersonation_chain = impersonation_chain
 
-    def execute(self, context: "Context"):
+    def execute(self, context: "Context") -> Any:
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSPrefixBlobTrigger(
@@ -156,7 +156,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(BaseOperator):
         )
 
     def execute_complete(
-        self, context: "Context", event=None
+        self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
     ) -> List[str]:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
