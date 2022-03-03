@@ -1,9 +1,12 @@
 import fnmatch
 import logging
+import os
 import re
-from typing import Any, List, Optional
+from datetime import datetime
+from typing import Any, List, Optional, Set
 
 from aiobotocore.session import ClientCreatorContext
+from airflow.exceptions import AirflowException
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
@@ -102,3 +105,119 @@ class S3HookAsync(AwsBaseHookAsync):
                 _temp = [k for k in page['Contents'] if isinstance(k.get('Size', None), (int, float))]
                 keys = keys + _temp
         return keys
+
+    @staticmethod
+    async def _list_keys(
+        client: ClientCreatorContext,
+        bucket_name: Optional[str] = None,
+        prefix: Optional[str] = None,
+        delimiter: Optional[str] = None,
+        page_size: Optional[int] = None,
+        max_items: Optional[int] = None,
+    ) -> List[str]:
+        """
+        Lists keys in a bucket under prefix and not containing delimiter
+        :param bucket_name: the name of the bucket
+        :param prefix: a key prefix
+        :param delimiter: the delimiter marks key hierarchy.
+        :param page_size: pagination size
+        :param max_items: maximum items to return
+        :return: a list of matched keys
+        :rtype: list
+        """
+        prefix = prefix or ''
+        delimiter = delimiter or ''
+        config = {
+            'PageSize': page_size,
+            'MaxItems': max_items,
+        }
+
+        paginator = client.get_paginator('list_objects_v2')
+        response = paginator.paginate(
+            Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter, PaginationConfig=config
+        )
+
+        keys = []
+        async for page in response:
+            if 'Contents' in page:
+                for k in page['Contents']:
+                    keys.append(k['Key'])
+
+        return keys
+
+    async def is_keys_unchanged(
+        self,
+        client: ClientCreatorContext,
+        bucket_name: str,
+        prefix: str,
+        inactivity_period: float = 60 * 60,
+        min_objects: int = 1,
+        previous_objects: Set[str] = set(),
+        inactivity_seconds: int = 0,
+        allow_delete: bool = True,
+        last_activity_time: Optional[datetime] = None,
+    ) -> bool:
+        """
+        Checks whether new objects have been uploaded and the inactivity_period
+        has passed and updates the state of the sensor accordingly.
+        :param current_objects: set of object ids in bucket during last poke.
+        """
+        list_keys = await self._list_keys(client=client, bucket_name=bucket_name, prefix=prefix)
+        current_objects = set(list_keys)
+
+        current_num_objects = len(current_objects)
+        if current_objects > previous_objects:
+            # When new objects arrived, reset the inactivity_seconds
+            # and update previous_objects for the next poke.
+            self.log.info(
+                "New objects found at %s, resetting last_activity_time.",
+                os.path.join(bucket_name, prefix),
+            )
+            self.log.debug("New objects: %s", current_objects - previous_objects)
+            last_activity_time = datetime.now()
+            inactivity_seconds = 0
+            previous_objects = current_objects
+            return False
+
+        if previous_objects - current_objects:
+            # During the last poke interval objects were deleted.
+            if allow_delete:
+                deleted_objects = previous_objects - current_objects
+                previous_objects = current_objects
+                last_activity_time = datetime.now()
+                self.log.info(
+                    "Objects were deleted during the last poke interval. Updating the "
+                    "file counter and resetting last_activity_time:\n%s",
+                    deleted_objects,
+                )
+                return False
+
+            raise AirflowException(
+                f"Illegal behavior: objects were deleted in"
+                f" {os.path.join(bucket_name, prefix)} between pokes."
+            )
+
+        if last_activity_time:
+            inactivity_seconds = int((datetime.now() - last_activity_time).total_seconds())
+        else:
+            # Handles the first poke where last inactivity time is None.
+            last_activity_time = datetime.now()
+            inactivity_seconds = 0
+
+        if inactivity_seconds >= inactivity_period:
+            path = os.path.join(bucket_name, prefix)
+
+            if current_num_objects >= min_objects:
+                self.log.info(
+                    "SUCCESS: \nSensor found %s objects at %s.\n"
+                    "Waited at least %s seconds, with no new objects uploaded.",
+                    current_num_objects,
+                    path,
+                    inactivity_period,
+                )
+                return True
+
+            self.log.error("FAILURE: Inactivity Period passed, not enough objects found in %s", path)
+
+            return False
+        return False
