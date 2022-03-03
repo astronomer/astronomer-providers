@@ -11,6 +11,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
+    S3PrefixSensorTrigger
 )
 
 log = logging.getLogger(__name__)
@@ -21,7 +22,6 @@ class S3KeySensorAsync(BaseOperator):
     Waits for a key (a file-like instance on S3) to be present in a S3 bucket
     asynchronously. S3 being a key/value it does not support folders. The path
     is just a key a resource.
-
     :param bucket_key: The key being waited on. Supports full s3:// style url
         or relative path from root level. When it's specified as a full s3://
         url, please leave bucket_name as `None`.
@@ -37,7 +37,6 @@ class S3KeySensorAsync(BaseOperator):
     :param verify: Whether or not to verify SSL certificates for S3 connection.
         By default SSL certificates are verified.
         You can provide the following values:
-
         - ``False``: do not validate SSL certificates. SSL will still be used
                  (unless use_ssl is False), but SSL certificates will not be
                  verified.
@@ -58,7 +57,7 @@ class S3KeySensorAsync(BaseOperator):
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
-
+        print("In init of S3KeySensorAsync")
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
@@ -68,6 +67,7 @@ class S3KeySensorAsync(BaseOperator):
 
     def _resolve_bucket_and_key(self) -> None:
         """If key is URI, parse bucket"""
+        print("In _resolve_bucket_and_key")
         if self.bucket_name is None:
             self.bucket_name, self.bucket_key = S3Hook.parse_s3_url(self.bucket_key)
         else:
@@ -454,6 +454,72 @@ class S3PrefixSensorAsync(BaseOperator):
 
     def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:  # pylint:
         # disable=unused-argument
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(event["message"])
+        return None
+
+
+class S3PrefixSensorAsync(BaseOperator):
+    """
+    Waits for a prefix or all prefixes to exist. A prefix is the first part of a key,
+    thus enabling checking of constructs similar to glob ``airfl*`` or
+    SQL LIKE ``'airfl%'``. There is the possibility to precise a delimiter to
+    indicate the hierarchy or keys, meaning that the match will stop at that
+    delimiter. Current code accepts sane delimiters, i.e. characters that
+    are NOT special characters in the Python regex engine.
+
+    :param bucket_name: Name of the S3 bucket
+    :param prefix: The prefix being waited on. Relative path from bucket root level.
+    :param delimiter: The delimiter intended to show hierarchy.
+        Defaults to '/'.
+    :param aws_conn_id: a reference to the s3 connection
+    :param verify: Whether to verify SSL certificates for S3 connection.
+        By default, SSL certificates are verified.
+        You can provide the following values:
+
+        - ``False``: do not validate SSL certificates. SSL will still be used
+                 (unless use_ssl is False), but SSL certificates will not be
+                 verified.
+        - ``path/to/cert/bundle.pem``: A filename of the CA cert bundle to uses.
+                 You can specify this argument if you want to use a different
+                 CA cert bundle than the one used by botocore.
+    """
+
+    template_fields: Sequence[str] = ('prefix', 'bucket_name')
+
+    def __init__(
+        self,
+        *,
+        bucket_name: str,
+        prefix: Union[str, List[str]],
+        delimiter: str = '/',
+        aws_conn_id: str = 'aws_default',
+        verify: Optional[Union[str, bool]] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self.bucket_name = bucket_name
+        self.prefix = [prefix] if isinstance(prefix, str) else prefix
+        self.delimiter = delimiter
+        self.aws_conn_id = aws_conn_id
+        self.verify = verify
+
+    def execute(self, context: Dict[Any, Any]) -> None:
+        self.log.info('Poking for prefix : %s in bucket s3://%s', self.prefix, self.bucket_name)
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=S3PrefixSensorTrigger(
+                bucket_name=self.bucket_name,
+                prefix=self.prefix,
+                delimiter=self.delimiter,
+                aws_conn_id=self.aws_conn_id,
+                verify=self.verify,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, event: Dict[str, str]) -> None:  # pylint: disable=unused-argument
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
