@@ -300,7 +300,93 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         )
 
     def execute_complete(
-        self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
+        self, context: Dict[Any, Any], event: Any = None
+    ) -> None:  # pylint: disable=unused-argument
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        return None
+
+
+class S3KeysUnchangedSensorAsync(BaseOperator):
+    """
+    Checks for changes in the number of objects at prefix in AWS S3
+    bucket and returns True if the inactivity period has passed with no
+    increase in the number of objects. Note, this sensor will not behave correctly
+    in reschedule mode, as the state of the listed objects in the S3 bucket will
+    be lost between rescheduled invocations.
+    :param bucket_name: Name of the S3 bucket
+    :param prefix: The prefix being waited on. Relative path from bucket root level.
+    :param aws_conn_id: a reference to the s3 connection
+    :param verify: Whether or not to verify SSL certificates for S3 connection.
+        By default SSL certificates are verified.
+        You can provide the following values:
+        - ``False``: do not validate SSL certificates. SSL will still be used
+                 (unless use_ssl is False), but SSL certificates will not be
+                 verified.
+        - ``path/to/cert/bundle.pem``: A filename of the CA cert bundle to uses.
+                 You can specify this argument if you want to use a different
+                 CA cert bundle than the one used by botocore.
+    :param inactivity_period: The total seconds of inactivity to designate
+        keys unchanged. Note, this mechanism is not real time and
+        this operator may not return until a poke_interval after this period
+        has passed with no additional objects sensed.
+    :param min_objects: The minimum number of objects needed for keys unchanged
+        sensor to be considered valid.
+    :param previous_objects: The set of object ids found during the last poke.
+    :param allow_delete: Should this sensor consider objects being deleted
+        between pokes valid behavior. If true a warning message will be logged
+        when this happens. If false an error will be raised.
+    """
+
+    template_fields: Sequence[str] = ('bucket_name', 'prefix')
+
+    def __init__(
+        self,
+        *,
+        bucket_name: str,
+        prefix: str,
+        aws_conn_id: str = 'aws_default',
+        verify: Optional[Union[bool, str]] = None,
+        inactivity_period: float = 60 * 60,
+        min_objects: int = 1,
+        previous_objects: Optional[Set[str]] = None,
+        allow_delete: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.bucket_name = bucket_name
+        self.prefix = prefix
+        if inactivity_period < 0:
+            raise ValueError("inactivity_period must be non-negative")
+        self.inactivity_period = inactivity_period
+        self.min_objects = min_objects
+        self.previous_objects = previous_objects or set()
+        self.inactivity_seconds = 0
+        self.allow_delete = allow_delete
+        self.aws_conn_id = aws_conn_id
+        self.verify = verify
+        self.last_activity_time: Optional[datetime] = None
+
+    def execute(self, context: Dict[Any, Any]) -> None:
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=S3KeysUnchangedTrigger(
+                bucket_name=self.bucket_name,
+                prefix=self.prefix,
+                inactivity_period=self.inactivity_period,
+                min_objects=self.min_objects,
+                previous_objects=self.previous_objects,
+                inactivity_seconds=self.inactivity_seconds,
+                allow_delete=self.allow_delete,
+                aws_conn_id=self.aws_conn_id,
+                verify=self.verify,
+                last_activity_time=self.last_activity_time,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(
+        self, context: Dict[Any, Any], event: Any = None
     ) -> None:  # pylint: disable=unused-argument
         if event["status"] == "error":
             raise AirflowException(event["message"])
