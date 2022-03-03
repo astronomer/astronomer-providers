@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
+from airflow.providers.google.cloud.sensors.gcs import (
+    GCSObjectsWithPrefixExistenceSensor,
+)
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
@@ -86,63 +89,16 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         return event["message"]
 
 
-class GCSObjectsWithPrefixExistenceSensorAsync(BaseOperator):
-    """
-    Checks for the existence of GCS objects at a given prefix, passing matches via XCom.
-
-    When files matching the given prefix are found, once match is found
-    and the matching objects will be returned from the operator and passed
-    through XCom for downstream tasks.
-
-    :param bucket: The Google Cloud Storage bucket where the object is.
-    :type bucket: str
-    :param prefix: The name of the prefix to check in the Google cloud
-        storage bucket.
-    :type prefix: str
-    :param google_cloud_conn_id: The connection ID to use when
-        connecting to Google Cloud Storage.
-    :type google_cloud_conn_id: str
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-        if any. For this to work, the service account making the request must have
-        domain-wide delegation enabled.
-    :type delegate_to: str
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
-    :type impersonation_chain: Union[str, Sequence[str]]
-    """
-
-    template_fields: Sequence[str] = (
-        'bucket',
-        'prefix',
-        'impersonation_chain',
-    )
-    ui_color = '#f0eee4'
-
+class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSensor):
     def __init__(
         self,
-        bucket: str,
-        prefix: str,
-        google_cloud_conn_id: str = 'google_cloud_default',
         polling_interval: float = 5.0,
-        delegate_to: Optional[str] = None,
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.bucket = bucket
-        self.prefix = prefix
-        self.google_cloud_conn_id = google_cloud_conn_id
         self.polling_interval = polling_interval
-        self.delegate_to = delegate_to
-        self.impersonation_chain = impersonation_chain
 
-    def execute(self, context: "Context") -> Any:
+    def execute(self, context: "Context") -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSPrefixBlobTrigger(
@@ -156,7 +112,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(BaseOperator):
         )
 
     def execute_complete(
-        self, context: Dict[Any, Any], event: Optional[Dict[Any, Any]] = None
+        self, context: "Context", event: Optional[Dict[Any, Any]] = None
     ) -> List[str]:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
