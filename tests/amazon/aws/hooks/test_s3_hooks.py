@@ -146,18 +146,3 @@ async def test_s3_key_trigger_check_key_raise_exception(mock_client):
     with pytest.raises(ClientError) as err:
         response = await s3_hook_async._check_exact_key(mock_client, "s3://test_bucket/file", "test_bucket")
         assert isinstance(response, err)
-
-
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@pytest.mark.asyncio
-async def test_s3_key_trigger_get_files(mock_client):
-    """
-    Test if the a list of files in the bucket
-    :return:
-    """
-    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
-    task = await s3_hook_async.get_files(
-        mock_client.return_value, "test_bucket", "s3://test_bucket/file", False
-    )
-
-    assert task is True
