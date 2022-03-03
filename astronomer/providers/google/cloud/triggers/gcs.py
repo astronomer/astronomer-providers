@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from aiohttp import ClientSession as Session
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -107,12 +107,14 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         google_cloud_conn_id: str,
         hook_params: dict,
     ):
-        super().__init__()
-        self.bucket = bucket
+        super().__init__(
+            bucket=bucket,
+            object_name=prefix,
+            polling_period_seconds=polling_period_seconds,
+            google_cloud_conn_id=google_cloud_conn_id,
+            hook_params=hook_params,
+        )
         self.prefix = prefix
-        self.polling_period_seconds = polling_period_seconds
-        self.google_cloud_conn_id: str = google_cloud_conn_id
-        self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
@@ -129,7 +131,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Simple loop until the relevant file/folder is found.
         """
@@ -137,7 +139,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             hook = self._get_async_hook()
             while True:
                 res = await self._object_with_prefix_exists(
-                    hook=hook, bucket_name=self.bucket, object_name=self.prefix
+                    hook=hook, bucket_name=self.bucket, prefix=self.prefix
                 )
                 if len(res) > 0:
                     yield TriggerEvent(
