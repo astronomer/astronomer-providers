@@ -21,15 +21,18 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
-from astronomer.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensorAsync
-from astronomer.providers.google.cloud.triggers.gcs import GCSBlobTrigger
+from astronomer.providers.google.cloud.sensors.gcs import (
+    GCSObjectExistenceSensorAsync,
+    GCSObjectsWithPrefixExistenceSensorAsync,
+)
+from astronomer.providers.google.cloud.triggers.gcs import (
+    GCSBlobTrigger,
+    GCSPrefixBlobTrigger,
+)
 
 TEST_BUCKET = "TEST_BUCKET"
-
 TEST_OBJECT = "TEST_OBJECT"
-
 TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
-
 TEST_DAG_ID = "unit_tests_gcs_sensor"
 
 
@@ -42,6 +45,10 @@ def context():
 
 
 def test_gcs_object_existence_sensor_async():
+    """
+    Asserts that a task is deferred and a GCSBlobTrigger will be fired
+    when the GCSObjectExistenceSensorAsync is executed.
+    """
     task = GCSObjectExistenceSensorAsync(
         task_id="task-id",
         bucket=TEST_BUCKET,
@@ -76,3 +83,46 @@ def test_gcs_object_existence_sensor_async_execute_complete():
     with mock.patch.object(task.log, "info") as mock_log_info:
         task.execute_complete(context=None, event={"status": "success", "message": "Job completed"})
     mock_log_info.assert_called_with("File %s was found in bucket %s.", TEST_OBJECT, TEST_BUCKET)
+
+
+def test_gcs_object_with_prefix_existence_sensor_async():
+    """
+    Asserts that a task is deferred and a GCSPrefixBlobTrigger will be fired
+    when the GCSObjectsWithPrefixExistenceSensorAsync is executed.
+    """
+    task = GCSObjectsWithPrefixExistenceSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        prefix=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with pytest.raises(TaskDeferred) as exc:
+        task.execute(context)
+    assert isinstance(exc.value.trigger, GCSPrefixBlobTrigger), "Trigger is not a GCSPrefixBlobTrigger"
+
+
+def test_gcs_object_with_prefix_existence_sensor_async_execute_failure(context):
+    """Tests that an AirflowException is raised in case of error event"""
+    task = GCSObjectsWithPrefixExistenceSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        prefix=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with pytest.raises(AirflowException):
+        task.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+
+
+def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
+    """Asserts that logging occurs as expected"""
+    task = GCSObjectsWithPrefixExistenceSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        prefix=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with mock.patch.object(task.log, "info") as mock_log_info:
+        task.execute_complete(
+            context=None, event={"status": "success", "message": "Job completed", "matches": [TEST_OBJECT]}
+        )
+    mock_log_info.assert_called_with('Sensor checks existence of objects: %s, %s', TEST_BUCKET, TEST_OBJECT)

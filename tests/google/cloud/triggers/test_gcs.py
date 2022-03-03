@@ -25,22 +25,21 @@ from airflow.triggers.base import TriggerEvent
 from gcloud.aio.storage import Bucket, Storage
 
 from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
-from astronomer.providers.google.cloud.triggers.gcs import GCSBlobTrigger
+from astronomer.providers.google.cloud.triggers.gcs import (
+    GCSBlobTrigger,
+    GCSPrefixBlobTrigger,
+)
 
 TEST_BUCKET = "TEST_BUCKET"
-
 TEST_OBJECT = "TEST_OBJECT"
-
+TEST_PREFIX = 'TEST_PREFIX'
 TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
-
 TEST_POLLING_INTERVAL = 3.0
-
 TEST_DAG_ID = "unit_tests_gcs_sensor"
-
 TEST_HOOK_PARAMS = {}
 
 
-def test_gcs_trigger_serialization():
+def test_gcs_blob_trigger_serialization():
     """
     Asserts that the GCSBlobTrigger correctly serializes its arguments
     and classpath.
@@ -65,7 +64,7 @@ def test_gcs_trigger_serialization():
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
-async def test_gcs_trigger_success(mock_object_exists):
+async def test_gcs_blob_trigger_success(mock_object_exists):
     """
     Tests that the GCSBlobTrigger is success case
     """
@@ -79,19 +78,37 @@ async def test_gcs_trigger_success(mock_object_exists):
         TEST_HOOK_PARAMS,
     )
 
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success", "message": "success"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
+async def test_gcs_blob_trigger_pending(mock_object_exists):
+    """
+    Test that GCSBlobTrigger is in loop if file isn't found.
+    """
+    mock_object_exists.return_value = "pending"
+
+    trigger = GCSBlobTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
 
-    # TriggerEvent was returned
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "success", "message": "success"})
-    # Prevents error when task is destroyed while in "pending" state
+    # TriggerEvent was not returned
+    assert task.done() is False
     asyncio.get_event_loop().stop()
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger._object_exists")
-async def test_gcs_trigger_exception(mock_object_exists):
+async def test_gcs_blob_trigger_exception(mock_object_exists):
     """
     Tests the GCSBlobTrigger does fire if there is an exception.
     """
@@ -103,15 +120,9 @@ async def test_gcs_trigger_exception(mock_object_exists):
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was returned
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception"})
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
 @pytest.mark.asyncio
@@ -143,3 +154,116 @@ async def test_object_exists(exists, response):
     res = await trigger._object_exists(hook, TEST_BUCKET, TEST_OBJECT)
     assert res == response
     bucket.blob_exists.assert_called_once_with(blob_name=TEST_OBJECT)
+
+
+def test_gcs_prefix_blob_trigger_serialization():
+    """
+    Asserts that the GCSPrefixBlobTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = GCSPrefixBlobTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger"
+    assert kwargs == {
+        "bucket": TEST_BUCKET,
+        "prefix": TEST_PREFIX,
+        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "google_cloud_conn_id": TEST_GCP_CONN_ID,
+        "hook_params": TEST_HOOK_PARAMS,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
+async def test_gcs_prefix_blob_trigger_success(mock_object_with_prefix_existss):
+    """
+    Tests that the GCSPrefixBlobTrigger is success case
+    """
+    mock_object_with_prefix_existss.return_value = ["success"]
+
+    trigger = GCSPrefixBlobTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert (
+        TriggerEvent({"status": "success", "message": "Successfully completed", "matches": ["success"]})
+        in task
+    )
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
+async def test_gcs_prefix_blob_trigger_exception(mock_object_with_prefix_existss):
+    """
+    Tests the GCSPrefixBlobTrigger does fire if there is an exception.
+    """
+    mock_object_with_prefix_existss.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+    trigger = GCSPrefixBlobTrigger(
+        bucket=TEST_BUCKET,
+        prefix=TEST_PREFIX,
+        polling_period_seconds=TEST_POLLING_INTERVAL,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
+async def test_gcs_prefix_blob_trigger_pending(mock_object_with_prefix_existss):
+    """
+    Test that GCSPrefixBlobTrigger is in loop if file isn't found.
+    """
+    mock_object_with_prefix_existss.return_value = []
+
+    trigger = GCSPrefixBlobTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+async def test_object_with_prefix_exists():
+    """
+    Tests to check if a particular object in Google Cloud Storage
+    is found or not
+    """
+    hook = mock.AsyncMock(GCSHookAsync)
+    storage = mock.AsyncMock(Storage)
+    hook.get_storage_client.return_value = storage
+    bucket = mock.AsyncMock(Bucket)
+    storage.get_bucket.return_value = bucket
+    bucket.list_blobs.return_value = ["test_string"]
+    trigger = GCSPrefixBlobTrigger(
+        bucket=TEST_BUCKET,
+        prefix=TEST_PREFIX,
+        polling_period_seconds=TEST_POLLING_INTERVAL,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
+    )
+    res = await trigger._object_with_prefix_exists(hook, TEST_BUCKET, TEST_PREFIX)
+    assert res == ["test_string"]
+    bucket.list_blobs.assert_called_once_with(prefix=TEST_PREFIX)
