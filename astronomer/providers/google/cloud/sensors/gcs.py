@@ -6,10 +6,12 @@ from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectsWithPrefixExistenceSensor,
+    GCSObjectUpdateSensor,
 )
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
+    GCSCheckBlobUpdateTimeTrigger,
     GCSPrefixBlobTrigger,
 )
 
@@ -55,7 +57,6 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         **kwargs,
     ) -> None:
-
         super().__init__(**kwargs)
         self.bucket = bucket
         self.object = object
@@ -120,6 +121,42 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         successful.
         """
         self.log.info('Sensor checks existence of objects: %s, %s', self.bucket, self.prefix)
+        if event["status"] == "success":
+            return event["matches"]
+        raise AirflowException(event["message"])
+
+
+class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
+    def __init__(
+        self,
+        poll_interval: float = 5,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.poll_interval = poll_interval
+
+    def execute(self, context: "Context") -> None:
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=GCSCheckBlobUpdateTimeTrigger(
+                bucket=self.bucket,
+                object=self.object,
+                ts=context["data_interval_end"],
+                polling_period_seconds=self.polling_interval,
+                google_cloud_conn_id=self.google_cloud_conn_id,
+                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(
+        self, context: "Context", event: Optional[Dict[Any, Any]] = None
+    ) -> None:  # pylint: disable=unused-argument
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "success":
             return event["matches"]
         raise AirflowException(event["message"])
