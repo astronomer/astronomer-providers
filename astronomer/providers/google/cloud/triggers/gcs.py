@@ -91,12 +91,13 @@ class GCSBlobTrigger(BaseTrigger):
 
 class GCSPrefixBlobTrigger(GCSBlobTrigger):
     """
-    A trigger that fires and it finds the requested file or folder present in the given bucket.
+     A trigger that fires and it looks for all the objects in the given bucket
+     which matches the given prefix if not found sleep for certain interval and checks again.
 
     :param bucket: the bucket in the google cloud storage where the objects are residing.
-    :param object_name: the file or folder present in the bucket
+    :param prefix: The prefix of the blob_names to match in the Google cloud storage bucket
     :param google_cloud_conn_id: reference to the Google Connection
-    :param polling_period_seconds: polling period in seconds to check for file/folder
+    :param polling_period_seconds: polling period in seconds to check
     """
 
     def __init__(
@@ -133,7 +134,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Simple loop until the relevant file/folder is found.
+        Simple loop until the matches are found for the given prefix on the bucket..
         """
         try:
             hook = self._get_async_hook()
@@ -155,9 +156,10 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         self, hook: GCSHookAsync, bucket_name: str, prefix: str
     ) -> List[str]:
         """
-        Checks for the existence of a file in Google Cloud Storage.
+        Returns list of blobs which matches the given prefix for the given bucket.
+
         :param bucket_name: The Google Cloud Storage bucket where the object is.
-        :param object_name: The name of the blob_name to check in the Google cloud
+        :param prefix: The prefix of the blob_names to match in the Google cloud
             storage bucket.
         """
         async with Session() as s:
