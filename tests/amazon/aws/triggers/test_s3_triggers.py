@@ -3,7 +3,11 @@ from unittest import mock
 
 import pytest
 
-from astronomer.providers.amazon.aws.triggers.s3 import S3KeySizeTrigger, S3KeyTrigger
+from astronomer.providers.amazon.aws.triggers.s3 import (
+    S3KeySizeTrigger,
+    S3KeysUnchangedTrigger,
+    S3KeyTrigger,
+)
 
 
 def test_s3_key_trigger_serialization():
@@ -86,3 +90,48 @@ def test_s3_key_size_check_fn_trigger_run():
 
     response = trigger._check_fn(data=[])
     assert response is True
+
+
+def test_s3_keys_unchanged_trigger_serialization():
+    """
+    Asserts that the TaskStateTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3KeysUnchangedTrigger(
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=1,
+        inactivity_seconds=0,
+        previous_objects=None,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3KeysUnchangedTrigger"
+    assert kwargs == {
+        "bucket_name": "test_bucket",
+        "prefix": "test",
+        "inactivity_period": 1,
+        "min_objects": 1,
+        "inactivity_seconds": 0,
+        "previous_objects": set(),
+        "allow_delete": 1,
+        "aws_conn_id": "aws_default",
+        "last_activity_time": None,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_keys_unchanged_trigger_run(mock_client):
+    """
+    Test if the task is run is in triggerr successfully.
+    :return:
+    """
+    mock_client.return_value.check_key.return_value = True
+    trigger = S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test")
+    with mock_client:
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
+
+        assert task.done() is True
+        asyncio.get_event_loop().stop()

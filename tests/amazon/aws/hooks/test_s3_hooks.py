@@ -1,10 +1,12 @@
 import asyncio
 import json
 import unittest
+from datetime import datetime
 from unittest import mock
 
 import pytest
 from aiobotocore.session import ClientCreatorContext
+from airflow.exceptions import AirflowException
 from airflow.models.connection import Connection
 from botocore.exceptions import ClientError
 
@@ -146,3 +148,207 @@ async def test_s3_key_hook_check_key_raise_exception(mock_client):
     with pytest.raises(ClientError) as err:
         response = await s3_hook_async._check_exact_key(mock_client, "s3://test_bucket/file", "test_bucket")
         assert isinstance(response, err)
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@pytest.mark.asyncio
+async def test_s3_key_hook_check_wildcard_key(mock_client):
+    """
+    Test check_wildcard_key for a valid response
+    :return:
+    """
+    test_resp_iter = [
+        {
+            'Contents': [
+                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            ]
+        }
+    ]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+    task = await s3_hook_async._check_wildcard_key(mock_client, "test_bucket", "test*")
+    assert task is True
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@pytest.mark.asyncio
+async def test_s3_key_hook_check_wildcard_key_invalid(mock_client):
+    """
+    Test check_wildcard_key for a valid response
+    :return:
+    """
+    test_resp_iter = [
+        {
+            'Contents': [
+                {
+                    'Key': 'no_regex_match_1',
+                    'ETag': 'etag1',
+                    'LastModified': datetime(2020, 8, 14, 17, 19, 34),
+                }
+            ]
+        }
+    ]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+    task = await s3_hook_async._check_wildcard_key(mock_client, "test_bucket", "test*")
+    assert task is False
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@pytest.mark.asyncio
+async def test_s3_key_hook_get_files(mock_client):
+    """
+    Test get_files for a valid response
+    :return:
+    """
+    test_resp_iter = [
+        {
+            'Contents': [
+                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            ]
+        }
+    ]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+    response = await s3_hook_async.get_files(mock_client, "test_bucket", "test.txt", False)
+    assert response == []
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@pytest.mark.asyncio
+async def test_s3_key_hook_list_keys(mock_client):
+    """
+    Test _list_keys for a valid response
+    :return:
+    """
+    test_resp_iter = [
+        {
+            'Contents': [
+                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            ]
+        }
+    ]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+    response = await s3_hook_async._list_keys(mock_client, "test_bucket", "test*")
+    assert response == ['test_key', 'test_key2']
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+@pytest.mark.asyncio
+async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
+    """
+    Test is_key_unchanged gives False response
+    :return:
+    """
+
+    mock_list_keys.return_value = ["test"]
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    response = await s3_hook_async.is_keys_unchanged(
+        client=mock_client.return_value,
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=1,
+        previous_objects=set(),
+        inactivity_seconds=0,
+        allow_delete=True,
+        last_activity_time=None,
+    )
+
+    assert response is False
+
+    # test for the case when current_objects < previous_objects
+    mock_list_keys.return_value = []
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    response = await s3_hook_async.is_keys_unchanged(
+        client=mock_client.return_value,
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=1,
+        previous_objects=set("test"),
+        inactivity_seconds=0,
+        allow_delete=True,
+        last_activity_time=None,
+    )
+
+    assert response is False
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+@pytest.mark.asyncio
+async def test_s3_key_hook_is_keys_unchanged_exception(mock_list_keys, mock_client):
+    """
+    Test is_key_unchanged gives AirflowException
+    :return:
+    """
+    mock_list_keys.return_value = []
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+
+    with pytest.raises(AirflowException):
+        await s3_hook_async.is_keys_unchanged(
+            client=mock_client.return_value,
+            bucket_name="test_bucket",
+            prefix="test",
+            inactivity_period=1,
+            min_objects=1,
+            previous_objects=set("test"),
+            inactivity_seconds=0,
+            allow_delete=False,
+            last_activity_time=None,
+        )
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+@pytest.mark.asyncio
+async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
+    """
+    Test is_key_unchanged gives AirflowException
+    :return:
+    """
+    mock_list_keys.return_value = ["test_file"]
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    response = await s3_hook_async.is_keys_unchanged(
+        client=mock_client.return_value,
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=1,
+        previous_objects=set("t"),
+        inactivity_seconds=0,
+        allow_delete=True,
+        last_activity_time=datetime(2020, 8, 14, 17, 19, 34),
+    )
+
+    assert response is True

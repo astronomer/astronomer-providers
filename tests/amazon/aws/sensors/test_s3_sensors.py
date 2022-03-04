@@ -11,8 +11,13 @@ from parameterized import parameterized
 from astronomer.providers.amazon.aws.sensors.s3 import (
     S3KeySensorAsync,
     S3KeySizeSensorAsync,
+    S3KeysUnchangedSensorAsync,
 )
-from astronomer.providers.amazon.aws.triggers.s3 import S3KeySizeTrigger, S3KeyTrigger
+from astronomer.providers.amazon.aws.triggers.s3 import (
+    S3KeySizeTrigger,
+    S3KeysUnchangedTrigger,
+    S3KeyTrigger,
+)
 
 
 @pytest.fixture
@@ -96,10 +101,9 @@ class TestS3KeySensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_execute_complete(self, key, bucket, mock_hook):
+    def test_s3_key_sensor_execute_complete_success(self, key, bucket, mock_hook):
         """
-        Asserts that a task is deferred and an S3KeyTrigger will be fired
-        when the S3KeySensorAsync is executed.
+        Asserts that a task is completed with success status.
         """
         mock_hook.check_for_key.return_value = False
 
@@ -109,6 +113,27 @@ class TestS3KeySensorAsync(unittest.TestCase):
             bucket_name=bucket,
         )
         assert sensor.execute_complete(context={}, event={"status": "success"}) is None
+
+    @parameterized.expand(
+        [
+            ["s3://bucket/key", None],
+            ["key", "bucket"],
+        ]
+    )
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    def test_s3_key_sensor_execute_complete_error(self, key, bucket, mock_hook):
+        """
+        Asserts that a task is completed with error status.
+        """
+        mock_hook.check_for_key.return_value = False
+
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async",
+            bucket_key=key,
+            bucket_name=bucket,
+        )
+        with pytest.raises(AirflowException):
+            sensor.execute_complete(context={}, event={"status": "error", "message": "mocked error"})
 
     @parameterized.expand(
         [
@@ -209,7 +234,10 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
     @parameterized.expand([["s3://bucket/key", None, "key", "bucket"], ["key", "bucket", "key", "bucket"]])
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook.check_for_key")
     def test_parse_bucket_key(self, key, bucket, parsed_key, parsed_bucket, mock_check):
-
+        """
+        Assert if the S3KeySizeSensorAsync parsed the bucket_name and bucket_key
+        correctly.
+        """
         mock_check.return_value = False
 
         op = S3KeySizeSensorAsync(
@@ -232,7 +260,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     def test_s3_key_sensor_async(self, key, bucket, mock_hook):
         """
-        Asserts that a task is deferred and an S3KeyTrigger will be fired
+        Asserts that a task is deferred and an S3KeySizeTrigger will be fired
         when the S3KeySizeSensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -255,10 +283,9 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
         ]
     )
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_size_sensor_execute_complete(self, key, bucket, mock_hook):
+    def test_s3_key_size_sensor_execute_complete_success(self, key, bucket, mock_hook):
         """
-        Asserts that a task is deferred and an S3KeyTrigger will be fired
-        when the S3KeySizeSensorAsync is executed.
+        Asserts that a task is completed with success status
         """
         mock_hook.check_for_key.return_value = False
 
@@ -271,6 +298,26 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
 
     @parameterized.expand(
         [
+            ["key", "bucket"],
+        ]
+    )
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    def test_s3_key_size_sensor_execute_complete_error(self, key, bucket, mock_hook):
+        """
+        Asserts that a task is completed with error.
+        """
+        mock_hook.check_for_key.return_value = False
+
+        sensor = S3KeySizeSensorAsync(
+            task_id="s3_key_size_sensor_async",
+            bucket_key=key,
+            bucket_name=bucket,
+        )
+        with pytest.raises(AirflowException):
+            sensor.execute_complete(context={}, event={"status": "error", "message": "Mocked error"})
+
+    @parameterized.expand(
+        [
             ["s3://bucket/key", None],
             ["key", "bucket"],
         ]
@@ -280,7 +327,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
     @mock.patch("astronomer.providers.amazon.aws.sensors.s3.S3KeySizeTrigger")
     def test_s3_key_sensor_async_with_mock_defer(self, key, bucket, mock_trigger, mock_defer, mock_hook):
         """
-        Asserts that a task is deferred and an S3KeyTrigger will be fired
+        Asserts that a task is deferred and an S3KeySizeSensorAsync will be fired
         when the S3KeySizeSensorAsync is executed.
         """
         mock_hook.check_for_key.return_value = False
@@ -299,7 +346,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
         )
 
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_with_wildcard_async(self, mock_hook):
+    def test_s3_key_size_sensor_with_wildcard_async(self, mock_hook):
         """
         Asserts that a task with wildcard=True is deferred and an S3KeyTrigger will be fired
         when the S3KeySizeSensorAsync is executed.
@@ -313,4 +360,56 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
         with pytest.raises(TaskDeferred) as exc:
             sensor.execute(context)
 
-        assert isinstance(exc.value.trigger, S3KeySizeTrigger), "Trigger is not a S3KeyTrigger"
+        assert isinstance(exc.value.trigger, S3KeySizeTrigger), "Trigger is not a S3KeySizeTrigger"
+
+
+class TestS3KeysUnchangedSensorAsync(unittest.TestCase):
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    def test_s3_keys_unchanged_sensor_check_trigger_instance(self, mock_hook):
+        """
+        Asserts that a task is deferred and an S3KeysUnchangedTrigger will be fired
+        when the S3KeysUnchangedSensorAsync is executed.
+        """
+        mock_hook.check_for_key.return_value = False
+
+        sensor = S3KeysUnchangedSensorAsync(
+            task_id="s3_keys_unchanged_sensor", bucket_name="test_bucket", prefix="test"
+        )
+
+        with pytest.raises(TaskDeferred) as exc:
+            sensor.execute(context)
+
+        assert isinstance(
+            exc.value.trigger, S3KeysUnchangedTrigger
+        ), "Trigger is not a S3KeysUnchangedTrigger"
+
+    @parameterized.expand([["bucket", "test"]])
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    def test_s3_keys_unchanged_sensor_execute_complete_success(self, bucket, prefix, mock_hook):
+        """
+        Asserts that a task completed with success status
+        """
+        mock_hook.check_for_key.return_value = False
+
+        sensor = S3KeysUnchangedSensorAsync(
+            task_id="s3_keys_unchanged_sensor",
+            bucket_name=bucket,
+            prefix=prefix,
+        )
+        assert sensor.execute_complete(context={}, event={"status": "success"}) is None
+
+    @parameterized.expand([["bucket", "test"]])
+    @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
+    def test_s3_keys_unchanged_sensor_execute_complete_error(self, bucket, prefix, mock_hook):
+        """
+        Asserts that a task is completed with error.
+        """
+        mock_hook.check_for_key.return_value = False
+
+        sensor = S3KeysUnchangedSensorAsync(
+            task_id="s3_keys_unchanged_sensor",
+            bucket_name=bucket,
+            prefix=prefix,
+        )
+        with pytest.raises(AirflowException):
+            sensor.execute_complete(context={}, event={"status": "error", "message": "Mocked error"})
