@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -30,7 +30,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         super().__init__(**kwargs)
 
     @staticmethod
-    def raise_for_trigger_status(event: Any) -> Optional[AirflowException]:
+    def raise_for_trigger_status(event: Dict[str, Any]) -> None:
         if event["status"] == "error":
             error_type = event["error_type"]
             description = event["description"]
@@ -38,7 +38,6 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                 raise PodLaunchTimeoutException(description)
             else:
                 raise AirflowException(description)
-        return None
 
     def execute(self, context: Context) -> None:
         self.pod_request_obj = self.build_pod_request_obj(context)  # type: ignore[no-untyped-call]
@@ -60,7 +59,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             method_name=self.execute_complete.__name__,
         )
 
-    def execute_complete(self, context: Context, event: Any) -> Any:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         remote_pod = None
         try:
             self.pod_request_obj = self.build_pod_request_obj(context)  # type: ignore[no-untyped-call]

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -279,14 +279,14 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
 
                     # If empty list, then no records are available
                     if not first_records:
-                        first_job_row = None
+                        first_job_row: Optional[str] = None
                     else:
                         # Extract only first record from the query results
                         first_job_row = first_records.pop(0)
 
                     # If empty list, then no records are available
                     if not second_records:
-                        second_job_row = None
+                        second_job_row: Optional[str] = None
                     else:
                         # Extract only first record from the query results
                         second_job_row = second_records.pop(0)
@@ -329,7 +329,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         self,
         conn_id: str,
         sql: str,
-        pass_value: Any,
+        pass_value: Union[int, float, str],
         job_id: Optional[str],
         project_id: Optional[str],
         tolerance: Any = None,
@@ -368,7 +368,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent
         """

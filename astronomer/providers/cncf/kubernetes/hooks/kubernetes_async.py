@@ -1,5 +1,3 @@
-from typing import Any
-
 import aiofiles  # type: ignore[import]
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
@@ -7,7 +5,7 @@ from kubernetes_asyncio import client, config
 
 
 class KubernetesHookAsync(KubernetesHook):
-    async def _load_config(self) -> Any:
+    async def _load_config(self) -> client.ApiClient:
         """
         cluster_context: Optional[str] = None,
         config_file: Optional[str] = None,
