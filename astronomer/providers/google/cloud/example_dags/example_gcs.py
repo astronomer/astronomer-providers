@@ -19,6 +19,7 @@
 Example Airflow DAG for Google Cloud Storage operators.
 """
 
+import os
 from datetime import datetime
 
 from airflow import models
@@ -37,7 +38,7 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 
 START_DATE = datetime(2021, 1, 1)
 
-PROJECT_ID = "astronomer-airflow-providers"
+PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 BUCKET_1 = "test-gcs-example-bucket"
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"

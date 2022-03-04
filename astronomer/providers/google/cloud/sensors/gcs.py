@@ -6,11 +6,13 @@ from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectsWithPrefixExistenceSensor,
+    GCSUploadSessionCompleteSensor,
 )
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
     GCSPrefixBlobTrigger,
+    GCSUploadSessionTrigger,
 )
 
 if TYPE_CHECKING:
@@ -122,4 +124,44 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         self.log.info('Sensor checks existence of objects: %s, %s', self.bucket, self.prefix)
         if event["status"] == "success":
             return event["matches"]
+        raise AirflowException(event["message"])
+
+
+class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
+    def __init__(
+        self,
+        polling_interval: float = 5.0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.polling_interval = polling_interval
+
+    def execute(self, context: "Context") -> None:
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=GCSUploadSessionTrigger(
+                bucket=self.bucket,
+                prefix=self.prefix,
+                polling_period_seconds=self.polling_interval,
+                google_cloud_conn_id=self.google_cloud_conn_id,
+                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+                inactivity_period=self.inactivity_period,
+                min_objects=self.min_objects,
+                previous_objects=self.previous_objects,
+                inactivity_seconds=self.inactivity_seconds,
+                allow_delete=self.allow_delete,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(
+        self, context: "Context", event: Optional[Dict[Any, Any]] = None
+    ) -> None:  # pylint: disable=unused-argument
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        if event["status"] == "success":
+            return event["message"]
         raise AirflowException(event["message"])

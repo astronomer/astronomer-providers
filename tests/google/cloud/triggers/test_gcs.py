@@ -180,12 +180,12 @@ def test_gcs_prefix_blob_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
-async def test_gcs_prefix_blob_trigger_success(mock_object_with_prefix_existss):
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._list_blobs_with_prefix")
+async def test_gcs_prefix_blob_trigger_success(mock_list_blobs_with_prefixs):
     """
     Tests that the GCSPrefixBlobTrigger is success case
     """
-    mock_object_with_prefix_existss.return_value = ["success"]
+    mock_list_blobs_with_prefixs.return_value = ["success"]
 
     trigger = GCSPrefixBlobTrigger(
         TEST_BUCKET,
@@ -204,12 +204,12 @@ async def test_gcs_prefix_blob_trigger_success(mock_object_with_prefix_existss):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
-async def test_gcs_prefix_blob_trigger_exception(mock_object_with_prefix_existss):
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._list_blobs_with_prefix")
+async def test_gcs_prefix_blob_trigger_exception(mock_list_blobs_with_prefixs):
     """
     Tests the GCSPrefixBlobTrigger does fire if there is an exception.
     """
-    mock_object_with_prefix_existss.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+    mock_list_blobs_with_prefixs.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
     trigger = GCSPrefixBlobTrigger(
         bucket=TEST_BUCKET,
         prefix=TEST_PREFIX,
@@ -223,12 +223,12 @@ async def test_gcs_prefix_blob_trigger_exception(mock_object_with_prefix_existss
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._object_with_prefix_exists")
-async def test_gcs_prefix_blob_trigger_pending(mock_object_with_prefix_existss):
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger._list_blobs_with_prefix")
+async def test_gcs_prefix_blob_trigger_pending(mock_list_blobs_with_prefixs):
     """
     Test that GCSPrefixBlobTrigger is in loop if file isn't found.
     """
-    mock_object_with_prefix_existss.return_value = []
+    mock_list_blobs_with_prefixs.return_value = []
 
     trigger = GCSPrefixBlobTrigger(
         TEST_BUCKET,
@@ -246,7 +246,7 @@ async def test_gcs_prefix_blob_trigger_pending(mock_object_with_prefix_existss):
 
 
 @pytest.mark.asyncio
-async def test_object_with_prefix_exists():
+async def test_list_blobs_with_prefix():
     """
     Tests to check if a particular object in Google Cloud Storage
     is found or not
@@ -264,6 +264,6 @@ async def test_object_with_prefix_exists():
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
-    res = await trigger._object_with_prefix_exists(hook, TEST_BUCKET, TEST_PREFIX)
+    res = await trigger._list_blobs_with_prefix(hook, TEST_BUCKET, TEST_PREFIX)
     assert res == ["test_string"]
     bucket.list_blobs.assert_called_once_with(prefix=TEST_PREFIX)
