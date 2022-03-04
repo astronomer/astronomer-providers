@@ -33,6 +33,7 @@ from airflow.providers.google.cloud.transfers.local_to_gcs import (
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
     GCSObjectsWithPrefixExistenceSensorAsync,
+    GCSObjectUpdateSensorAsync,
 )
 
 START_DATE = datetime(2021, 1, 1)
@@ -74,6 +75,13 @@ with models.DAG(
         task_id="gcs_object_with_prefix_exists_task_async",
     )
     # [END howto_sensor_object_with_prefix_exists_task]
+    # [START howto_sensor_object_update_exists_task]
+    gcs_object_exists = GCSObjectUpdateSensorAsync(
+        bucket=BUCKET_1,
+        object=BUCKET_FILE_LOCATION,
+        task_id="gcs_object_exists_task_async",
+    )
+    # [END howto_sensor_object_update_exists_task]
     delete_bucket = GCSDeleteBucketOperator(task_id="delete_bucket", bucket_name=BUCKET_1)
 
     create_bucket >> upload_file >> [gcs_object_exists, gcs_object_with_prefix_exists] >> delete_bucket

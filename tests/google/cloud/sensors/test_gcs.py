@@ -15,7 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import datetime
 from unittest import mock
 
 import pytest
@@ -24,6 +24,7 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
     GCSObjectsWithPrefixExistenceSensorAsync,
+    GCSObjectUpdateSensorAsync,
 )
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
@@ -41,7 +42,8 @@ def context():
     """
     Creates an empty context.
     """
-    yield
+    context = {"data_interval_end": datetime.datetime.utcnow()}
+    yield context
 
 
 def test_gcs_object_existence_sensor_async():
@@ -126,3 +128,48 @@ def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
             context=None, event={"status": "success", "message": "Job completed", "matches": [TEST_OBJECT]}
         )
     mock_log_info.assert_called_with('Sensor checks existence of objects: %s, %s', TEST_BUCKET, TEST_OBJECT)
+
+
+# def test_gcs_object_update_sensor_async():
+#     """
+#     Asserts that a task is deferred and a GCSBlobTrigger will be fired
+#     when the GCSObjectUpdateSensorAsync is executed.
+#     """
+#     task = GCSObjectUpdateSensorAsync(
+#         task_id="task-id",
+#         bucket=TEST_BUCKET,
+#         object=TEST_OBJECT,
+#         google_cloud_conn_id=TEST_GCP_CONN_ID,
+#     )
+#     with pytest.raises(TaskDeferred) as exc:
+#         task.execute(context)
+#     assert isinstance(
+#         exc.value.trigger, GCSCheckBlobUpdateTimeTrigger
+#     ), "Trigger is not a GCSCheckBlobUpdateTimeTrigger"
+
+
+def test_gcs_object_update_sensor_async_execute_failure(context):
+    """Tests that an AirflowException is raised in case of error event"""
+    task = GCSObjectUpdateSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        object=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with pytest.raises(AirflowException):
+        task.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+
+
+def test_gcs_object_update_sensor_async_execute_complete():
+    """Asserts that logging occurs as expected"""
+    task = GCSObjectUpdateSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        object=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with mock.patch.object(task.log, "info") as mock_log_info:
+        task.execute_complete(context=None, event={"status": "success", "message": "Job completed"})
+    mock_log_info.assert_called_with(
+        'Sensor checks update time for object %s in bucket : %s', TEST_OBJECT, TEST_BUCKET
+    )

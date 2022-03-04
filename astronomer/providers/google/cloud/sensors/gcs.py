@@ -129,19 +129,20 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     def __init__(
         self,
-        poll_interval: float = 5,
+        polling_interval: float = 5,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.poll_interval = poll_interval
+        self.polling_interval = polling_interval
 
     def execute(self, context: "Context") -> None:
+        date_time = self.ts_func(context)
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSCheckBlobUpdateTimeTrigger(
                 bucket=self.bucket,
-                object=self.object,
-                ts=context["data_interval_end"],
+                object_name=self.object,
+                ts=date_time,
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
@@ -157,6 +158,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "success":
-            return event["matches"]
-        raise AirflowException(event["message"])
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info('Sensor checks update time for object %s in bucket : %s', self.object, self.bucket)
+        return event["message"]
