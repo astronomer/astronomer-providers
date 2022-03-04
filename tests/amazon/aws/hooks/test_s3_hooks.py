@@ -45,7 +45,7 @@ async def test_aws_base_hook_async_get_client_async_with_aws_secrets(mock_get_co
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._check_exact_key")
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._check_wildcard_key")
 @pytest.mark.asyncio
-async def test_s3_key_trigger_check_key(mock_check_wildcard_key, mock_check_exact_key, mock_client):
+async def test_s3_key_hook_check_key(mock_check_wildcard_key, mock_check_exact_key, mock_client):
     """
     Test for key with and without wildcard.
     :return:
@@ -75,7 +75,7 @@ async def test_s3_key_trigger_check_key(mock_check_wildcard_key, mock_check_exac
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
-async def test_s3_key_trigger_check_exact_key(mock_client):
+async def test_s3_key_hook_check_exact_key(mock_client):
     """
     Test if the key exists and asserts True if key is found.
     :return:
@@ -90,7 +90,7 @@ async def test_s3_key_trigger_check_exact_key(mock_client):
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
-async def test_s3_key_trigger_check_key_with_error(mock_client):
+async def test_s3_key_hook_check_key_with_error(mock_client):
     """
     Test for 404 error if key not found and assert based on response.
     :return:
@@ -120,7 +120,7 @@ async def test_s3_key_trigger_check_key_with_error(mock_client):
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 @unittest.expectedFailure
-async def test_s3_key_trigger_check_key_raise_exception(mock_client):
+async def test_s3_key_hook_check_key_raise_exception(mock_client):
     """
     Test for 500 error if key not found and assert based on response.
     :return:
