@@ -519,7 +519,8 @@ class S3PrefixSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, event: Dict[str, str]) -> None:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:  # pylint:
+        # disable=unused-argument
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])

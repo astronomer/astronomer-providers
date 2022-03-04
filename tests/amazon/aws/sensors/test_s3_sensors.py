@@ -483,7 +483,9 @@ class TestS3PrefixSensorAsync(unittest.TestCase):
         )
 
         with mock.patch.object(sensor.log, "info") as mock_log_info:
-            sensor.execute_complete(event={"status": "success", "message": "Success criteria met. Exiting."})
+            sensor.execute_complete(
+                context, event={"status": "success", "message": "Success criteria met. Exiting."}
+            )
         mock_log_info.assert_called_with("Success criteria met. Exiting.")
 
     def test_s3_prefix_sensor_execute_failure(self):
@@ -494,4 +496,4 @@ class TestS3PrefixSensorAsync(unittest.TestCase):
         )
 
         with pytest.raises(AirflowException):
-            sensor.execute_complete(event={"status": "error", "message": "test failure message"})
+            sensor.execute_complete(context, event={"status": "error", "message": "test failure message"})
