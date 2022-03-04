@@ -8,6 +8,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
+    S3PrefixSensorTrigger,
 )
 
 
@@ -195,3 +196,20 @@ async def test_s3_keys_unchanged_trigger_run_success(mock_is_keys_unchanged, moc
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "success"}) in task
+
+def test_s3_prefix_sensor_trigger_serialization():
+    """
+    Asserts that the BigQueryInsertJobTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3PrefixSensorTrigger(bucket_name='test-bucket', prefix="test")
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3PrefixSensorTrigger"
+    assert kwargs == {
+        "bucket_name": "test-bucket",
+        "prefix": ["test"],
+        "delimiter": "/",
+        "aws_conn_id": "aws_default",
+        "verify": None,
+        "hook_params": {},
+    }
