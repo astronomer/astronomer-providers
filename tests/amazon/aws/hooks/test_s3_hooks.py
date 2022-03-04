@@ -6,6 +6,7 @@ from unittest import mock
 
 import pytest
 from aiobotocore.session import ClientCreatorContext
+from airflow.exceptions import AirflowException
 from airflow.models.connection import Connection
 from botocore.exceptions import ClientError
 
