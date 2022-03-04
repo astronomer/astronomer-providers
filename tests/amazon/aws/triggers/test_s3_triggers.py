@@ -213,3 +213,38 @@ def test_s3_prefix_sensor_trigger_serialization():
         "verify": None,
         "hook_params": {},
     }
+
+
+def test_s3_prefix_sensor_trigger_serialization():
+    """
+    Asserts that the BigQueryInsertJobTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3PrefixSensorTrigger(bucket_name='test-bucket', prefix="test")
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3PrefixSensorTrigger"
+    assert kwargs == {
+        "bucket_name": "test-bucket",
+        "prefix": ["test"],
+        "delimiter": "/",
+        "aws_conn_id": "aws_default",
+        "verify": None,
+        "hook_params": {},
+    }
+
+
+# @pytest.mark.asyncio
+# @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
+# @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync._check_for_prefix")
+# async def test_s3_prefix_sensor_trigger_success(mock_check_for_prefix, mock_client):
+#     """
+#     Tests the S3PrefixSensorTrigger only fires once the query execution reaches a successful state.
+#     """
+#     print(type(mock_client))  # <class 'unittest.mock.AsyncMock'>
+#     trigger = S3PrefixSensorTrigger(
+#         bucket_name='test-bucket', prefix="test"
+#     )
+#     task = [i async for i in trigger.run()]
+#
+#     assert len(task) == 1
+#     assert TriggerEvent({"status": "success", "message": "Success criteria met. Exiting."}) in task
