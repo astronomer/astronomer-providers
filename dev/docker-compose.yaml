@@ -157,7 +157,7 @@ services:
         exec /entrypoint bash -c "
           airflow db upgrade && \
           airflow users create -r Admin -u admin -e admin -f admin -l admin -p admin && \
-          airflow connections import /usr/local/airflow/astronomer_operators/dev/connections.yaml || true && \
+          airflow connections import /usr/local/airflow/astronomer_providers/dev/connections.yaml || true && \
           airflow version"
     # yamllint enable rule:line-length
     environment:
