@@ -164,9 +164,8 @@ class S3HookAsync(AwsBaseHookAsync):
         """
         list_keys = await self._list_keys(client=client, bucket_name=bucket_name, prefix=prefix)
         current_objects = set(list_keys)
-
         current_num_objects = len(current_objects)
-        if current_objects > previous_objects:
+        if current_num_objects > len(previous_objects):
             # When new objects arrived, reset the inactivity_seconds
             # and update previous_objects for the next poke.
             self.log.info(
@@ -179,7 +178,7 @@ class S3HookAsync(AwsBaseHookAsync):
             previous_objects = current_objects
             return False
 
-        if previous_objects - current_objects:
+        if len(previous_objects) - len(current_objects):
             # During the last poke interval objects were deleted.
             if allow_delete:
                 deleted_objects = previous_objects - current_objects
