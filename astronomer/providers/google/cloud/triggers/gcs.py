@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Tuple
 
 from aiohttp import ClientSession as Session
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -97,6 +97,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
 
     :param bucket: google cloud storage bucket name cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
+    :param ts: datetime object
     :param polling_period_seconds: polling period in seconds to check for file/folder
     :param google_cloud_conn_id: reference to the Google Connection
     :param hook_params: DIct object has delegate_to and impersonation_chain
@@ -135,7 +136,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         try:
             hook = self._get_async_hook()
             while True:
