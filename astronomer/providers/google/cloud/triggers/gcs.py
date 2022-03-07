@@ -208,11 +208,10 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
     ):
         super().__init__(
             bucket=bucket,
-            object_name=prefix,
+            prefix=prefix,
             polling_period_seconds=polling_period_seconds,
             google_cloud_conn_id=google_cloud_conn_id,
             hook_params=hook_params,
-            prefix=prefix,
         )
         self.inactivity_period = inactivity_period
         self.min_objects = min_objects
@@ -236,14 +235,14 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
                 "inactivity_period": self.inactivity_period,
                 "min_objects": self.min_objects,
                 "previous_objects": self.previous_objects,
-                "inactivity_seconds": self.inactivity_seconds,
                 "allow_delete": self.allow_delete,
             },
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Simple loop until no change in list blob is found for the inactivity_period.
+        Simple loop until no change in any new files or deleted in list blob is
+        found for the inactivity_period.
         """
         try:
             hook = self._get_async_hook()
@@ -263,14 +262,14 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
 
-    def _get_time() -> datetime:
+    def _get_time(self) -> datetime:
         """
         This is just a wrapper of datetime.datetime.now to simplify mocking in the
         unittests.
         """
         return datetime.now()
 
-    def _is_bucket_updated(self, current_objects: Set[str]) -> dict[str, str]:
+    def _is_bucket_updated(self, current_objects: Set[str]) -> Dict[str, str]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
@@ -306,7 +305,6 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
                 "status": "error",
                 "message": "Illegal behavior: objects were deleted in between check intervals",
             }
-
         if self.last_activity_time:
             self.inactivity_seconds = (self._get_time() - self.last_activity_time).total_seconds()
         else:
@@ -325,7 +323,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
                     self.inactivity_period,
                 )
                 self.log.info(success_message)
-                return {"status": "success", "messgae": success_message}
+                return {"status": "success", "message": success_message}
 
             error_message = "FAILURE: Inactivity Period passed, not enough objects found in %s", path
             self.log.error(error_message)

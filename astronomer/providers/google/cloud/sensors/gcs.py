@@ -144,12 +144,11 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
                 prefix=self.prefix,
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
                 inactivity_period=self.inactivity_period,
                 min_objects=self.min_objects,
                 previous_objects=self.previous_objects,
-                inactivity_seconds=self.inactivity_seconds,
                 allow_delete=self.allow_delete,
+                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
             ),
             method_name="execute_complete",
         )

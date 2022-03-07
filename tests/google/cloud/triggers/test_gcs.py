@@ -18,6 +18,7 @@
 
 
 import asyncio
+from datetime import datetime, timedelta
 from unittest import mock
 
 import pytest
@@ -28,6 +29,7 @@ from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
     GCSPrefixBlobTrigger,
+    GCSUploadSessionTrigger,
 )
 
 TEST_BUCKET = "TEST_BUCKET"
@@ -37,6 +39,10 @@ TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_POLLING_INTERVAL = 3.0
 TEST_DAG_ID = "unit_tests_gcs_sensor"
 TEST_HOOK_PARAMS = {}
+TEST_INACTIVITY_PERIOD = 5.0
+TEST_MIN_OBJECTS = 1
+TEST_ALLOW_DELETE = True
+TEST_PREVIOUS_OBJECTS = set(['a', 'ab'])
 
 
 def test_gcs_blob_trigger_serialization():
@@ -267,3 +273,212 @@ async def test_list_blobs_with_prefix():
     res = await trigger._list_blobs_with_prefix(hook, TEST_BUCKET, TEST_PREFIX)
     assert res == ["test_string"]
     bucket.list_blobs.assert_called_once_with(prefix=TEST_PREFIX)
+
+
+def test_gcs_upload_session_trigger_serialization():
+    """
+    Asserts that the GCSUploadSessionTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        TEST_MIN_OBJECTS,
+        TEST_PREVIOUS_OBJECTS,
+        TEST_ALLOW_DELETE,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger"
+    assert kwargs == {
+        "bucket": TEST_BUCKET,
+        "prefix": TEST_PREFIX,
+        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "google_cloud_conn_id": TEST_GCP_CONN_ID,
+        "hook_params": TEST_HOOK_PARAMS,
+        "inactivity_period": TEST_INACTIVITY_PERIOD,
+        "min_objects": TEST_MIN_OBJECTS,
+        "previous_objects": TEST_PREVIOUS_OBJECTS,
+        "allow_delete": TEST_ALLOW_DELETE,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._list_blobs_with_prefix")
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._is_bucket_updated")
+async def test_gcs_upload_session_trigger_pending(mock_is_bucket_updated, mock_list_blobs):
+    """
+    Test that GCSUploadSessionTrigger is in loop if Upload is still in progress till inactivity period.
+    """
+    mock_is_bucket_updated.return_value = {"status": "pending"}
+    mock_list_blobs.return_value = TEST_PREVIOUS_OBJECTS
+
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        TEST_MIN_OBJECTS,
+        TEST_PREVIOUS_OBJECTS,
+        TEST_ALLOW_DELETE,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "is_bucket_return_value",
+    [
+        ({"status": "success", "message": "Successfully completed"}),
+        ({"status": "error", "message": "Error occurred"}),
+    ],
+)
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._list_blobs_with_prefix")
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._is_bucket_updated")
+async def test_gcs_upload_session_trigger_success(
+    mock_is_bucket_updated, mock_list_blobs, is_bucket_return_value
+):
+    """
+    Tests that the GCSUploadSessionTrigger is success case
+    """
+    mock_is_bucket_updated.return_value = is_bucket_return_value
+    mock_list_blobs.return_value = TEST_PREVIOUS_OBJECTS
+
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        TEST_MIN_OBJECTS,
+        TEST_PREVIOUS_OBJECTS,
+        TEST_ALLOW_DELETE,
+    )
+
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent(is_bucket_return_value) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._list_blobs_with_prefix")
+async def test_gcs_upload_session_trigger_exception(mock_list_blobs):
+    """
+    Tests the GCSUploadSessionTrigger does fire if there is an exception.
+    """
+    mock_list_blobs.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        TEST_MIN_OBJECTS,
+        TEST_PREVIOUS_OBJECTS,
+        TEST_ALLOW_DELETE,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "allow_delete, current_objects, response",
+    [
+        (True, set(['a', 'aa', 'ab']), {"status": "pending"}),
+        (True, set(['a']), {"status": "pending"}),
+        (
+            False,
+            set(['a']),
+            {
+                "status": "error",
+                "message": "Illegal behavior: objects were deleted in between check intervals",
+            },
+        ),
+    ],
+)
+async def test_is_bucket_updated_pending_status(allow_delete, current_objects, response):
+    """
+    Tests to check if there is less items or more items than expected and reset the inactivity period
+    along with the proper status
+    """
+
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        TEST_MIN_OBJECTS,
+        TEST_PREVIOUS_OBJECTS,
+        allow_delete,
+    )
+    res = trigger._is_bucket_updated(current_objects=current_objects)
+    assert res == response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "last_activity_time , min_objects, response",
+    [
+        (
+            datetime.now() - timedelta(hours=0, minutes=50),
+            10,
+            {
+                "status": "error",
+                "message": (
+                    'FAILURE: Inactivity Period passed, not enough objects found in %s',
+                    'TEST_BUCKET/TEST_PREFIX',
+                ),
+            },
+        ),
+        (None, 10, {"status": "pending"}),
+        (
+            datetime.now() - timedelta(hours=0, minutes=50),
+            1,
+            {
+                "status": "success",
+                "message": (
+                    'SUCCESS: Sensor found %s objects at %s. Waited at least %s seconds, with no new objects dropped.',
+                    2,
+                    'TEST_BUCKET/TEST_PREFIX',
+                    5.0,
+                ),
+            },
+        ),
+    ],
+)
+async def test_is_bucket_updated_success_failure_status(last_activity_time, min_objects, response):
+    """
+    Tests to check if inactivity period is finished and found min objects or not and return status
+    based on that.
+    """
+
+    trigger = GCSUploadSessionTrigger(
+        TEST_BUCKET,
+        TEST_PREFIX,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        TEST_INACTIVITY_PERIOD,
+        min_objects,
+        TEST_PREVIOUS_OBJECTS,
+        TEST_ALLOW_DELETE,
+    )
+    trigger.last_activity_time = last_activity_time
+    res = trigger._is_bucket_updated(current_objects=TEST_PREVIOUS_OBJECTS)
+    assert res == response
