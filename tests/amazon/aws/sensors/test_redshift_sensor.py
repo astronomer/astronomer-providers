@@ -22,7 +22,9 @@ def context():
     yield
 
 
-def test_gcs_object_existence_sensor_async():
+def test_redshift_cluster_sensor_async():
+    """Test RedshiftClusterSensorAsync that a task with wildcard=True
+    is deferred and an RedshiftClusterSensorTrigger will be fired when executed method is called"""
     task = RedshiftClusterSensorAsync(
         task_id=TASK_ID,
         cluster_identifier="astro-redshift-cluster-1",

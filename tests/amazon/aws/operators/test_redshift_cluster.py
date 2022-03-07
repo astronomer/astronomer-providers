@@ -84,7 +84,7 @@ def test_resume_cluster_execute_complete(
     mock_log_info.assert_called_with("Resumed cluster successfully, now its in available state")
 
 
-def test_resume_cluster_execute_complete_none():
+def test_resume_cluster_execute_complete_with_none():
     """Asserts that logging occurs as expected"""
     task = RedshiftResumeClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"

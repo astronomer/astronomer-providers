@@ -72,15 +72,6 @@ async def test_redshift_cluster_resume_trigger_run(
     assert len(task) == 1
     assert response in task
 
-    # task = asyncio.create_task(trigger.run().__anext__())
-    # await asyncio.sleep(0.5)
-    #
-    # # TriggerEvent was returned
-    # assert task.done() is True
-    # assert task.result() == response
-    # # Prevents error when task is destroyed while in "pending" state
-    # asyncio.get_event_loop().stop()
-
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
