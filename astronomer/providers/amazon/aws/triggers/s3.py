@@ -182,7 +182,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
             async with await hook.get_client_async() as client:
                 while True:
 
-                    if await hook.is_keys_unchanged(
+                    result = await hook.is_keys_unchanged(
                         client,
                         self.bucket_name,
                         self.prefix,
@@ -192,11 +192,10 @@ class S3KeysUnchangedTrigger(BaseTrigger):
                         self.inactivity_seconds,
                         self.allow_delete,
                         self.last_activity_time,
-                    ):
-
-                        yield TriggerEvent({"status": "success"})
+                    )
+                    if result.get("status") == "success" or result.get("error") == "error":
+                        yield TriggerEvent(result)
                         return
-
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 

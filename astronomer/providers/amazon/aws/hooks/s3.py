@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Any, List, Optional, Set
 
 from aiobotocore.session import ClientCreatorContext
-from airflow.exceptions import AirflowException
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
@@ -176,7 +175,7 @@ class S3HookAsync(AwsBaseHookAsync):
             last_activity_time = datetime.now()
             inactivity_seconds = 0
             previous_objects = current_objects
-            return False
+            return {"status": "pending"}
 
         if len(previous_objects) - len(current_objects):
             # During the last poke interval objects were deleted.
@@ -189,12 +188,12 @@ class S3HookAsync(AwsBaseHookAsync):
                     "file counter and resetting last_activity_time:\n%s",
                     deleted_objects,
                 )
-                return False
+                return {"status": "pending"}
 
-            raise AirflowException(
-                f"Illegal behavior: objects were deleted in"
-                f" {os.path.join(bucket_name, prefix)} between pokes."
-            )
+            return {
+                "status": "error",
+                "message": f" {os.path.join(bucket_name, prefix)} between pokes.",
+            }
 
         if last_activity_time:
             inactivity_seconds = int((datetime.now() - last_activity_time).total_seconds())
@@ -207,16 +206,17 @@ class S3HookAsync(AwsBaseHookAsync):
             path = os.path.join(bucket_name, prefix)
 
             if current_num_objects >= min_objects:
-                self.log.info(
+                success_message = (
                     "SUCCESS: \nSensor found %s objects at %s.\n"
                     "Waited at least %s seconds, with no new objects uploaded.",
                     current_num_objects,
                     path,
                     inactivity_period,
                 )
-                return True
+                self.log.info(success_message)
+                return {"status": "success", "message": success_message}
 
-            self.log.error("FAILURE: Inactivity Period passed, not enough objects found in %s", path)
-
-            return False
-        return False
+            error_message = "FAILURE: Inactivity Period passed, not enough objects found in %s", path
+            self.log.error(error_message)
+            return {"status": "error", "message": error_message}
+        return {"status": "pending"}
