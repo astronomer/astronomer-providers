@@ -5,7 +5,7 @@ Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
 import os
 from datetime import datetime
 
-from airflow import models
+from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
@@ -44,7 +44,7 @@ INSERT_ROWS_QUERY = (
     f"(42, 'fishy fish', '{INSERT_DATE}');"
 )
 
-with models.DAG(
+with DAG(
     dag_id,
     schedule_interval="@once",
     start_date=datetime(2021, 1, 1),

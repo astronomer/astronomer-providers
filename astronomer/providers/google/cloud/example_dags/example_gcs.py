@@ -5,7 +5,7 @@ Example Airflow DAG for Google Cloud Storage operators.
 import os
 from datetime import datetime
 
-from airflow import models
+from airflow.models.dag import DAG
 from airflow.providers.google.cloud.operators.gcs import (
     GCSCreateBucketOperator,
     GCSDeleteBucketOperator,
@@ -27,7 +27,7 @@ PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 
 BUCKET_FILE_LOCATION = "example_gcs.py"
 
-with models.DAG(
+with DAG(
     "example_async_gcs_sensors",
     start_date=datetime(2021, 1, 1),
     catchup=False,
