@@ -87,6 +87,10 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
 
 
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
+    """
+    Async version to checks if an object is updated in Google Cloud Storage
+    """
+
     def __init__(
         self,
         polling_interval: float = 5,
@@ -111,7 +115,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
 
     def execute_complete(
         self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ):  # pylint: disable=unused-argument
+    ) -> Optional[str]:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -120,5 +124,4 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info('Sensor checks update time for object %s in bucket : %s', self.object, self.bucket)
-        print("message ", event["message"])
         return event["message"]
