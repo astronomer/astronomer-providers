@@ -1,18 +1,14 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
-from airflow.providers.google.cloud.sensors.gcs import (
-    GCSObjectsWithPrefixExistenceSensor,
-    GCSObjectUpdateSensor,
-)
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectUpdateSensor
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
     GCSCheckBlobUpdateTimeTrigger,
-    GCSPrefixBlobTrigger,
 )
 
 if TYPE_CHECKING:
@@ -90,42 +86,6 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         return event["message"]
 
 
-class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSensor):
-    def __init__(
-        self,
-        polling_interval: float = 5.0,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(**kwargs)
-        self.polling_interval = polling_interval
-
-    def execute(self, context: "Context") -> None:
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=GCSPrefixBlobTrigger(
-                bucket=self.bucket,
-                prefix=self.prefix,
-                polling_period_seconds=self.polling_interval,
-                google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
-            ),
-            method_name="execute_complete",
-        )
-
-    def execute_complete(
-        self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> List[str]:  # pylint: disable=unused-argument
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        self.log.info('Sensor checks existence of objects: %s, %s', self.bucket, self.prefix)
-        if event["status"] == "success":
-            return event["matches"]
-        raise AirflowException(event["message"])
-
-
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     def __init__(
         self,
@@ -136,13 +96,12 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         self.polling_interval = polling_interval
 
     def execute(self, context: "Context") -> None:
-        date_time = self.ts_func(context)
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSCheckBlobUpdateTimeTrigger(
                 bucket=self.bucket,
                 object_name=self.object,
-                ts=date_time,
+                ts=self.ts_func(context),
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
@@ -152,7 +111,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
 
     def execute_complete(
         self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> None:  # pylint: disable=unused-argument
+    ):  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -161,4 +120,5 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info('Sensor checks update time for object %s in bucket : %s', self.object, self.bucket)
+        print("message ", event["message"])
         return event["message"]

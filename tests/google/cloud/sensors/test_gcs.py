@@ -28,6 +28,7 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 )
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
+    GCSCheckBlobUpdateTimeTrigger,
     GCSPrefixBlobTrigger,
 )
 
@@ -37,7 +38,7 @@ TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_DAG_ID = "unit_tests_gcs_sensor"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def context():
     """
     Creates an empty context.
@@ -130,22 +131,22 @@ def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
     mock_log_info.assert_called_with('Sensor checks existence of objects: %s, %s', TEST_BUCKET, TEST_OBJECT)
 
 
-# def test_gcs_object_update_sensor_async():
-#     """
-#     Asserts that a task is deferred and a GCSBlobTrigger will be fired
-#     when the GCSObjectUpdateSensorAsync is executed.
-#     """
-#     task = GCSObjectUpdateSensorAsync(
-#         task_id="task-id",
-#         bucket=TEST_BUCKET,
-#         object=TEST_OBJECT,
-#         google_cloud_conn_id=TEST_GCP_CONN_ID,
-#     )
-#     with pytest.raises(TaskDeferred) as exc:
-#         task.execute(context)
-#     assert isinstance(
-#         exc.value.trigger, GCSCheckBlobUpdateTimeTrigger
-#     ), "Trigger is not a GCSCheckBlobUpdateTimeTrigger"
+def test_gcs_object_update_sensor_async(context):
+    """
+    Asserts that a task is deferred and a GCSBlobTrigger will be fired
+    when the GCSObjectUpdateSensorAsync is executed.
+    """
+    task = GCSObjectUpdateSensorAsync(
+        task_id="task-id",
+        bucket=TEST_BUCKET,
+        object=TEST_OBJECT,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+    )
+    with pytest.raises(TaskDeferred) as exc:
+        task.execute(context)
+    assert isinstance(
+        exc.value.trigger, GCSCheckBlobUpdateTimeTrigger
+    ), "Trigger is not a GCSCheckBlobUpdateTimeTrigger"
 
 
 def test_gcs_object_update_sensor_async_execute_failure(context):

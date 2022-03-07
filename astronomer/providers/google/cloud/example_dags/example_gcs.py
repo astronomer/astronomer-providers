@@ -76,16 +76,20 @@ with models.DAG(
     )
     # [END howto_sensor_object_with_prefix_exists_task]
     # [START howto_sensor_object_update_exists_task]
-    gcs_object_exists = GCSObjectUpdateSensorAsync(
+    gcs_update_object_exists = GCSObjectUpdateSensorAsync(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
-        task_id="gcs_object_exists_task_async",
+        task_id="gcs_object_update_sensor_task_async",
     )
     # [END howto_sensor_object_update_exists_task]
     delete_bucket = GCSDeleteBucketOperator(task_id="delete_bucket", bucket_name=BUCKET_1)
 
-    create_bucket >> upload_file >> [gcs_object_exists, gcs_object_with_prefix_exists] >> delete_bucket
-
+    (
+        create_bucket
+        >> upload_file
+        >> [gcs_object_exists, gcs_object_with_prefix_exists, gcs_update_object_exists]
+        >> delete_bucket
+    )
 
 if __name__ == '__main__':
     dag.clear()
