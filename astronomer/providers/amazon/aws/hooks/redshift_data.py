@@ -1,14 +1,14 @@
 from io import StringIO
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import botocore.exceptions
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from snowflake.connector.util_text import split_statements
 
 
 class RedshiftDataHook(AwsBaseHook):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"
         kwargs["resource_type"] = "redshift-data"
@@ -17,6 +17,9 @@ class RedshiftDataHook(AwsBaseHook):
 
     def get_conn_params(self) -> Dict[str, Union[str, int]]:
         """Helper method to retrieve connection args"""
+        if not self.aws_conn_id:
+            raise AirflowException("Required connection details is missing !")
+
         connection_object = self.get_connection(self.aws_conn_id)
         extra_config = connection_object.extra_dejson
 
@@ -64,13 +67,17 @@ class RedshiftDataHook(AwsBaseHook):
 
         return conn_params
 
-    def execute_query(self, sql: Union[str, Iterable[str]], params: Optional[Dict]):
+    def execute_query(
+        self, sql: Union[Dict[Any, Any], Iterable[Any]], params: Optional[Dict[Any, Any]]
+    ) -> Tuple[List[str], Dict[str, str]]:
         """
         Runs an SQL statement, which can be data manipulation language (DML)
         or data definition language (DDL)
 
         :param sql: list of query ids
         """
+        if not sql:
+            raise AirflowException("SQL query is None.")
         try:
             if isinstance(sql, str):
                 split_statements_tuple = split_statements(StringIO(sql))
@@ -89,6 +96,6 @@ class RedshiftDataHook(AwsBaseHook):
                     WithEvent=True,
                 )
                 query_ids.append(response["Id"])
-            return query_ids
+            return query_ids, {"status": "success", "message": "success"}
         except botocore.exceptions.ClientError as error:
-            return {"status": "error", "message": str(error)}
+            return [], {"status": "error", "message": str(error)}

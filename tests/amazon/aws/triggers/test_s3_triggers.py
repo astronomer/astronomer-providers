@@ -1,11 +1,14 @@
 import asyncio
-import unittest
 from unittest import mock
 
 import pytest
-from botocore.exceptions import ClientError
+from airflow.triggers.base import TriggerEvent
 
-from astronomer.providers.amazon.aws.triggers.s3 import S3KeyTrigger
+from astronomer.providers.amazon.aws.triggers.s3 import (
+    S3KeySizeTrigger,
+    S3KeysUnchangedTrigger,
+    S3KeyTrigger,
+)
 
 
 def test_s3_key_trigger_serialization():
@@ -27,13 +30,12 @@ def test_s3_key_trigger_serialization():
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_key")
-async def test_s3_key_trigger_run(mock_check_key, mock_client):
+async def test_s3_key_trigger_run(mock_client):
     """
     Test if the task is run is in triggerr successfully.
     :return:
     """
-    mock_check_key.return_value = True
+    mock_client.return_value.check_key.return_value = True
     trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
     with mock_client:
         task = asyncio.create_task(trigger.run().__anext__())
@@ -43,106 +45,153 @@ async def test_s3_key_trigger_run(mock_check_key, mock_client):
         asyncio.get_event_loop().stop()
 
 
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_exact_key")
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger._check_wildcard_key")
-@pytest.mark.asyncio
-async def test_s3_key_trigger_check_key(mock_check_wildcard_key, mock_check_exact_key, mock_client):
+def test_s3_key_size_trigger_serialization():
     """
-    Test for key with and without wildcard.
+    Asserts that the TaskStateTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3KeySizeTrigger(
+        bucket_key="s3://test_bucket/file", bucket_name="test_bucket", wildcard_match=True
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3KeySizeTrigger"
+    assert kwargs == {
+        "bucket_name": "test_bucket",
+        "bucket_key": "s3://test_bucket/file",
+        "wildcard_match": True,
+        "aws_conn_id": "aws_default",
+        "hook_params": {},
+        "check_fn_user": None,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_key_size_trigger_run(mock_client):
+    """
+    Test if the task is run is in triggerr successfully.
     :return:
     """
-    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    mock_client.return_value.check_key.return_value = True
+    trigger = S3KeySizeTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    with mock_client:
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
 
-    # test for wildcard=False
-    asyncio.create_task(
-        trigger._check_key(mock_client.return_value, "s3://test_bucket/file", "test_bucket", False)
-    )
-    await asyncio.sleep(0.5)
-    mock_check_exact_key.assert_called_once_with(
-        mock_client.return_value, "s3://test_bucket/file", "test_bucket"
-    )
-
-    # test for wildcard=True
-    asyncio.create_task(
-        trigger._check_key(mock_client.return_value, "s3://test_bucket/file", "test_bucket", True)
-    )
-    await asyncio.sleep(0.5)
-    mock_check_wildcard_key.assert_called_once_with(
-        mock_client.return_value, "s3://test_bucket/file", "test_bucket"
-    )
-
-    asyncio.get_event_loop().stop()
+        assert task.done() is True
+        asyncio.get_event_loop().stop()
 
 
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
-async def test_s3_key_trigger_check_exact_key(mock_client):
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_files")
+async def test_s3_key_size_trigger_run_check_fn_user_success(mock_get_files, mock_client):
     """
-    Test if the key exists and asserts True if key is found.
+    Test if the task is run is in triggerr with check_fn_user defined by user.
+    """
+    mock_get_files.return_value = True
+
+    def dummy_check_fn(list_obj):
+        return True
+
+    mock_client.return_value.check_key.return_value = True
+    trigger = S3KeySizeTrigger(
+        bucket_key="s3://test_bucket/file", bucket_name="test_bucket", check_fn=dummy_check_fn
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_files")
+async def test_s3_key_size_trigger_run_check_fn_success(mock_get_files, mock_client):
+    """
+    Test if the task is run is in triggerr with check_fn.
+    """
+    mock_get_files.return_value = ["test"]
+    mock_client.return_value.check_key.return_value = True
+    trigger = S3KeySizeTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success"}) in task
+
+
+def test_s3_key_size_check_fn_trigger_run():
+    """
+    Test if the _check_fn returns True.
     :return:
     """
-    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
-    task = await trigger._check_exact_key(mock_client.return_value, "s3://test_bucket/file", "test_bucket")
+    trigger = S3KeySizeTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
 
-    assert task is True
+    response = trigger._check_fn(data=[])
+    assert response is True
 
 
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@pytest.mark.asyncio
-async def test_s3_key_trigger_check_key_with_error(mock_client):
+def test_s3_keys_unchanged_trigger_serialization():
     """
-    Test for 404 error if key not found and assert based on response.
+    Asserts that the TaskStateTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3KeysUnchangedTrigger(
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=1,
+        inactivity_seconds=0,
+        previous_objects=None,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3KeysUnchangedTrigger"
+    assert kwargs == {
+        "bucket_name": "test_bucket",
+        "prefix": "test",
+        "inactivity_period": 1,
+        "min_objects": 1,
+        "inactivity_seconds": 0,
+        "previous_objects": set(),
+        "allow_delete": 1,
+        "aws_conn_id": "aws_default",
+        "last_activity_time": None,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_keys_unchanged_trigger_run(mock_client):
+    """
+    Test if the task is run is in triggerr successfully.
     :return:
     """
-    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    mock_client.return_value.check_key.return_value = True
+    trigger = S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test")
+    with mock_client:
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
 
-    mock_client.head_object.side_effect = ClientError(
-        {
-            "Error": {
-                "Code": "SomeServiceException",
-                "Message": "Details/context around the exception or error",
-            },
-            "ResponseMetadata": {
-                "RequestId": "1234567890ABCDEF",
-                "HostId": "host ID data will appear here as a hash",
-                "HTTPStatusCode": 404,
-                "HTTPHeaders": {"header metadata key/values will appear here"},
-                "RetryAttempts": 0,
-            },
-        },
-        operation_name="s3",
-    )
-    response = await trigger._check_exact_key(mock_client, "s3://test_bucket/file", "test_bucket")
-    assert response is False
+        assert task.done() is True
+        asyncio.get_event_loop().stop()
 
 
-@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
-@pytest.mark.asyncio
-@unittest.expectedFailure
-async def test_s3_key_trigger_check_key_raise_exception(mock_client):
+def test_s3_keys_unchanged_trigger_raise_value_error():
     """
-    Test for 500 error if key not found and assert based on response.
+    Test if the S3KeysUnchangedTrigger raises Value error for negative inactivity_period.
+    """
+    with pytest.raises(ValueError):
+        S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test", inactivity_period=-100)
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.is_keys_unchanged")
+async def test_s3_keys_unchanged_trigger_run_success(mock_is_keys_unchanged, mock_client):
+    """
+    Test if the task is run is in triggerr successfully.
     :return:
     """
-    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
-
-    mock_client.head_object.side_effect = ClientError(
-        {
-            "Error": {
-                "Code": "SomeServiceException",
-                "Message": "Details/context around the exception or error",
-            },
-            "ResponseMetadata": {
-                "RequestId": "1234567890ABCDEF",
-                "HostId": "host ID data will appear here as a hash",
-                "HTTPStatusCode": 500,
-                "HTTPHeaders": {"header metadata key/values will appear here"},
-                "RetryAttempts": 0,
-            },
-        },
-        operation_name="s3",
-    )
-    with pytest.raises(ClientError) as err:
-        response = await trigger._check_exact_key(mock_client, "s3://test_bucket/file", "test_bucket")
-        assert isinstance(response, err)
+    mock_is_keys_unchanged.return_value = {"status": "success"}
+    trigger = S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test")
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success"}) in task
