@@ -37,10 +37,8 @@ from astronomer.providers.google.cloud.sensors.gcs import (
     GCSUploadSessionCompleteSensorAsync,
 )
 
-START_DATE = datetime(2021, 1, 1)
-
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
-BUCKET_1 = "test-gcs-example-bucket"
+BUCKET_1 = os.environ.get("GCP_TEST_BUCKET", "test-gcs-example-bucket")
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 
@@ -48,20 +46,25 @@ BUCKET_FILE_LOCATION = "example_gcs.py"
 
 with models.DAG(
     "example_async_gcs_sensors",
-    start_date=START_DATE,
+    start_date=datetime(2021, 1, 1),
     catchup=False,
     schedule_interval='@once',
     tags=['example'],
 ) as dag:
+
+    # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
         task_id="create_bucket", bucket_name=BUCKET_1, project_id=PROJECT_ID
     )
+    # [END howto_create_bucket_task]
+    # [START howto_upload_file_task]
     upload_file = LocalFilesystemToGCSOperator(
         task_id="upload_file",
         src=PATH_TO_UPLOAD_FILE,
         dst=BUCKET_FILE_LOCATION,
         bucket=BUCKET_1,
     )
+    # [END howto_upload_file_task]
     # [START howto_sensor_object_exists_task]
     gcs_object_exists = GCSObjectExistenceSensorAsync(
         bucket=BUCKET_1,
@@ -76,7 +79,7 @@ with models.DAG(
         task_id="gcs_object_with_prefix_exists_task",
     )
     # [END howto_sensor_object_with_prefix_exists_task]
-
+    # [START howto_sensor_gcs_upload_session_complete_task]
     gcs_upload_session_complete = GCSUploadSessionCompleteSensorAsync(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
@@ -86,8 +89,10 @@ with models.DAG(
         previous_objects=set(),
         task_id="gcs_upload_session_complete_task",
     )
-
+    # [END howto_sensor_gcs_upload_session_complete_task]
+    # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(task_id="delete_bucket", bucket_name=BUCKET_1)
+    # [END howto_delete_buckettask]
 
     (
         create_bucket

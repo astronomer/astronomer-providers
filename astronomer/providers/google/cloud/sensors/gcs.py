@@ -1,6 +1,6 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -115,7 +115,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
 
     def execute_complete(
         self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> List[str]:  # pylint: disable=unused-argument
+    ) -> Any:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -155,7 +155,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
 
     def execute_complete(
         self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> None:  # pylint: disable=unused-argument
+    ) -> Optional[str]:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

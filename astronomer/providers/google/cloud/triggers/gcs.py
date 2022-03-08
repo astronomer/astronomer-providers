@@ -121,7 +121,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Serializes GCSBlobTrigger arguments and classpath.
+        Serializes GCSPrefixBlobTrigger arguments and classpath.
         """
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger",
@@ -162,8 +162,8 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         :param prefix: The prefix of the blob_names to match in the Google cloud
             storage bucket.
         """
-        async with Session() as s:
-            client = await hook.get_storage_client(s)
+        async with Session() as session:
+            client = await hook.get_storage_client(session)
             bucket = client.get_bucket(bucket_name)
             object_response = await bucket.list_blobs(prefix=prefix)
             return object_response
