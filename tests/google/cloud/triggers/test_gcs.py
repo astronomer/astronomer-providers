@@ -42,7 +42,7 @@ TEST_HOOK_PARAMS = {}
 TEST_INACTIVITY_PERIOD = 5.0
 TEST_MIN_OBJECTS = 1
 TEST_ALLOW_DELETE = True
-TEST_PREVIOUS_OBJECTS = set(["a", "ab"])
+TEST_PREVIOUS_OBJECTS = {"a", "ab"}
 
 
 def test_gcs_blob_trigger_serialization():
@@ -398,11 +398,11 @@ async def test_gcs_upload_session_trigger_exception(mock_list_blobs):
 @pytest.mark.parametrize(
     "allow_delete, current_objects, response",
     [
-        (True, set(["a", "aa", "ab"]), {"status": "pending"}),
-        (True, set(["a"]), {"status": "pending"}),
+        (True, {"a", "aa", "ab"}, {"status": "pending"}),
+        (True, {"a"}, {"status": "pending"}),
         (
             False,
-            set(["a"]),
+            {"a"},
             {
                 "status": "error",
                 "message": "Illegal behavior: objects were deleted in between check intervals",
@@ -441,8 +441,7 @@ async def test_is_bucket_updated_pending_status(allow_delete, current_objects, r
             {
                 "status": "error",
                 "message": (
-                    "FAILURE: Inactivity Period passed, not enough objects found in %s",
-                    "TEST_BUCKET/TEST_PREFIX",
+                    "FAILURE: Inactivity Period passed, not enough objects found in TEST_BUCKET/TEST_PREFIX"
                 ),
             },
         ),
@@ -453,20 +452,22 @@ async def test_is_bucket_updated_pending_status(allow_delete, current_objects, r
             {
                 "status": "success",
                 "message": (
-                    "SUCCESS: Sensor found %s objects at %s. Waited at least %s seconds, with no new objects dropped.",
-                    2,
-                    "TEST_BUCKET/TEST_PREFIX",
-                    5.0,
+                    "SUCCESS: Sensor found 2 objects at TEST_BUCKET/TEST_PREFIX. "
+                    "Waited at least 5.0 seconds, with no new objects dropped."
                 ),
             },
         ),
     ],
 )
-async def test_is_bucket_updated_success_failure_status(last_activity_time, min_objects, response):
+@mock.patch("astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger._get_time")
+async def test_is_bucket_updated_success_failure_status(mock_time, last_activity_time, min_objects, response):
     """
     Tests to check if inactivity period is finished and found min objects or not and return status
     based on that.
     """
+    mock_time.return_value = (
+        last_activity_time + timedelta(seconds=5) if last_activity_time else datetime.now()
+    )
 
     trigger = GCSUploadSessionTrigger(
         TEST_BUCKET,
