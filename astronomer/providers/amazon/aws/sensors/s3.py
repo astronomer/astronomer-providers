@@ -89,9 +89,7 @@ class S3KeySensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Dict[Any, Any], event: Any = None
-    ) -> None:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -154,9 +152,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Dict[Any, Any], event: Any = None
-    ) -> None:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -194,14 +190,14 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         when this happens. If false an error will be raised.
     """
 
-    template_fields: Sequence[str] = ('bucket_name', 'prefix')
+    template_fields: Sequence[str] = ("bucket_name", "prefix")
 
     def __init__(
         self,
         *,
         bucket_name: str,
         prefix: str,
-        aws_conn_id: str = 'aws_default',
+        aws_conn_id: str = "aws_default",
         verify: Optional[Union[bool, str]] = None,
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
@@ -241,9 +237,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Dict[Any, Any], event: Any = None
-    ) -> None:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None

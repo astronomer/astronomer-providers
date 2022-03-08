@@ -96,7 +96,7 @@ class S3KeySizeTrigger(BaseTrigger):
         :param data: List of the objects in S3 bucket.
         :param object_min_size: Checks if the objects sizes are greater then this value.
         """
-        return all(f.get('Size', 0) > object_min_size for f in data if isinstance(f, dict))
+        return all(f.get("Size", 0) > object_min_size for f in data if isinstance(f, dict))
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """

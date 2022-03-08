@@ -44,7 +44,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
             )
 
     @provide_session
-    def execute_complete(self, context, session, event=None):  # pylint: disable=unused-argument
+    def execute_complete(self, context, session, event=None):
         """
         Callback for when the trigger fires - returns immediately.
         Verifies that there is a success status for each task via execution date.
