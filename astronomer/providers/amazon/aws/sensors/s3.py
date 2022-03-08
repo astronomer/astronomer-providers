@@ -395,8 +395,11 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
 
 class S3PrefixSensorAsync(BaseOperator):
     """
-    Waits for a prefix or all prefixes to exist. A prefix is the first part of a key,
-    thus enabling checking of constructs similar to glob ``airfl*`` or
+    Async implementation of the S3 Prefix Sensor.
+    Gets deferred onto the Trigggerer and pokes
+    for a prefix or all prefixes to exist.
+    A prefix is the first part of a key,thus enabling
+    checking of constructs similar to glob ``airfl*`` or
     SQL LIKE ``'airfl%'``. There is the possibility to precise a delimiter to
     indicate the hierarchy or keys, meaning that the match will stop at that
     delimiter. Current code accepts sane delimiters, i.e. characters that
