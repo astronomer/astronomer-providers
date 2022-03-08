@@ -238,13 +238,8 @@ def test_execute_query_exception(mock_conn, mock_params):
         },
         operation_name="redshift-data",
     )
-    resp = hook.execute_query(TEST_SQL, params=None)
-    print(resp)
-    assert resp == {
-        "status": "error",
-        "message": "An error occurred (SomeServiceException) when calling the "
-        "redshift-data operation: Details/context around the exception or error",
-    }
+    with pytest.raises(AirflowException):
+        hook.execute_query(TEST_SQL, params=None)
 
 
 @pytest.mark.asyncio
