@@ -1,5 +1,6 @@
+from datetime import datetime
+
 from airflow.models.dag import DAG
-from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,

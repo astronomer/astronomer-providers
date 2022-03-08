@@ -24,10 +24,8 @@ default_args = {
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket")
 S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "sample_key.txt")
 S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "sam*")
-WILDCARD_KEY_FALSE = os.environ.get("WILDCARD_KEY_FALSE", False)
-WILDCARD_KEY_TRUE = os.environ.get("WILDCARD_KEY_TRUE", True)
 TEST_FILE_PREFIX = os.environ.get("TEST_FILE_PREFIX", "test")
-INACTIVITY_PERIOD = os.environ.get("INACTIVITY_PERIOD", 5)
+INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/sample_key.txt")
 
@@ -53,28 +51,28 @@ with DAG(
     waiting_for_s3_key = S3KeySensorAsync(
         task_id="waiting_for_s3_key",
         bucket_key=S3_BUCKET_KEY,
-        wildcard_match=WILDCARD_KEY_FALSE,
+        wildcard_match=False,
         bucket_name=S3_BUCKET_NAME,
     )
 
     check_if_wildcard_exists = S3KeySensorAsync(
         task_id="check_if_wildcard_exists",
         bucket_key=S3_BUCKET_WILDCARD_KEY,
-        wildcard_match=WILDCARD_KEY_TRUE,
+        wildcard_match=True,
         bucket_name=S3_BUCKET_NAME,
     )
 
     check_if_key_with_size_without_wildcard = S3KeySizeSensorAsync(
         task_id="check_if_key_with_size_without_wildcard",
         bucket_key=S3_BUCKET_KEY,
-        wildcard_match=WILDCARD_KEY_FALSE,
+        wildcard_match=False,
         bucket_name=S3_BUCKET_NAME,
     )
 
     check_if_key_with_size_with_wildcard = S3KeySizeSensorAsync(
         task_id="check_if_key_with_size_with_wildcard",
         bucket_key=S3_BUCKET_WILDCARD_KEY,
-        wildcard_match=WILDCARD_KEY_TRUE,
+        wildcard_match=True,
         bucket_name=S3_BUCKET_NAME,
     )
 

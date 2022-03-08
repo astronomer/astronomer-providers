@@ -1,8 +1,8 @@
 import os
+from datetime import datetime
 
 from airflow.models.dag import DAG
 from airflow.operators.dummy import DummyOperator
-from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,

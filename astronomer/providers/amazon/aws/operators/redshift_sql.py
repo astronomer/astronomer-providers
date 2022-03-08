@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
@@ -19,12 +19,12 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         self,
         *,
         poll_interval: float = 5,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context"):
+    def execute(self, context: "Context") -> None:
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
         query_ids = redshift_data_hook.execute_query(sql=self.sql, params=self.params)
         self.defer(
@@ -38,7 +38,9 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):  # pylint: disable=unused-argument
+    def execute_complete(
+        self, context: Dict[Any, Any], event: Any = None
+    ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

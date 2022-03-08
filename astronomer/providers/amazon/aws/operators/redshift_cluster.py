@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.redshift_cluster import RedshiftHook
@@ -27,12 +27,12 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
         self,
         *,
         poll_interval: float = 5,
-        **kwargs,
+        **kwargs: Any,
     ):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context"):
+    def execute(self, context: "Context") -> None:
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
         if cluster_state == "paused":
@@ -52,7 +52,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
                 "Unable to resume cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -83,12 +83,12 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
         self,
         *,
         poll_interval: float = 5,
-        **kwargs,
+        **kwargs: Any,
     ):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context"):
+    def execute(self, context: "Context") -> None:
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
         if cluster_state == "available":
@@ -108,7 +108,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
                 "Unable to pause cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
