@@ -9,6 +9,7 @@ from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTri
 if TYPE_CHECKING:
     from airflow.utils.context import Context
 
+
 class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
     """
     Executes SQL Statements against an Amazon Redshift cluster

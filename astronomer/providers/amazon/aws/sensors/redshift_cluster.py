@@ -44,9 +44,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> None:
+    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

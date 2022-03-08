@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Any, AsyncIterator, Dict, List, Optional, Set, Tuple
 
-from aiohttp import ClientSession as ClientSession
+from aiohttp import ClientSession
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
@@ -161,7 +161,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         :param prefix: The prefix of the blob_names to match in the Google cloud
             storage bucket.
         """
-        async with Session() as session:
+        async with ClientSession() as session:
             client = await hook.get_storage_client(session)
             bucket = client.get_bucket(bucket_name)
             object_response = await bucket.list_blobs(prefix=prefix)

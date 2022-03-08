@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
-    def execute(self, context: 'Context') -> None:
+    def execute(self, context: "Context") -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,
         and defer execution as expected. It makes two non-async API calls to
@@ -49,7 +49,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: 'Context', event: Any = None) -> None:
+    def execute_complete(self, context: "Context", event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -60,7 +60,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
 
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
-    def execute(self, context: 'Context') -> None:
+    def execute(self, context: "Context") -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,
         and defer execution as expected. It makes two non-async API calls to
@@ -95,7 +95,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
         )
 
     def execute_complete(
-        self, context: 'Context', event: Any = None
+        self, context: "Context", event: Any = None
     ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
