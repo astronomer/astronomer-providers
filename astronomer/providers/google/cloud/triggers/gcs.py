@@ -317,15 +317,16 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
 
             if current_num_objects >= self.min_objects:
                 success_message = (
-                    "SUCCESS: Sensor found %s objects at %s. Waited at least %s seconds, with no new objects dropped.",
-                    current_num_objects,
-                    path,
-                    self.inactivity_period,
+                    "SUCCESS: Sensor found %s objects at %s. Waited at least %s "
+                    "seconds, with no new objects dropped."
                 )
-                self.log.info(success_message)
-                return {"status": "success", "message": success_message}
+                self.log.info(success_message, current_num_objects, path, self.inactivity_seconds)
+                return {
+                    "status": "success",
+                    "message": success_message % (current_num_objects, path, self.inactivity_seconds),
+                }
 
-            error_message = "FAILURE: Inactivity Period passed, not enough objects found in %s", path
-            self.log.error(error_message)
-            return {"status": "error", "message": error_message}
+            error_message = "FAILURE: Inactivity Period passed, not enough objects found in %s"
+            self.log.error(error_message, path)
+            return {"status": "error", "message": error_message % path}
         return {"status": "pending"}
