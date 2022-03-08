@@ -21,16 +21,16 @@ default_args = {
     "retry_delay": timedelta(minutes=1),
 }
 
-S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket")
-S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "sample_key.txt")
-S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "sam*")
+S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
+S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "example_s3_test_file.txt")
+S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "exam*")
 TEST_FILE_PREFIX = os.environ.get("TEST_FILE_PREFIX", "test")
 INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
-LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/sample_key.txt")
+LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
 
 with DAG(
-    dag_id="example_s3_key_sensor",
+    dag_id="example_s3_sensor",
     schedule_interval="@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
