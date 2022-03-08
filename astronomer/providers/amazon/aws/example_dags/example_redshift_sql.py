@@ -1,13 +1,13 @@
-from airflow.models.dag import DAG
-from airflow.utils.timezone import datetime
+import airflow
+from airflow.utils.dates import days_ago
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
 )
 
-with DAG(
+with airflow.DAG(
     dag_id="example_async_redshift_sql",
-    start_date=datetime(2021, 1, 1),
+    start_date=days_ago(1),
     tags=["example", "async"],
     schedule_interval="@once",
     catchup=False,
@@ -45,7 +45,7 @@ with DAG(
             "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
             "INSERT INTO fruit VALUES ( 3, 'Lemon', 'Yellow');",
             "INSERT INTO fruit VALUES ( 4, 'Grape', 'Purple');",
-            "INSERT INTO  VALUES ( 5, 'Pear', 'Green');",
+            "INSERT INTO fruit VALUES ( 5, 'Pear', 'Green');",
             "INSERT INTO fruit VALUES ( 6, 'Strawberry', 'Red');",
         ],
     )
@@ -67,7 +67,9 @@ with DAG(
     )
 
     (
-        task_create_table
+        task_create_func
+        >> task_long_running_query_sleep
+        >> task_create_table
         >> task_insert_data
         >> task_get_all_data
         >> task_get_data_with_filter
