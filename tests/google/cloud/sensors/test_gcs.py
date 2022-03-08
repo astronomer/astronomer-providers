@@ -129,7 +129,7 @@ def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
         task.execute_complete(
             context=None, event={"status": "success", "message": "Job completed", "matches": [TEST_OBJECT]}
         )
-    mock_log_info.assert_called_with('Sensor checks existence of objects: %s, %s', TEST_BUCKET, TEST_OBJECT)
+    mock_log_info.assert_called_with("Sensor checks existence of objects: %s, %s", TEST_BUCKET, TEST_OBJECT)
 
 
 def test_gcs_upload_session_complete_sensor_async():

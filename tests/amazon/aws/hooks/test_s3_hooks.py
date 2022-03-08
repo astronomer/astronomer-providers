@@ -158,9 +158,9 @@ async def test_s3_key_hook_check_wildcard_key(mock_client):
     """
     test_resp_iter = [
         {
-            'Contents': [
-                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
-                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            "Contents": [
+                {"Key": "test_key", "ETag": "etag1", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
+                {"Key": "test_key2", "ETag": "etag2", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
             ]
         }
     ]
@@ -184,11 +184,11 @@ async def test_s3_key_hook_check_wildcard_key_invalid(mock_client):
     """
     test_resp_iter = [
         {
-            'Contents': [
+            "Contents": [
                 {
-                    'Key': 'no_regex_match_1',
-                    'ETag': 'etag1',
-                    'LastModified': datetime(2020, 8, 14, 17, 19, 34),
+                    "Key": "no_regex_match_1",
+                    "ETag": "etag1",
+                    "LastModified": datetime(2020, 8, 14, 17, 19, 34),
                 }
             ]
         }
@@ -213,9 +213,9 @@ async def test_s3_key_hook_get_files(mock_client):
     """
     test_resp_iter = [
         {
-            'Contents': [
-                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
-                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            "Contents": [
+                {"Key": "test_key", "ETag": "etag1", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
+                {"Key": "test_key2", "ETag": "etag2", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
             ]
         }
     ]
@@ -239,9 +239,9 @@ async def test_s3_key_hook_list_keys(mock_client):
     """
     test_resp_iter = [
         {
-            'Contents': [
-                {'Key': 'test_key', 'ETag': 'etag1', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
-                {'Key': 'test_key2', 'ETag': 'etag2', 'LastModified': datetime(2020, 8, 14, 17, 19, 34)},
+            "Contents": [
+                {"Key": "test_key", "ETag": "etag1", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
+                {"Key": "test_key2", "ETag": "etag2", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
             ]
         }
     ]
@@ -253,7 +253,7 @@ async def test_s3_key_hook_list_keys(mock_client):
     s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
     mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
     response = await s3_hook_async._list_keys(mock_client, "test_bucket", "test*")
-    assert response == ['test_key', 'test_key2']
+    assert response == ["test_key", "test_key2"]
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -280,7 +280,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {'status': 'pending'}
+    assert response == {"status": "pending"}
 
     # test for the case when current_objects < previous_objects
     mock_list_keys.return_value = []
@@ -298,7 +298,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {'status': 'pending'}
+    assert response == {"status": "pending"}
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -325,7 +325,7 @@ async def test_s3_key_hook_is_keys_unchanged_exception(mock_list_keys, mock_clie
         last_activity_time=None,
     )
 
-    assert response == {'message': ' test_bucket/test between pokes.', 'status': 'error'}
+    assert response == {"message": " test_bucket/test between pokes.", "status": "error"}
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -352,11 +352,11 @@ async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
     )
 
     assert response == {
-        'message': (
-            'SUCCESS: \nSensor found %s objects at %s.\nWaited at least %s seconds, with no new objects uploaded.',
+        "message": (
+            "SUCCESS: \nSensor found %s objects at %s.\nWaited at least %s seconds, with no new objects uploaded.",
             1,
-            'test_bucket/test',
+            "test_bucket/test",
             1,
         ),
-        'status': 'success',
+        "status": "success",
     }

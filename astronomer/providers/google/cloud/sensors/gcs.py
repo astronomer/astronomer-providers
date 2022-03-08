@@ -121,7 +121,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        self.log.info('Sensor checks existence of objects: %s, %s', self.bucket, self.prefix)
+        self.log.info("Sensor checks existence of objects: %s, %s", self.bucket, self.prefix)
         if event["status"] == "success":
             return event["matches"]
         raise AirflowException(event["message"])

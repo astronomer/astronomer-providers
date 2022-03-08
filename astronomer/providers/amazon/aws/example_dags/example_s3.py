@@ -38,7 +38,7 @@ with DAG(
     tags=["async"],
 ) as dag:
     create_bucket = S3CreateBucketOperator(
-        task_id='create_bucket', region_name=REGION_NAME, bucket_name=S3_BUCKET_NAME
+        task_id="create_bucket", region_name=REGION_NAME, bucket_name=S3_BUCKET_NAME
     )
 
     create_local_to_s3_job = LocalFilesystemToS3Operator(
@@ -84,7 +84,7 @@ with DAG(
     )
 
     delete_bucket = S3DeleteBucketOperator(
-        task_id='delete_bucket', force_delete=True, bucket_name=S3_BUCKET_NAME
+        task_id="delete_bucket", force_delete=True, bucket_name=S3_BUCKET_NAME
     )
 
 (

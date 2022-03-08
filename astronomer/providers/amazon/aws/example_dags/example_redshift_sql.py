@@ -14,7 +14,7 @@ with DAG(
     catchup=False,
 ) as dag:
     task_create_func = RedshiftSQLOperatorAsync(
-        task_id='task_create_func',
+        task_id="task_create_func",
         sql="""
             CREATE OR REPLACE FUNCTION janky_sleep (x float) RETURNS bool IMMUTABLE as $$
                 from time import sleep
@@ -25,12 +25,12 @@ with DAG(
     )
 
     task_long_running_query_sleep = RedshiftSQLOperatorAsync(
-        task_id='task_long_running_query_sleep',
+        task_id="task_long_running_query_sleep",
         sql="select janky_sleep(10.0);",
     )
 
     task_create_table = RedshiftSQLOperatorAsync(
-        task_id='task_create_table',
+        task_id="task_create_table",
         sql="""
             CREATE TABLE IF NOT EXISTS fruit (
             fruit_id INTEGER,
@@ -40,7 +40,7 @@ with DAG(
         """,
     )
     task_insert_data = RedshiftSQLOperatorAsync(
-        task_id='task_insert_data',
+        task_id="task_insert_data",
         sql=[
             "INSERT INTO fruit VALUES ( 1, 'Banana', 'Yellow');",
             "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
@@ -52,18 +52,18 @@ with DAG(
     )
 
     task_get_all_data = RedshiftSQLOperatorAsync(
-        task_id='task_get_all_data',
+        task_id="task_get_all_data",
         sql="SELECT * FROM fruit;",
     )
 
     task_get_data_with_filter = RedshiftSQLOperatorAsync(
-        task_id='task_get_with_filter',
+        task_id="task_get_with_filter",
         sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
-        params={'color': 'Red'},
+        params={"color": "Red"},
     )
 
     task_delete_table = RedshiftSQLOperatorAsync(
-        task_id='task_delete_table',
+        task_id="task_delete_table",
         sql="drop table fruit;",
     )
 

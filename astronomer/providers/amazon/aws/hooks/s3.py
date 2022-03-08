@@ -87,19 +87,19 @@ class S3HookAsync(AwsBaseHookAsync):
         bucket: str,
         key: str,
         wildcard_match: bool,
-        delimiter: Optional[str] = '/',
+        delimiter: Optional[str] = "/",
     ) -> List[Any]:
         """Gets a list of files in the bucket"""
         prefix = key
         if wildcard_match:
-            prefix = re.split(r'[\[\*\?]', key, 1)[0]
+            prefix = re.split(r"[\[\*\?]", key, 1)[0]
 
-        paginator = client.get_paginator('list_objects_v2')
+        paginator = client.get_paginator("list_objects_v2")
         response = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
         keys: List[Any] = []
         async for page in response:
-            if 'Contents' in page:
-                _temp = [k for k in page['Contents'] if isinstance(k.get('Size', None), (int, float))]
+            if "Contents" in page:
+                _temp = [k for k in page["Contents"] if isinstance(k.get("Size", None), (int, float))]
                 keys = keys + _temp
         return keys
 
@@ -122,23 +122,23 @@ class S3HookAsync(AwsBaseHookAsync):
         :return: a list of matched keys
         :rtype: list
         """
-        prefix = prefix or ''
-        delimiter = delimiter or ''
+        prefix = prefix or ""
+        delimiter = delimiter or ""
         config = {
-            'PageSize': page_size,
-            'MaxItems': max_items,
+            "PageSize": page_size,
+            "MaxItems": max_items,
         }
 
-        paginator = client.get_paginator('list_objects_v2')
+        paginator = client.get_paginator("list_objects_v2")
         response = paginator.paginate(
             Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter, PaginationConfig=config
         )
 
         keys = []
         async for page in response:
-            if 'Contents' in page:
-                for k in page['Contents']:
-                    keys.append(k['Key'])
+            if "Contents" in page:
+                for k in page["Contents"]:
+                    keys.append(k["Key"])
 
         return keys
 

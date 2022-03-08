@@ -48,8 +48,8 @@ with models.DAG(
     "example_async_gcs_sensors",
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    schedule_interval='@once',
-    tags=['example'],
+    schedule_interval="@once",
+    tags=["example"],
 ) as dag:
 
     # [START howto_create_bucket_task]
@@ -101,6 +101,6 @@ with models.DAG(
         >> delete_bucket
     )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dag.clear()
     dag.run()
