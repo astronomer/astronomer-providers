@@ -103,7 +103,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                             }
                     return {"status": "success", "query_ids": sfqid}
             except ProgrammingError as err:
-                error_message = "Programming Error: {0}".format(str(err))
+                error_message = (f"Programming Error: {str(err)}",)
                 self.log.error("error_message ", error_message)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:

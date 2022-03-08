@@ -44,6 +44,7 @@ class TestPytestSnowflakeHookAsync:
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     def test_run_storing_query_ids(self, mock_conn, sql, expected_sql, expected_query_ids):
+        """Test run method and store, return the query ids"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         cur = mock.MagicMock(rowcount=0)
@@ -85,6 +86,7 @@ class TestPytestSnowflakeHookAsync:
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     async def test_get_query_status(self, mock_conn, query_ids, expected_state, expected_result):
+        """Test get_query_status async in run state"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         conn.is_still_running.return_value = False
@@ -98,6 +100,7 @@ class TestPytestSnowflakeHookAsync:
         side_effect=Exception('Connection Errors'),
     )
     async def test_get_query_status_error(self, mock_conn):
+        """Test get_query_status async with exception"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         conn.is_still_running.side_effect = Exception("Test exception")
@@ -113,6 +116,7 @@ class TestPytestSnowflakeHookAsync:
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     def test_check_query_output_query_ids(self, mock_conn, query_ids):
+        """Test check_query_output by query id passed as params"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         cur = mock.MagicMock(rowcount=0)
@@ -141,6 +145,7 @@ class TestPytestSnowflakeHookAsync:
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
     def test_run_storing_query_ids_without_params(self, mock_conn, sql, expected_sql, expected_query_ids):
+        """Test run method without params and store, return the query ids"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         cur = mock.MagicMock(rowcount=0)
