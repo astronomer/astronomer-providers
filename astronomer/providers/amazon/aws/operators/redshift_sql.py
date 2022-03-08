@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
@@ -26,7 +26,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
 
     def execute(self, context: "Context") -> None:
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
-        query_ids, response = redshift_data_hook.execute_query(sql=self.sql, params=self.params)
+        query_ids, response = redshift_data_hook.execute_query(sql=cast(str, self.sql), params=self.params)
         if response.get("status") == "error":
             self.execute_complete({}, response)
             return

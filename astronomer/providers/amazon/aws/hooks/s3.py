@@ -153,7 +153,7 @@ class S3HookAsync(AwsBaseHookAsync):
         inactivity_seconds: int = 0,
         allow_delete: bool = True,
         last_activity_time: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, str]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
