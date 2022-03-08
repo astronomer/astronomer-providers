@@ -21,13 +21,12 @@ default_args = {
     "retry_delay": timedelta(minutes=1),
 }
 
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket")
 S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "sample_key.txt")
 S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "sam*")
 WILDCARD_KEY_FALSE = os.environ.get("WILDCARD_KEY_FALSE", False)
 WILDCARD_KEY_TRUE = os.environ.get("WILDCARD_KEY_TRUE", True)
-PREFIX = os.environ.get("PREFIX", "test")
+TEST_FILE_PREFIX = os.environ.get("TEST_FILE_PREFIX", "test")
 INACTIVITY_PERIOD = os.environ.get("INACTIVITY_PERIOD", 5)
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/sample_key.txt")
@@ -82,7 +81,7 @@ with DAG(
     check_s3_key_unchanged_sensor = S3KeysUnchangedSensorAsync(
         task_id="check_s3_key_unchanged_sensor",
         bucket_name=S3_BUCKET_NAME,
-        prefix=PREFIX,
+        prefix=TEST_FILE_PREFIX,
         inactivity_period=INACTIVITY_PERIOD,
     )
 
