@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Tuple
 
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -16,7 +16,6 @@ class RedshiftClusterTrigger(BaseTrigger):
         cluster_identifier: str,
         operation_type: str,
     ):
-        super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
         self.aws_conn_id = aws_conn_id
@@ -38,7 +37,7 @@ class RedshiftClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Make async connection to redshift, based on the operation type call
         the RedshiftHookAsync functions
@@ -77,7 +76,6 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         target_status: str,
         polling_period_seconds: float,
     ):
-        super().__init__()
         self.task_id = task_id
         self.aws_conn_id = aws_conn_id
         self.cluster_identifier = cluster_identifier
@@ -99,7 +97,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Simple async function run until the cluster status match the target status.
         """

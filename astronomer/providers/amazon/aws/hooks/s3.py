@@ -3,9 +3,9 @@ import logging
 import os
 import re
 from datetime import datetime
-from typing import Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
-from aiobotocore.session import ClientCreatorContext
+from aiobotocore.client import AioBaseClient
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
@@ -27,7 +27,7 @@ class S3HookAsync(AwsBaseHookAsync):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    async def _check_exact_key(client: ClientCreatorContext, bucket: str, key: str) -> bool:
+    async def _check_exact_key(client: AioBaseClient, bucket: str, key: str) -> bool:
         """
         Checks if a key exists in a bucket asynchronously
 
@@ -46,7 +46,7 @@ class S3HookAsync(AwsBaseHookAsync):
                 raise e
 
     @staticmethod
-    async def _check_wildcard_key(client: ClientCreatorContext, bucket: str, wildcard_key: str) -> bool:
+    async def _check_wildcard_key(client: AioBaseClient, bucket: str, wildcard_key: str) -> bool:
         """
         Checks that a key matching a wildcard expression exists in a bucket asynchronously
 
@@ -66,9 +66,7 @@ class S3HookAsync(AwsBaseHookAsync):
                         return True
         return False
 
-    async def check_key(
-        self, client: ClientCreatorContext, bucket: str, key: str, wildcard_match: bool
-    ) -> bool:
+    async def check_key(self, client: AioBaseClient, bucket: str, key: str, wildcard_match: bool) -> bool:
         """
         Checks if key exists or a key matching a wildcard expression exists in a bucket asynchronously
 
@@ -85,7 +83,7 @@ class S3HookAsync(AwsBaseHookAsync):
 
     async def get_files(
         self,
-        client: ClientCreatorContext,
+        client: AioBaseClient,
         bucket: str,
         key: str,
         wildcard_match: bool,
@@ -107,7 +105,7 @@ class S3HookAsync(AwsBaseHookAsync):
 
     @staticmethod
     async def _list_keys(
-        client: ClientCreatorContext,
+        client: AioBaseClient,
         bucket_name: Optional[str] = None,
         prefix: Optional[str] = None,
         delimiter: Optional[str] = None,
@@ -146,7 +144,7 @@ class S3HookAsync(AwsBaseHookAsync):
 
     async def is_keys_unchanged(
         self,
-        client: ClientCreatorContext,
+        client: AioBaseClient,
         bucket_name: str,
         prefix: str,
         inactivity_period: float = 60 * 60,
@@ -155,7 +153,7 @@ class S3HookAsync(AwsBaseHookAsync):
         inactivity_seconds: int = 0,
         allow_delete: bool = True,
         last_activity_time: Optional[datetime] = None,
-    ) -> bool:
+    ) -> Dict[str, str]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
