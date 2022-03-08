@@ -214,7 +214,9 @@ class S3HookAsync(AwsBaseHookAsync):
                 self.log.info(success_message)
                 return {"status": "success", "message": success_message}
 
-            error_message = "FAILURE: Inactivity Period passed, not enough objects found in %s", path
-            self.log.error(error_message)
-            return {"status": "error", "message": error_message}
+            self.log.error("FAILURE: Inactivity Period passed, not enough objects found in %s", path)
+            return {
+                "status": "error",
+                "message": f"FAILURE: Inactivity Period passed, not enough objects found in {path}",
+            }
         return {"status": "pending"}

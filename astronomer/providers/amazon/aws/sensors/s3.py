@@ -103,6 +103,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
     some size in a S3 bucket asynchronously.
     S3 being a key/value it does not support folders. The path is just a key
     a resource.
+
     :param bucket_key: The key being waited on. Supports full s3:// style url
         or relative path from root level. When it's specified as a full s3://
         url, please leave bucket_name as `None`.
@@ -168,6 +169,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
     increase in the number of objects. Note, this sensor will not behave correctly
     in reschedule mode, as the state of the listed objects in the S3 bucket will
     be lost between rescheduled invocations.
+
     :param bucket_name: Name of the S3 bucket
     :param prefix: The prefix being waited on. Relative path from bucket root level.
     :param aws_conn_id: a reference to the s3 connection
