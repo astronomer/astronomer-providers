@@ -290,11 +290,12 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
         self.log.info("Total extracted rows: %s", len(event["records"]))
+        return event["records"]
 
 
 class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):

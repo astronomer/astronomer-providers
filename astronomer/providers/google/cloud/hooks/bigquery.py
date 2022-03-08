@@ -1,14 +1,15 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
-from aiohttp import ClientSession as Session
+from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
+from requests import Session
 
 from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookAsync
 
@@ -81,11 +82,11 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
     sync_hook_class = _BigQueryHook
 
     async def get_job_instance(
-        self, project_id: Optional[str], job_id: Optional[str], session: Session
+        self, project_id: Optional[str], job_id: Optional[str], session: ClientSession
     ) -> Job:
         """Get the specified job resource by job ID and project ID."""
         with await self.service_file_as_context() as f:
-            return Job(job_id=job_id, project=project_id, service_file=f, session=session)
+            return Job(job_id=job_id, project=project_id, service_file=f, session=cast(Session, session))
 
     async def get_job_status(
         self,
@@ -95,11 +96,11 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         """Polls for job status asynchronously using gcloud-aio.
         Note that an OSError is raised when Job results are still pending.
         Exception means that Job finished with errors"""
-        async with Session() as s:
+        async with ClientSession() as s:
             try:
                 self.log.info("Executing get_job_status...")
                 job_client = await self.get_job_instance(project_id, job_id, s)
-                job_status_response = await job_client.result(s)
+                job_status_response = await job_client.result(cast(Session, s))
                 if job_status_response:
                     job_status = "success"
             except OSError:
@@ -118,10 +119,10 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         Get the big query job output for the given job id
         asynchronously using gcloud-aio.
         """
-        async with Session() as session:
+        async with ClientSession() as session:
             self.log.info("Executing get_job_output..")
             job_client = await self.get_job_instance(project_id, job_id, session)
-            job_query_response = await job_client.get_query_results(session)
+            job_query_response = await job_client.get_query_results(cast(Session, session))
             return job_query_response
 
     def get_records(self, query_results: Dict[str, Any], nocast: bool = True) -> List[Any]:

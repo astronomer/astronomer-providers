@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Any, AsyncIterator, Dict, List, Optional, Set, Tuple
 
-from aiohttp import ClientSession as Session
+from aiohttp import ClientSession as ClientSession
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
@@ -79,7 +79,7 @@ class GCSBlobTrigger(BaseTrigger):
         :param object_name: The name of the blob_name to check in the Google cloud
             storage bucket.
         """
-        async with Session() as s:
+        async with ClientSession() as s:
             client = await hook.get_storage_client(s)
             bucket = client.get_bucket(bucket_name)
             object_response = await bucket.blob_exists(blob_name=object_name)
