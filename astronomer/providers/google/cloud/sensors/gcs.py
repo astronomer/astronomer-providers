@@ -66,7 +66,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         self.delegate_to = delegate_to
         self.impersonation_chain = impersonation_chain
 
-    def execute(self, context: "Context"):
+    def execute(self, context: "Context") -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSBlobTrigger(
@@ -79,7 +79,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event=None):  # pylint: disable=unused-argument
+    def execute_complete(self, context: "Context", event=None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -113,9 +113,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> Any:  # pylint: disable=unused-argument
+    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -153,9 +151,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: "Context", event: Optional[Dict[Any, Any]] = None
-    ) -> Optional[str]:  # pylint: disable=unused-argument
+    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> Optional[str]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

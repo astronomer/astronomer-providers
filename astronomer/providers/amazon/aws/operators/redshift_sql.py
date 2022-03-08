@@ -38,9 +38,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Dict[str, Any], event: Any = None
-    ) -> None:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
