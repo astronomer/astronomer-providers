@@ -26,7 +26,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
 
     def execute(self, context: "Context") -> None:
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
-        query_ids = redshift_data_hook.execute_query(cast(str, sql=self.sql), params=self.params)
+        query_ids = redshift_data_hook.execute_query(sql=cast(str, self.sql), params=self.params)
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftSQLTrigger(
