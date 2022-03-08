@@ -23,7 +23,7 @@ def context():
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
 def test_redshiftsql_op_async(mock_execute):
-    mock_execute.return_value = []
+    mock_execute.return_value = [], {}
     task = RedshiftSQLOperatorAsync(
         task_id=TEST_TASK_ID,
         sql=TEST_SQL,

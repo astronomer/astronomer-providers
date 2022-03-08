@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
@@ -69,7 +69,7 @@ class RedshiftDataHook(AwsBaseHook):
 
     def execute_query(
         self, sql: Optional[Union[Dict[Any, Any], Iterable[Any]]], params: Optional[Dict[Any, Any]]
-    ) -> List[str]:
+    ) -> Tuple[List[str], Dict[str, str]]:
         """
         Runs an SQL statement, which can be data manipulation language (DML)
         or data definition language (DDL)
@@ -96,6 +96,6 @@ class RedshiftDataHook(AwsBaseHook):
                     WithEvent=True,
                 )
                 query_ids.append(response["Id"])
-            return query_ids
+            return query_ids, {"status": "success", "message": "success"}
         except botocore.exceptions.ClientError as error:
-            raise AirflowException(str(error))
+            return [], {"status": "error", "message": str(error)}
