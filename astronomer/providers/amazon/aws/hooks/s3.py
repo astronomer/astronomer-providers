@@ -47,7 +47,7 @@ class S3HookAsync(AwsBaseHookAsync):
 
     async def list_prefixes(
         self,
-        client: ClientCreatorContext,
+        client: AioBaseClient,
         bucket_name: Optional[str] = None,
         prefix: Optional[str] = None,
         delimiter: Optional[str] = None,
@@ -71,23 +71,23 @@ class S3HookAsync(AwsBaseHookAsync):
         :return: a list of matched prefixes
         :rtype: list
         """
-        prefix = prefix or ''
-        delimiter = delimiter or ''
+        prefix = prefix or ""
+        delimiter = delimiter or ""
         config = {
-            'PageSize': page_size,
-            'MaxItems': max_items,
+            "PageSize": page_size,
+            "MaxItems": max_items,
         }
 
-        paginator = client.get_paginator('list_objects_v2')
+        paginator = client.get_paginator("list_objects_v2")
         response = paginator.paginate(
             Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter, PaginationConfig=config
         )
 
         prefixes = []
         async for page in response:
-            if 'CommonPrefixes' in page:
-                for common_prefix in page['CommonPrefixes']:
-                    prefixes.append(common_prefix['Prefix'])
+            if "CommonPrefixes" in page:
+                for common_prefix in page["CommonPrefixes"]:
+                    prefixes.append(common_prefix["Prefix"])
 
         return prefixes
 
@@ -128,14 +128,14 @@ class S3HookAsync(AwsBaseHookAsync):
             return await self._check_exact_key(client, bucket, key)
 
     async def _check_for_prefix(
-        self, client: ClientCreatorContext, prefix: str, delimiter: str, bucket_name: Optional[str] = None
+        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: Optional[str] = None
     ) -> bool:
         return await self.check_for_prefix(
             client, prefix=prefix, delimiter=delimiter, bucket_name=bucket_name
         )
 
     async def check_for_prefix(
-        self, client: ClientCreatorContext, prefix: str, delimiter: str, bucket_name: Optional[str] = None
+        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: Optional[str] = None
     ) -> bool:
         """
         Checks that a prefix exists in a bucket
@@ -150,7 +150,7 @@ class S3HookAsync(AwsBaseHookAsync):
         :rtype: bool
         """
         prefix = prefix + delimiter if prefix[-1] != delimiter else prefix
-        prefix_split = re.split(fr'(\w+[{delimiter}])$', prefix, 1)
+        prefix_split = re.split(rf"(\w+[{delimiter}])$", prefix, 1)
         previous_level = prefix_split[0]
         plist = await self.list_prefixes(client, bucket_name, previous_level, delimiter)
         return prefix in plist

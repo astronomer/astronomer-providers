@@ -5,8 +5,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from aiobotocore.session import ClientCreatorContext
-from airflow.exceptions import AirflowException
+from aiobotocore.client import AioBaseClient
 from airflow.models.connection import Connection
 from botocore.exceptions import ClientError
 
@@ -19,7 +18,7 @@ async def test_aws_base_hook_async_get_client_async_without_get_connection():
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, ClientCreatorContext)
+    assert isinstance(response, AioBaseClient)
 
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.base_aws_async.AwsBaseHookAsync.get_connection")
@@ -28,7 +27,7 @@ async def test_aws_base_hook_async_get_client_async_with_get_connection(mock_con
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, ClientCreatorContext)
+    assert isinstance(response, AioBaseClient)
 
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.base_aws_async.AwsBaseHookAsync.get_connection")
@@ -40,7 +39,7 @@ async def test_aws_base_hook_async_get_client_async_with_aws_secrets(mock_get_co
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, ClientCreatorContext)
+    assert isinstance(response, AioBaseClient)
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -360,58 +359,6 @@ async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
         "status": "success",
     }
 
-@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
-async def test_s3_prefix_sensor_hook_list_prefixes(mock_client):
-    """
-    Test list_prefixes for a valid response
-    """
-    test_resp_iter = [{"CommonPrefixes": [{"Prefix": "async-prefix1/"}, {"Prefix": "async-prefix2/"}]}]
-    mock_paginator = mock.Mock()
-    mock_paginate = mock.MagicMock()
-    mock_paginate.__aiter__.return_value = test_resp_iter
-    mock_paginator.paginate.return_value = mock_paginate
-
-    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
-    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
-
-    actual_output = await s3_hook_async.list_prefixes(mock_client, "test_bucket", "test")
-    expected_output = ['async-prefix1/', 'async-prefix2/']
-    assert expected_output == actual_output
-
-
-
-@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
-@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.list_prefixes")
-@pytest.mark.asyncio
-async def test_s3_prefix_sensor_hook_check_for_prefix(mock_list_prefixes, mock_client):
-    """
-    Test is_key_unchanged gives AirflowException
-    :return:
-    """
-    mock_list_prefixes.return_value = ['async-prefix1/', 'async-prefix2/']
-
-    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
-
-    response = await s3_hook_async._check_for_prefix(
-        client=mock_client.return_value, prefix="async-prefix1", bucket_name="test_bucket", delimiter="/"
-    )
-
-    assert response is True
-
-    response = await s3_hook_async._check_for_prefix(
-        client=mock_client.return_value, prefix="async-prefix2", bucket_name="test_bucket", delimiter="/"
-    )
-
-    assert response is True
-
-    response = await s3_hook_async._check_for_prefix(
-        client=mock_client.return_value,
-        prefix="non-existing-prefix",
-        bucket_name="test_bucket",
-        delimiter="/",
-    )
-
-    assert response is False
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
@@ -457,7 +404,7 @@ async def test_s3_prefix_sensor_hook_check_for_prefix(
     Test that _check_for_prefix method returns True when valid prefix is used and returns False
     when invalid prefix is used
     """
-    mock_list_prefixes.return_value = ['async-prefix1/', 'async-prefix2/']
+    mock_list_prefixes.return_value = ["async-prefix1/", "async-prefix2/"]
 
     s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
 
