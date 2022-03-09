@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Optional, SupportsAbs, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -17,7 +17,6 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         poll_interval: float = 4.0,
     ):
         self.log.info("Using the connection  %s .", conn_id)
-        super().__init__()
         self.conn_id = conn_id
         self.job_id = job_id
         self._job_conn = None
@@ -42,7 +41,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent
         """
@@ -95,7 +94,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent
         """
@@ -159,7 +158,7 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent with response data
         """
@@ -202,9 +201,9 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         project_id: Optional[str],
         table: str,
         metrics_thresholds: Dict[str, int],
-        date_filter_column: str = "ds",
+        date_filter_column: Optional[str] = "ds",
         days_back: SupportsAbs[int] = -7,
-        ratio_formula: Optional[str] = "max_over_min",
+        ratio_formula: str = "max_over_min",
         ignore_zero: bool = True,
         dataset_id: Optional[str] = None,
         table_id: Optional[str] = None,
@@ -249,7 +248,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent
         """
@@ -280,14 +279,14 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
 
                     # If empty list, then no records are available
                     if not first_records:
-                        first_job_row = None
+                        first_job_row: Optional[str] = None
                     else:
                         # Extract only first record from the query results
                         first_job_row = first_records.pop(0)
 
                     # If empty list, then no records are available
                     if not second_records:
-                        second_job_row = None
+                        second_job_row: Optional[str] = None
                     else:
                         # Extract only first record from the query results
                         second_job_row = second_records.pop(0)
@@ -330,7 +329,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         self,
         conn_id: str,
         sql: str,
-        pass_value: Any,
+        pass_value: Union[int, float, str],
         job_id: Optional[str],
         project_id: Optional[str],
         tolerance: Any = None,
@@ -369,7 +368,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Gets current job execution status and yields a TriggerEvent
         """

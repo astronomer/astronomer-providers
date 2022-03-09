@@ -512,10 +512,10 @@ def test_bigquery_value_check_operator_execute_complete_success():
     """Tests response message in case of success event"""
     operator = _get_value_check_async_operator()
 
-    response = operator.execute_complete(
-        context=None, event={"status": "success", "message": "Job completed!"}
+    assert (
+        operator.execute_complete(context=None, event={"status": "success", "message": "Job completed!"})
+        is None
     )
-    assert response == "success"
 
 
 def test_bigquery_value_check_operator_execute_complete_failure():

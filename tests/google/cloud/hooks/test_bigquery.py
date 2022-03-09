@@ -71,7 +71,7 @@ class TestBigQueryHookMethods(_BigQueryBaseTestClass):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.ClientSession")
 async def test_get_job_instance(mock_session):
     hook = BigQueryHookAsync()
     result = await hook.get_job_instance(project_id=PROJECT_ID, job_id=JOB_ID, session=mock_session)
@@ -80,7 +80,7 @@ async def test_get_job_instance(mock_session):
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.ClientSession")
 async def test_get_job_status_success(mock_session, mock_job_instance):
     hook = BigQueryHookAsync()
     resp = await hook.get_job_status(job_id=JOB_ID, project_id=PROJECT_ID)
@@ -111,7 +111,7 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
 
 
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
-@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.Session")
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.ClientSession")
 async def test_get_job_output_assert_once_with(mock_session, mock_job_instance):
     hook = BigQueryHookAsync()
     await hook.get_job_output(job_id=JOB_ID, project_id=PROJECT_ID)

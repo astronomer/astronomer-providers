@@ -52,7 +52,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
                 "Unable to resume cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -108,7 +108,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
                 "Unable to pause cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

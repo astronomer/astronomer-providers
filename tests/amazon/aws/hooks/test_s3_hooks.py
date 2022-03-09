@@ -353,10 +353,8 @@ async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
 
     assert response == {
         "message": (
-            "SUCCESS: \nSensor found %s objects at %s.\nWaited at least %s seconds, with no new objects uploaded.",
-            1,
-            "test_bucket/test",
-            1,
+            "SUCCESS: Sensor found 1 objects at test_bucket/test. "
+            "Waited at least 1 seconds, with no new objects uploaded."
         ),
         "status": "success",
     }

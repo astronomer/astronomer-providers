@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any, Dict, Optional
 
 from airflow.hooks.filesystem import FSHook
 from airflow.sensors.filesystem import FileSensor
@@ -17,16 +18,13 @@ class FileSensorAsync(FileSensor):
     any files exist inside it (either directly, or within a subdirectory)
 
     :param fs_conn_id: reference to the File (path)
-    :type fs_conn_id: str
     :param filepath: File or folder name (relative to the base path set within the connection), can
         be a glob.
-    :type filepath: str
     :param recursive: when set to ``True``, enables recursive directory matching behavior of
         ``**`` in glob filepath parameter. Defaults to ``False``.
-    :type recursive: bool
     """
 
-    def execute(self, context):
+    def execute(self, context: Dict[str, Any]) -> None:
         if not self.poke(context=context):
             hook = FSHook(self.fs_conn_id)
             basepath = hook.get_path()
@@ -43,11 +41,10 @@ class FileSensorAsync(FileSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
         self.log.info("%s completed successfully.", self.task_id)
-        return None

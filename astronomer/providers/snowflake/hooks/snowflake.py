@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import closing
 from io import StringIO
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
@@ -11,7 +11,12 @@ from snowflake.connector.util_text import split_statements
 
 
 class SnowflakeHookAsync(SnowflakeHook):
-    def run(self, sql: Union[str, list], autocommit: bool = False, parameters: Optional[dict] = None):
+    def run(  # type: ignore[override]
+        self,
+        sql: Union[str, List[str]],
+        autocommit: bool = False,
+        parameters: Optional[dict] = None,  # type: ignore[type-arg]
+    ) -> List[str]:
         """
         Makes sync connection to snowflake
         Runs a command or a list of commands. Pass a list of sql
@@ -22,12 +27,8 @@ class SnowflakeHookAsync(SnowflakeHook):
 
         :param sql: the sql string to be executed with possibly multiple statements,
           or a list of sql statements to execute
-        :type sql: str or list
-        :param autocommit: What to set the connection's autocommit setting to
-            before executing the query.
-        :type autocommit: bool
+        :param autocommit: What to set the connection's autocommit setting to before executing the query.
         :param parameters: The parameters to render the SQL query with.
-        :type parameters: dict or iterable
         """
         self.query_ids = []
         with closing(self.get_conn()) as conn:
@@ -57,9 +58,9 @@ class SnowflakeHookAsync(SnowflakeHook):
                 conn.commit()
         return self.query_ids
 
-    def check_query_output(self, query_ids: List[str]):
+    def check_query_output(self, query_ids: List[str]) -> None:
         """
-        Once the qurey is finished fetch the result and log it in airflow
+        Once the query is finished fetch the result and log it in airflow
         """
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor(DictCursor)) as cur:
@@ -69,7 +70,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
 
-    async def get_query_status(self, query_ids: List[str]):
+    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
         """
         Async function to get the Query status by query Ids, this function takes list of query_ids make
         sync_to_async connection
@@ -102,7 +103,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                                 "query_id": query_id,
                             }
                         else:
-                            return status
+                            return {"status": "error", "message": f"Unknown status: {status}"}
                     return {"status": "success", "query_ids": sfqid}
             except ProgrammingError as err:
                 error_message = "Programming Error: {0}".format(err)

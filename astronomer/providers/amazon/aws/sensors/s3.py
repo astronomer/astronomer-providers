@@ -75,7 +75,7 @@ class S3KeySensorAsync(BaseOperator):
             if parsed_url.scheme != "" or parsed_url.netloc != "":
                 raise AirflowException("If bucket_name provided, bucket_key must be relative path, not URI.")
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -89,7 +89,7 @@ class S3KeySensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -137,7 +137,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         super().__init__(**kwargs)
         self.check_fn_user = check_fn
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -152,7 +152,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -219,7 +219,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         self.verify = verify
         self.last_activity_time: Optional[datetime] = None
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=S3KeysUnchangedTrigger(
@@ -237,7 +237,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None

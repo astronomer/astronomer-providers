@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING, Any
+
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
@@ -7,9 +9,12 @@ from airflow.providers.databricks.operators.databricks import (
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 
+if TYPE_CHECKING:
+    from airflow.utils.context import Context
+
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
-    def execute(self, context):
+    def execute(self, context: "Context") -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,
         and defer execution as expected. It makes two non-async API calls to
@@ -36,7 +41,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
             trigger=DatabricksTrigger(
                 conn_id=self.databricks_conn_id,
                 task_id=self.task_id,
-                run_id=self.run_id,
+                run_id=str(self.run_id),
                 retry_limit=self.databricks_retry_limit,
                 retry_delay=self.databricks_retry_delay,
                 polling_period_seconds=self.polling_period_seconds,
@@ -44,7 +49,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: "Context", event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -55,7 +60,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
 
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
-    def execute(self, context):
+    def execute(self, context: "Context") -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,
         and defer execution as expected. It makes two non-async API calls to
@@ -81,7 +86,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
             trigger=DatabricksTrigger(
                 task_id=self.task_id,
                 conn_id=self.databricks_conn_id,
-                run_id=self.run_id,
+                run_id=str(self.run_id),
                 retry_limit=self.databricks_retry_limit,
                 retry_delay=self.databricks_retry_delay,
                 polling_period_seconds=self.polling_period_seconds,
@@ -89,7 +94,9 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(
+        self, context: "Context", event: Any = None
+    ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

@@ -1,10 +1,12 @@
+from typing import Any, Dict, Optional
+
 from airflow.providers.http.sensors.http import HttpSensor
 
 from astronomer.providers.http.triggers.http import HttpTrigger
 
 
 class HttpSensorAsync(HttpSensor):
-    def execute(self, context):
+    def execute(self, context: Dict[str, Any]) -> None:
         """
         Logic that the sensor uses to correctly identify which trigger to
         execute, and defer execution as expected.
@@ -27,7 +29,7 @@ class HttpSensorAsync(HttpSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[Any, Any]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

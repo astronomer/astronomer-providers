@@ -8,6 +8,7 @@ workflows:
   test:
     jobs:
       - static-checks
+      - mypy
       - test:
           name: test-python<< matrix.python_version >>
           matrix:
@@ -48,6 +49,31 @@ jobs:
           paths:
             - ~/.cache/pre-commit
             - ~/.pyenv/versions/
+
+  mypy:
+    description: "Mypy"
+    executor:
+      name: docker-executor
+      python_version: "3.9"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - mypy-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+      - run:
+          name: Install Dependencies
+          command: pip install -U -e .[mypy]
+      - run:
+          name: Run Mypy
+          command: |
+            mypy --version
+            mypy astronomer/
+      - save_cache:
+          paths:
+            - ~/.cache/pip
+            - ~/.pyenv/versions/
+          key: mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
 
   test:
     parameters:
