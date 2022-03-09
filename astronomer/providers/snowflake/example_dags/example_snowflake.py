@@ -1,6 +1,4 @@
-"""
-Example use of SnowflakeAsync related providers.
-"""
+"""Example use of SnowflakeAsync related providers."""
 from airflow.models.dag import DAG
 from airflow.utils.timezone import datetime
 

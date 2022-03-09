@@ -4,7 +4,7 @@ from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
 
 
-class KubernetesHookAsync(KubernetesHook):
+class KubernetesHookAsync(KubernetesHook):  # noqa: D101
     async def _load_config(self) -> client.ApiClient:
         """
         cluster_context: Optional[str] = None,
@@ -68,5 +68,6 @@ class KubernetesHookAsync(KubernetesHook):
         )
 
     async def get_api_client_async(self) -> client.ApiClient:
+        """Create an API Client object to interact with Kubernetes"""
         await self._load_config()
         return client.ApiClient()

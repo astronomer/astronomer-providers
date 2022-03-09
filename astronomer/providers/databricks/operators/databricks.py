@@ -13,11 +13,10 @@ if TYPE_CHECKING:
     from airflow.utils.context import Context
 
 
-class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
+class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D101
     def execute(self, context: "Context") -> None:
         """
-        Logic that the operator uses to execute the Databricks trigger,
-        and defer execution as expected. It makes two non-async API calls to
+        Execute the Databricks trigger, and defer execution as expected. It makes two non-async API calls to
         submit the run, and retrieve the run page URL. It also pushes these
         values as xcom data if do_xcom_push is set to True in the context.
         """
@@ -59,7 +58,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
         return None
 
 
-class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
+class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
     def execute(self, context: "Context") -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,

@@ -10,7 +10,7 @@ from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 log = logging.getLogger(__name__)
 
 
-class RedshiftSQLHookAsync(RedshiftDataHook):
+class RedshiftSQLHookAsync(RedshiftDataHook):  # noqa: D101
     async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
         """
         Async function to get the Query status by query Ids, this function

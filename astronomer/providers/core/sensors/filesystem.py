@@ -25,6 +25,7 @@ class FileSensorAsync(FileSensor):
     """
 
     def execute(self, context: Dict[str, Any]) -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         if not self.poke(context=context):
             hook = FSHook(self.fs_conn_id)
             basepath = hook.get_path()

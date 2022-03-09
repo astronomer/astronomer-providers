@@ -43,6 +43,7 @@ class HttpTrigger(BaseTrigger):
         extra_options: Optional[Dict[str, Any]] = None,
         poll_interval: float = 5.0,
     ):
+        super().__init__()
         self.endpoint = endpoint
         self.method = method
         self.data = data
@@ -52,9 +53,7 @@ class HttpTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes HttpTrigger arguments and classpath.
-        """
+        """Serializes HttpTrigger arguments and classpath."""
         return (
             "astronomer.providers.http.triggers.http.HttpTrigger",
             {

@@ -31,6 +31,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
 
     @staticmethod
     def raise_for_trigger_status(event: Dict[str, Any]) -> None:
+        """Raise exception if pod is not in expected state."""
         if event["status"] == "error":
             error_type = event["error_type"]
             description = event["description"]
@@ -39,7 +40,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> None:  # noqa: D102
         self.pod_request_obj = self.build_pod_request_obj(context)
         self.pod = self.get_or_create_pod(self.pod_request_obj, context)
         self.defer(
@@ -60,6 +61,11 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         remote_pod = None
         try:
             self.pod_request_obj = self.build_pod_request_obj(context)

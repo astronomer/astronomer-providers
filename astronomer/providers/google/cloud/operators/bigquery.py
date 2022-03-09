@@ -90,7 +90,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> None:  # noqa: D102
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
@@ -131,6 +131,11 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(
@@ -140,7 +145,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         )
 
 
-class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
+class BigQueryCheckOperatorAsync(BigQueryCheckOperator):  # noqa: D101
     def _submit_job(
         self,
         hook: _BigQueryHook,
@@ -157,7 +162,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
         )
@@ -173,6 +178,11 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
@@ -263,7 +273,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
         return query
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
 
@@ -290,6 +300,11 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
@@ -301,12 +316,15 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     """
     Checks asynchronously that the values of metrics given as SQL expressions are within
     a certain tolerance of the ones from days_back before.
+
     This method constructs a query like so ::
         SELECT {metrics_threshold_dict_key} FROM {table}
         WHERE {date_filter_column}=<date>
+
     .. seealso::
         For more information on how to use this operator, take a look at the guide:
         :ref:`howto/operator:BigQueryIntervalCheckOperator`
+
     :param table: the table name
     :param days_back: number of days between ds and the ds we want to check
         against. Defaults to 7 days
@@ -347,7 +365,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         self.log.info("Using ratio formula: %s", self.ratio_formula)
 
@@ -375,6 +393,11 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
 
@@ -385,7 +408,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         )
 
 
-class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
+class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
     def _submit_job(
         self,
         hook: _BigQueryHook,
@@ -409,7 +432,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         job = self._submit_job(hook, job_id="")
@@ -428,6 +451,11 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(

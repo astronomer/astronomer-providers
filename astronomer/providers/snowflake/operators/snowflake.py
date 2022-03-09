@@ -12,6 +12,35 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
+    """
+    Executes SQL code in a Snowflake database
+
+    :param snowflake_conn_id: Reference to
+        :ref:`Snowflake connection id<howto/connection:snowflake>`
+    :param sql: the sql code to be executed. (templated)
+    :param autocommit: if True, each command is automatically committed.
+        (default value: True)
+    :param parameters: (optional) the parameters to render the SQL query with.
+    :param warehouse: name of warehouse (will overwrite any warehouse
+        defined in the connection's extra JSON)
+    :param database: name of database (will overwrite database defined
+        in connection)
+    :param schema: name of schema (will overwrite schema defined in
+        connection)
+    :param role: name of role (will overwrite any role defined in
+        connection's extra JSON)
+    :param authenticator: authenticator for Snowflake.
+        'snowflake' (default) to use the internal Snowflake authenticator
+        'externalbrowser' to authenticate using your web browser and
+        Okta, ADFS or any other SAML 2.0-compliant identify provider
+        (IdP) that has been defined for your account
+        'https://<your_okta_account_name>.okta.com' to authenticate
+        through native Okta.
+    :param session_parameters: You can set session-level parameters at
+        the time you connect to Snowflake
+    :param poll_interval: the interval in seconds to poll the query
+    """
+
     def __init__(self, *, poll_interval: int = 5, **kwargs: Any) -> None:
         self.poll_interval = poll_interval
         super().__init__(**kwargs)

@@ -10,7 +10,7 @@ from snowflake.connector.constants import QueryStatus
 from snowflake.connector.util_text import split_statements
 
 
-class SnowflakeHookAsync(SnowflakeHook):
+class SnowflakeHookAsync(SnowflakeHook):  # noqa: D101
     def run(  # type: ignore[override]
         self,
         sql: Union[str, List[str]],
@@ -18,12 +18,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         parameters: Optional[dict] = None,  # type: ignore[type-arg]
     ) -> List[str]:
         """
-        Makes sync connection to snowflake
-        Runs a command or a list of commands. Pass a list of sql
-        statements to the sql parameter to get them to execute
-        sequentially. The variable query_ids is returned so that
-        it can be used to check the  modify the behavior
-        depending on the result of the query
+        Runs a SQL command or a list of SQL commands.
 
         :param sql: the sql string to be executed with possibly multiple statements,
           or a list of sql statements to execute
@@ -59,9 +54,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         return self.query_ids
 
     def check_query_output(self, query_ids: List[str]) -> None:
-        """
-        Once the query is finished fetch the result and log it in airflow
-        """
+        """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor(DictCursor)) as cur:
                 for query_id in query_ids:
@@ -71,11 +64,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                     self.log.info("Snowflake query id: %s", query_id)
 
     async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
-        """
-        Async function to get the Query status by query Ids, this function takes list of query_ids make
-        sync_to_async connection
-        to snowflake to get the query status by query id returns the query status.
-        """
+        """Get the Query status by query ids."""
         try:
             sfqid = []
             async_connection = await sync_to_async(self.get_conn)()

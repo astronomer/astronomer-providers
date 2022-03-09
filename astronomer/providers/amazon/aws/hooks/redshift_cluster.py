@@ -10,9 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class RedshiftHookAsync(AwsBaseHookAsync):
-    """
-    Interact with AWS Redshift using aiobotocore python library
-    """
+    """Interact with AWS Redshift using aiobotocore python library"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["client_type"] = "redshift"
@@ -88,7 +86,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         self, cluster_identifier: str, expected_state: str, flag: asyncio.Event
     ) -> Dict[str, Any]:
         """
-        make call self.cluster_status to know the status and run till the expected_state is met and set the flag
+        Make call self.cluster_status to know the status and run till the expected_state is met and set the flag
 
         :param cluster_identifier: unique identifier of a cluster
         :param expected_state: expected_state example("available", "pausing", "paused"")

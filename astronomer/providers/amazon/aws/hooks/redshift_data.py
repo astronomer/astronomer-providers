@@ -7,7 +7,7 @@ from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from snowflake.connector.util_text import split_statements
 
 
-class RedshiftDataHook(AwsBaseHook):
+class RedshiftDataHook(AwsBaseHook):  # noqa: D101
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"

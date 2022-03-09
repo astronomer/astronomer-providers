@@ -22,6 +22,7 @@ class S3KeySensorAsync(BaseOperator):
     Waits for a key (a file-like instance on S3) to be present in a S3 bucket
     asynchronously. S3 being a key/value it does not support folders. The path
     is just a key a resource.
+
     :param bucket_key: The key being waited on. Supports full s3:// style url
         or relative path from root level. When it's specified as a full s3://
         url, please leave bucket_name as `None`.
@@ -73,7 +74,7 @@ class S3KeySensorAsync(BaseOperator):
             if parsed_url.scheme != "" or parsed_url.netloc != "":
                 raise AirflowException("If bucket_name provided, bucket_key must be relative path, not URI.")
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -88,6 +89,11 @@ class S3KeySensorAsync(BaseOperator):
         )
 
     def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -135,7 +141,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         super().__init__(**kwargs)
         self.check_fn_user = check_fn
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -151,6 +157,11 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         )
 
     def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -217,7 +228,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         self.verify = verify
         self.last_activity_time: Optional[datetime] = None
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
         self.defer(
             timeout=self.execution_timeout,
             trigger=S3KeysUnchangedTrigger(
@@ -236,6 +247,11 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         )
 
     def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         return None
@@ -289,7 +305,7 @@ class S3PrefixSensorAsync(BaseOperator):
         self.aws_conn_id = aws_conn_id
         self.verify = verify
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Dict[Any, Any]) -> None:  # noqa: D102
         self.log.info("Poking for prefix : %s in bucket s3://%s", self.prefix, self.bucket_name)
         self.defer(
             timeout=self.execution_timeout,
@@ -303,8 +319,12 @@ class S3PrefixSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:  # pylint:
-        # disable=unused-argument
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
