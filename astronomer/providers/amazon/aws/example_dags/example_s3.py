@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 
-from airflow import DAG
+from airflow.models.dag import DAG
 from airflow.providers.amazon.aws.operators.s3 import (
     S3CreateBucketOperator,
     S3DeleteBucketOperator,
@@ -14,6 +14,7 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
     S3KeySensorAsync,
     S3KeySizeSensorAsync,
     S3KeysUnchangedSensorAsync,
+    S3PrefixSensorAsync,
 )
 
 default_args = {
@@ -24,7 +25,7 @@ default_args = {
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
 S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "example_s3_test_file.txt")
 S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "exam*")
-TEST_FILE_PREFIX = os.environ.get("TEST_FILE_PREFIX", "test")
+PREFIX = os.environ.get("S3_PREFIX", "test-prefix")
 INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
@@ -79,8 +80,14 @@ with DAG(
     check_s3_key_unchanged_sensor = S3KeysUnchangedSensorAsync(
         task_id="check_s3_key_unchanged_sensor",
         bucket_name=S3_BUCKET_NAME,
-        prefix=TEST_FILE_PREFIX,
+        prefix=PREFIX,
         inactivity_period=INACTIVITY_PERIOD,
+    )
+
+    check_s3_prefix_sensor = S3PrefixSensorAsync(
+        task_id="check_s3_prefix_sensor",
+        bucket_name=S3_BUCKET_NAME,
+        prefix=PREFIX,
     )
 
     delete_bucket = S3DeleteBucketOperator(
@@ -95,5 +102,6 @@ with DAG(
     >> check_if_key_with_size_without_wildcard
     >> check_if_key_with_size_with_wildcard
     >> check_s3_key_unchanged_sensor
+    >> check_s3_prefix_sensor
     >> delete_bucket
 )
