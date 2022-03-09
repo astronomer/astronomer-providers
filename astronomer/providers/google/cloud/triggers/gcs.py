@@ -30,6 +30,7 @@ class GCSBlobTrigger(BaseTrigger):
         google_cloud_conn_id: str,
         hook_params: Dict[str, Any],
     ):
+        super().__init__()
         self.bucket = bucket
         self.object_name = object_name
         self.polling_period_seconds = polling_period_seconds
@@ -107,7 +108,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         prefix: str,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
-        hook_params: dict,
+        hook_params: Dict[str, Any],
     ):
         super().__init__(
             bucket=bucket,
@@ -199,7 +200,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         prefix: str,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
-        hook_params: dict,
+        hook_params: Dict[str, Any],
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
         previous_objects: Optional[Set[str]] = None,
@@ -215,9 +216,9 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         self.inactivity_period = inactivity_period
         self.min_objects = min_objects
         self.previous_objects = previous_objects if previous_objects else set()
-        self.inactivity_seconds = 0
+        self.inactivity_seconds = 0.0
         self.allow_delete = allow_delete
-        self.last_activity_time = None
+        self.last_activity_time: Optional[datetime] = None
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """

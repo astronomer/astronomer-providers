@@ -1,6 +1,6 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -55,7 +55,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         google_cloud_conn_id: str = "google_cloud_default",
         delegate_to: Optional[str] = None,
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
 
         super().__init__(**kwargs)
@@ -79,7 +79,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event=None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Dict[str, str]) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -124,7 +124,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSPrefixBlobTrigger(
@@ -137,7 +137,9 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> Any:
+    def execute_complete(
+        self, context: Dict[str, Any], event: Dict[str, Union[str, List[str]]]
+    ) -> Union[str, List[str]]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -193,7 +195,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Dict[str, Any]) -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSUploadSessionTrigger(
@@ -210,12 +212,14 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> Optional[str]:
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "success":
-            return event["message"]
-        raise AirflowException(event["message"])
+        if event:
+            if event["status"] == "success":
+                return event["message"]
+            raise AirflowException(event["message"])
+        raise AirflowException("No event received in trigger callback")

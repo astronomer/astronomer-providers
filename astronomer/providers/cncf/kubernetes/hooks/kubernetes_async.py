@@ -1,4 +1,4 @@
-import aiofiles  # type: ignore[import]
+import aiofiles
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
@@ -19,13 +19,13 @@ class KubernetesHookAsync(KubernetesHook):
             extras = {}
         in_cluster = self._coalesce_param(
             self.in_cluster, extras.get("extra__kubernetes__in_cluster") or None
-        )  # type: ignore[no-untyped-call]
+        )
         cluster_context = self._coalesce_param(
             self.cluster_context, extras.get("extra__kubernetes__cluster_context") or None
-        )  # type: ignore[no-untyped-call]
+        )
         kubeconfig_path = self._coalesce_param(
             self.config_file, extras.get("extra__kubernetes__kube_config_path") or None
-        )  # type: ignore[no-untyped-call]
+        )
         kubeconfig = extras.get("extra__kubernetes__kube_config") or None
         num_selected_configuration = len([o for o in [in_cluster, kubeconfig, kubeconfig_path] if o])
 
@@ -50,7 +50,7 @@ class KubernetesHookAsync(KubernetesHook):
             return client.ApiClient()
 
         if kubeconfig is not None:
-            async with aiofiles.tempfile.NamedTemporaryFile() as temp_config:
+            async with aiofiles.tempfile.NamedTemporaryFile() as temp_config:  # type: ignore[attr-defined]
                 self.log.debug("loading kube_config from: connection kube_config")
                 temp_config.write(kubeconfig.encode())
                 temp_config.flush()

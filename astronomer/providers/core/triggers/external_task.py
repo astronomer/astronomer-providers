@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import typing
 from typing import Any, Dict, List, Tuple
 
 from airflow.models import DagRun, TaskInstance
@@ -7,6 +8,7 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 
 class TaskStateTrigger(BaseTrigger):
@@ -40,7 +42,7 @@ class TaskStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Checks periodically in the database to see if the task exists, and has
         hit one of the states yet, or not.
@@ -54,7 +56,7 @@ class TaskStateTrigger(BaseTrigger):
 
     @sync_to_async
     @provide_session
-    def count_tasks(self, session) -> int:
+    def count_tasks(self, session: Session) -> typing.Optional[int]:
         """
         Count how many task instances in the database match our criteria.
         """
@@ -68,7 +70,7 @@ class TaskStateTrigger(BaseTrigger):
             )
             .scalar()
         )
-        return count
+        return typing.cast(int, count)
 
 
 class DagStateTrigger(BaseTrigger):
@@ -99,7 +101,7 @@ class DagStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Checks periodically in the database to see if the dag run exists, and has
         hit one of the states yet, or not.
@@ -114,7 +116,7 @@ class DagStateTrigger(BaseTrigger):
 
     @sync_to_async
     @provide_session
-    def count_dags(self, session) -> int:
+    def count_dags(self, session: Session) -> typing.Optional[int]:
         """
         Count how many dag runs in the database match our criteria.
         """
@@ -127,4 +129,4 @@ class DagStateTrigger(BaseTrigger):
             )
             .scalar()
         )
-        return count
+        return typing.cast(int, count)

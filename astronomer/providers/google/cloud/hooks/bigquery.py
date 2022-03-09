@@ -268,7 +268,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             else:
                 ratios[metric] = ratio_formulas[ratio_formula](
                     float(current[metric]), float(reference[metric])
-                )  # type: ignore[no-untyped-call]
+                )
                 test_results[metric] = float(ratios[metric]) < threshold
 
             self.log.info(

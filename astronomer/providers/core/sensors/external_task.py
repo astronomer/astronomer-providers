@@ -1,3 +1,6 @@
+import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 from airflow.exceptions import AirflowException
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
@@ -7,9 +10,12 @@ from astronomer.providers.core.triggers.external_task import (
     TaskStateTrigger,
 )
 
+if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
+
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):
-    def execute(self, context):
+    def execute(self, context: Dict[str, Any]) -> None:
         """
         Logic that the sensor uses to correctly identify which trigger to
         execute, and defer execution as expected.
@@ -44,7 +50,9 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
             )
 
     @provide_session
-    def execute_complete(self, context, session, event=None):
+    def execute_complete(
+        self, context: Dict[str, Any], session: "Session", event: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Verifies that there is a success status for each task via execution date.
@@ -60,7 +68,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
                 raise AirflowException(f"The external DAG {self.external_dag_id} failed.")
         return None
 
-    def get_execution_dates(self, context):
+    def get_execution_dates(self, context: Dict[str, Any]) -> List[datetime.datetime]:
         """
         Helper function to set execution dates depending on which context and/or
         internal fields are populated.

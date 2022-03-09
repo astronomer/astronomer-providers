@@ -4,3 +4,6 @@
 airflow_settings.yaml
 logs/
 tests/
+.cache
+.idea
+.mypy_cache

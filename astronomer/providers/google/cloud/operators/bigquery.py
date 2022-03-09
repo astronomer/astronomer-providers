@@ -30,7 +30,7 @@ _DEPRECATION_MSG = (
 )
 
 
-class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):  # type: ignore[misc]
+class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
     Starts a BigQuery job asynchronously, and returns job id.
     This operator works in the following way:
@@ -51,7 +51,6 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):  
     .. seealso::
         For more information on how to use this operator, take a look at the guide:
         :ref:`howto/operator:BigQueryInsertJobOperatorAsync`
-
 
     :param configuration: The configuration parameter maps directly to BigQuery's
         configuration field in the job  object. For more details see
@@ -95,7 +94,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):  
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
-        job_id = self._job_id(context)  # type: ignore[no-untyped-call]
+        job_id = self._job_id(context)
 
         try:
             job = self._submit_job(hook, job_id)

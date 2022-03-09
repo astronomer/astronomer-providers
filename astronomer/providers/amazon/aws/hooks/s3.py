@@ -205,14 +205,14 @@ class S3HookAsync(AwsBaseHookAsync):
 
             if current_num_objects >= min_objects:
                 success_message = (
-                    "SUCCESS: \nSensor found %s objects at %s.\n"
-                    "Waited at least %s seconds, with no new objects uploaded.",
-                    current_num_objects,
-                    path,
-                    inactivity_period,
+                    "SUCCESS: Sensor found %s objects at %s. "
+                    "Waited at least %s seconds, with no new objects uploaded."
                 )
-                self.log.info(success_message)
-                return {"status": "success", "message": success_message}
+                self.log.info(success_message, current_num_objects, path, inactivity_period)
+                return {
+                    "status": "success",
+                    "message": success_message % (current_num_objects, path, inactivity_period),
+                }
 
             self.log.error("FAILURE: Inactivity Period passed, not enough objects found in %s", path)
             return {

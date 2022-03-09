@@ -1,3 +1,6 @@
+import typing
+from typing import Any, Dict, List, Optional, Union
+
 from airflow.exceptions import AirflowException
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 
@@ -9,15 +12,15 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
-    def __init__(self, *, poll_interval: int = 5, **kwargs):
+    def __init__(self, *, poll_interval: int = 5, **kwargs: Any) -> None:
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
     def get_db_hook(self) -> SnowflakeHookAsync:
         """Get the Snowflake Hook"""
-        return get_db_hook(self)
+        return get_db_hook(self.snowflake_conn_id)
 
-    def execute(self, context):
+    def execute(self, context: Dict[str, Any]) -> None:
         """
         Make a sync connection to snowflake and run query in execute_async
         function in snowflake and close the connection
@@ -41,7 +44,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(
+        self, context: Dict[str, Any], event: Optional[Dict[str, Union[str, List[str]]]] = None
+    ) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -53,7 +58,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
-                hook.check_query_output(event["query_ids"])
+                qids = typing.cast(List[str], event["query_ids"])
+                hook.check_query_output(qids)
                 self.log.info("%s completed successfully.", self.task_id)
                 return None
         else:

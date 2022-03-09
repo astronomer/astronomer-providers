@@ -27,32 +27,27 @@ class WaitContainerTrigger(BaseTrigger):
     Next, waits for ``container_name`` to reach a terminal state.
 
     :param kubernetes_conn_id: Airflow connection ID to use
-    :type kubernetes_conn_id: str
     :param hook_params: kwargs for hook
-    :type hook_params: dict
     :param container_name: container to wait for
-    :type container_name: str
     :param pod_name: name of pod to monitor
-    :type pod_name: str
     :param pod_namespace: pod namespace
-    :type pod_namespace: str
     :param pending_phase_timeout: max time in seconds to wait for pod to leave pending phase
-    :type pending_phase_timeout: float
     :param poll_interval: number of seconds between reading pod state
-    :type poll_interval: float
 
     """
 
     def __init__(
         self,
+        *,
+        container_name: str,
+        pod_name: str,
+        pod_namespace: str,
         kubernetes_conn_id: Optional[str] = None,
         hook_params: Optional[Dict[str, Any]] = None,
-        container_name: str = None,
-        pod_name: Optional[str] = None,
-        pod_namespace: Optional[str] = None,
         pending_phase_timeout: float = 120,
         poll_interval: float = 5,
     ):
+        super().__init__()
         self.kubernetes_conn_id = kubernetes_conn_id
         self.hook_params = hook_params
         self.container_name = container_name
