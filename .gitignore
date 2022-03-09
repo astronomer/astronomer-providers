@@ -42,3 +42,6 @@ docs/*/_api/
 test-report/
 .coverage
 coverage.xml
+
+# Mypy Cache
+.mypy_cache

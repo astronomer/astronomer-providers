@@ -49,7 +49,8 @@ run-mypy: ## Run MyPy in Container
 	docker build -f dev/Dockerfile . -t astronomer-providers-dev
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
-		--rm -it astronomer-providers-dev -- mypy --install-types $(RUN_ARGS)
+		--rm -it astronomer-providers-dev \
+		-- mypy --install-types --cache-dir /home/astro/.cache/.mypy_cache $(RUN_ARGS)
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

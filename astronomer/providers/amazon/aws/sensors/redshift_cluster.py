@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
@@ -26,12 +26,12 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         self,
         *,
         poll_interval: float = 5,
-        **kwargs,
+        **kwargs: Any,
     ):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context"):
+    def execute(self, context: Dict[str, Any]) -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftClusterSensorTrigger(
@@ -44,7 +44,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event=None):  # pylint: disable=unused-argument
+    def execute_complete(self, context: "Context", event: Optional[Dict[Any, Any]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

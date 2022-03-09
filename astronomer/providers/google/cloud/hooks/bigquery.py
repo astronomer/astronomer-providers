@@ -1,14 +1,15 @@
 """
 This module contains a BigQueryHookAsync
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
-from aiohttp import ClientSession as Session
+from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
+from requests import Session
 
 from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookAsync
 
@@ -19,7 +20,7 @@ class _BigQueryHook(BigQueryHook):
     @GoogleBaseHook.fallback_to_default_project_id
     def insert_job(
         self,
-        configuration: Dict,
+        configuration: Dict[str, Any],
         job_id: Optional[str] = None,
         project_id: Optional[str] = None,
         location: Optional[str] = None,
@@ -80,24 +81,26 @@ class _BigQueryHook(BigQueryHook):
 class BigQueryHookAsync(GoogleBaseHookAsync):
     sync_hook_class = _BigQueryHook
 
-    async def get_job_instance(self, project_id, job_id, session) -> Job:
+    async def get_job_instance(
+        self, project_id: Optional[str], job_id: Optional[str], session: ClientSession
+    ) -> Job:
         """Get the specified job resource by job ID and project ID."""
         with await self.service_file_as_context() as f:
-            return Job(job_id=job_id, project=project_id, service_file=f, session=session)
+            return Job(job_id=job_id, project=project_id, service_file=f, session=cast(Session, session))
 
     async def get_job_status(
         self,
-        job_id: str,
+        job_id: Optional[str],
         project_id: Optional[str] = None,
-    ):
+    ) -> Optional[str]:
         """Polls for job status asynchronously using gcloud-aio.
         Note that an OSError is raised when Job results are still pending.
         Exception means that Job finished with errors"""
-        async with Session() as s:
+        async with ClientSession() as s:
             try:
                 self.log.info("Executing get_job_status...")
                 job_client = await self.get_job_instance(project_id, job_id, s)
-                job_status_response = await job_client.result(s)
+                job_status_response = await job_client.result(cast(Session, s))
                 if job_status_response:
                     job_status = "success"
             except OSError:
@@ -109,20 +112,20 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
 
     async def get_job_output(
         self,
-        job_id: str,
+        job_id: Optional[str],
         project_id: Optional[str] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """
         Get the big query job output for the given job id
         asynchronously using gcloud-aio.
         """
-        async with Session() as session:
+        async with ClientSession() as session:
             self.log.info("Executing get_job_output..")
             job_client = await self.get_job_instance(project_id, job_id, session)
-            job_query_response = await job_client.get_query_results(session)
+            job_query_response = await job_client.get_query_results(cast(Session, session))
             return job_query_response
 
-    def get_records(self, query_results: Dict, nocast: bool = True) -> list:
+    def get_records(self, query_results: Dict[str, Any], nocast: bool = True) -> List[Any]:
         """
         Given the output query response from gcloud aio bigquery,
         convert the response to records.
@@ -146,9 +149,9 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         self,
         sql: str,
         pass_value: Any,
-        records: Any,
-        tolerance: Any = None,
-    ):
+        records: List[Any],
+        tolerance: Optional[float] = None,
+    ) -> None:
         """
         Match a single query resulting row and tolerance with pass_value
         :return: If Match fail,
@@ -158,8 +161,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             raise AirflowException("The query returned None")
         pass_value_conv = self._convert_to_float_if_possible(pass_value)
         is_numeric_value_check = isinstance(pass_value_conv, float)
-        has_tolerance = tolerance is not None
-        tolerance_pct_str = str(tolerance * 100) + "%" if has_tolerance else None
+        tolerance_pct_str = str(tolerance * 100) + "%" if tolerance else None
 
         error_msg = (
             "Test failed.\nPass value:{pass_value_conv}\n"
@@ -185,7 +187,9 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             raise AirflowException(error_msg)
 
     @staticmethod
-    def _get_numeric_matches(records: List[float], pass_value: float, tolerance: float = None):
+    def _get_numeric_matches(
+        records: List[float], pass_value: Any, tolerance: Optional[float] = None
+    ) -> List[bool]:
         """
         A helper function to match numeric pass_value, tolerance with records value
 
@@ -201,7 +205,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         return [record == pass_value for record in records]
 
     @staticmethod
-    def _convert_to_float_if_possible(s):
+    def _convert_to_float_if_possible(s: Any) -> Any:
         """
         A small helper function to convert a string to a numeric value
         if appropriate
@@ -215,8 +219,13 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         return ret
 
     def interval_check(
-        self, row1: str, row2: str, metrics_thresholds: dict, ignore_zero: bool, ratio_formula: str
-    ):
+        self,
+        row1: Optional[str],
+        row2: Optional[str],
+        metrics_thresholds: Dict[str, Any],
+        ignore_zero: bool,
+        ratio_formula: str,
+    ) -> None:
         """
         Checks that the values of metrics given as SQL expressions are within a certain tolerance of the ones from
         days_back before.
@@ -246,8 +255,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
 
         current = dict(zip(metrics_sorted, row1))
         reference = dict(zip(metrics_sorted, row2))
-        ratios = {}
-        test_results = {}
+        ratios: Dict[str, Any] = {}
+        test_results: Dict[str, Any] = {}
 
         for metric in metrics_sorted:
             cur = float(current[metric])

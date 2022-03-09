@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import logging
 import os
+import typing
 from glob import glob
 from typing import Any, Dict, Tuple
 
@@ -46,7 +47,7 @@ class FileTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Simple loop until the relevant files are found.
         """

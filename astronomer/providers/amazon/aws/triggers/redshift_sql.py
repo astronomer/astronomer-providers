@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -13,7 +13,6 @@ class RedshiftSQLTrigger(BaseTrigger):
         aws_conn_id: str,
         query_ids: List[str],
     ):
-        super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
         self.aws_conn_id = aws_conn_id
@@ -33,7 +32,7 @@ class RedshiftSQLTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Make async connection to redshiftSQL and execute query using
         the Amazon Redshift Data API to interact with Amazon Redshift clusters

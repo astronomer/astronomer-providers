@@ -14,7 +14,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
     Interact with AWS Redshift using aiobotocore python library
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["client_type"] = "redshift"
         kwargs["resource_type"] = "redshift"
         super().__init__(*args, **kwargs)

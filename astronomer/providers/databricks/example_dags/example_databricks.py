@@ -38,7 +38,7 @@ with DAG(
     opr_run_now = DatabricksRunNowOperatorAsync(
         task_id="run_now",
         databricks_conn_id="databricks_default",
-        job_id=1003,
+        job_id="1003",
         polling_period_seconds=30,
     )
 

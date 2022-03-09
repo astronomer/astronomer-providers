@@ -1,7 +1,10 @@
-from airflow import AirflowException
+from typing import Any, Dict
+
+from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
@@ -20,12 +23,14 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     :param poll_interval: interval in seconds to sleep between checking pod status
     """
 
-    def __init__(self, *, poll_interval: int = 5, **kwargs):
+    def __init__(self, *, poll_interval: int = 5, **kwargs: Any):
+        self.pod = None
+        self.pod_request_obj = None
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
     @staticmethod
-    def raise_for_trigger_status(event):
+    def raise_for_trigger_status(event: Dict[str, Any]) -> None:
         if event["status"] == "error":
             error_type = event["error_type"]
             description = event["description"]
@@ -34,7 +39,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def execute(self, context):
+    def execute(self, context: Context) -> None:
         self.pod_request_obj = self.build_pod_request_obj(context)
         self.pod = self.get_or_create_pod(self.pod_request_obj, context)
         self.defer(
@@ -54,7 +59,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             method_name=self.execute_complete.__name__,
         )
 
-    def execute_complete(self, context, event=None):
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         remote_pod = None
         try:
             self.pod_request_obj = self.build_pod_request_obj(context)

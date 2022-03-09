@@ -91,7 +91,7 @@ def test_execute_query(mock_conn, mock_params, sql, expected_response, expected_
     }
     mock_conn.return_value.execute_statement.return_value = expected_response
     resp = hook.execute_query(sql, params=None)
-    assert resp == expected_query_ids
+    assert resp[0] == expected_query_ids
 
 
 @pytest.mark.parametrize(
@@ -238,13 +238,16 @@ def test_execute_query_exception(mock_conn, mock_params):
         },
         operation_name="redshift-data",
     )
+
     resp = hook.execute_query(TEST_SQL, params=None)
-    print(resp)
-    assert resp == {
-        "status": "error",
-        "message": "An error occurred (SomeServiceException) when calling the "
-        "redshift-data operation: Details/context around the exception or error",
-    }
+    assert resp == (
+        [],
+        {
+            "status": "error",
+            "message": "An error occurred (SomeServiceException) when calling the "
+            "redshift-data operation: Details/context around the exception or error",
+        },
+    )
 
 
 @pytest.mark.asyncio
