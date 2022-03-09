@@ -84,10 +84,6 @@ with DAG(
         inactivity_period=INACTIVITY_PERIOD,
     )
 
-    delete_bucket = S3DeleteBucketOperator(
-        task_id="delete_bucket", force_delete=True, bucket_name=S3_BUCKET_NAME
-    )
-
     check_s3_prefix_sensor = S3PrefixSensorAsync(
         task_id="check_s3_prefix_sensor",
         bucket_name=S3_BUCKET_NAME,
