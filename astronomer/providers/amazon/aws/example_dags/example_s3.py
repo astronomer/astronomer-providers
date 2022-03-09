@@ -95,7 +95,7 @@ with DAG(
     )
 
     delete_bucket = S3DeleteBucketOperator(
-        task_id='delete_bucket', force_delete=True, bucket_name=S3_BUCKET_NAME
+        task_id="delete_bucket", force_delete=True, bucket_name=S3_BUCKET_NAME
     )
 
 (

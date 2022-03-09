@@ -197,12 +197,13 @@ async def test_s3_keys_unchanged_trigger_run_success(mock_is_keys_unchanged, moc
     assert len(task) == 1
     assert TriggerEvent({"status": "success"}) in task
 
+
 def test_s3_prefix_sensor_trigger_serialization():
     """
     Asserts that the S3 prefix sensor trigger correctly serializes its arguments
     and classpath.
     """
-    trigger = S3PrefixSensorTrigger(bucket_name='test-bucket', prefix="test")
+    trigger = S3PrefixSensorTrigger(bucket_name="test-bucket", prefix="test")
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3PrefixSensorTrigger"
     assert kwargs == {
@@ -223,7 +224,7 @@ async def test_s3_prefix_sensor_trigger_success(mock_check_for_prefix):
     """
     mock_check_for_prefix.return_value = True
 
-    trigger = S3PrefixSensorTrigger(bucket_name='test-bucket', prefix="test")
+    trigger = S3PrefixSensorTrigger(bucket_name="test-bucket", prefix="test")
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "success", "message": "Success criteria met. Exiting."}) in task
@@ -237,7 +238,7 @@ async def test_s3_prefix_sensor_trigger_failure(mock_client):
     """
     mock_client.side_effect = Exception("Test exception")
 
-    trigger = S3PrefixSensorTrigger(bucket_name='test-bucket', prefix="test")
+    trigger = S3PrefixSensorTrigger(bucket_name="test-bucket", prefix="test")
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
