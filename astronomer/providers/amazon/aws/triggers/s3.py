@@ -1,4 +1,3 @@
-import fnmatch
 import logging
 from datetime import datetime
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -201,7 +200,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
 
     def _get_async_hook(self) -> S3HookAsync:
-        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
+        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
 
 
 class S3PrefixSensorTrigger(BaseTrigger):
@@ -210,8 +209,8 @@ class S3PrefixSensorTrigger(BaseTrigger):
         *,
         bucket_name: str,
         prefix: Union[str, List[str]],
-        delimiter: str = '/',
-        aws_conn_id: str = 'aws_default',
+        delimiter: str = "/",
+        aws_conn_id: str = "aws_default",
         verify: Optional[Union[str, bool]] = None,
         **hook_params: Any,
     ):
@@ -246,67 +245,7 @@ class S3PrefixSensorTrigger(BaseTrigger):
         try:
             async with await hook.get_client_async() as client:
                 while True:
-                    self.log.info('Poking for prefix : %s in bucket s3://%s', self.prefix, self.bucket_name)
-                    buffer = []
-                    for elem in (
-                        hook._check_for_prefix(client, prefix, self.delimiter, self.bucket_name)
-                        for prefix in self.prefix
-                    ):
-                        buffer.append(await elem)
-                    if all(buffer):
-                        yield TriggerEvent({"status": "success", "message": "Success criteria met. Exiting."})
-                        return
-
-        except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
-
-    def _get_async_hook(self) -> S3HookAsync:
-        return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
-
-
-class S3PrefixSensorTrigger(BaseTrigger):
-    def __init__(
-        self,
-        *,
-        bucket_name: str,
-        prefix: Union[str, List[str]],
-        delimiter: str = '/',
-        aws_conn_id: str = 'aws_default',
-        verify: Optional[Union[str, bool]] = None,
-        **hook_params: Any,
-    ):
-        self.bucket_name = bucket_name
-        self.prefix = [prefix] if isinstance(prefix, str) else prefix
-        self.delimiter = delimiter
-        self.aws_conn_id = aws_conn_id
-        self.verify = verify
-        self.hook_params = hook_params
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serialize S3PrefixSensorTrigger arguments and classpath.
-        """
-        return (
-            "astronomer.providers.amazon.aws.triggers.s3.S3PrefixSensorTrigger",
-            {
-                "bucket_name": self.bucket_name,
-                "prefix": self.prefix,
-                "delimiter": self.delimiter,
-                "aws_conn_id": self.aws_conn_id,
-                "verify": self.verify,
-                "hook_params": self.hook_params,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Make an asynchronous connection using S3HookAsync.
-        """
-        hook = self._get_async_hook()
-        try:
-            async with await hook.get_client_async() as client:
-                while True:
-                    self.log.info('Poking for prefix : %s in bucket s3://%s', self.prefix, self.bucket_name)
+                    self.log.info("Poking for prefix : %s in bucket s3://%s", self.prefix, self.bucket_name)
                     buffer = []
                     for elem in (
                         hook._check_for_prefix(client, prefix, self.delimiter, self.bucket_name)

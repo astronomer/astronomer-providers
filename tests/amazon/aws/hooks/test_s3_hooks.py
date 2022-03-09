@@ -5,7 +5,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from aiobotocore.client import AioBaseClient
+from aiobotocore.session import ClientCreatorContext
 from airflow.models.connection import Connection
 from botocore.exceptions import ClientError
 
@@ -18,7 +18,7 @@ async def test_aws_base_hook_async_get_client_async_without_get_connection():
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, AioBaseClient)
+    assert isinstance(response, ClientCreatorContext)
 
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.base_aws_async.AwsBaseHookAsync.get_connection")
@@ -27,7 +27,7 @@ async def test_aws_base_hook_async_get_client_async_with_get_connection(mock_con
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, AioBaseClient)
+    assert isinstance(response, ClientCreatorContext)
 
 
 @mock.patch("astronomer.providers.amazon.aws.hooks.base_aws_async.AwsBaseHookAsync.get_connection")
@@ -39,7 +39,7 @@ async def test_aws_base_hook_async_get_client_async_with_aws_secrets(mock_get_co
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
     response = await aws_base_hook_async_obj.get_client_async()
 
-    assert isinstance(response, AioBaseClient)
+    assert isinstance(response, ClientCreatorContext)
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -360,7 +360,6 @@ async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
     }
 
 
-@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_first_prefix, test_second_prefix",
