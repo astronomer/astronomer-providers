@@ -16,12 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import unittest
 from unittest import mock
 
 import pytest
-from airflow.exceptions import TaskDeferred
-from airflow.models.dag import DAG
+from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.utils import timezone
 
 from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
@@ -53,46 +51,88 @@ def context():
     yield context
 
 
-class TestSnowflakeOperator(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        args = {"owner": "airflow", "start_date": DEFAULT_DATE}
-        dag = DAG(TEST_DAG_ID, default_args=args)
-        self.dag = dag
+@mock.patch(LONG_MOCK_PATH)
+def test_snowflake_execute_operator_async(context):
+    """
+    Asserts that a task is deferred and an SnowflakeTrigger will be fired
+    when the SnowflakeOperatorAsync is executed.
+    """
+    sql = """
+    CREATE TABLE IF NOT EXISTS test_airflow (
+        dummy VARCHAR(50)
+    );
+    """
 
-    @mock.patch(LONG_MOCK_PATH)
-    def test_snowflake_operator(self, mock_get_db_hook):
-        sql = """
-        CREATE TABLE IF NOT EXISTS test_airflow (
-            dummy VARCHAR(50)
-        );
-        """
-        operator = SnowflakeOperatorAsync(
-            task_id="basic_snowflake", sql=sql, dag=self.dag, do_xcom_push=False
+    operator = SnowflakeOperatorAsync(
+        task_id="execute_run",
+        snowflake_conn_id=CONN_ID,
+        sql=sql,
+    )
+
+    with pytest.raises(TaskDeferred) as exc:
+        operator.execute(context)
+
+    assert isinstance(exc.value.trigger, SnowflakeTrigger), "Trigger is not a SnowflakeTrigger"
+
+
+def test_snowflake_async_execute_complete_failure():
+    """Tests that an AirflowException is raised in case of error event"""
+
+    sql = """
+            CREATE TABLE IF NOT EXISTS test_airflow (
+                dummy VARCHAR(50)
+            );
+            """
+
+    operator = SnowflakeOperatorAsync(
+        task_id="execute_complete",
+        snowflake_conn_id=CONN_ID,
+        sql=sql,
+    )
+    with pytest.raises(AirflowException):
+        operator.execute_complete(
+            context=None,
+            event={"status": "error", "message": "Test failure message", "type": "FAILED_WITH_ERROR"},
         )
-        # do_xcom_push=False because otherwise the XCom test will fail due to the mocking (it actually works)
-        # Dummy change
-        operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, ignore_ti_state=True)
 
-    @mock.patch(LONG_MOCK_PATH)
-    def test_snowflake_execute_operator_async(self, context):
-        """
-        Asserts that a task is deferred and an SnowflakeTrigger will be fired
-        when the SnowflakeOperatorAsync is executed.
-        """
-        sql = """
-        CREATE TABLE IF NOT EXISTS test_airflow (
-            dummy VARCHAR(50)
-        );
-        """
 
-        operator = SnowflakeOperatorAsync(
-            task_id="execute_run",
-            snowflake_conn_id=CONN_ID,
-            sql=sql,
-        )
+@pytest.mark.parametrize(
+    "mock_event",
+    [
+        None,
+        ({"status": "success", "query_ids": ["uuid", "uuid"]}),
+    ],
+)
+@mock.patch(LONG_MOCK_PATH)
+def test_snowflake_async_execute_complete(mock_conn, mock_event):
+    sql = """
+            CREATE TABLE IF NOT EXISTS test_airflow (
+                dummy VARCHAR(50)
+            );
+            """
 
-        with pytest.raises(TaskDeferred) as exc:
-            operator.execute(context)
+    operator = SnowflakeOperatorAsync(
+        task_id="execute_complete",
+        snowflake_conn_id=CONN_ID,
+        sql=sql,
+    )
 
-        assert isinstance(exc.value.trigger, SnowflakeTrigger), "Trigger is not a SnowflakeTrigger"
+    with mock.patch.object(operator.log, "info") as mock_log_info:
+        operator.execute_complete(context=None, event=mock_event)
+    mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
+
+
+@mock.patch(LONG_MOCK_PATH)
+def test_get_db_hook(mock_get_db_hook):
+    sql = """
+                CREATE TABLE IF NOT EXISTS test_airflow (
+                    dummy VARCHAR(50)
+                );
+                """
+    operator = SnowflakeOperatorAsync(
+        task_id="execute_complete",
+        snowflake_conn_id=CONN_ID,
+        sql=sql,
+    )
+    operator.get_db_hook()
+    mock_get_db_hook.assert_called_once()

@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from unittest import mock
 
 import pytest
@@ -33,17 +32,38 @@ def test_snowflake_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 @pytest.mark.parametrize(
-    "query_ids",
+    "query_ids,return_value,response",
     [
-        (["uuid", "uuid"]),
+        (
+            ["uuid", "uuid"],
+            {"status": "error", "message": "test error", "type": "FAILED_WITH_ERROR"},
+            TriggerEvent({"status": "error", "message": "test error", "type": "FAILED_WITH_ERROR"}),
+        ),
+        (
+            ["uuid", "uuid"],
+            {"status": "success", "query_ids": ["uuid", "uuid"]},
+            TriggerEvent({"status": "success", "query_ids": ["uuid", "uuid"]}),
+        ),
+        (
+            ["uuid", "uuid"],
+            False,
+            TriggerEvent(
+                {
+                    "status": "error",
+                    "message": f"{TASK_ID} " f"failed with terminal state: False",
+                    "type": "ERROR",
+                }
+            ),
+        ),
     ],
 )
-async def test_snowflake_trigger_running(mock_get_first, query_ids):
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
+async def test_snowflake_trigger_running(mock_get_query_status, query_ids, return_value, response):
     """
     Tests that the SnowflakeTrigger in
     """
+    mock_get_query_status.return_value = return_value
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
         polling_period_seconds=POLLING_PERIOD_SECONDS,
@@ -51,14 +71,9 @@ async def test_snowflake_trigger_running(mock_get_first, query_ids):
         snowflake_conn_id="test_conn",
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was returned
-    assert task.done() is True
-
-    # Prevents error when task is destroyed while in "pending" state
-    asyncio.get_event_loop().stop()
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert response in task
 
 
 @pytest.mark.asyncio
@@ -87,7 +102,6 @@ async def test_snowflake_trigger_success(mock_get_first, query_ids):
 
     # TriggerEvent was returned
     assert task.done() is True
-    print(task.result())
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
 
@@ -132,22 +146,19 @@ async def test_snowflake_trigger_failed(mock_get_first, query_ids):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
 @pytest.mark.parametrize(
     "query_ids",
     [
         (["uuid", "uuid"]),
     ],
 )
-async def test_snowflake_trigger_exception(mock_conn, caplog, query_ids):
+@mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
+async def test_snowflake_trigger_exception(mock_query_status, query_ids):
     """
-    Tests the SnowflkeTrigger does not fire if there is an exception.
+    Tests the SnowflakeTrigger does not fire if there is an exception.
     """
-    mock_conn.return_value = mock.MagicMock(
-        is_still_running=mock.MagicMock(side_effect=Exception("Test exception"))
-    )
+    mock_query_status.side_effect = Exception("Test exception")
 
-    caplog.set_level(logging.DEBUG)
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
         polling_period_seconds=0.5,
@@ -155,8 +166,6 @@ async def test_snowflake_trigger_exception(mock_conn, caplog, query_ids):
         snowflake_conn_id="test_conn",
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(1)
-
-    assert task.done() is True
-    assert task.result() == TriggerEvent({"status": "error", "message": "Test exception", "type": "ERROR"})
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception", "type": "ERROR"}) in task
