@@ -240,7 +240,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Dict[str, Any]) -> None:
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSCheckBlobUpdateTimeTrigger(
@@ -255,7 +255,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         )
 
     def execute_complete(
-        self, context: "Context", event: Optional[Dict[Any, Any]] = None
+        self, context: Dict[str, Any], event: Optional[Dict[Any, Any]] = None
     ) -> str:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.

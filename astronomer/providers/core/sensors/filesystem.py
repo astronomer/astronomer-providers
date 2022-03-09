@@ -25,8 +25,8 @@ class FileSensorAsync(FileSensor):
     """
 
     def execute(self, context: Dict[str, Any]) -> None:
-        if not self.poke(context=context):
-            hook = FSHook(self.fs_conn_id)
+        if not self.poke(context=context):  # type: ignore[no-untyped-call]
+            hook = FSHook(self.fs_conn_id)  # type: ignore[no-untyped-call]
             basepath = hook.get_path()
             full_path = os.path.join(basepath, self.filepath)
             self.log.info("Poking for file %s", full_path)

@@ -3,7 +3,8 @@ import datetime
 import typing
 from typing import Any, Dict, List, Tuple
 
-from airflow.models import DagRun, TaskInstance
+from airflow.models.dagrun import DagRun
+from airflow.models.taskinstance import TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
@@ -20,7 +21,6 @@ class TaskStateTrigger(BaseTrigger):
         execution_dates: List[datetime.datetime],
         poll_interval: float = 5.0,
     ):
-        super().__init__()
         self.dag_id = dag_id
         self.task_id = task_id
         self.states = states
@@ -81,7 +81,6 @@ class DagStateTrigger(BaseTrigger):
         execution_dates: List[datetime.datetime],
         poll_interval: float = 5.0,
     ):
-        super().__init__()
         self.dag_id = dag_id
         self.states = states
         self.execution_dates = execution_dates

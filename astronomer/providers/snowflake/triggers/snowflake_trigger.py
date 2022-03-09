@@ -21,7 +21,6 @@ class SnowflakeTrigger(BaseTrigger):
         query_ids: List[str],
         snowflake_conn_id: str,
     ):
-        super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
         self.query_ids = query_ids

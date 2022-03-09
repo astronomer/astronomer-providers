@@ -29,7 +29,6 @@ class FileTrigger(BaseTrigger):
         recursive: bool = False,
         poll_interval: float = 5.0,
     ):
-        super().__init__()
         self.filepath = filepath
         self.recursive = recursive
         self.poll_interval = poll_interval

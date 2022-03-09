@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -42,12 +43,13 @@ TEST_INACTIVITY_PERIOD = 5
 TEST_MIN_OBJECTS = 1
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def context():
     """
     Creates an empty context.
     """
-    yield
+    context = {"data_interval_end": datetime.utcnow()}
+    yield context
 
 
 def test_gcs_object_existence_sensor_async():
