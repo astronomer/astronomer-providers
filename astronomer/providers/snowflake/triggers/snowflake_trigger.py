@@ -16,7 +16,7 @@ def get_db_hook(snowflake_conn_id: str) -> SnowflakeHookAsync:
     return SnowflakeHookAsync(snowflake_conn_id=snowflake_conn_id)
 
 
-class SnowflakeTrigger(BaseTrigger):
+class SnowflakeTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         task_id: str,
@@ -31,9 +31,7 @@ class SnowflakeTrigger(BaseTrigger):
         self.snowflake_conn_id = snowflake_conn_id
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes SnowflakeTrigger arguments and classpath.
-        """
+        """Serializes SnowflakeTrigger arguments and classpath."""
         return (
             "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeTrigger",
             {
@@ -46,7 +44,8 @@ class SnowflakeTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Makes a series of connection to snowflake to get the status of the query by async get_query_status function
+        Makes a series of connections to snowflake to get the status of the query
+        by async get_query_status function
         """
         hook = get_db_hook(self.snowflake_conn_id)
         while True:

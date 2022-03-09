@@ -33,6 +33,10 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
         super().__init__(**kwargs)
 
     def execute(self, context: "Context") -> None:
+        """
+        Logic that the operator uses to correctly identify which trigger to
+        execute, and defer execution as expected.
+        """
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
         if cluster_state == "paused":
@@ -89,6 +93,10 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
         super().__init__(**kwargs)
 
     def execute(self, context: "Context") -> None:
+        """
+        Logic that the operator uses to correctly identify which trigger to
+        execute, and defer execution as expected.
+        """
         redshift_hook = RedshiftHook(aws_conn_id=self.aws_conn_id)
         cluster_state = redshift_hook.cluster_status(cluster_identifier=self.cluster_identifier)
         if cluster_state == "available":

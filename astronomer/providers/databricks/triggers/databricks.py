@@ -7,7 +7,7 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
 
 
-class DatabricksTrigger(BaseTrigger):
+class DatabricksTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         conn_id: str,
@@ -17,6 +17,7 @@ class DatabricksTrigger(BaseTrigger):
         retry_delay: int,
         polling_period_seconds: int,
     ):
+        super().__init__()
         self.conn_id = conn_id
         self.task_id = task_id
         self.run_id = run_id
@@ -25,9 +26,7 @@ class DatabricksTrigger(BaseTrigger):
         self.polling_period_seconds = polling_period_seconds
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes DatabricksTrigger arguments and classpath.
-        """
+        """Serializes DatabricksTrigger arguments and classpath."""
         return (
             "astronomer.providers.databricks.triggers.databricks.DatabricksTrigger",
             {

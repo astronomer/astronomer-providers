@@ -14,9 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class S3HookAsync(AwsBaseHookAsync):
-    """
-    Interact with AWS S3, using the aiobotocore library.
-    """
+    """Interact with AWS S3, using the aiobotocore library."""
 
     conn_type = "s3"
     hook_name = "S3"

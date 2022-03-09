@@ -9,7 +9,7 @@ from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
 log = logging.getLogger(__name__)
 
 
-class S3KeyTrigger(BaseTrigger):
+class S3KeyTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         bucket_name: str,
@@ -18,6 +18,7 @@ class S3KeyTrigger(BaseTrigger):
         aws_conn_id: str = "aws_default",
         **hook_params: Any,
     ):
+        super().__init__()
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
@@ -25,9 +26,7 @@ class S3KeyTrigger(BaseTrigger):
         self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serialize S3KeyTrigger arguments and classpath.
-        """
+        """Serialize S3KeyTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger",
             {
@@ -40,9 +39,7 @@ class S3KeyTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Make an asynchronous connection using S3HookAsync.
-        """
+        """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
@@ -57,7 +54,7 @@ class S3KeyTrigger(BaseTrigger):
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
 
 
-class S3KeySizeTrigger(BaseTrigger):
+class S3KeySizeTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         bucket_name: str,
@@ -67,6 +64,7 @@ class S3KeySizeTrigger(BaseTrigger):
         check_fn: Optional[Callable[..., bool]] = None,
         **hook_params: Any,
     ):
+        super().__init__()
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
@@ -75,9 +73,7 @@ class S3KeySizeTrigger(BaseTrigger):
         self.check_fn_user = check_fn
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serialize S3KeySizeTrigger arguments and classpath.
-        """
+        """Serialize S3KeySizeTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3KeySizeTrigger",
             {
@@ -99,9 +95,7 @@ class S3KeySizeTrigger(BaseTrigger):
         return all(f.get("Size", 0) > object_min_size for f in data if isinstance(f, dict))
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Make an asynchronous connection using S3HookAsync.
-        """
+        """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
@@ -127,7 +121,7 @@ class S3KeySizeTrigger(BaseTrigger):
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
 
 
-class S3KeysUnchangedTrigger(BaseTrigger):
+class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         bucket_name: str,
@@ -141,6 +135,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         last_activity_time: Optional[datetime] = None,
         verify: Optional[Union[bool, str]] = None,
     ):
+        super().__init__()
         self.bucket_name = bucket_name
         self.prefix = prefix
         if inactivity_period < 0:
@@ -155,9 +150,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         self.verify = verify
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serialize S3KeysUnchangedTrigger arguments and classpath.
-        """
+        """Serialize S3KeysUnchangedTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3KeysUnchangedTrigger",
             {
@@ -174,9 +167,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Make an asynchronous connection using S3HookAsync.
-        """
+        """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
@@ -203,7 +194,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
 
 
-class S3PrefixTrigger(BaseTrigger):
+class S3PrefixTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         *,
@@ -214,6 +205,7 @@ class S3PrefixTrigger(BaseTrigger):
         verify: Optional[Union[str, bool]] = None,
         **hook_params: Any,
     ):
+        super().__init__()
         self.bucket_name = bucket_name
         self.prefix = [prefix] if isinstance(prefix, str) else prefix
         self.delimiter = delimiter
@@ -222,9 +214,7 @@ class S3PrefixTrigger(BaseTrigger):
         self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serialize S3PrefixTrigger arguments and classpath.
-        """
+        """Serialize S3PrefixTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3PrefixTrigger",
             {
@@ -238,9 +228,7 @@ class S3PrefixTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Make an asynchronous connection using S3HookAsync.
-        """
+        """Make an asynchronous connection using S3HookAsync."""
         hook = self._get_async_hook()
         try:
             async with await hook.get_client_async() as client:

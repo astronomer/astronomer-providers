@@ -56,7 +56,7 @@ class WaitContainerTrigger(BaseTrigger):
         self.pending_phase_timeout = pending_phase_timeout
         self.poll_interval = poll_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:  # noqa: D102
         return (
             "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger",
             dict(
@@ -70,7 +70,7 @@ class WaitContainerTrigger(BaseTrigger):
             ),
         )
 
-    async def get_hook(self) -> KubernetesHookAsync:
+    async def get_hook(self) -> KubernetesHookAsync:  # noqa: D102
         return KubernetesHookAsync(conn_id=self.kubernetes_conn_id, **(self.hook_params or {}))
 
     async def wait_for_pod_start(self, v1_api: CoreV1Api) -> Any:
@@ -95,7 +95,7 @@ class WaitContainerTrigger(BaseTrigger):
                 break
             await asyncio.sleep(self.poll_interval)
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]  # noqa: D102
         self.log.debug("Checking pod %r in namespace %r.", self.pod_name, self.pod_namespace)
         try:
             hook = await self.get_hook()

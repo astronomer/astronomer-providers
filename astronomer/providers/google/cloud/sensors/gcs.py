@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 class GCSObjectExistenceSensorAsync(BaseOperator):
     """
     Checks for the existence of a file in Google Cloud Storage.
+
     :param bucket: The Google Cloud Storage bucket where the object is.
     :param object: The name of the object to check in the Google cloud
         storage bucket.
@@ -67,6 +68,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         self.impersonation_chain = impersonation_chain
 
     def execute(self, context: "Context") -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSBlobTrigger(
@@ -125,6 +127,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         self.polling_interval = polling_interval
 
     def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSPrefixBlobTrigger(
@@ -196,6 +199,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         self.polling_interval = polling_interval
 
     def execute(self, context: Dict[str, Any]) -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSUploadSessionTrigger(
