@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 
 
-def get_db_hook(self) -> SnowflakeHookAsync:
+def get_db_hook(self: Any) -> SnowflakeHookAsync:
     """
     Create and return SnowflakeHookAsync.
     :return: a SnowflakeHookAsync instance.
@@ -23,7 +23,7 @@ class SnowflakeTrigger(BaseTrigger):
         polling_period_seconds: float,
         query_ids: List[str],
         snowflake_conn_id: str,
-    ):
+    ) -> None:
         super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
@@ -44,7 +44,7 @@ class SnowflakeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a series of connection to snowflake to get the status of the query by async get_query_status function
         """

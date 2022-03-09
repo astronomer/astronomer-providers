@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow.models import DagRun, TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -40,7 +40,7 @@ class TaskStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Checks periodically in the database to see if the task exists, and has
         hit one of the states yet, or not.
@@ -99,7 +99,7 @@ class DagStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Checks periodically in the database to see if the dag run exists, and has
         hit one of the states yet, or not.

@@ -1,7 +1,9 @@
 import logging
 import os
+from typing import Any
 
 from airflow.hooks.filesystem import FSHook
+from airflow.models.taskinstance import Context
 from airflow.sensors.filesystem import FileSensor
 
 from astronomer.providers.core.triggers.filesystem import FileTrigger
@@ -26,7 +28,7 @@ class FileSensorAsync(FileSensor):
     :type recursive: bool
     """
 
-    def execute(self, context):
+    def execute(self, context: Context) -> None:
         if not self.poke(context=context):
             hook = FSHook(self.fs_conn_id)
             basepath = hook.get_path()
@@ -43,7 +45,9 @@ class FileSensorAsync(FileSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context, event=None):  # pylint: disable=unused-argument
+    def execute_complete(
+        self, context: Context, event: Any = None
+    ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

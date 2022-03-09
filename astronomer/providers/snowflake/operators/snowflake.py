@@ -1,4 +1,7 @@
+from typing import Any
+
 from airflow.exceptions import AirflowException
+from airflow.models.taskinstance import Context
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -9,7 +12,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
-    def __init__(self, *, poll_interval: int = 5, **kwargs):
+    def __init__(self, *, poll_interval: float = 5, **kwargs: Any) -> None:
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
@@ -17,7 +20,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         """Get the Snowflake Hook"""
         return get_db_hook(self)
 
-    def execute(self, context):
+    def execute(self, context: Context) -> None:
         """
         Make a sync connection to snowflake and run query in execute_async
         function in snowflake and close the connection
@@ -41,7 +44,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context, event=None):  # pylint: disable=unused-argument
+    def execute_complete(
+        self, context: Context, event: Any = None
+    ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

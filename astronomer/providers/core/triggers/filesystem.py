@@ -3,7 +3,7 @@ import datetime
 import logging
 import os
 from glob import glob
-from typing import Any, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -46,7 +46,7 @@ class FileTrigger(BaseTrigger):
             },
         )
 
-    async def run(self):
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Simple loop until the relevant files are found.
         """

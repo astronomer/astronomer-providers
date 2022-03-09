@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import closing
 from io import StringIO
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
@@ -11,7 +11,12 @@ from snowflake.connector.util_text import split_statements
 
 
 class SnowflakeHookAsync(SnowflakeHook):
-    def run(self, sql: Union[str, list], autocommit: bool = False, parameters: Optional[dict] = None):
+    def run(
+        self,
+        sql: Union[str, list[str]],
+        autocommit: bool = False,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ) -> List[str]:
         """
         Makes sync connection to snowflake
         Runs a command or a list of commands. Pass a list of sql
@@ -57,7 +62,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                 conn.commit()
         return self.query_ids
 
-    def check_query_output(self, query_ids: List[str]):
+    def check_query_output(self, query_ids: List[str]) -> None:
         """
         Once the qurey is finished fetch the result and log it in airflow
         """
@@ -69,7 +74,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
 
-    async def get_query_status(self, query_ids: List[str]):
+    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Any]:
         """
         Async function to get the Query status by query Ids, this function takes list of query_ids make
         sync_to_async connection
