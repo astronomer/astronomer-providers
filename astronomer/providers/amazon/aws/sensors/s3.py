@@ -57,7 +57,6 @@ class S3KeySensorAsync(BaseOperator):
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
-        print("In init of S3KeySensorAsync")
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
@@ -67,7 +66,6 @@ class S3KeySensorAsync(BaseOperator):
 
     def _resolve_bucket_and_key(self) -> None:
         """If key is URI, parse bucket"""
-        print("In _resolve_bucket_and_key")
         if self.bucket_name is None:
             self.bucket_name, self.bucket_key = S3Hook.parse_s3_url(self.bucket_key)
         else:
