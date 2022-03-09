@@ -10,9 +10,8 @@ until the second DAG is complete.
        successfully completes, then resumes execution and finishes without issue.
 """
 
-from datetime import datetime
-
 from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
 

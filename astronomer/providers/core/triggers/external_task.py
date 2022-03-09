@@ -21,6 +21,7 @@ class TaskStateTrigger(BaseTrigger):
         execution_dates: List[datetime.datetime],
         poll_interval: float = 5.0,
     ):
+        super().__init__()
         self.dag_id = dag_id
         self.task_id = task_id
         self.states = states
@@ -81,6 +82,7 @@ class DagStateTrigger(BaseTrigger):
         execution_dates: List[datetime.datetime],
         poll_interval: float = 5.0,
     ):
+        super().__init__()
         self.dag_id = dag_id
         self.states = states
         self.execution_dates = execution_dates

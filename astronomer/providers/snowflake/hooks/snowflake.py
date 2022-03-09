@@ -54,7 +54,7 @@ class SnowflakeHookAsync(SnowflakeHook):
 
             # If autocommit was set to False for db that supports autocommit,
             # or if db does not supports autocommit, we do a manual commit.
-            if not self.get_autocommit(conn):  # type: ignore[no-untyped-call]
+            if not self.get_autocommit(conn):
                 conn.commit()
         return self.query_ids
 

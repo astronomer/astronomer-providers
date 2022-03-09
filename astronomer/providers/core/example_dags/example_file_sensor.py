@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.filesystem import FileSensorAsync
 
@@ -10,7 +9,7 @@ with DAG(
     catchup=False,
     tags=["async"],
 ) as dag:
-    sensor_task = FileSensorAsync(  # type: ignore[no-untyped-call]
+    sensor_task = FileSensorAsync(
         task_id="my_file_sensor_task",
         filepath="/files/dags/example_async_file.py",
     )

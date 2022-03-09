@@ -1,9 +1,9 @@
 """
 Example use of SnowflakeAsync related providers.
 """
-from datetime import datetime
 
 from airflow.models.dag import DAG
+from airflow.utils.timezone import datetime
 
 from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
 

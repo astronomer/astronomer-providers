@@ -351,7 +351,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         ts: datetime,
         polling_period_seconds: float,
         google_cloud_conn_id: str,
-        hook_params: dict,
+        hook_params: Dict[str, Any],
     ):
         super().__init__()
         self.bucket = bucket
@@ -377,7 +377,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         try:
             hook = self._get_async_hook()
             while True:
@@ -419,13 +419,16 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
              Blob updated time is in string format so converting the string datetime to datetime object to
              compare the last updated time
             """
-            blob_updated_time = datetime.strptime(blob.updated, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+            blob_updated_date = blob.updated  # type: ignore[attr-defined]
+            blob_updated_time = datetime.strptime(blob_updated_date, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
                 tzinfo=timezone.utc
             )
             if blob_updated_time is not None:
                 if not ts.tzinfo:
                     ts = ts.replace(tzinfo=timezone.utc)
                 self.log.info("Verify object date: %s > %s", blob_updated_time, ts)
+                print("blob_updated_time ", blob_updated_time)
+                print("ts ", ts)
                 if blob_updated_time > ts:
                     return True, {"status": "success", "message": "success"}
             return False, {"status": "pending", "message": "pending"}

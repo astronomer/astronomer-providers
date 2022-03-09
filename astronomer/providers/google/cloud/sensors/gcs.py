@@ -59,7 +59,6 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         **kwargs: Any,
     ) -> None:
-
         super().__init__(**kwargs)
         self.bucket = bucket
         self.object = object
@@ -254,15 +253,17 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Dict[str, Any], event: Optional[Dict[Any, Any]] = None
-    ) -> str:  # pylint: disable=unused-argument
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
+        if event:
+            if event["status"] == "success":
+                self.log.info(
+                    "Sensor checks update time for object %s in bucket : %s", self.object, self.bucket
+                )
+                return event["message"]
             raise AirflowException(event["message"])
-        self.log.info("Sensor checks update time for object %s in bucket : %s", self.object, self.bucket)
-        return event["message"]
+        raise AirflowException("No event received in trigger callback")
