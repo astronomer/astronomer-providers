@@ -59,17 +59,11 @@ class S3HookAsync(AwsBaseHookAsync):
 
         :param client: ClientCreatorContext
         :param bucket_name: the name of the bucket
-        :type bucket_name: str
         :param prefix: a key prefix
-        :type prefix: str
         :param delimiter: the delimiter marks key hierarchy.
-        :type delimiter: str
         :param page_size: pagination size
-        :type page_size: int
         :param max_items: maximum items to return
-        :type max_items: int
         :return: a list of matched prefixes
-        :rtype: list
         """
         prefix = prefix or ""
         delimiter = delimiter or ""
@@ -141,13 +135,9 @@ class S3HookAsync(AwsBaseHookAsync):
         Checks that a prefix exists in a bucket
 
         :param bucket_name: the name of the bucket
-        :type bucket_name: str
         :param prefix: a key prefix
-        :type prefix: str
         :param delimiter: the delimiter marks key hierarchy.
-        :type delimiter: str
         :return: False if the prefix does not exist in the bucket and True if it does.
-        :rtype: bool
         """
         prefix = prefix + delimiter if prefix[-1] != delimiter else prefix
         prefix_split = re.split(rf"(\w+[{delimiter}])$", prefix, 1)
@@ -194,7 +184,6 @@ class S3HookAsync(AwsBaseHookAsync):
         :param page_size: pagination size
         :param max_items: maximum items to return
         :return: a list of matched keys
-        :rtype: list
         """
         prefix = prefix or ""
         delimiter = delimiter or ""
@@ -231,7 +220,23 @@ class S3HookAsync(AwsBaseHookAsync):
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
-        :param current_objects: set of object ids in bucket during last poke.
+        :param client: aiobotocore client
+        :param bucket_name: the name of the bucket
+        :param prefix: a key prefix
+        :param inactivity_period:  the total seconds of inactivity to designate
+            keys unchanged. Note, this mechanism is not real time and
+            this operator may not return until a poke_interval after this period
+            has passed with no additional objects sensed.
+        :param min_objects: the minimum number of objects needed for keys unchanged
+            sensor to be considered valid.
+        :param previous_objects: the set of object ids found during the last poke.
+        :param inactivity_seconds: number of inactive seconds
+        :param last_activity_time: last activity datetime
+        :param allow_delete: Should this sensor consider objects being deleted
+            between pokes valid behavior. If true a warning message will be logged
+            when this happens. If false an error will be raised.
+        :return: dictionary with status and message
+        :rtype: Dict
         """
         list_keys = await self._list_keys(client=client, bucket_name=bucket_name, prefix=prefix)
         current_objects = set(list_keys)

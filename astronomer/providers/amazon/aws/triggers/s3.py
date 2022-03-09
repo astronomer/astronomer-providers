@@ -203,7 +203,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
 
 
-class S3PrefixSensorTrigger(BaseTrigger):
+class S3PrefixTrigger(BaseTrigger):
     def __init__(
         self,
         *,
@@ -223,10 +223,10 @@ class S3PrefixSensorTrigger(BaseTrigger):
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Serialize S3PrefixSensorTrigger arguments and classpath.
+        Serialize S3PrefixTrigger arguments and classpath.
         """
         return (
-            "astronomer.providers.amazon.aws.triggers.s3.S3PrefixSensorTrigger",
+            "astronomer.providers.amazon.aws.triggers.s3.S3PrefixTrigger",
             {
                 "bucket_name": self.bucket_name,
                 "prefix": self.prefix,

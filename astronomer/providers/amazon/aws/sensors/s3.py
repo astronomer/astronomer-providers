@@ -11,7 +11,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
-    S3PrefixSensorTrigger,
+    S3PrefixTrigger,
 )
 
 log = logging.getLogger(__name__)
@@ -293,7 +293,7 @@ class S3PrefixSensorAsync(BaseOperator):
         self.log.info("Poking for prefix : %s in bucket s3://%s", self.prefix, self.bucket_name)
         self.defer(
             timeout=self.execution_timeout,
-            trigger=S3PrefixSensorTrigger(
+            trigger=S3PrefixTrigger(
                 bucket_name=self.bucket_name,
                 prefix=self.prefix,
                 delimiter=self.delimiter,

@@ -18,7 +18,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
-    S3PrefixSensorTrigger,
+    S3PrefixTrigger,
 )
 
 
@@ -420,7 +420,7 @@ class TestS3KeysUnchangedSensorAsync(unittest.TestCase):
 class TestS3PrefixSensorAsync(unittest.TestCase):
     def test_s3_prefix_sensor_async(self):
         """
-        Asserts that a task is deferred and an S3PrefixSensorTrigger will be fired
+        Asserts that a task is deferred and an S3PrefixTrigger will be fired
         when the S3PrefixSensorAsync is executed.
         """
         sensor = S3PrefixSensorAsync(
@@ -430,11 +430,11 @@ class TestS3PrefixSensorAsync(unittest.TestCase):
         with pytest.raises(TaskDeferred) as exc:
             sensor.execute(context)
 
-        assert isinstance(exc.value.trigger, S3PrefixSensorTrigger), "Trigger is not a S3PrefixSensorTrigger"
+        assert isinstance(exc.value.trigger, S3PrefixTrigger), "Trigger is not a S3PrefixSensorTrigger"
 
     def test_s3_prefix_sensor_execute_complete(self):
         """
-        Asserts that a task is deferred and an S3PrefixSensorTrigger will be fired
+        Asserts that a task is deferred and an S3PrefixTrigger will be fired
         when the S3PrefixSensorAsync is executed.
         """
         sensor = S3PrefixSensorAsync(
