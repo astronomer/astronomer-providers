@@ -82,6 +82,14 @@ class TestPytestSnowflakeHookAsync:
                     "query_id": "uuid1",
                 },
             ),
+            (
+                ["uuid1"],
+                QueryStatus.BLOCKED,
+                {
+                    "status": "error",
+                    "message": "Unknown status: QueryStatus.BLOCKED",
+                },
+            ),
         ],
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")

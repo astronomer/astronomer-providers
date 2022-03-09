@@ -335,7 +335,8 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
 
 class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
     """
-    A trigger Makes an async call to GCS and check whether the object is updated in blob.
+    A trigger that makes an async call to GCS to check whether the object is updated in a bucket.
+
     :param bucket: google cloud storage bucket name cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param ts: datetime object
@@ -399,14 +400,15 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         self, hook: GCSHookAsync, bucket_name: str, object_name: str, ts: datetime
     ) -> Tuple[bool, Dict[str, Any]]:
         """
-        Checks if object in blob object is updated.
+        Checks if the object in the bucket is updated.
+
         :hook: GCSHookAsync Hook class
         :param bucket_name: The Google Cloud Storage bucket where the object is.
         :param object_name: The name of the blob_name to check in the Google cloud
             storage bucket.
         """
-        async with ClientSession() as s:
-            client = await hook.get_storage_client(s)
+        async with ClientSession() as session:
+            client = await hook.get_storage_client(session)
             bucket = client.get_bucket(bucket_name)
             blob = await bucket.get_blob(blob_name=object_name)
             if blob is None:
@@ -415,20 +417,17 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
                     "status": "error",
                 }
                 return True, res
-            """
-             Blob updated time is in string format so converting the string datetime to datetime object to
-             compare the last updated time
-            """
+
             blob_updated_date = blob.updated  # type: ignore[attr-defined]
             blob_updated_time = datetime.strptime(blob_updated_date, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
                 tzinfo=timezone.utc
-            )
+            )  # Blob updated time is in string format so converting the string format
+            # to datetime object to compare the last updated time
+
             if blob_updated_time is not None:
                 if not ts.tzinfo:
                     ts = ts.replace(tzinfo=timezone.utc)
                 self.log.info("Verify object date: %s > %s", blob_updated_time, ts)
-                print("blob_updated_time ", blob_updated_time)
-                print("ts ", ts)
                 if blob_updated_time > ts:
                     return True, {"status": "success", "message": "success"}
             return False, {"status": "pending", "message": "pending"}

@@ -40,6 +40,7 @@ RETRY_DELAY = 1.0
 POLLING_PERIOD_SECONDS = 1.0
 XCOM_RUN_ID_KEY = "run_id"
 XCOM_RUN_PAGE_URL_KEY = "run_page_url"
+TEST_SQL = "select * from any"
 
 
 @pytest.fixture
@@ -57,16 +58,11 @@ def test_snowflake_execute_operator_async(context):
     Asserts that a task is deferred and an SnowflakeTrigger will be fired
     when the SnowflakeOperatorAsync is executed.
     """
-    sql = """
-    CREATE TABLE IF NOT EXISTS test_airflow (
-        dummy VARCHAR(50)
-    );
-    """
 
     operator = SnowflakeOperatorAsync(
         task_id="execute_run",
         snowflake_conn_id=CONN_ID,
-        sql=sql,
+        sql=TEST_SQL,
     )
 
     with pytest.raises(TaskDeferred) as exc:
@@ -78,16 +74,10 @@ def test_snowflake_execute_operator_async(context):
 def test_snowflake_async_execute_complete_failure():
     """Tests that an AirflowException is raised in case of error event"""
 
-    sql = """
-            CREATE TABLE IF NOT EXISTS test_airflow (
-                dummy VARCHAR(50)
-            );
-            """
-
     operator = SnowflakeOperatorAsync(
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
-        sql=sql,
+        sql=TEST_SQL,
     )
     with pytest.raises(AirflowException):
         operator.execute_complete(
@@ -124,15 +114,11 @@ def test_snowflake_async_execute_complete(mock_conn, mock_event):
 
 @mock.patch(LONG_MOCK_PATH)
 def test_get_db_hook(mock_get_db_hook):
-    sql = """
-                CREATE TABLE IF NOT EXISTS test_airflow (
-                    dummy VARCHAR(50)
-                );
-                """
+
     operator = SnowflakeOperatorAsync(
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
-        sql=sql,
+        sql=TEST_SQL,
     )
     operator.get_db_hook()
     mock_get_db_hook.assert_called_once()

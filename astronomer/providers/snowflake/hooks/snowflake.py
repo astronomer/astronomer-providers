@@ -102,6 +102,8 @@ class SnowflakeHookAsync(SnowflakeHook):
                                 "type": "FAILED_WITH_ERROR",
                                 "query_id": query_id,
                             }
+                        else:
+                            return {"status": "error", "message": f"Unknown status: {status}"}
                     return {"status": "success", "query_ids": sfqid}
             except ProgrammingError as err:
                 error_message = "Programming Error: {0}".format(err)
