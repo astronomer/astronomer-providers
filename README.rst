@@ -78,6 +78,18 @@ A detailed overview on how to contribute can be found in the
 As contributors and maintainers to this project, you are expected to abide by the
 `Contributor Code of Conduct <https://github.com/astronomer/astronomer-providers/blob/main/CODE_OF_CONDUCT.md>`_.
 
+Goals for the project
+---------------------
+
+- Our focus is on the speed of iteration and development in this stage of the project and so we want to be able to
+  quickly iterate with our community members and customers and cut releases as necessary
+- Airflow Providers are separate packages from the core ``apache-airflow`` package and we would like to avoid
+  further bloating the Airflow repo
+- We want users and the community to be able to easily track features and the roadmap for individual providers
+  that we develop
+- We would love to see the Airflow community members create, maintain and share their providers to build an Ecosystem
+  of Providers.
+
 License
 -------
 
