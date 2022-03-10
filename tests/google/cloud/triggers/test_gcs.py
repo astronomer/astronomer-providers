@@ -28,6 +28,7 @@ from gcloud.aio.storage import Bucket, Storage
 from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
+    GCSCheckBlobUpdateTimeTrigger,
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
@@ -43,6 +44,7 @@ TEST_INACTIVITY_PERIOD = 5.0
 TEST_MIN_OBJECTS = 1
 TEST_ALLOW_DELETE = True
 TEST_PREVIOUS_OBJECTS = {"a", "ab"}
+TEST_TS_OBJECT = datetime.utcnow()
 
 
 def test_gcs_blob_trigger_serialization():
@@ -483,3 +485,172 @@ async def test_is_bucket_updated_success_failure_status(mock_time, last_activity
     trigger.last_activity_time = last_activity_time
     res = trigger._is_bucket_updated(current_objects=TEST_PREVIOUS_OBJECTS)
     assert res == response
+
+
+def test_gcs_blob_update_trigger_serialization():
+    """
+    Asserts that the GCSCheckBlobUpdateTimeTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_TS_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger"
+    assert kwargs == {
+        "bucket": TEST_BUCKET,
+        "object_name": TEST_OBJECT,
+        "ts": TEST_TS_OBJECT,
+        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "google_cloud_conn_id": TEST_GCP_CONN_ID,
+        "hook_params": TEST_HOOK_PARAMS,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch(
+    "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger._is_blob_updated_after"
+)
+async def test_gcs_blob_update_trigger_success(mock_blob_updated):
+    """
+    Tests success case GCSCheckBlobUpdateTimeTrigger
+    """
+    mock_blob_updated.return_value = True, {"status": "success", "message": "success"}
+
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_TS_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success", "message": "success"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch(
+    "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger._is_blob_updated_after"
+)
+async def test_gcs_blob_update_trigger_pending(mock_blob_updated):
+    """
+    Test that GCSCheckBlobUpdateTimeTrigger is in loop till file isn't updated.
+    """
+    mock_blob_updated.return_value = False, {"status": "pending", "message": "pending"}
+
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_TS_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch(
+    "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger._is_blob_updated_after"
+)
+async def test_gcs_blob_update_trigger_exception(mock_object_exists):
+    """
+    Tests the GCSCheckBlobUpdateTimeTrigger does fire if there is an exception.
+    """
+    mock_object_exists.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        TEST_BUCKET,
+        TEST_OBJECT,
+        TEST_TS_OBJECT,
+        TEST_POLLING_INTERVAL,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "blob_object_update_datetime, ts_object, expected_response",
+    [
+        (
+            "2022-03-07T10:05:43.535Z",
+            datetime(2022, 1, 1, 1, 1, 1),
+            (True, {"status": "success", "message": "success"}),
+        ),
+        (
+            "2022-03-07T10:05:43.535Z",
+            datetime(2022, 3, 8, 1, 1, 1),
+            (False, {"status": "pending", "message": "pending"}),
+        ),
+    ],
+)
+async def test_is_blob_updated_after(blob_object_update_datetime, ts_object, expected_response):
+    """
+    Tests to check if a particular object in Google Cloud Storage
+    is found or not
+    """
+    hook = mock.AsyncMock(GCSHookAsync)
+    storage = mock.AsyncMock(Storage)
+    hook.get_storage_client.return_value = storage
+    bucket = mock.AsyncMock(Bucket)
+    storage.get_bucket.return_value = bucket
+    bucket.get_blob.return_value.updated = blob_object_update_datetime
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        bucket=TEST_BUCKET,
+        object_name=TEST_OBJECT,
+        ts=ts_object,
+        polling_period_seconds=TEST_POLLING_INTERVAL,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
+    )
+    res = await trigger._is_blob_updated_after(hook, TEST_BUCKET, TEST_OBJECT, ts_object)
+    assert res == expected_response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "blob_object, expected_response",
+    [
+        (
+            None,
+            (True, {"status": "error", "message": "Object (TEST_OBJECT) not found in Bucket (TEST_BUCKET)"}),
+        ),
+    ],
+)
+async def test_is_blob_updated_after_with_none(blob_object, expected_response):
+    """
+    Tests to check if a particular object in Google Cloud Storage
+    is found or not
+    """
+    hook = mock.AsyncMock(GCSHookAsync)
+    storage = mock.AsyncMock(Storage)
+    hook.get_storage_client.return_value = storage
+    bucket = mock.AsyncMock(Bucket)
+    storage.get_bucket.return_value = bucket
+    bucket.get_blob.return_value = blob_object
+    trigger = GCSCheckBlobUpdateTimeTrigger(
+        bucket=TEST_BUCKET,
+        object_name=TEST_OBJECT,
+        ts=TEST_TS_OBJECT,
+        polling_period_seconds=TEST_POLLING_INTERVAL,
+        google_cloud_conn_id=TEST_GCP_CONN_ID,
+        hook_params=TEST_HOOK_PARAMS,
+    )
+    res = await trigger._is_blob_updated_after(hook, TEST_BUCKET, TEST_OBJECT, TEST_TS_OBJECT)
+    assert res == expected_response
