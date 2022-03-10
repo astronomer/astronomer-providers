@@ -46,11 +46,11 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         self.defer(
             trigger=WaitContainerTrigger(
                 kubernetes_conn_id=None,
-                hook_params=dict(
-                    cluster_context=self.cluster_context,
-                    config_file=self.config_file,
-                    in_cluster=self.in_cluster,
-                ),
+                hook_params={
+                    "cluster_context": self.cluster_context,
+                    "config_file": self.config_file,
+                    "in_cluster": self.in_cluster,
+                },
                 pod_name=self.pod.metadata.name,
                 container_name=self.BASE_CONTAINER_NAME,
                 pod_namespace=self.pod.metadata.namespace,

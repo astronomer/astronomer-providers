@@ -24,7 +24,7 @@ class HttpSensorAsync(HttpSensor):
 
         HttpSensorAsync(task_id='my_http_sensor', ..., response_check=response_check)
 
-    :param http_conn_id: The :ref:`http connection<howto/connection:http>` to run the sensor against
+    :param http_conn_id: The Connection ID to run the sensor against
     :type http_conn_id: str
     :param method: The HTTP request method to use
     :type method: str

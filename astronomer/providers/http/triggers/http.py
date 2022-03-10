@@ -13,8 +13,7 @@ class HttpTrigger(BaseTrigger):
 
     :param endpoint: The relative part of the full url
     :type endpoint: str
-    :param http_conn_id: The :ref:`http connection<howto/connection:http>` to run the
-        sensor against
+    :param http_conn_id: The HTTP Connection ID to run the sensor against
     :type http_conn_id: str
     :param method: The HTTP request method to use
     :type method: str

@@ -51,7 +51,7 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         self,
         *,
         bucket: str,
-        object: str,
+        object: str,  # noqa: A002
         polling_interval: float = 5.0,
         google_cloud_conn_id: str = "google_cloud_default",
         delegate_to: Optional[str] = None,
@@ -76,7 +76,10 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
                 object_name=self.object,
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+                hook_params={
+                    "delegate_to": self.delegate_to,
+                    "impersonation_chain": self.impersonation_chain,
+                },
             ),
             method_name="execute_complete",
         )
@@ -135,7 +138,10 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
                 prefix=self.prefix,
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+                hook_params={
+                    "delegate_to": self.delegate_to,
+                    "impersonation_chain": self.impersonation_chain,
+                },
             ),
             method_name="execute_complete",
         )
@@ -211,7 +217,10 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
                 min_objects=self.min_objects,
                 previous_objects=self.previous_objects,
                 allow_delete=self.allow_delete,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+                hook_params={
+                    "delegate_to": self.delegate_to,
+                    "impersonation_chain": self.impersonation_chain,
+                },
             ),
             method_name="execute_complete",
         )

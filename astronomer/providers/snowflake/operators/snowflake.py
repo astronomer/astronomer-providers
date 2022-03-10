@@ -15,8 +15,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     """
     Executes SQL code in a Snowflake database
 
-    :param snowflake_conn_id: Reference to
-        :ref:`Snowflake connection id<howto/connection:snowflake>`
+    :param snowflake_conn_id: Reference to Snowflake connection id
     :param sql: the sql code to be executed. (templated)
     :param autocommit: if True, each command is automatically committed.
         (default value: True)
