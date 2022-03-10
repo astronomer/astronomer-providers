@@ -280,7 +280,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {"status": "pending"}
+    assert response.get("status") == "pending"
 
     # test for the case when current_objects < previous_objects
     mock_list_keys.return_value = []
@@ -298,7 +298,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {"status": "pending"}
+    assert response.get("status") == "pending"
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
