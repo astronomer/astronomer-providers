@@ -1,7 +1,6 @@
 import asyncio
 from typing import Any, AsyncIterator, Dict, Tuple
 
-from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.amazon.aws.hooks.redshift_cluster import RedshiftHookAsync
@@ -44,26 +43,28 @@ class RedshiftClusterTrigger(BaseTrigger):  # noqa: D101
         if operation_type is 'pause_cluster it will call the pause_cluster function in RedshiftHookAsync
         """
         hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
-        while True:
-            try:
-                if self.operation_type == "resume_cluster":
-                    response = await hook.resume_cluster(cluster_identifier=self.cluster_identifier)
-                    if response:
-                        yield TriggerEvent(response)
-                        return
-                    else:
-                        error_message = f"{self.task_id} failed"
-                        raise AirflowException(error_message)
+        try:
+            if self.operation_type == "resume_cluster":
+                response = await hook.resume_cluster(cluster_identifier=self.cluster_identifier)
+                if response:
+                    yield TriggerEvent(response)
+                    return
                 else:
-                    response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
-                    if response:
-                        yield TriggerEvent(response)
-                        return
-                    else:
-                        error_message = f"{self.task_id} failed"
-                        raise AirflowException(error_message)
-            except AirflowException:
-                await asyncio.sleep(self.polling_period_seconds)
+                    error_message = f"{self.task_id} failed"
+                    yield TriggerEvent({"status": "error", "message": str(error_message)})
+                    return
+            else:
+                response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
+                if response:
+                    yield TriggerEvent(response)
+                    return
+                else:
+                    error_message = f"{self.task_id} failed"
+                    yield TriggerEvent({"status": "error", "message": str(error_message)})
+                    return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return
 
 
 class RedshiftClusterSensorTrigger(BaseTrigger):  # noqa: D101

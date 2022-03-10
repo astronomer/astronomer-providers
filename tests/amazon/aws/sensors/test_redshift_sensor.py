@@ -1,10 +1,13 @@
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, TaskDeferred
 
 from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
     RedshiftClusterSensorAsync,
+)
+from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
+    RedshiftClusterSensorTrigger,
 )
 
 TASK_ID = "redshift_sensor_check"
@@ -18,6 +21,21 @@ def context():
     """
     context = {}
     yield context
+
+
+def test_redshift_cluster_sensor_async():
+    """Test RedshiftClusterSensorAsync that a task with wildcard=True
+    is deferred and an RedshiftClusterSensorTrigger will be fired when executed method is called"""
+    task = RedshiftClusterSensorAsync(
+        task_id=TASK_ID,
+        cluster_identifier="astro-redshift-cluster-1",
+        target_status="available",
+    )
+    with pytest.raises(TaskDeferred) as exc:
+        task.execute(context)
+    assert isinstance(
+        exc.value.trigger, RedshiftClusterSensorTrigger
+    ), "Trigger is not a RedshiftClusterSensorTrigger"
 
 
 def test_redshift_sensor_async_execute_failure(context):
@@ -43,3 +61,15 @@ def test_redshift_sensor_async_execute_complete():
     mock_log_info.assert_called_with(
         "Cluster Identifier %s is in %s state", "astro-redshift-cluster-1", "available"
     )
+
+
+def test_redshift_sensor_async_execute_complete_event_none():
+    """Asserts that logging occurs as expected"""
+    task = RedshiftClusterSensorAsync(
+        task_id=TASK_ID,
+        cluster_identifier="astro-redshift-cluster-1",
+        target_status="available",
+    )
+    with mock.patch.object(task.log, "info") as mock_log_info:
+        task.execute_complete(context=None, event=None)
+    mock_log_info.assert_called_with("%s completed successfully.", TASK_ID)

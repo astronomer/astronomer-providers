@@ -1,7 +1,5 @@
-import asyncio
 from typing import Any, AsyncIterator, Dict, List, Tuple
 
-from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -10,7 +8,6 @@ from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 def get_db_hook(snowflake_conn_id: str) -> SnowflakeHookAsync:
     """
     Create and return SnowflakeHookAsync.
-
     :return: a SnowflakeHookAsync instance.
     """
     return SnowflakeHookAsync(snowflake_conn_id=snowflake_conn_id)
@@ -48,14 +45,15 @@ class SnowflakeTrigger(BaseTrigger):  # noqa: D101
         by async get_query_status function
         """
         hook = get_db_hook(self.snowflake_conn_id)
-        while True:
-            try:
-                run_state = await hook.get_query_status(self.query_ids)
-                if run_state:
-                    yield TriggerEvent(run_state)
-                    return
-                else:
-                    error_message = f"{self.task_id} failed with terminal state: {run_state}"
-                    raise AirflowException(error_message)
-            except AirflowException:
-                await asyncio.sleep(self.polling_period_seconds)
+        try:
+            run_state = await hook.get_query_status(self.query_ids)
+            if run_state:
+                yield TriggerEvent(run_state)
+                return
+            else:
+                error_message = f"{self.task_id} failed with terminal state: {run_state}"
+                yield TriggerEvent({"status": "error", "message": str(error_message), "type": "ERROR"})
+                return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e), "type": "ERROR"})
+            return

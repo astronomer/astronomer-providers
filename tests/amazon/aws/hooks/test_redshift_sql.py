@@ -210,6 +210,12 @@ def test_get_conn_params_exeception(mock_get_connection, connection_details, tes
         hook.get_conn_params()
 
 
+def test_execute_query_exception_exception_with_none_sql():
+    hook = RedshiftDataHook(client_type="redshift-data")
+    with pytest.raises(AirflowException):
+        hook.execute_query(None, params=None)
+
+
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn_params")
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
 def test_execute_query_exception(mock_conn, mock_params):

@@ -10,7 +10,7 @@ TEST_TASK_ID = "123"
 POLLING_PERIOD_SECONDS = 4.0
 
 
-def test_redhsift_sqltrigger_serialization():
+def test_redshift_sql_trigger_serialization():
     """
     Asserts that the RedshiftSQLTrigger correctly serializes its arguments
     and classpath.

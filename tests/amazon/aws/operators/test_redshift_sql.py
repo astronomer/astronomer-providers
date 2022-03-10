@@ -34,6 +34,18 @@ def test_redshiftsql_op_async(mock_execute):
     assert isinstance(exc.value.trigger, RedshiftSQLTrigger), "Trigger is not a RedshiftSQLTrigger"
 
 
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
+def test_redshiftsql_op_async_execute_query_error(mock_execute, context):
+    mock_execute.return_value = [], {"status": "error", "message": "Test exception"}
+    task = RedshiftSQLOperatorAsync(
+        task_id=TEST_TASK_ID,
+        sql=TEST_SQL,
+        params=TEST_PARAMATERS,
+    )
+    with pytest.raises(AirflowException):
+        task.execute(context)
+
+
 def test_redshiftsql_op_async_execute_failure(context):
     """Tests that an AirflowException is raised in case of error event"""
 
