@@ -88,3 +88,12 @@ repos:
           ^dev|
           .*example_dags/.*|
         additional_dependencies: ['toml']
+
+  - repo: local
+    hooks:
+      - id: sync-all-extras-setup.cfg
+        name: Sync "all" extra in setup.cfg
+        language: python
+        files: ^setup.cfg$
+        pass_filenames: false
+        entry: .circleci/scripts/pre_commit_setup_cfg_all_extra.py

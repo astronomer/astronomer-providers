@@ -63,7 +63,7 @@ jobs:
             - mypy-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[mypy]
+          command: pip install -U -e .[all,mypy]
       - run:
           name: Run Mypy
           command: |
@@ -92,7 +92,7 @@ jobs:
             - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[tests]
+          command: pip install -U -e .[all,tests]
       - run:
           name: Run tests
           command: |

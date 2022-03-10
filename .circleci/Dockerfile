@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -U -r ci/requirements.txt
 
 COPY . .
 
-RUN pip install -U .[tests]
+RUN pip install -U .[all,tests]
