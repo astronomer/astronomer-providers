@@ -9,11 +9,10 @@ log = logging.getLogger(__name__)
 
 
 class AwsBaseHookAsync(AwsBaseHook):
-    """
-    Interacts with AWS using aiobotocore asynchronously
-    """
+    """Interacts with AWS using aiobotocore asynchronously."""
 
     async def get_client_async(self) -> AioBaseClient:
+        """Create an Async Client object to communicate with AWS services."""
         # Fetch the Airflow connection object
         connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
         extra_config = connection_object.extra_dejson

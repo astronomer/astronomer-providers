@@ -15,6 +15,22 @@ from asgiref.sync import sync_to_async
 
 
 class DatabricksHookAsync(DatabricksHook):
+    """
+    Interact with Databricks.
+
+    :param databricks_conn_id: Reference to the Databricks connection.
+    :type databricks_conn_id: str
+    :param timeout_seconds: The amount of time in seconds the requests library
+        will wait before timing-out.
+    :type timeout_seconds: int
+    :param retry_limit: The number of times to retry the connection in case of
+        service outages.
+    :type retry_limit: int
+    :param retry_delay: The number of seconds to wait between retries (it
+        might be a floating point number).
+    :type retry_delay: float
+    """
+
     async def get_run_state_async(self, run_id: str) -> RunState:
         """
         Retrieves run state of the run using an asynchronous api call.
@@ -37,6 +53,7 @@ class DatabricksHookAsync(DatabricksHook):
     ) -> Dict[str, Any]:
         """
         Utility function to perform an asynchronous API call with retries
+
         :param endpoint_info: Tuple of method and endpoint
         :type endpoint_info: tuple[string, string]
         :param json: Parameters for this API call.

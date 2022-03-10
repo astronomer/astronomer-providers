@@ -14,12 +14,9 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-class ExternalTaskSensorAsync(ExternalTaskSensor):
+class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
     def execute(self, context: Dict[str, Any]) -> None:
-        """
-        Logic that the sensor uses to correctly identify which trigger to
-        execute, and defer execution as expected.
-        """
+        """Correctly identify which trigger to execute, and defer execution as expected."""
         execution_dates = self.get_execution_dates(context)
 
         # Work out if we are a DAG sensor or a Task sensor
@@ -53,10 +50,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
     def execute_complete(
         self, context: Dict[str, Any], session: "Session", event: Optional[Dict[str, Any]] = None
     ) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Verifies that there is a success status for each task via execution date.
-        """
+        """Verifies that there is a success status for each task via execution date."""
         execution_dates = self.get_execution_dates(context)
         count_allowed = self.get_count(execution_dates, session, self.allowed_states)
         if count_allowed != len(execution_dates):
@@ -69,10 +63,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):
         return None
 
     def get_execution_dates(self, context: Dict[str, Any]) -> List[datetime.datetime]:
-        """
-        Helper function to set execution dates depending on which context and/or
-        internal fields are populated.
-        """
+        """Helper function to set execution dates depending on which context and/or internal fields are populated."""
         if self.execution_delta:
             execution_date = context["execution_date"] - self.execution_delta
         elif self.execution_date_fn:

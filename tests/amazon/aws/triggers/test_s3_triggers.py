@@ -8,6 +8,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
+    S3PrefixTrigger,
 )
 
 
@@ -161,8 +162,7 @@ def test_s3_keys_unchanged_trigger_serialization():
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 async def test_s3_keys_unchanged_trigger_run(mock_client):
     """
-    Test if the task is run is in triggerr successfully.
-    :return:
+    Test if the task is run is in triggerer successfully.
     """
     mock_client.return_value.check_key.return_value = True
     trigger = S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test")
@@ -187,11 +187,56 @@ def test_s3_keys_unchanged_trigger_raise_value_error():
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.is_keys_unchanged")
 async def test_s3_keys_unchanged_trigger_run_success(mock_is_keys_unchanged, mock_client):
     """
-    Test if the task is run is in triggerr successfully.
-    :return:
+    Test if the task is run is in triggerer successfully.
     """
     mock_is_keys_unchanged.return_value = {"status": "success"}
     trigger = S3KeysUnchangedTrigger(bucket_name="test_bucket", prefix="test")
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "success"}) in task
+
+
+def test_s3_prefix_sensor_trigger_serialization():
+    """
+    Asserts that the S3 prefix trigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = S3PrefixTrigger(bucket_name="test-bucket", prefix="test")
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3PrefixTrigger"
+    assert kwargs == {
+        "bucket_name": "test-bucket",
+        "prefix": ["test"],
+        "delimiter": "/",
+        "aws_conn_id": "aws_default",
+        "verify": None,
+        "hook_params": {},
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync._check_for_prefix")
+async def test_s3_prefix_sensor_trigger_success(mock_check_for_prefix):
+    """
+    Test if the S3 prefix trigger fires correct event in case of success.
+    """
+    mock_check_for_prefix.return_value = True
+
+    trigger = S3PrefixTrigger(bucket_name="test-bucket", prefix="test")
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success", "message": "Success criteria met. Exiting."}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_prefix_sensor_trigger_failure(mock_client):
+    """
+    Test if the S3 prefix trigger fires correct event in case of failure.
+    """
+    mock_client.side_effect = Exception("Test exception")
+
+    trigger = S3PrefixTrigger(bucket_name="test-bucket", prefix="test")
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task

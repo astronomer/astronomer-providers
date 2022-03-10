@@ -6,7 +6,7 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.amazon.aws.hooks.redshift_cluster import RedshiftHookAsync
 
 
-class RedshiftClusterTrigger(BaseTrigger):
+class RedshiftClusterTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         task_id: str,
@@ -15,6 +15,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         cluster_identifier: str,
         operation_type: str,
     ):
+        super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
         self.aws_conn_id = aws_conn_id
@@ -22,9 +23,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         self.operation_type = operation_type
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes RedshiftClusterTrigger arguments and classpath.
-        """
+        """Serializes RedshiftClusterTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger",
             {
@@ -68,7 +67,7 @@ class RedshiftClusterTrigger(BaseTrigger):
             return
 
 
-class RedshiftClusterSensorTrigger(BaseTrigger):
+class RedshiftClusterSensorTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         task_id: str,
@@ -77,6 +76,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         target_status: str,
         polling_period_seconds: float,
     ):
+        super().__init__()
         self.task_id = task_id
         self.aws_conn_id = aws_conn_id
         self.cluster_identifier = cluster_identifier
@@ -84,9 +84,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         self.polling_period_seconds = polling_period_seconds
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes RedshiftClusterSensorTrigger arguments and classpath.
-        """
+        """Serializes RedshiftClusterSensorTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterSensorTrigger",
             {
@@ -99,9 +97,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Simple async function run until the cluster status match the target status.
-        """
+        """Simple async function run until the cluster status match the target status."""
         try:
             hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
             while True:

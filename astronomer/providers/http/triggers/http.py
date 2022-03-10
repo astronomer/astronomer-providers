@@ -13,8 +13,7 @@ class HttpTrigger(BaseTrigger):
 
     :param endpoint: The relative part of the full url
     :type endpoint: str
-    :param http_conn_id: The :ref:`http connection<howto/connection:http>` to run the
-        sensor against
+    :param http_conn_id: The HTTP Connection ID to run the sensor against
     :type http_conn_id: str
     :param method: The HTTP request method to use
     :type method: str
@@ -43,6 +42,7 @@ class HttpTrigger(BaseTrigger):
         extra_options: Optional[Dict[str, Any]] = None,
         poll_interval: float = 5.0,
     ):
+        super().__init__()
         self.endpoint = endpoint
         self.method = method
         self.data = data
@@ -52,9 +52,7 @@ class HttpTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes HttpTrigger arguments and classpath.
-        """
+        """Serializes HttpTrigger arguments and classpath."""
         return (
             "astronomer.providers.http.triggers.http.HttpTrigger",
             {

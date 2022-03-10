@@ -12,7 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 
-class TaskStateTrigger(BaseTrigger):
+class TaskStateTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         dag_id: str,
@@ -29,9 +29,7 @@ class TaskStateTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes TaskStatetrigger arguments and classpath.
-        """
+        """Serializes TaskStateTrigger arguments and classpath."""
         return (
             "astronomer.providers.core.triggers.external_task.TaskStateTrigger",
             {
@@ -58,9 +56,7 @@ class TaskStateTrigger(BaseTrigger):
     @sync_to_async
     @provide_session
     def count_tasks(self, session: Session) -> typing.Optional[int]:
-        """
-        Count how many task instances in the database match our criteria.
-        """
+        """Count how many task instances in the database match our criteria."""
         count = (
             session.query(func.count())  # .count() is inefficient
             .filter(
@@ -74,7 +70,7 @@ class TaskStateTrigger(BaseTrigger):
         return typing.cast(int, count)
 
 
-class DagStateTrigger(BaseTrigger):
+class DagStateTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         dag_id: str,
@@ -89,9 +85,7 @@ class DagStateTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes DagStateTrigger arguments and classpath.
-        """
+        """Serializes DagStateTrigger arguments and classpath."""
         return (
             "astronomer.providers.core.triggers.external_dag.DagStateTrigger",
             {
@@ -107,7 +101,6 @@ class DagStateTrigger(BaseTrigger):
         Checks periodically in the database to see if the dag run exists, and has
         hit one of the states yet, or not.
         """
-
         while True:
             num_dags = await self.count_dags()
             if num_dags == len(self.execution_dates):
@@ -118,9 +111,7 @@ class DagStateTrigger(BaseTrigger):
     @sync_to_async
     @provide_session
     def count_dags(self, session: Session) -> typing.Optional[int]:
-        """
-        Count how many dag runs in the database match our criteria.
-        """
+        """Count how many dag runs in the database match our criteria."""
         count = (
             session.query(func.count())  # .count() is inefficient
             .filter(
