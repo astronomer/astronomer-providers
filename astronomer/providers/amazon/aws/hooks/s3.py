@@ -176,6 +176,7 @@ class S3HookAsync(AwsBaseHookAsync):
     ) -> List[str]:
         """
         Lists keys in a bucket under prefix and not containing delimiter
+
         :param bucket_name: the name of the bucket
         :param prefix: a key prefix
         :param delimiter: the delimiter marks key hierarchy.
@@ -218,6 +219,7 @@ class S3HookAsync(AwsBaseHookAsync):
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
+
         :param client: aiobotocore client
         :param bucket_name: the name of the bucket
         :param prefix: a key prefix

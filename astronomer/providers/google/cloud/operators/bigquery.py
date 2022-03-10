@@ -48,10 +48,6 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
         https://cloud.google.com/bigquery/docs/reference/v2/jobs
 
-    .. seealso::
-        For more information on how to use this operator, take a look at the guide:
-        :ref:`howto/operator:BigQueryInsertJobOperatorAsync`
-
     :param configuration: The configuration parameter maps directly to BigQuery's
         configuration field in the job  object. For more details see
         https://cloud.google.com/bigquery/docs/reference/v2/jobs
@@ -197,7 +193,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):  # noqa: D101
 
 class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     """
-    Fetches the data from a BigQuery table using Job API (alternatively fetch data for selected columns)
+    Fetches the data from a BigQuery table (alternatively fetch data for selected columns)
     and returns data in a python list. The number of elements in the returned list will
     be equal to the number of rows fetched. Each element in the list will again be a list
     where element would represent the columns values for that row.
@@ -213,7 +209,8 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         the data would still be of the form ``'A,B'``.
 
     **Example**: ::
-        get_data = BigQueryGetDataOperatorAsync(
+
+        get_data = BigQueryGetDataOperator(
             task_id='get_data_from_bq',
             dataset_id='test_dataset',
             table_id='Transaction_partitions',
@@ -224,8 +221,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
 
     :param dataset_id: The dataset ID of the requested table. (templated)
     :param table_id: The table ID of the requested table. (templated)
-    :param max_results: The maximum number of records (rows) to be fetched
-        from the table. (templated)
+    :param max_results: The maximum number of records (rows) to be fetched from the table. (templated)
     :param selected_fields: List of fields to return (comma-separated). If
         unspecified, all fields are returned.
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
@@ -320,10 +316,6 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     This method constructs a query like so ::
         SELECT {metrics_threshold_dict_key} FROM {table}
         WHERE {date_filter_column}=<date>
-
-    .. seealso::
-        For more information on how to use this operator, take a look at the guide:
-        :ref:`howto/operator:BigQueryIntervalCheckOperator`
 
     :param table: the table name
     :param days_back: number of days between ds and the ds we want to check

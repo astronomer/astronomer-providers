@@ -59,15 +59,15 @@ class WaitContainerTrigger(BaseTrigger):
     def serialize(self) -> Tuple[str, Dict[str, Any]]:  # noqa: D102
         return (
             "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger",
-            dict(
-                kubernetes_conn_id=self.kubernetes_conn_id,
-                hook_params=self.hook_params,
-                pod_name=self.pod_name,
-                container_name=self.container_name,
-                pod_namespace=self.pod_namespace,
-                pending_phase_timeout=self.pending_phase_timeout,
-                poll_interval=self.poll_interval,
-            ),
+            {
+                "kubernetes_conn_id": self.kubernetes_conn_id,
+                "hook_params": self.hook_params,
+                "pod_name": self.pod_name,
+                "container_name": self.container_name,
+                "pod_namespace": self.pod_namespace,
+                "pending_phase_timeout": self.pending_phase_timeout,
+                "poll_interval": self.poll_interval,
+            },
         )
 
     async def get_hook(self) -> KubernetesHookAsync:  # noqa: D102

@@ -18,7 +18,7 @@ class DatabricksHookAsync(DatabricksHook):
     """
     Interact with Databricks.
 
-    :param databricks_conn_id: Reference to the :ref:`Databricks connection <howto/connection:databricks>`.
+    :param databricks_conn_id: Reference to the Databricks connection.
     :type databricks_conn_id: str
     :param timeout_seconds: The amount of time in seconds the requests library
         will wait before timing-out.
@@ -53,6 +53,7 @@ class DatabricksHookAsync(DatabricksHook):
     ) -> Dict[str, Any]:
         """
         Utility function to perform an asynchronous API call with retries
+
         :param endpoint_info: Tuple of method and endpoint
         :type endpoint_info: tuple[string, string]
         :param json: Parameters for this API call.

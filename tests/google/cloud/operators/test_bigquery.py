@@ -317,9 +317,12 @@ def test_bigquery_check_operator_execute_complete():
 @pytest.mark.parametrize(
     "operator_class, kwargs",
     [
-        (BigQueryCheckOperatorAsync, dict(sql="Select * from test_table")),
-        (BigQueryIntervalCheckOperatorAsync, dict(table="test_table", metrics_thresholds={"COUNT(*)": 1.5})),
-        (BigQueryValueCheckOperatorAsync, dict(sql="Select * from test_tabl", pass_value="Any")),
+        (BigQueryCheckOperatorAsync, {"sql": "Select * from test_table"}),
+        (
+            BigQueryIntervalCheckOperatorAsync,
+            {"table": "test_table", "metrics_thresholds": {"COUNT(*)": 1.5}},
+        ),
+        (BigQueryValueCheckOperatorAsync, {"sql": "Select * from test_tabl", "pass_value": "Any"}),
     ],
 )
 def test_bigquery_conn_id_deprecation_warning(operator_class, kwargs):
@@ -529,8 +532,8 @@ def test_bigquery_value_check_operator_execute_complete_failure():
 @pytest.mark.parametrize(
     "kwargs, expected",
     [
-        (dict(sql="SELECT COUNT(*) from Any"), "Argument ['pass_value'] is required"),
-        (dict(pass_value="Any"), "Argument ['sql'] is required"),
+        ({"sql": "SELECT COUNT(*) from Any"}, "Argument ['pass_value'] is required"),
+        ({"pass_value": "Any"}, "Argument ['sql'] is required"),
     ],
 )
 def test_bigquery_value_check_missing_param(kwargs, expected):

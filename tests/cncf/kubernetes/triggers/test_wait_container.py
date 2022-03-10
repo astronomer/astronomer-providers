@@ -18,19 +18,19 @@ def test_serialize():
     Asserts that the Trigger correctly serializes its arguments
     and classpath.
     """
-    expected_kwargs = dict(
-        kubernetes_conn_id=None,
-        hook_params=dict(
-            cluster_context="cluster_context",
-            config_file="config_file",
-            in_cluster="in_cluster",
-        ),
-        pod_name="pod_name",
-        container_name="container_name",
-        pod_namespace="pod_namespace",
-        pending_phase_timeout=120,
-        poll_interval=5,
-    )
+    expected_kwargs = {
+        "kubernetes_conn_id": None,
+        "hook_params": {
+            "cluster_context": "cluster_context",
+            "config_file": "config_file",
+            "in_cluster": "in_cluster",
+        },
+        "pod_name": "pod_name",
+        "container_name": "container_name",
+        "pod_namespace": "pod_namespace",
+        "pending_phase_timeout": 120,
+        "poll_interval": 5,
+    }
     trigger = WaitContainerTrigger(**expected_kwargs)
     classpath, actual_kwargs = trigger.serialize()
     assert classpath == TRIGGER_CLASS
