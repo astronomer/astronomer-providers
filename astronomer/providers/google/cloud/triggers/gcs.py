@@ -353,9 +353,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes GCSCheckBlobUpdateTimeTrigger arguments and classpath.
-        """
+        """Serializes GCSCheckBlobUpdateTimeTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger",
             {
@@ -369,6 +367,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """Simple loop until the object updated time is greater than ts datetime in bucket."""
         try:
             hook = self._get_async_hook()
             while True:

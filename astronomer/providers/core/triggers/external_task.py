@@ -3,8 +3,7 @@ import datetime
 import typing
 from typing import Any, Dict, List, Tuple
 
-from airflow.models.dagrun import DagRun
-from airflow.models.taskinstance import TaskInstance
+from airflow.models import DagRun, TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async

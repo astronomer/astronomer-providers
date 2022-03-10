@@ -273,6 +273,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         self.polling_interval = polling_interval
 
     def execute(self, context: Dict[str, Any]) -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
             trigger=GCSCheckBlobUpdateTimeTrigger(
@@ -281,7 +282,10 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                 ts=self.ts_func(context),
                 polling_period_seconds=self.polling_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=dict(delegate_to=self.delegate_to, impersonation_chain=self.impersonation_chain),
+                hook_params={
+                    "delegate_to": self.delegate_to,
+                    "impersonation_chain": self.impersonation_chain,
+                },
             ),
             method_name="execute_complete",
         )
