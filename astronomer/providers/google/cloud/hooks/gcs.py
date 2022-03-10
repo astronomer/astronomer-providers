@@ -11,12 +11,10 @@ from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookA
 DEFAULT_TIMEOUT = 60
 
 
-class GCSHookAsync(GoogleBaseHookAsync):
+class GCSHookAsync(GoogleBaseHookAsync):  # noqa: D101
     sync_hook_class = GCSHook
 
     async def get_storage_client(self, session: ClientSession) -> Storage:
-        """
-        Returns a Google Cloud Storage service object.
-        """
+        """Returns a Google Cloud Storage service object."""
         with await self.service_file_as_context() as file:
             return Storage(service_file=file, session=cast(Session, session))

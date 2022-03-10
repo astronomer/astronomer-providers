@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 class GCSBlobTrigger(BaseTrigger):
     """
     A trigger that fires and it finds the requested file or folder present in the given bucket.
-
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param google_cloud_conn_id: reference to the Google Connection
@@ -39,9 +38,7 @@ class GCSBlobTrigger(BaseTrigger):
         self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes GCSBlobTrigger arguments and classpath.
-        """
+        """Serializes GCSBlobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger",
             {
@@ -54,9 +51,7 @@ class GCSBlobTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Simple loop until the relevant file/folder is found.
-        """
+        """Simple loop until the relevant file/folder is found."""
         try:
             hook = self._get_async_hook()
             while True:
@@ -77,6 +72,7 @@ class GCSBlobTrigger(BaseTrigger):
     async def _object_exists(self, hook: GCSHookAsync, bucket_name: str, object_name: str) -> str:
         """
         Checks for the existence of a file in Google Cloud Storage.
+
         :param bucket_name: The Google Cloud Storage bucket where the object is.
         :param object_name: The name of the blob_name to check in the Google cloud
             storage bucket.
@@ -94,8 +90,8 @@ class GCSBlobTrigger(BaseTrigger):
 
 class GCSPrefixBlobTrigger(GCSBlobTrigger):
     """
-     A trigger that fires and it looks for all the objects in the given bucket
-     which matches the given prefix if not found sleep for certain interval and checks again.
+    A trigger that fires and it looks for all the objects in the given bucket
+    which matches the given prefix if not found sleep for certain interval and checks again.
 
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param prefix: The prefix of the blob_names to match in the Google cloud storage bucket
@@ -121,9 +117,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         self.prefix = prefix
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes GCSPrefixBlobTrigger arguments and classpath.
-        """
+        """Serializes GCSPrefixBlobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger",
             {
@@ -136,9 +130,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Simple loop until the matches are found for the given prefix on the bucket..
-        """
+        """Simple loop until the matches are found for the given prefix on the bucket."""
         try:
             hook = self._get_async_hook()
             while True:
@@ -222,9 +214,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         self.last_activity_time: Optional[datetime] = None
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes GCSUploadSessionTrigger arguments and classpath.
-        """
+        """Serializes GCSUploadSessionTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger",
             {

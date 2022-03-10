@@ -16,7 +16,7 @@ class HttpHookAsync(BaseHook):
     Interact with HTTP servers using Python Async.
 
     :param method: the API method to be called
-    :param http_conn_id: :ref:`http connection<howto/connection:http>` that has the base
+    :param http_conn_id: http connection id that has the base
         API url i.e https://www.google.com/ and optional authentication credentials. Default
         headers can also be specified in the Extra field in json format.
     :param auth_type: The auth type for the service

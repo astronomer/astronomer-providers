@@ -358,3 +358,66 @@ async def test_s3_key_hook_is_keys_unchanged_true(mock_list_keys, mock_client):
         ),
         "status": "success",
     }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_first_prefix, test_second_prefix",
+    [
+        ("async-prefix1/", "async-prefix2/"),
+    ],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
+async def test_s3_prefix_sensor_hook_list_prefixes(mock_client, test_first_prefix, test_second_prefix):
+    """
+    Test list_prefixes whether it returns a valid response
+    """
+    test_resp_iter = [{"CommonPrefixes": [{"Prefix": test_first_prefix}, {"Prefix": test_second_prefix}]}]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+
+    actual_output = await s3_hook_async.list_prefixes(mock_client, "test_bucket", "test")
+    expected_output = [test_first_prefix, test_second_prefix]
+    assert expected_output == actual_output
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_prefix, mock_bucket",
+    [
+        ("async-prefix1", "test_bucket"),
+        ("async-prefix2", "test_bucket"),
+    ],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.list_prefixes")
+async def test_s3_prefix_sensor_hook_check_for_prefix(
+    mock_list_prefixes, mock_client, mock_prefix, mock_bucket
+):
+    """
+    Test that _check_for_prefix method returns True when valid prefix is used and returns False
+    when invalid prefix is used
+    """
+    mock_list_prefixes.return_value = ["async-prefix1/", "async-prefix2/"]
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+
+    response = await s3_hook_async._check_for_prefix(
+        client=mock_client.return_value, prefix=mock_prefix, bucket_name=mock_bucket, delimiter="/"
+    )
+
+    assert response is True
+
+    response = await s3_hook_async._check_for_prefix(
+        client=mock_client.return_value,
+        prefix="non-existing-prefix",
+        bucket_name=mock_bucket,
+        delimiter="/",
+    )
+
+    assert response is False

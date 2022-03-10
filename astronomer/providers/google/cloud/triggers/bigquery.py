@@ -6,7 +6,7 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.google.cloud.hooks.bigquery import BigQueryHookAsync
 
 
-class BigQueryInsertJobTrigger(BaseTrigger):
+class BigQueryInsertJobTrigger(BaseTrigger):  # noqa: D101
     def __init__(
         self,
         conn_id: str,
@@ -16,6 +16,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         table_id: Optional[str] = None,
         poll_interval: float = 4.0,
     ):
+        super().__init__()
         self.log.info("Using the connection  %s .", conn_id)
         self.conn_id = conn_id
         self.job_id = job_id
@@ -26,9 +27,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes BigQueryInsertJobTrigger arguments and classpath.
-        """
+        """Serializes BigQueryInsertJobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger",
             {
@@ -42,9 +41,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Gets current job execution status and yields a TriggerEvent
-        """
+        """Gets current job execution status and yields a TriggerEvent"""
         hook = self._get_async_hook()
         while True:
             try:
@@ -77,11 +74,9 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
 
 
-class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes BigQueryCheckTrigger arguments and classpath.
-        """
+        """Serializes BigQueryCheckTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger",
             {
@@ -95,9 +90,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Gets current job execution status and yields a TriggerEvent
-        """
+        """Gets current job execution status and yields a TriggerEvent"""
         hook = self._get_async_hook()
         while True:
             try:
@@ -141,11 +134,9 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 return
 
 
-class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
+class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):  # noqa: D101
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes BigQueryInsertJobTrigger arguments and classpath.
-        """
+        """Serializes BigQueryInsertJobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
             {
@@ -159,9 +150,7 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Gets current job execution status and yields a TriggerEvent with response data
-        """
+        """Gets current job execution status and yields a TriggerEvent with response data"""
         hook = self._get_async_hook()
         while True:
             try:
@@ -192,7 +181,7 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
                 return
 
 
-class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
     def __init__(
         self,
         conn_id: str,
@@ -229,9 +218,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         self.ignore_zero = ignore_zero
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes BigQueryCheckTrigger arguments and classpath.
-        """
+        """Serializes BigQueryCheckTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger",
             {
@@ -249,9 +236,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Gets current job execution status and yields a TriggerEvent
-        """
+        """Gets current job execution status and yields a TriggerEvent"""
         hook = self._get_async_hook()
         while True:
             try:
@@ -324,7 +309,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
                 return
 
 
-class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
     def __init__(
         self,
         conn_id: str,
@@ -350,9 +335,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         self.tolerance = tolerance
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes BigQueryValueCheckTrigger arguments and classpath.
-        """
+        """Serializes BigQueryValueCheckTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger",
             {
@@ -369,9 +352,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Gets current job execution status and yields a TriggerEvent
-        """
+        """Gets current job execution status and yields a TriggerEvent"""
         hook = self._get_async_hook()
         while True:
             try:

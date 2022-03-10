@@ -35,9 +35,7 @@ class FileTrigger(BaseTrigger):
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Serializes FileTrigger arguments and classpath.
-        """
+        """Serializes FileTrigger arguments and classpath."""
         return (
             "astronomer.providers.core.triggers.filesystem.FileTrigger",
             {
@@ -48,9 +46,7 @@ class FileTrigger(BaseTrigger):
         )
 
     async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Simple loop until the relevant files are found.
-        """
+        """Simple loop until the relevant files are found."""
         while True:
             for path in glob(self.filepath, recursive=self.recursive):
                 if os.path.isfile(path):

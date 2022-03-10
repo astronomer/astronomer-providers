@@ -12,11 +12,13 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
     S3KeySensorAsync,
     S3KeySizeSensorAsync,
     S3KeysUnchangedSensorAsync,
+    S3PrefixSensorAsync,
 )
 from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeySizeTrigger,
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
+    S3PrefixTrigger,
 )
 
 
@@ -413,3 +415,44 @@ class TestS3KeysUnchangedSensorAsync(unittest.TestCase):
         )
         with pytest.raises(AirflowException):
             sensor.execute_complete(context={}, event={"status": "error", "message": "Mocked error"})
+
+
+class TestS3PrefixSensorAsync(unittest.TestCase):
+    def test_s3_prefix_sensor_async(self):
+        """
+        Asserts that a task is deferred and an S3PrefixTrigger will be fired
+        when the S3PrefixSensorAsync is executed.
+        """
+        sensor = S3PrefixSensorAsync(
+            task_id="s3_prefix_sensor_async", bucket_name="test-bucket", prefix=["prefix1", "prefix2"]
+        )
+
+        with pytest.raises(TaskDeferred) as exc:
+            sensor.execute(context)
+
+        assert isinstance(exc.value.trigger, S3PrefixTrigger), "Trigger is not a S3PrefixSensorTrigger"
+
+    def test_s3_prefix_sensor_execute_complete(self):
+        """
+        Asserts that a task is deferred and an S3PrefixTrigger will be fired
+        when the S3PrefixSensorAsync is executed.
+        """
+        sensor = S3PrefixSensorAsync(
+            task_id="s3_prefix_sensor_async", bucket_name="test-bucket", prefix=["prefix1", "prefix2"]
+        )
+
+        with mock.patch.object(sensor.log, "info") as mock_log_info:
+            sensor.execute_complete(
+                context, event={"status": "success", "message": "Success criteria met. Exiting."}
+            )
+        mock_log_info.assert_called_with("Success criteria met. Exiting.")
+
+    def test_s3_prefix_sensor_execute_failure(self):
+        """Tests that an AirflowException is raised in case of error event"""
+
+        sensor = S3PrefixSensorAsync(
+            task_id="s3_prefix_sensor_async", bucket_name="test-bucket", prefix=["prefix1", "prefix2"]
+        )
+
+        with pytest.raises(AirflowException):
+            sensor.execute_complete(context, event={"status": "error", "message": "test failure message"})

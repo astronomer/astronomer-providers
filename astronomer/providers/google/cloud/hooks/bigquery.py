@@ -1,6 +1,3 @@
-"""
-This module contains a BigQueryHookAsync
-"""
 from typing import Any, Dict, List, Optional, Union, cast
 
 from aiohttp import ClientSession as ClientSession
@@ -28,9 +25,8 @@ class _BigQueryHook(BigQueryHook):
     ) -> BigQueryJob:
         """
         Executes a BigQuery job. Initiates the job and returns job id.
-        See here:
 
-        https://cloud.google.com/bigquery/docs/reference/v2/jobs
+        See here: https://cloud.google.com/bigquery/docs/reference/v2/jobs
 
         :param configuration: The configuration parameter maps directly to
             BigQuery's configuration field in the job object. See
@@ -78,7 +74,7 @@ class _BigQueryHook(BigQueryHook):
         return job
 
 
-class BigQueryHookAsync(GoogleBaseHookAsync):
+class BigQueryHookAsync(GoogleBaseHookAsync):  # noqa: D101
     sync_hook_class = _BigQueryHook
 
     async def get_job_instance(
@@ -93,9 +89,12 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         job_id: Optional[str],
         project_id: Optional[str] = None,
     ) -> Optional[str]:
-        """Polls for job status asynchronously using gcloud-aio.
+        """
+        Polls for job status asynchronously using gcloud-aio.
+
         Note that an OSError is raised when Job results are still pending.
-        Exception means that Job finished with errors"""
+        Exception means that Job finished with errors
+        """
         async with ClientSession() as s:
             try:
                 self.log.info("Executing get_job_status...")
@@ -115,10 +114,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         job_id: Optional[str],
         project_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Get the big query job output for the given job id
-        asynchronously using gcloud-aio.
-        """
+        """Get the big query job output for the given job id asynchronously using gcloud-aio."""
         async with ClientSession() as session:
             self.log.info("Executing get_job_output..")
             job_client = await self.get_job_instance(project_id, job_id, session)
@@ -127,8 +123,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
 
     def get_records(self, query_results: Dict[str, Any], nocast: bool = True) -> List[Any]:
         """
-        Given the output query response from gcloud aio bigquery,
-        convert the response to records.
+        Given the output query response from gcloud aio bigquery, convert the response to records.
+
         :param query_results: the results from a SQL query
         :param nocast: indicates whether casting to bq data type is required or not
         """
@@ -154,8 +150,8 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
     ) -> None:
         """
         Match a single query resulting row and tolerance with pass_value
-        :return: If Match fail,
-            we throw an AirflowException.
+
+        :return: If Match fail, we throw an AirflowException.
         """
         if not records:
             raise AirflowException("The query returned None")
@@ -207,8 +203,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
     @staticmethod
     def _convert_to_float_if_possible(s: Any) -> Any:
         """
-        A small helper function to convert a string to a numeric value
-        if appropriate
+        A small helper function to convert a string to a numeric value if appropriate
 
         :param s: the string to be converted
         """
@@ -227,15 +222,15 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         ratio_formula: str,
     ) -> None:
         """
-        Checks that the values of metrics given as SQL expressions are within a certain tolerance of the ones from
-        days_back before.
+        Checks that the values of metrics given as SQL expressions are within a certain tolerance
+
         :param row1: first resulting row of a query execution job for first SQL query
         :param row2: first resulting row of a query execution job for second SQL query
-        :metrics_thresholds: a dictionary of ratios indexed by metrics, for
+        :param metrics_thresholds: a dictionary of ratios indexed by metrics, for
             example 'COUNT(*)': 1.5 would require a 50 percent or less difference
             between the current day, and the prior days_back.
-        :ignore_zero: whether we should ignore zero metrics
-        :ratio_formula: which formula to use to compute the ratio between
+        :param ignore_zero: whether we should ignore zero metrics
+        :param ratio_formula: which formula to use to compute the ratio between
             the two metrics. Assuming cur is the metric of today and ref is
             the metric to today - days_back.
             max_over_min: computes max(cur, ref) / min(cur, ref)
