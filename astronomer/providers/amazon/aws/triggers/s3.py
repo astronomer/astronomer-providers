@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -129,7 +130,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
         inactivity_seconds: int = 0,
-        previous_objects: Optional[Set[str]] = None,
+        previous_objects: Optional[Set[str]] = set(),
         allow_delete: bool = True,
         aws_conn_id: str = "aws_default",
         last_activity_time: Optional[datetime] = None,
@@ -148,6 +149,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
         self.aws_conn_id = aws_conn_id
         self.last_activity_time: Optional[datetime] = last_activity_time
         self.verify = verify
+        self.polling_period_seconds = 0
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serialize S3KeysUnchangedTrigger arguments and classpath."""
@@ -172,7 +174,6 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
                 while True:
-
                     result = await hook.is_keys_unchanged(
                         client,
                         self.bucket_name,
@@ -184,9 +185,14 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
                         self.allow_delete,
                         self.last_activity_time,
                     )
-                    if result.get("status") == "success" or result.get("error") == "error":
+                    if result.get("status") == "success" or result.get("status") == "error":
                         yield TriggerEvent(result)
                         return
+                    elif result.get("status") == "pending":
+                        self.previous_objects = result.get("previous_objects", set())
+                        self.last_activity_time = result.get("last_activity_time")
+                        self.inactivity_seconds = result.get("inactivity_seconds", 0)
+                    await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 

@@ -206,7 +206,7 @@ async def test_s3_key_hook_check_wildcard_key_invalid(mock_client):
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
-async def test_s3_key_hook_get_files(mock_client):
+async def test_s3_key_hook_get_files_without_wildcard(mock_client):
     """
     Test get_files for a valid response
     :return:
@@ -227,6 +227,32 @@ async def test_s3_key_hook_get_files(mock_client):
     s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
     mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
     response = await s3_hook_async.get_files(mock_client, "test_bucket", "test.txt", False)
+    assert response == []
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@pytest.mark.asyncio
+async def test_s3_key_hook_get_files_with_wildcard(mock_client):
+    """
+    Test get_files for a valid response
+    :return:
+    """
+    test_resp_iter = [
+        {
+            "Contents": [
+                {"Key": "test_key", "ETag": "etag1", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
+                {"Key": "test_key2", "ETag": "etag2", "LastModified": datetime(2020, 8, 14, 17, 19, 34)},
+            ]
+        }
+    ]
+    mock_paginator = mock.Mock()
+    mock_paginate = mock.MagicMock()
+    mock_paginate.__aiter__.return_value = test_resp_iter
+    mock_paginator.paginate.return_value = mock_paginate
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    mock_client.get_paginator = mock.Mock(return_value=mock_paginator)
+    response = await s3_hook_async.get_files(mock_client, "test_bucket", "test.txt", True)
     assert response == []
 
 
@@ -280,7 +306,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {"status": "pending"}
+    assert response.get("status") == "pending"
 
     # test for the case when current_objects < previous_objects
     mock_list_keys.return_value = []
@@ -298,7 +324,7 @@ async def test_s3_key_hook_is_keys_unchanged_false(mock_list_keys, mock_client):
         last_activity_time=None,
     )
 
-    assert response == {"status": "pending"}
+    assert response.get("status") == "pending"
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
@@ -326,6 +352,63 @@ async def test_s3_key_hook_is_keys_unchanged_exception(mock_list_keys, mock_clie
     )
 
     assert response == {"message": " test_bucket/test between pokes.", "status": "error"}
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+@pytest.mark.asyncio
+async def test_s3_key_hook_is_keys_unchanged_pending(mock_list_keys, mock_client):
+    """
+    Test is_key_unchanged gives AirflowException
+    :return:
+    """
+    mock_list_keys.return_value = []
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+
+    response = await s3_hook_async.is_keys_unchanged(
+        client=mock_client.return_value,
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=1,
+        min_objects=0,
+        previous_objects=set(),
+        inactivity_seconds=0,
+        allow_delete=False,
+        last_activity_time=None,
+    )
+
+    assert response.get("status") == "pending"
+
+
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+@pytest.mark.asyncio
+async def test_s3_key_hook_is_keys_unchanged_inactivity_error(mock_list_keys, mock_client):
+    """
+    Test is_key_unchanged gives AirflowException
+    :return:
+    """
+    mock_list_keys.return_value = []
+
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+
+    response = await s3_hook_async.is_keys_unchanged(
+        client=mock_client.return_value,
+        bucket_name="test_bucket",
+        prefix="test",
+        inactivity_period=0,
+        min_objects=5,
+        previous_objects=set(),
+        inactivity_seconds=5,
+        allow_delete=False,
+        last_activity_time=None,
+    )
+
+    assert response == {
+        "status": "error",
+        "message": "FAILURE: Inactivity Period passed, not enough objects found in test_bucket/test",
+    }
 
 
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")

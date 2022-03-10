@@ -215,7 +215,7 @@ class S3HookAsync(AwsBaseHookAsync):
         inactivity_seconds: int = 0,
         allow_delete: bool = True,
         last_activity_time: Optional[datetime] = None,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Any]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
@@ -252,7 +252,12 @@ class S3HookAsync(AwsBaseHookAsync):
             last_activity_time = datetime.now()
             inactivity_seconds = 0
             previous_objects = current_objects
-            return {"status": "pending"}
+            return {
+                "status": "pending",
+                "previous_objects": previous_objects,
+                "last_activity_time": last_activity_time,
+                "inactivity_seconds": inactivity_seconds,
+            }
 
         if len(previous_objects) - len(current_objects):
             # During the last poke interval objects were deleted.
@@ -265,7 +270,12 @@ class S3HookAsync(AwsBaseHookAsync):
                     "file counter and resetting last_activity_time:\n%s",
                     deleted_objects,
                 )
-                return {"status": "pending"}
+                return {
+                    "status": "pending",
+                    "previous_objects": previous_objects,
+                    "last_activity_time": last_activity_time,
+                    "inactivity_seconds": inactivity_seconds,
+                }
 
             return {
                 "status": "error",
@@ -298,4 +308,9 @@ class S3HookAsync(AwsBaseHookAsync):
                 "status": "error",
                 "message": f"FAILURE: Inactivity Period passed, not enough objects found in {path}",
             }
-        return {"status": "pending"}
+        return {
+            "status": "pending",
+            "previous_objects": previous_objects,
+            "last_activity_time": last_activity_time,
+            "inactivity_seconds": inactivity_seconds,
+        }
