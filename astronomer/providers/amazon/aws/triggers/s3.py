@@ -129,7 +129,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
         inactivity_seconds: int = 0,
-        previous_objects: Optional[Set[str]] = None,
+        previous_objects: Optional[Set[str]] = set(),
         allow_delete: bool = True,
         aws_conn_id: str = "aws_default",
         last_activity_time: Optional[datetime] = None,
@@ -188,9 +188,9 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
                         yield TriggerEvent(result)
                         return
                     elif result.get("status") == "pending":
-                        self.previous_objects = result.get("previous_objects")
+                        self.previous_objects = result.get("previous_objects", set())
                         self.last_activity_time = result.get("last_activity_time")
-                        self.inactivity_seconds = result.get("inactivity_seconds")
+                        self.inactivity_seconds = result.get("inactivity_seconds", 0)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
