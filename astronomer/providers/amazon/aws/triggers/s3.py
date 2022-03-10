@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -148,6 +149,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
         self.aws_conn_id = aws_conn_id
         self.last_activity_time: Optional[datetime] = last_activity_time
         self.verify = verify
+        self.polling_period_seconds = 0
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serialize S3KeysUnchangedTrigger arguments and classpath."""
@@ -172,7 +174,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
                 while True:
-
+                    # breakpoint()
                     result = await hook.is_keys_unchanged(
                         client,
                         self.bucket_name,
@@ -191,6 +193,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
                         self.previous_objects = result.get("previous_objects", set())
                         self.last_activity_time = result.get("last_activity_time")
                         self.inactivity_seconds = result.get("inactivity_seconds", 0)
+                    await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
