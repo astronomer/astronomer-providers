@@ -416,6 +416,18 @@ class TestS3KeysUnchangedSensorAsync(unittest.TestCase):
         with pytest.raises(AirflowException):
             sensor.execute_complete(context={}, event={"status": "error", "message": "Mocked error"})
 
+    def test_s3_keys_unchanged_sensor_raise_value_error(self):
+        """
+        Test if the S3KeysUnchangedTrigger raises Value error for negative inactivity_period.
+        """
+        with pytest.raises(ValueError):
+            S3KeysUnchangedSensorAsync(
+                task_id="s3_keys_unchanged_sensor",
+                bucket_name="test_bucket",
+                prefix="test",
+                inactivity_period=-100,
+            )
+
 
 class TestS3PrefixSensorAsync(unittest.TestCase):
     def test_s3_prefix_sensor_async(self):

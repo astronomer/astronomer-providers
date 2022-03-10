@@ -46,6 +46,18 @@ async def test_s3_key_trigger_run(mock_client):
         asyncio.get_event_loop().stop()
 
 
+@pytest.mark.asyncio
+async def test_s3_key_trigger_run_exception():
+    """
+    Test if the task is run is in triggerr successfully.
+    :return:
+    """
+    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Unable to locate credentials"}) in task
+
+
 def test_s3_key_size_trigger_serialization():
     """
     Asserts that the TaskStateTrigger correctly serializes its arguments
