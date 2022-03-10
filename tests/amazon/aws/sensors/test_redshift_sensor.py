@@ -14,12 +14,13 @@ TASK_ID = "redshift_sensor_check"
 POLLING_PERIOD_SECONDS = 1.0
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def context():
     """
     Creates an empty context.
     """
-    yield
+    context = {}
+    yield context
 
 
 def test_redshift_cluster_sensor_async():
