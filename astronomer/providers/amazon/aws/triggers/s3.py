@@ -184,9 +184,13 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
                         self.allow_delete,
                         self.last_activity_time,
                     )
-                    if result.get("status") == "success" or result.get("error") == "error":
+                    if result.get("status") == "success" or result.get("status") == "error":
                         yield TriggerEvent(result)
                         return
+                    elif result.get("status") == "pending":
+                        self.previous_objects = result.get("previous_objects")
+                        self.last_activity_time = result.get("last_activity_time")
+                        self.inactivity_seconds = result.get("inactivity_seconds")
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
