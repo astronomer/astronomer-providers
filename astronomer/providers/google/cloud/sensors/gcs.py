@@ -228,7 +228,27 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
 
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     """
-    Async version to checks if an object is updated in Google Cloud Storage
+    Async version to check if an object is updated in Google Cloud Storage
+
+    :param bucket: The Google Cloud Storage bucket where the object is.
+    :param object: The name of the object to download in the Google cloud
+        storage bucket.
+    :param ts_func: Callback for defining the update condition. The default callback
+        returns execution_date + schedule_interval. The callback takes the context
+        as parameter.
+    :param google_cloud_conn_id: The connection ID to use when
+        connecting to Google Cloud Storage.
+    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
+        if any. For this to work, the service account making the request must have
+        domain-wide delegation enabled.
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account (templated).
     """
 
     def __init__(

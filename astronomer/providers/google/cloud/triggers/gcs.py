@@ -402,10 +402,11 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         """
         Checks if the object in the bucket is updated.
 
-        :hook: GCSHookAsync Hook class
+        :param hook: GCSHookAsync Hook class
         :param bucket_name: The Google Cloud Storage bucket where the object is.
         :param object_name: The name of the blob_name to check in the Google cloud
             storage bucket.
+        :param ts: context datetime to compare with blob object updated time
         """
         async with ClientSession() as session:
             client = await hook.get_storage_client(session)

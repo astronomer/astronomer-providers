@@ -95,16 +95,12 @@ def test_snowflake_async_execute_complete_failure():
 )
 @mock.patch(LONG_MOCK_PATH)
 def test_snowflake_async_execute_complete(mock_conn, mock_event):
-    sql = """
-            CREATE TABLE IF NOT EXISTS test_airflow (
-                dummy VARCHAR(50)
-            );
-            """
+    """Tests execute_complete assert with successful message"""
 
     operator = SnowflakeOperatorAsync(
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
-        sql=sql,
+        sql=TEST_SQL,
     )
 
     with mock.patch.object(operator.log, "info") as mock_log_info:
@@ -114,7 +110,7 @@ def test_snowflake_async_execute_complete(mock_conn, mock_event):
 
 @mock.patch(LONG_MOCK_PATH)
 def test_get_db_hook(mock_get_db_hook):
-
+    """Test get_db_hook with async hook"""
     operator = SnowflakeOperatorAsync(
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
