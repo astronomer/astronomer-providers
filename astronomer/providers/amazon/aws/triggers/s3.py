@@ -174,7 +174,6 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
             hook = self._get_async_hook()
             async with await hook.get_client_async() as client:
                 while True:
-                    # breakpoint()
                     result = await hook.is_keys_unchanged(
                         client,
                         self.bucket_name,
