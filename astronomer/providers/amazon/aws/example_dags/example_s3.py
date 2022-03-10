@@ -23,9 +23,9 @@ default_args = {
 }
 
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
-S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "example_s3_test_file.txt")
-S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "exam*")
-PREFIX = os.environ.get("S3_PREFIX", "test-prefix")
+S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "test/example_s3_test_file.txt")
+S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "test*")
+PREFIX = os.environ.get("S3_PREFIX", "test")
 INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
@@ -47,6 +47,7 @@ with DAG(
         filename=LOCAL_FILE_PATH,
         dest_key=S3_BUCKET_KEY,
         dest_bucket=S3_BUCKET_NAME,
+        replace=True,
     )
 
     waiting_for_s3_key = S3KeySensorAsync(
@@ -81,7 +82,10 @@ with DAG(
         task_id="check_s3_key_unchanged_sensor",
         bucket_name=S3_BUCKET_NAME,
         prefix=PREFIX,
-        inactivity_period=INACTIVITY_PERIOD,
+        inactivity_period=60,
+        min_objects=1,
+        allow_delete=True,
+        previous_objects=set(),
     )
 
     check_s3_prefix_sensor = S3PrefixSensorAsync(
