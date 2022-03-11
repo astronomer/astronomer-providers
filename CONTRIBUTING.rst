@@ -290,6 +290,7 @@ Considerations while writing Async or Deferrable Operator
 - Inheriting the sync version of the operator wherever possible so boilerplate code can be avoided while keeping consistency. And then replacing the logic of the execute method.
 - At times the async implementation might require to call the synchronous function. We use `asgiref <https://github.com/django/asgiref>`_ ``sync_to_async`` function wrappers for this. ``sync_to_async`` lets async code call a synchronous function, which is run in a threadpool and control returned to the async coroutine when the synchronous function completes. For example:
     .. code-block:: python
+
         async def service_file_as_context(self) -> Any:  # noqa: D102
             sync_hook = await self.get_sync_hook()
             return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
