@@ -94,7 +94,7 @@ with DAG(
     (
         create_bucket
         >> [
-            delay_bash_operator_task,
+            delay_bash_operator_task
             gcs_object_exists,
             gcs_object_with_prefix_exists,
             gcs_upload_session_complete,
