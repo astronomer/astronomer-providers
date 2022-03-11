@@ -10,10 +10,15 @@ Welcome to Astronomer Providers's documentation!
    :maxdepth: 5
    :caption: Contents:
 
-   autoapi/example/index
-   modules
-   astronomer
+   :glob: directive
 
+   astronomer/amazon/index.rst
+   astronomer/google/index.rst
+   astronomer/cncf/index.rst
+   astronomer/databricks/index.rst
+   astronomer/core/index.rst
+   astronomer/http/index.rst
+   astronomer/snowflake/index.rst
 
 Indices and tables
 ==================

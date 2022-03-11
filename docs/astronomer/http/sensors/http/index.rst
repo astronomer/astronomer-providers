@@ -22,7 +22,7 @@ Classes
    Bases: :py:obj:`airflow.providers.http.sensors.http.HttpSensor`
 
    Executes a HTTP GET statement and returns False on failure caused by
-   404 Not Found or \`response_check\` returning False.
+   404 Not Found or ``response_check`` returning False.
 
    If ``response_check`` is passed, the sync version of the sensor will be used.
 

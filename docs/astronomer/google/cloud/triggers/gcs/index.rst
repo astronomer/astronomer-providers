@@ -15,6 +15,7 @@ Classes
    google.cloud.triggers.gcs.GCSBlobTrigger
    google.cloud.triggers.gcs.GCSPrefixBlobTrigger
    google.cloud.triggers.gcs.GCSUploadSessionTrigger
+   google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger
 
 
 
@@ -37,6 +38,7 @@ Attributes
    Bases: :py:obj:`airflow.triggers.base.BaseTrigger`
 
    A trigger that fires and it finds the requested file or folder present in the given bucket.
+
    :param bucket: the bucket in the google cloud storage where the objects are residing.
    :param object_name: the file or folder present in the bucket
    :param google_cloud_conn_id: reference to the Google Connection
@@ -114,3 +116,28 @@ Attributes
 
       Simple loop until no change in any new files or deleted in list blob is
       found for the inactivity_period.
+
+
+
+.. py:class:: GCSCheckBlobUpdateTimeTrigger(bucket, object_name, ts, polling_period_seconds, google_cloud_conn_id, hook_params)
+
+   Bases: :py:obj:`airflow.triggers.base.BaseTrigger`
+
+   A trigger that makes an async call to GCS to check whether the object is updated in a bucket.
+
+   :param bucket: google cloud storage bucket name cloud storage where the objects are residing.
+   :param object_name: the file or folder present in the bucket
+   :param ts: datetime object
+   :param polling_period_seconds: polling period in seconds to check for file/folder
+   :param google_cloud_conn_id: reference to the Google Connection
+   :param hook_params: DIct object has delegate_to and impersonation_chain
+
+   .. py:method:: serialize(self)
+
+      Serializes GCSCheckBlobUpdateTimeTrigger arguments and classpath.
+
+
+   .. py:method:: run(self)
+      :async:
+
+      Simple loop until the object updated time is greater than ts datetime in bucket.
