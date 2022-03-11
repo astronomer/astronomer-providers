@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 class GCSBlobTrigger(BaseTrigger):
     """
     A trigger that fires and it finds the requested file or folder present in the given bucket.
+
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param google_cloud_conn_id: reference to the Google Connection

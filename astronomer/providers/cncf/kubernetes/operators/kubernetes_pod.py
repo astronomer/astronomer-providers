@@ -24,8 +24,6 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     """
 
     def __init__(self, *, poll_interval: int = 5, **kwargs: Any):
-        self.pod = None
-        self.pod_request_obj = None
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 

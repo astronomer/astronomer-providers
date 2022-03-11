@@ -7,8 +7,6 @@ import configparser
 from pathlib import Path
 
 repo_dir = Path(__file__).parent.parent.parent
-# print(repo_dir)
-# assert repo_dir.name == "astronomer-providers", repo_dir.name
 
 config = configparser.ConfigParser(strict=False)
 config.read(repo_dir / "setup.cfg")
