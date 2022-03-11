@@ -84,7 +84,7 @@ jobs:
     executor:
       name: docker-executor
       python_version: "<<parameters.python_version>>"
-    parallelism: 2
+    parallelism: 4
     steps:
       - checkout
       - restore_cache:
