@@ -161,6 +161,85 @@ Before you submit a pull request (PR), check that it meets these guidelines:
 -   Adhere to guidelines for commit messages described in this `article <http://chris.beams.io/posts/git-commit/>`__.
     This makes the lives of those who come after you a lot easier.
 
+Static code checks
+==================
+
+We check our code quality via static code checks. The static code checks in astronomer-providers are used to verify
+that the code meets certain quality standards. All the static code checks can be run through pre-commit hooks.
+
+Your code must pass all the static code checks in the CI in order to be eligible for Code Review.
+The easiest way to make sure your code is good before pushing is to use pre-commit checks locally
+as described in the static code checks documentation.
+
+You can also run some static code checks via make command using available bash scripts.
+
+.. code-block:: bash
+
+    make run-static-checks
+
+Pre-commit hooks
+----------------
+
+Pre-commit hooks help speed up your local development cycle and place less burden on the CI infrastructure.
+Consider installing the pre-commit hooks as a necessary prerequisite.
+
+The pre-commit hooks by default only check the files you are currently working on and make
+them fast. Yet, these checks use exactly the same environment as the CI tests
+use. So, you can be sure your modifications will also work for CI if they pass
+pre-commit hooks.
+
+We have integrated the fantastic `pre-commit <https://pre-commit.com>`__ framework
+in our development workflow. To install and use it, you need at least Python 3.7 locally.
+
+Installing pre-commit hooks
+...........................
+
+It is the best to use pre-commit hooks when you have your local virtualenv or conda environment
+for astronomer-providers activated since then pre-commit hooks and other dependencies are
+automatically installed. You can also install the pre-commit hooks manually
+using ``pip install``.
+
+.. code-block:: bash
+
+    pip install pre-commit
+
+After installation, pre-commit hooks are run automatically when you commit the code and they will
+only run on the files that you change during your commit, so they are usually pretty fast and do
+not slow down your iteration speed on your changes. There are also ways to disable the ``pre-commits``
+temporarily when you commit your code with ``--no-verify`` switch or skip certain checks that you find
+to much disturbing your local workflow.
+
+Enabling pre-commit hooks
+.........................
+
+To turn on pre-commit checks for ``commit`` operations in git, enter:
+
+.. code-block:: bash
+
+    pre-commit install
+
+
+To install the checks also for ``pre-push`` operations, enter:
+
+.. code-block:: bash
+
+    pre-commit install -t pre-push
+
+
+For details on advanced usage of the install method, use:
+
+.. code-block:: bash
+
+   pre-commit install --help
+
+
+Coding style and best practices
+===============================
+
+Most of our coding style rules are enforced programmatically by flake8 and mypy (which are run automatically
+on every pull request), but there are some rules that are not yet automated and are more Airflow specific or
+semantic than style.
+
 Naming Conventions
 ------------------
 
@@ -173,6 +252,72 @@ Naming Conventions
   ``test_<object_to_test>.py``
 
 * System/Example test DAGs are placed under ``example_dags`` folder within respective folders.
+
+
+Guideline to write an example DAG
+---------------------------------
+- The example DAG should be self-sufficient as it is tested as part of the CI. For example, while implementing example DAG for ``S3KeySensorAsync``, the DAG should first create bucket, then upload s3 key, the check for key using ``S3KeySensorAsync`` and then finally delete the bucket once sensor found the key.
+- Add proper doc-strings as part of example DAG.
+- Include a long running query always in the example DAG.
+- Include a clean up step at the start of the example DAG so that there won't be failures if the resources are already present.
+- Run all the steps in example DAG even if a particular task fails.
+
+Considerations while writing Async or Deferrable Operator
+-----------------------------------------------------------------------
+- Writing a deferrable or async operator takes a bit more work. There are some main points to consider:
+    - Deferrable Operators & Triggers rely on more recent asyncio features, and as a result only work on Python 3.7 or higher.
+    - Your Operator must defer itself with a Trigger. If there is a Trigger in core Airflow you can use, great; otherwise, you will have to write one.
+    - Your Operator will be stopped and removed from its worker while deferred, and no state will persist automatically. You can persist state by asking Airflow to resume you at a certain method or pass certain kwargs, but that’s it.
+    - You can defer multiple times, and you can defer before/after your Operator does significant work, or only defer if certain conditions are met (e.g. a system does not have an immediate answer). Deferral is entirely under your control.
+    - Any Operator can defer; no special marking on its class is needed, and it’s not limited to Sensors.
+- If you want to trigger deferral, at any place in your Operator you can call ``self.defer(trigger, method_name, kwargs, timeout)``, which will raise a special exception that Airflow will catch. The arguments are:
+    - ``trigger``: An instance of a Trigger that you wish to defer on. It will be serialized into the database.
+    - ``method_name``: The method name on your Operator you want Airflow to call when it resumes.
+    - ``kwargs``: Additional keyword arguments to pass to the method when it is called. Optional, defaults to {}.
+    - ``timeout``: A timedelta that specifies a timeout after which this deferral will fail, and fail the task instance. Optional, defaults to None, meaning no timeout.
+- A Trigger is written as a class that inherits from ``BaseTrigger``, and implements three methods:
+    - ``__init__``, to receive arguments from Operators instantiating it
+    - ``run``, an asynchronous method that runs its logic and yields one or more TriggerEvent instances as an asynchronous generator
+    - ``serialize``, which returns the information needed to re-construct this trigger, as a tuple of the classpath, and keyword arguments to pass to ``__init__``
+- There’s also some design constraints in the Trigger to be aware of:
+    - The ``run`` method must be asynchronous (using Python’s asyncio), and correctly ``await`` whenever it does a blocking operation.
+    - ``run`` must ``yield`` its TriggerEvents, not return them. If it returns before yielding at least one event, Airflow will consider this an error and fail any Task Instances waiting on it. If it throws an exception, Airflow will also fail any dependent task instances.
+    - You should assume that a trigger instance may run more than once (this can happen if a network partition occurs and Airflow re-launches a trigger on a separated machine). So you must be mindful about side effects. For example you might not want to use a trigger to insert database rows.
+    - If your trigger is designed to emit more than one event (not currently supported), then each emitted event must contain a payload that can be used to deduplicate events if the trigger is being run in multiple places. If you only fire one event and don’t need to pass information back to the Operator, you can just set the payload to ``None``.
+    - A trigger may be suddenly removed from one triggerer service and started on a new one, for example if subnets are changed and a network partition results, or if there is a deployment. If desired you may implement the ``cleanup`` method, which is always called after ``run`` whether the trigger exits cleanly or otherwise.
+- The Async version of the operator should ideally be easily swappable and no DAG-facing changes should be required apart from changing Import Paths.
+- See if the official library supports async, if not find a third-party library that supports async calls. For example, ``pip install apache-airflow-providers-snowflake`` also installs ``snowflake-connector-python`` which officially support async calls to execute the queries. So it is used directly to implement deferrable operators for Snowflake. But many providers don't come with official support for async like Amazon. If not some research to find the right third-party library that support calls is important. In case of Amazon, we use `aiobotocore <https://github.com/aio-libs/aiobotocore>`_ for Async client for amazon services using botocore and aiohttp/asyncio.
+- Inheriting the sync version of the operator wherever possible so boilerplate code can be avoided while keeping consistency. And then replacing the logic of the execute method.
+- Logging: Passing the Status of the task from Trigger to the Operator or Sensors so the logs show up in the Task Logs since Triggerer logs don’t make it to Task Logs
+
+Some Common Pitfalls
+--------------------
+- At times the async implementation might require to call the synchronous function. We use `asgiref <https://github.com/django/asgiref>`_ ``sync_to_async`` function wrappers for this. ``sync_to_async`` lets async code call a synchronous function, which is run in a threadpool and control returned to the async coroutine when the synchronous function completes. For example:
+    .. code-block:: python
+
+        async def service_file_as_context(self) -> Any:  # noqa: D102
+            sync_hook = await self.get_sync_hook()
+            return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
+
+- While implementing trigger serialize method, its important to use the correct class name.
+    .. code-block:: python
+
+            def serialize(self) -> Tuple[str, Dict[str, Any]]:
+                """Serialize S3KeyTrigger arguments and classpath."""
+                return (
+                    "astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger",
+                    {
+                        "bucket_name": self.bucket_name,
+                        "bucket_key": self.bucket_key,
+                        "wildcard_match": self.wildcard_match,
+                        "aws_conn_id": self.aws_conn_id,
+                        "hook_params": self.hook_params,
+                    },
+                )
+- Add the github issue-id as part of the PR request
+- Write unit tests which respect the code coverage toleration
+- Git commit messages aligned to open source standards
+- Rebase the code from ``main`` branch regularly.
 
 Setting up Debug
 ----------------
