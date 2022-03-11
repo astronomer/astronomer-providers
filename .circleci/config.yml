@@ -63,7 +63,7 @@ jobs:
             - mypy-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[mypy]
+          command: pip install -U -e .[all,mypy]
       - run:
           name: Run Mypy
           command: |
@@ -84,6 +84,7 @@ jobs:
     executor:
       name: docker-executor
       python_version: "<<parameters.python_version>>"
+    parallelism: 2
     steps:
       - checkout
       - restore_cache:
@@ -92,11 +93,13 @@ jobs:
             - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[tests]
+          command: pip install -U -e .[all,tests]
       - run:
           name: Run tests
           command: |
-            pytest --junit-xml=test-report/report.xml
+            set -e
+            TEST_FILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
+            pytest --junit-xml=test-report/report.xml  $TEST_FILES
       - codecov/upload:
           file: coverage.xml
       - run:
