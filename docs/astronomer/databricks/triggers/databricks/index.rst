@@ -43,6 +43,3 @@ Classes
       Makes a series of asynchronous http calls via a Databrick hook. It yields a Trigger if
       response is a 200 and run_state is successful, will retry the call up to the retry limit
       if the error is 'retryable', otherwise it throws an exception.
-
-
-

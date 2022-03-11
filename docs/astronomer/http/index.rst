@@ -14,5 +14,3 @@ Subpackages
    hooks/index.rst
    sensors/index.rst
    triggers/index.rst
-
-

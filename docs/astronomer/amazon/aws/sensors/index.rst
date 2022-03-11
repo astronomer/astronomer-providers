@@ -12,5 +12,3 @@ Submodules
 
    redshift_cluster/index.rst
    s3/index.rst
-
-

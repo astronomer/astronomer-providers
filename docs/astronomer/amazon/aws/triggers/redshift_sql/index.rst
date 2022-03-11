@@ -41,6 +41,3 @@ Classes
       :async:
 
       Make async connection and execute query using the Amazon Redshift Data API.
-
-
-

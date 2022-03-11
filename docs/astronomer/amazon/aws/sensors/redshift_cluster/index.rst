@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: RedshiftClusterSensorAsync(*, poll_interval = 5, **kwargs)
 
@@ -51,6 +51,3 @@ Attributes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-

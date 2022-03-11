@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: RedshiftHookAsync(*args, **kwargs)
 
@@ -71,6 +71,3 @@ Attributes
       :param cluster_identifier: unique identifier of a cluster
       :param expected_state: expected_state example("available", "pausing", "paused"")
       :param flag: asyncio even flag set true if success and if any error
-
-
-

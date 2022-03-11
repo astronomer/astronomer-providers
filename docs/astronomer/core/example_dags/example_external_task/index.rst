@@ -22,7 +22,3 @@ Module Contents
 ---------------
 
 .. py:data:: ext_task_sensor
-   
-
-   
-

@@ -14,5 +14,3 @@ Subpackages
    hooks/index.rst
    operators/index.rst
    triggers/index.rst
-
-

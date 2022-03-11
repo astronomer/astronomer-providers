@@ -8,7 +8,3 @@ Module Contents
 ---------------
 
 .. py:data:: wait_for_me
-   
-
-   
-

@@ -41,6 +41,3 @@ Classes
       Retrieves run state of the run using an asynchronous api call.
       :param run_id: id of the run
       :return: state of the run
-
-
-

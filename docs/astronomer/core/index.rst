@@ -13,5 +13,3 @@ Subpackages
    example_dags/index.rst
    sensors/index.rst
    triggers/index.rst
-
-

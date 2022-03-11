@@ -28,9 +28,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: GCSBlobTrigger(bucket, object_name, polling_period_seconds, google_cloud_conn_id, hook_params)
 
@@ -114,6 +114,3 @@ Attributes
 
       Simple loop until no change in any new files or deleted in list blob is
       found for the inactivity_period.
-
-
-

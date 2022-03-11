@@ -44,6 +44,3 @@ Classes
       :async:
 
       Create an API Client object to interact with Kubernetes
-
-
-

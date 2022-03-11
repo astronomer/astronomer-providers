@@ -12,5 +12,3 @@ Subpackages
 
    cloud/index.rst
    common/index.rst
-
-

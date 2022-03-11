@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: S3HookAsync(*args, **kwargs)
 
@@ -39,12 +39,12 @@ Attributes
    .. py:attribute:: conn_type
       :annotation: = s3
 
-      
+
 
    .. py:attribute:: hook_name
       :annotation: = S3
 
-      
+
 
    .. py:method:: list_prefixes(self, client, bucket_name = None, prefix = None, delimiter = None, page_size = None, max_items = None)
       :async:
@@ -112,6 +112,3 @@ Attributes
           when this happens. If false an error will be raised.
       :return: dictionary with status and message
       :rtype: Dict
-
-
-

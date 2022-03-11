@@ -15,5 +15,3 @@ Subpackages
    operators/index.rst
    sensors/index.rst
    triggers/index.rst
-
-

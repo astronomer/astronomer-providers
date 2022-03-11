@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: RedshiftSQLHookAsync(*args, **kwargs)
 
@@ -66,6 +66,3 @@ Attributes
       Async function to whether the query is still running or in
       "PICKED", "STARTED", "SUBMITTED" state and returns True else
       return False
-
-
-

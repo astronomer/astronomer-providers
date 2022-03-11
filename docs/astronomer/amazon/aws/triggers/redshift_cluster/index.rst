@@ -72,6 +72,3 @@ Classes
       :async:
 
       Simple async function run until the cluster status match the target status.
-
-
-

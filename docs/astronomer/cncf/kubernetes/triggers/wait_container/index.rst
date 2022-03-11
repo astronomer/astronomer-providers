@@ -80,6 +80,3 @@ Classes
 
       In either case, Trigger classes should assume they will be persisted,
       and then rely on cleanup() being called when they are no longer needed.
-
-
-

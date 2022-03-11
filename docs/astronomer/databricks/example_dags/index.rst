@@ -11,5 +11,3 @@ Submodules
    :maxdepth: 1
 
    example_databricks/index.rst
-
-

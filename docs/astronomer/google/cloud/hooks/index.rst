@@ -12,5 +12,3 @@ Submodules
 
    bigquery/index.rst
    gcs/index.rst
-
-

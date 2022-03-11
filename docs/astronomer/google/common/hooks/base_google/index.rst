@@ -30,7 +30,7 @@ Classes
    .. py:attribute:: sync_hook_class
       :annotation: :Any
 
-      
+
 
    .. py:method:: get_sync_hook(self)
       :async:
@@ -41,6 +41,3 @@ Classes
 
    .. py:method:: service_file_as_context(self)
       :async:
-
-
-

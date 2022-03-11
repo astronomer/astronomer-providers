@@ -81,6 +81,3 @@ Classes
    .. py:method:: count_dags(self, session)
 
       Count how many dag runs in the database match our criteria.
-
-
-

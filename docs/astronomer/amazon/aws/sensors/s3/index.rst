@@ -29,9 +29,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: S3KeySensorAsync(*, bucket_key, bucket_name = None, wildcard_match = False, aws_conn_id = 'aws_default', verify = None, **kwargs)
 
@@ -165,7 +165,7 @@ Attributes
    .. py:attribute:: template_fields
       :annotation: :Sequence[str] = ['bucket_name', 'prefix']
 
-      
+
 
    .. py:method:: execute(self, context)
 
@@ -216,7 +216,7 @@ Attributes
    .. py:attribute:: template_fields
       :annotation: :Sequence[str] = ['prefix', 'bucket_name']
 
-      
+
 
    .. py:method:: execute(self, context)
 
@@ -231,6 +231,3 @@ Attributes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-

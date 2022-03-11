@@ -56,6 +56,3 @@ Functions
 
       Makes a series of connections to snowflake to get the status of the query
       by async get_query_status function
-
-
-

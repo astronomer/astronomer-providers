@@ -8,7 +8,3 @@ Module Contents
 ---------------
 
 .. py:data:: sensor_task
-   
-
-   
-

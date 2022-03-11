@@ -153,6 +153,3 @@ Classes
       :async:
 
       Gets current job execution status and yields a TriggerEvent
-
-
-

@@ -8,7 +8,3 @@ Module Contents
 ---------------
 
 .. py:data:: task_create_func
-   
-
-   
-

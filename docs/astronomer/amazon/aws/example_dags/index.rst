@@ -13,5 +13,3 @@ Submodules
    example_redshift_cluster_management/index.rst
    example_redshift_sql/index.rst
    example_s3/index.rst
-
-

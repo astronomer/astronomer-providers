@@ -12,5 +12,3 @@ Submodules
 
    example_bigquery_queries/index.rst
    example_gcs/index.rst
-
-

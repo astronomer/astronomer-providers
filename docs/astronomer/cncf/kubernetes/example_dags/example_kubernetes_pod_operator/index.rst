@@ -8,17 +8,13 @@ Module Contents
 ---------------
 
 .. py:data:: namespace
-   
 
-   
+
+
 
 .. py:data:: config_file
-   
 
-   
+
+
 
 .. py:data:: simple_async
-   
-
-   
-

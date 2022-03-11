@@ -48,6 +48,3 @@ Classes
       or data definition language (DDL)
 
       :param sql: list of query ids
-
-
-

@@ -33,22 +33,22 @@ Classes
    .. py:attribute:: conn_name_attr
       :annotation: = http_conn_id
 
-      
+
 
    .. py:attribute:: default_conn_name
       :annotation: = http_default
 
-      
+
 
    .. py:attribute:: conn_type
       :annotation: = http
 
-      
+
 
    .. py:attribute:: hook_name
       :annotation: = HTTP
 
-      
+
 
    .. py:method:: run(self, endpoint = None, data = None, headers = None, extra_options = None)
       :async:
@@ -60,6 +60,3 @@ Classes
       :param headers: additional headers to be passed through as a dictionary
       :param extra_options: Additional kwargs to pass when creating a request.
           For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
-
-
-

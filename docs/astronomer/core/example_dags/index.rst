@@ -13,5 +13,3 @@ Submodules
    example_external_task/index.rst
    example_external_task_wait_for_me/index.rst
    example_file_sensor/index.rst
-
-

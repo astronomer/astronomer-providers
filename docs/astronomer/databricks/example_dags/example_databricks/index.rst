@@ -8,17 +8,13 @@ Module Contents
 ---------------
 
 .. py:data:: notebook_task
-   
 
-   
+
+
 
 .. py:data:: default_args
-   
 
-   
+
+
 
 .. py:data:: opr_submit_run
-   
-
-   
-

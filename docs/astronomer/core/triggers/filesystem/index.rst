@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: FileTrigger(filepath, recursive = False, poll_interval = 5.0)
 
@@ -52,6 +52,3 @@ Attributes
       :async:
 
       Simple loop until the relevant files are found.
-
-
-

@@ -29,9 +29,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: S3KeyTrigger(bucket_name, bucket_key, wildcard_match = False, aws_conn_id = 'aws_default', **hook_params)
 
@@ -138,6 +138,3 @@ Attributes
       :async:
 
       Make an asynchronous connection using S3HookAsync.
-
-
-

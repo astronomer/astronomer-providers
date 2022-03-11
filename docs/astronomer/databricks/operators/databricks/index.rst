@@ -358,6 +358,3 @@ Classes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-

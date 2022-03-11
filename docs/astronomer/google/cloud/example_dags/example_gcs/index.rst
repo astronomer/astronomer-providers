@@ -13,32 +13,28 @@ Module Contents
 ---------------
 
 .. py:data:: PROJECT_ID
-   
 
-   
+
+
 
 .. py:data:: BUCKET_1
-   
 
-   
+
+
 
 .. py:data:: PATH_TO_UPLOAD_FILE
    :annotation: = dags/example_gcs.py
 
-   
+
 
 .. py:data:: PATH_TO_UPLOAD_FILE_PREFIX
    :annotation: = example_
 
-   
+
 
 .. py:data:: BUCKET_FILE_LOCATION
    :annotation: = example_gcs.py
 
-   
+
 
 .. py:data:: create_bucket
-   
-
-   
-

@@ -11,5 +11,3 @@ Submodules
    :maxdepth: 1
 
    base_google/index.rst
-
-

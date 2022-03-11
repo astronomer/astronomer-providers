@@ -8,7 +8,3 @@ Module Contents
 ---------------
 
 .. py:data:: async_http_sensor
-   
-
-   
-

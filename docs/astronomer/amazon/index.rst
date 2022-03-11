@@ -11,5 +11,3 @@ Subpackages
    :maxdepth: 3
 
    aws/index.rst
-
-

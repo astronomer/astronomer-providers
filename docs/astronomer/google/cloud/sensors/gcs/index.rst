@@ -53,12 +53,12 @@ Classes
    .. py:attribute:: template_fields
       :annotation: = ['bucket', 'object', 'impersonation_chain']
 
-      
+
 
    .. py:attribute:: ui_color
       :annotation: = #f0eee4
 
-      
+
 
    .. py:method:: execute(self, context)
 
@@ -159,6 +159,3 @@ Classes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-

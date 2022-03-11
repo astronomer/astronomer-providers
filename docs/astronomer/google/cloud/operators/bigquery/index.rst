@@ -37,7 +37,7 @@ Attributes
 .. py:data:: BIGQUERY_JOB_DETAILS_LINK_FMT
    :annotation: = https://console.cloud.google.com/bigquery?j={job_id}
 
-   
+
 
 .. py:class:: BigQueryInsertJobOperatorAsync(configuration, project_id = None, location = None, job_id = None, force_rerun = True, reattach_states = None, gcp_conn_id = 'google_cloud_default', delegate_to = None, impersonation_chain = None, cancel_on_kill = True, **kwargs)
 
@@ -348,6 +348,3 @@ Attributes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-

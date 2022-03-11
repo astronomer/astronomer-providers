@@ -8,12 +8,8 @@ Module Contents
 ---------------
 
 .. py:data:: REDSHIFT_CLUSTER_IDENTIFIER
-   
 
-   
+
+
 
 .. py:data:: start
-   
-
-   
-

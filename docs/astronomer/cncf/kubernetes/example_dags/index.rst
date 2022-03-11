@@ -11,5 +11,3 @@ Submodules
    :maxdepth: 1
 
    example_kubernetes_pod_operator/index.rst
-
-

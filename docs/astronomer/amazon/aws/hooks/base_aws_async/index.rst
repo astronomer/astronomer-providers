@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: log
-   
 
-   
+
+
 
 .. py:class:: AwsBaseHookAsync(aws_conn_id = default_conn_name, verify = None, region_name = None, client_type = None, resource_type = None, config = None)
 
@@ -40,6 +40,3 @@ Attributes
       :async:
 
       Create an Async Client object to communicate with AWS services.
-
-
-

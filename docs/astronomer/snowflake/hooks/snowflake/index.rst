@@ -85,6 +85,3 @@ Classes
       :async:
 
       Get the Query status by query ids.
-
-
-

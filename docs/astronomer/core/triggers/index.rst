@@ -12,5 +12,3 @@ Submodules
 
    external_task/index.rst
    filesystem/index.rst
-
-

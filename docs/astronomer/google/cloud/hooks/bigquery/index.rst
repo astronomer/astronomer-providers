@@ -26,9 +26,9 @@ Attributes
 
 
 .. py:data:: BigQueryJob
-   
 
-   
+
+
 
 .. py:class:: BigQueryHookAsync(**kwargs)
 
@@ -41,9 +41,9 @@ Attributes
    with them.
 
    .. py:attribute:: sync_hook_class
-      
 
-      
+
+
 
    .. py:method:: get_job_instance(self, project_id, job_id, session)
       :async:
@@ -96,6 +96,3 @@ Attributes
           the metric to today - days_back.
           max_over_min: computes max(cur, ref) / min(cur, ref)
           relative_diff: computes abs(cur-ref) / ref
-
-
-

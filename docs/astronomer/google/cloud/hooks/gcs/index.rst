@@ -33,7 +33,7 @@ Attributes
 .. py:data:: DEFAULT_TIMEOUT
    :annotation: = 60
 
-   
+
 
 .. py:class:: GCSHookAsync(**kwargs)
 
@@ -46,14 +46,11 @@ Attributes
    with them.
 
    .. py:attribute:: sync_hook_class
-      
 
-      
+
+
 
    .. py:method:: get_storage_client(self, session)
       :async:
 
       Returns a Google Cloud Storage service object.
-
-
-

@@ -51,7 +51,7 @@ Classes
        Either execution_delta or execution_date_fn can be passed to ExternalTaskSensor,
        but not both.
    :type execution_date_fn: Optional[Callable]
-   :param check_existence: Set to `True` to check if the external task exists (when
+   :param check_existence: Set to \`True\` to check if the external task exists (when
        external_task_id is not None) or check if the DAG to wait for exists (when
        external_task_id is None), and immediately cease waiting if the external task
        or DAG does not exist (default value: False).
@@ -70,6 +70,3 @@ Classes
    .. py:method:: get_execution_dates(self, context)
 
       Helper function to set execution dates depending on which context and/or internal fields are populated.
-
-
-

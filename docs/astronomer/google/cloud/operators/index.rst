@@ -11,5 +11,3 @@ Submodules
    :maxdepth: 1
 
    bigquery/index.rst
-
-

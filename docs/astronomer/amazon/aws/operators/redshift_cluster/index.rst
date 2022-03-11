@@ -45,7 +45,7 @@ Classes
 
    Bases: :py:obj:`airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftPauseClusterOperator`
 
-   Pause an AWS Redshift Cluster if cluster status is in `available` state
+   Pause an AWS Redshift Cluster if cluster status is in \`available\` state
 
    :param cluster_identifier: id of the AWS Redshift Cluster
    :param aws_conn_id: aws connection to use
@@ -61,6 +61,3 @@ Classes
       Callback for when the trigger fires - returns immediately.
       Relies on trigger to throw an exception, otherwise it assumes execution was
       successful.
-
-
-
