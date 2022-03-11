@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 from airflow.models.dag import DAG
+from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.gcs import (
     GCSCreateBucketOperator,
     GCSDeleteBucketOperator,
@@ -39,6 +40,9 @@ with DAG(
         task_id="create_bucket", bucket_name=BUCKET_1, project_id=PROJECT_ID
     )
     # [END howto_create_bucket_task]
+    # []
+    delay_bash_operator_task = BashOperator(task_id="delay_bash_operator_task", bash_command="sleep 5s")
+    # []
     # [START howto_upload_file_task]
     upload_file = LocalFilesystemToGCSOperator(
         task_id="upload_file",
@@ -85,8 +89,8 @@ with DAG(
 
     (
         create_bucket
-        >> upload_file
         >> [
+            delay_bash_operator_task >> upload_file,
             gcs_object_exists,
             gcs_object_with_prefix_exists,
             gcs_upload_session_complete,
