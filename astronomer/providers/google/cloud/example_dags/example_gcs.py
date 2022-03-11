@@ -1,5 +1,4 @@
 """Example Airflow DAG for Google Cloud Storage operators."""
-
 import os
 from datetime import datetime
 
@@ -21,12 +20,10 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
-BUCKET_1 = os.environ.get("GCP_TEST_BUCKET", "test-gcs-example-bucket")
+BUCKET_1 = os.environ.get("GCP_TEST_BUCKET", "test-gcs-bucket-astronomer-providers")
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"
-
 BUCKET_FILE_LOCATION = "example_gcs.py"
-
 with DAG(
     "example_async_gcs_sensors",
     start_date=datetime(2021, 1, 1),
@@ -34,15 +31,23 @@ with DAG(
     schedule_interval="@once",
     tags=["example"],
 ) as dag:
-
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
-        task_id="create_bucket", bucket_name=BUCKET_1, project_id=PROJECT_ID
+        task_id="create_bucket1",
+        bucket_name=BUCKET_1,
+        project_id=PROJECT_ID,
+        resource={
+            "iamConfiguration": {
+                "uniformBucketLevelAccess": {
+                    "enabled": False,
+                },
+            },
+        },
     )
     # [END howto_create_bucket_task]
-    # []
-    delay_bash_operator_task = BashOperator(task_id="delay_bash_operator_task", bash_command="sleep 5s")
-    # []
+    # [START delay_bash_operator_task]
+    delay_bash_operator_task = BashOperator(task_id="delay_bash_operator_task", bash_command="sleep 15s")
+    # [END delay_bash_operator_task]
     # [START howto_upload_file_task]
     upload_file = LocalFilesystemToGCSOperator(
         task_id="upload_file",
@@ -86,19 +91,27 @@ with DAG(
     # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(task_id="delete_bucket", bucket_name=BUCKET_1)
     # [END howto_delete_buckettask]
-
     (
         create_bucket
         >> [
-            delay_bash_operator_task >> upload_file,
+            delay_bash_operator_task,
+            gcs_object_exists,
+            gcs_object_with_prefix_exists,
+            gcs_upload_session_complete,
+        ]
+    )
+    (
+        delay_bash_operator_task
+        >> upload_file
+        >> gcs_update_object_exists
+        >> delete_bucket
+        << [
             gcs_object_exists,
             gcs_object_with_prefix_exists,
             gcs_upload_session_complete,
             gcs_update_object_exists,
         ]
-        >> delete_bucket
     )
-
 if __name__ == "__main__":
     dag.clear()
     dag.run()
