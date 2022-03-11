@@ -287,7 +287,12 @@ Considerations while writing Async or Deferrable Operator
     - A trigger may be suddenly removed from one triggerer service and started on a new one, for example if subnets are changed and a network partition results, or if there is a deployment. If desired you may implement the ``cleanup`` method, which is always called after ``run`` whether the trigger exits cleanly or otherwise.
 - The Async version of the operator should ideally be easily swappable and no DAG-facing changes should be required apart from changing Import Paths.
 - See if the official library supports async, if not find a third-party library that supports async calls. For example, ``pip install apache-airflow-providers-snowflake`` also installs ``snowflake-connector-python`` which officially support async calls to execute the queries. So it is used directly to implement deferrable operators for Snowflake. But many providers don't come with official support for async like Amazon. If not some research to find the right third-party library that support calls is important. In case of Amazon, we use `aiobotocore <https://github.com/aio-libs/aiobotocore>`_ for Async client for amazon services using botocore and aiohttp/asyncio.
-- Inheriting the sync version of the operator wherever possible so boilerplate code can be avoided while keeping consistency. And then replacing the logic of the execute method
+- Inheriting the sync version of the operator wherever possible so boilerplate code can be avoided while keeping consistency. And then replacing the logic of the execute method.
+- At times the async implementation might require to call the synchronous function. We use `asgiref <https://github.com/django/asgiref>`_ ``sync_to_async`` function wrappers for this. ``sync_to_async`` lets async code call a synchronous function, which is run in a threadpool and control returned to the async coroutine when the synchronous function completes. For example:
+    .. code-block:: python
+        async def service_file_as_context(self) -> Any:  # noqa: D102
+            sync_hook = await self.get_sync_hook()
+            return await sync_to_async(sync_hook.provide_gcp_credential_file_as_context)()
 - Logging: Passing the Status of the task from Trigger to the Operator or Sensors so the logs show up in the Task Logs since Triggerer logs don’t make it to Task Logs
 
 Setting up Debug
