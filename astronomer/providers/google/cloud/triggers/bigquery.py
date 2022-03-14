@@ -459,6 +459,6 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
             except Exception as e:
                 # when url is not found it returns 404 error it should poll and wait
                 # until the table id is found
-                if e.status == 404: # type: ignore[attr-defined]
+                if e.status == 404:  # type: ignore[attr-defined]
                     return False
                 raise e

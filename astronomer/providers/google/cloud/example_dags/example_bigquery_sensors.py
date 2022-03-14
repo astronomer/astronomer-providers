@@ -1,6 +1,4 @@
-"""
-Example Airflow DAG for Google BigQuery Sensors.
-"""
+"""Example Airflow DAG for Google BigQuery Sensors."""
 import os
 from datetime import datetime
 
@@ -16,7 +14,7 @@ from airflow.providers.google.cloud.sensors.bigquery import (
 )
 
 from astronomer.providers.google.cloud.sensors.bigquery import (
-    BigQueryTableExistenceSensorAsync
+    BigQueryTableExistenceSensorAsync,
 )
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -39,7 +37,7 @@ dag_id = "example_bigquery_sensors"
 
 with models.DAG(
     dag_id,
-    schedule_interval='@once',  # Override to match your needs
+    schedule_interval="@once",  # Override to match your needs
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=["example"],
