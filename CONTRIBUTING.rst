@@ -87,6 +87,7 @@ You can configure the Docker-based development environment as follows:
    - ``make stop`` - To stop all the containers
    - ``make clean`` - To remove all the containers along with volumes
    - ``make help`` - To view the available commands
+   - ``make build`` - To re-build the docker image
    - ``make build-run`` - To build the docker image and then run containers
    - ``make restart`` - To restart Scheduler & Triggerer containers
    - ``make restart-all`` - To restart all the containers

@@ -1,4 +1,4 @@
-.PHONY: dev clean stop build-run restart restart-all run-tests run-static-checks help
+.PHONY: dev clean stop build build-run restart restart-all run-mypy run-tests run-static-checks help
 
 # If the first argument is "run"...
 ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
@@ -23,6 +23,9 @@ stop: ## Stop all the containers
 clean: ## Remove all the containers along with volumes
 	docker-compose -f dev/docker-compose.yaml down  --volumes --remove-orphans
 	rm -rf dev/logs
+
+build: ## Build the Docker image (ignoring cache)
+	docker build -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
 
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
