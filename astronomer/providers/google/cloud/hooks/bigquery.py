@@ -4,7 +4,7 @@ from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-from gcloud.aio.bigquery import Job
+from gcloud.aio.bigquery import Job, Table
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 from requests import Session
 
@@ -299,3 +299,22 @@ class BigQueryHookAsync(GoogleBaseHookAsync):  # noqa: D101
             raise AirflowException(f"The following tests have failed:\n {', '.join(sorted(failed_tests))}")
 
         self.log.info("All tests have passed")
+
+
+class BigQueryTableHookAsync(GoogleBaseHookAsync):
+    """Class to get async hook for Bigquery Table Async"""
+
+    sync_hook_class = BigQueryHook
+
+    async def get_table_client(
+        self, dataset: str, table_id: str, project_id: str, session: ClientSession
+    ) -> Table:
+        """Returns a Google Big Query Table object."""
+        with await self.service_file_as_context() as file:
+            return Table(
+                dataset_name=dataset,
+                table_name=table_id,
+                project=project_id,
+                service_file=file,
+                session=cast(Session, session),
+            )
