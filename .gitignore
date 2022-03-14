@@ -45,3 +45,4 @@ coverage.xml
 
 # Mypy Cache
 .mypy_cache
+/docs/astronomer/
