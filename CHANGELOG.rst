@@ -40,17 +40,17 @@ Changelog
    * - ``KubernetesPodOperatorAsync``
      - .. code-block:: python
 
-        from astronomer_operators.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperatorAsync
+        from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperatorAsync
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/1.0.0/astronomer/providers/cncf/kubernetes/example_dags/example_kubernetes_pod_operator.py>`_
    * - ``ExternalTaskSensorAsync``
      - .. code-block:: python
 
-        from astronomer_operators.core.sensors.external_task import ExternalTaskSensorAsync
+        from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/1.0.0/astronomer/providers/core/example_dags/example_external_task.py>`_
    * - ``FileSensorAsync``
      - .. code-block:: python
 
-        from astronomer_operators.core.sensors.filesystem import FileSensorAsync
+        from astronomer.providers.core.sensors.filesystem import FileSensorAsync
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/1.0.0/astronomer/providers/core/example_dags/example_file_sensor.py>`_
    * - ``DatabricksRunNowOperatorAsync``
      - .. code-block:: python
