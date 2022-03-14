@@ -163,7 +163,7 @@ Before you submit a pull request (PR), check that it meets these guidelines:
     This makes the lives of those who come after you a lot easier.
 
 Static code checks
-==================
+------------------
 
 We check our code quality via static code checks. The static code checks in astronomer-providers are used to verify
 that the code meets certain quality standards. All the static code checks can be run through pre-commit hooks.
@@ -193,7 +193,7 @@ We have integrated the fantastic `pre-commit <https://pre-commit.com>`__ framewo
 in our development workflow. To install and use it, you need at least Python 3.7 locally.
 
 Installing pre-commit hooks
-...........................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is the best to use pre-commit hooks when you have your local virtualenv or conda environment
 for astronomer-providers activated since then pre-commit hooks and other dependencies are
@@ -211,7 +211,7 @@ temporarily when you commit your code with ``--no-verify`` switch or skip certai
 to much disturbing your local workflow.
 
 Enabling pre-commit hooks
-.........................
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To turn on pre-commit checks for ``commit`` operations in git, enter:
 
@@ -235,14 +235,14 @@ For details on advanced usage of the install method, use:
 
 
 Coding style and best practices
-===============================
+-------------------------------
 
 Most of our coding style rules are enforced programmatically by flake8 and mypy (which are run automatically
 on every pull request), but there are some rules that are not yet automated and are more Airflow specific or
 semantic than style.
 
 Naming Conventions
-------------------
+^^^^^^^^^^^^^^^^^^
 
 * Class names contain 'Operator', 'Hook', 'Sensor', 'Trigger' - for example ``BigQueryInsertJobOperatorAsync``, ``BigQueryHookAsync``
 
@@ -256,7 +256,7 @@ Naming Conventions
 
 
 Guideline to write an example DAG
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - The example DAG should be self-sufficient as it is tested as part of the CI. For example, while implementing example DAG for ``S3KeySensorAsync``, the DAG should first create bucket, then upload s3 key, the check for key using ``S3KeySensorAsync`` and then finally delete the bucket once sensor found the key.
 - Add proper doc-strings as part of example DAG.
 - Include a long running query always in the example DAG.
@@ -264,7 +264,7 @@ Guideline to write an example DAG
 - Run all the steps in example DAG even if a particular task fails.
 
 Considerations while writing Async or Deferrable Operator
------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Writing a deferrable or async operator takes a bit more work. There are some main points to consider:
     - Deferrable Operators & Triggers rely on more recent asyncio features, and as a result only work on Python 3.7 or higher.
     - Your Operator must defer itself with a Trigger. If there is a Trigger in core Airflow you can use, great; otherwise, you will have to write one.
@@ -320,8 +320,8 @@ Some Common Pitfalls
 - Git commit messages aligned to open source standards
 - Rebase the code from ``main`` branch regularly.
 
-Setting up Debug
-----------------
+Debugging
+---------
 
 1. Debugging an example DAG
 

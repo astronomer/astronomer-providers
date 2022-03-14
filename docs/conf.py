@@ -12,6 +12,7 @@
 #
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -19,10 +20,10 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "Astronomer Providers"
-author = "Astronomer"
+author = "Astronomer Inc."
 
 # The full version, including alpha/beta/rc tags
-release = "1.0.0a1"
+release = "1.1.0.dev1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -32,7 +33,9 @@ release = "1.0.0a1"
 # ones.
 extensions = [
     "autoapi.extension",
-    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -66,31 +69,25 @@ html_theme = "alabaster"
 # documentation.
 #
 html_theme_options = {
-    "description": "Astronomer Providers",
-    "fixed_sidebar": True,
+    "description": "Airflow Providers containing Deferrable Operators & Sensors from Astronomer",
+    "github_user": "astronomer-providers",
+    "github_repo": "astronomer",
 }
 
 
 # Custom sidebar templates, maps document names to template names.
 #
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "searchbox.html",
-    ]
-}
+# html_sidebars = {}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-autoapi_dirs = ["../astronomer"]
-autoapi_add_toctree_entry = False
-autoapi_root = "../astronomer"
+# html_static_path = ["_static"]
+
+# -- AutoAPI ---------------------------------------------------------------
+autoapi_dirs = [str(prov_dir) for prov_dir in Path("../astronomer/providers/").iterdir()]
 
 autoapi_generate_api_docs = True
-autodoc_typehints = "description"
-
 
 # The default options for autodoc directives. They are applied to all autodoc directives automatically.
 autodoc_default_options = {"show-inheritance": True, "members": True}
@@ -105,12 +102,12 @@ autoapi_keep_files = True
 
 # Relative path to output the AutoAPI files into. This can also be used to place the generated documentation
 # anywhere in your documentation hierarchy.
-autoapi_root = "astronomer"
+autoapi_root = "_api"
 
 # Whether to insert the generated documentation into the TOC tree. If this is False, the default AutoAPI
 # index page is not generated and you will need to include the generated documentation in a
 # TOC tree entry yourself.
-autoapi_add_toctree_entry = False
+autoapi_add_toctree_entry = True
 
 # By default autoapi will include private members -- we don't want that!
 autoapi_options = [
@@ -123,16 +120,22 @@ autoapi_options = [
 
 suppress_warnings = [
     "autoapi.python_import_resolution",
+    "ref.doc",
 ]
 
-# -- Options for ext.exampleinclude --------------------------------------------
-exampleinclude_sourceroot = os.path.abspath("..")
-
-# -- Options for ext.redirects -------------------------------------------------
-redirects_file = "redirects.txt"
 autoapi_python_use_implicit_namespaces = True
-autoapi_member_order = "groupwise"
 
-# Napoleon settings
-napoleon_google_docstring = True
-napoleon_numpy_docstring = False
+# -- Intersphinx configuration ------------------------------------------------
+intersphinx_mapping = {
+    "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable/", None),
+    "airflow-databricks": (
+        "https://airflow.apache.org/docs/apache-airflow-providers-databricks/stable/",
+        None,
+    ),
+    "airflow-google": ("https://airflow.apache.org/docs/apache-airflow-providers-google/stable/", None),
+    "airflow-kubernetes": (
+        "https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/",
+        None,
+    ),
+    "airflow-snowflake": ("https://airflow.apache.org/docs/apache-airflow-providers-snowflake/stable/", None),
+}
