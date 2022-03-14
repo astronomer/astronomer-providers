@@ -1,5 +1,4 @@
 """This module contains Google Big Query sensors."""
-import warnings
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -38,21 +37,11 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
 
     def __init__(
         self,
-        gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
-        if self.bigquery_conn_id:
-            warnings.warn(
-                "The bigquery_conn_id parameter has been deprecated. You should pass "
-                "the gcp_conn_id parameter.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            gcp_conn_id = self.bigquery_conn_id
-        self.gcp_conn_id = gcp_conn_id
 
     def execute(self, context: Dict[str, Any]) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""

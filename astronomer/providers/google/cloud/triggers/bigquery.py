@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientResponseError
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.google.cloud.hooks.bigquery import (
@@ -456,9 +457,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
                 )
                 response = await client.get()
                 return True if response else False
-            except Exception as e:
-                # when url is not found it returns 404 error it should poll and wait
-                # until the table id is found
-                if e.status == 404:  # type: ignore[attr-defined]
+            except ClientResponseError as err:
+                if err.status == 404:
                     return False
-                raise e
+                raise err
