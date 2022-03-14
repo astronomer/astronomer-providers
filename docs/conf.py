@@ -32,10 +32,6 @@ release = "1.0.0a1"
 # ones.
 extensions = [
     "autoapi.extension",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.inheritance_diagram",
     "sphinx.ext.napoleon",
 ]
 
