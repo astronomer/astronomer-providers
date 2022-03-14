@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.napoleon",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -44,12 +45,12 @@ templates_path = ["_templates"]
 # If true, keep warnings as "system message" paragraphs in the built documents.
 keep_warnings = True
 
+# The master toctree document.
+master_doc = "index"
+
 # -- Options for HTML output ---------------------------------------------------
 # See: https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = "sphinx_airflow_theme"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -62,8 +63,27 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "alabaster"
 
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+html_theme_options = {
+    "description": "Astronomer Providers",
+    "fixed_sidebar": True,
+}
+
+
+# Custom sidebar templates, maps document names to template names.
+#
+html_sidebars = {
+    "**": [
+        "about.html",
+        "navigation.html",
+        "searchbox.html",
+    ]
+}
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -114,3 +134,9 @@ exampleinclude_sourceroot = os.path.abspath("..")
 
 # -- Options for ext.redirects -------------------------------------------------
 redirects_file = "redirects.txt"
+autoapi_python_use_implicit_namespaces = True
+autoapi_member_order = "groupwise"
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
