@@ -1,28 +1,22 @@
-.. Astronomer Providers documentation master file, created by
-   sphinx-quickstart on Fri Mar 11 03:36:05 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root \`toctree\` directive.
-
 Welcome to Astronomer Providers's documentation!
 ================================================
 
-.. toctree::
-   :maxdepth: 5
-   :caption: Contents:
-
-   :glob: directive
-
-   astronomer/amazon/index.rst
-   astronomer/google/index.rst
-   astronomer/cncf/index.rst
-   astronomer/databricks/index.rst
-   astronomer/core/index.rst
-   astronomer/http/index.rst
-   astronomer/snowflake/index.rst
+.. include:: ../README.rst
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
+* :ref:`Index <genindex>`
+* :ref:`Async Operators,Sensors, Triggers and Hooks Reference<modindex>`
 * :ref:`search`
+
+That's just a taste of what you can do with the astronomer-provider. For more, :doc:`take a look at the reference <providers>`.
+
+
+.. toctree::
+  :hidden:
+  :maxdepth: 2
+
+  index
+  providers
+  installations
