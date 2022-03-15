@@ -97,3 +97,9 @@ repos:
         files: ^setup.cfg$
         pass_filenames: false
         entry: .circleci/scripts/pre_commit_setup_cfg_all_extra.py
+      - id: sync-version-setup.cfg-docs-conf
+        name: Sync "version" of the package in setup.cfg and docs/conf.py
+        language: python
+        files: ^setup.cfg$|^docs/conf.py$
+        pass_filenames: false
+        entry: .circleci/scripts/pre_commit_sync_version_docs.py

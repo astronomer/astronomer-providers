@@ -16,6 +16,9 @@ Astronomer Providers
 .. image:: https://codecov.io/gh/astronomer/astronomer-providers/branch/main/graph/badge.svg?token=LPHFRC3CB3
     :target: https://codecov.io/gh/astronomer/astronomer-providers
     :alt: CodeCov
+.. image:: https://readthedocs.org/projects/astronomer-providers/badge/?version=latest
+    :target: https://astronomer-providers.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 `Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
 
