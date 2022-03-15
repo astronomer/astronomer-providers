@@ -70,8 +70,8 @@ html_theme = "alabaster"
 #
 html_theme_options = {
     "description": "Airflow Providers containing Deferrable Operators & Sensors from Astronomer",
-    "github_user": "astronomer-providers",
-    "github_repo": "astronomer",
+    "github_user": "astronomer",
+    "github_repo": "astronomer-providers",
 }
 
 
