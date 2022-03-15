@@ -12,7 +12,7 @@ config = configparser.ConfigParser(strict=False)
 config.read(repo_dir / "setup.cfg")
 
 all_extra = []
-extra_to_exclude = {"tests", "mypy", "all"}
+extra_to_exclude = {"tests", "mypy", "docs", "all"}
 for k in config["options.extras_require"].keys():
     if k in extra_to_exclude:
         continue
