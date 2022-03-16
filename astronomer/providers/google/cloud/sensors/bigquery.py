@@ -37,11 +37,13 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
 
     def __init__(
         self,
+        gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
+        self.gcp_conn_id = gcp_conn_id
 
     def execute(self, context: Dict[str, Any]) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""

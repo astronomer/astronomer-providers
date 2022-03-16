@@ -19,9 +19,9 @@ from astronomer.providers.google.cloud.sensors.bigquery import (
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 DATASET_NAME = os.environ.get("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
-LOCATION = "us"
+LOCATION = os.environ.get("GCP_LOCATION", "us")
 
-TABLE_NAME = "partitioned_table"
+TABLE_NAME = os.environ.get("TABLE_NAME", "partitioned_table")
 INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
 
 PARTITION_NAME = "{{ ds_nodash }}"
@@ -37,13 +37,14 @@ dag_id = "example_bigquery_sensors"
 
 with models.DAG(
     dag_id,
-    schedule_interval="@once",  # Override to match your needs
+    schedule_interval="None",  # Override to match your needs
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=["example"],
+    tags=["example", "async", "bigquery", "sensors"],
     user_defined_macros={"DATASET": DATASET_NAME, "TABLE": TABLE_NAME},
     default_args={"project_id": PROJECT_ID},
-) as dag_with_locations:
+) as dag:
+
     create_dataset = BigQueryCreateEmptyDatasetOperator(
         task_id="create-dataset", dataset_id=DATASET_NAME, project_id=PROJECT_ID
     )

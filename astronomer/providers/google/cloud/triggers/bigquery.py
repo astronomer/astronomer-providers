@@ -423,7 +423,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         return BigQueryTableHookAsync(gcp_conn_id=self.google_cloud_conn_id)
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Simple loop until the table exists in the google big query."""
+        """Will run until the table exists in the Google Big Query."""
         while True:
             try:
                 hook = self._get_async_hook()
@@ -443,12 +443,14 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         self, hook: BigQueryTableHookAsync, dataset: str, table_id: str, project_id: str
     ) -> bool:
         """
-        Checks if the object in the bucket is updated.
+        Create client session and make call to BigQueryTableHookAsync and check for the table in Google Big Query.
 
         :param hook: BigQueryTableHookAsync Hook class
-        :param dataset: The Google Cloud Storage bucket where the object is.
-        :param table_id: The name of the blob_name to check in the Google cloud.
-        :param project_id: context datetime to compare with blob object updated time
+        :param dataset:  The name of the dataset in which to look for the table storage bucket.
+        :param table_id: The name of the table to check the existence of.
+        :param project_id: The Google cloud project in which to look for the table.
+            The connection supplied to the hook must provide
+            access to the specified project.
         """
         async with ClientSession() as session:
             try:
