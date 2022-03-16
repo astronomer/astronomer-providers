@@ -5,7 +5,7 @@ Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
 import os
 from datetime import datetime
 
-from airflow.models.dag import DAG
+from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
@@ -23,7 +23,8 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 DATASET_NAME = os.environ.get("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
-LOCATION = "us"
+GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
+LOCATION = os.environ.get("GCP_LOCATION", "us")
 
 TABLE_1 = "table1"
 TABLE_2 = "table2"
@@ -34,8 +35,6 @@ SCHEMA = [
     {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
 ]
 
-location = LOCATION
-dag_id = "example_async_bigquery_queries"
 DATASET = DATASET_NAME
 INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
 INSERT_ROWS_QUERY = (
@@ -44,18 +43,20 @@ INSERT_ROWS_QUERY = (
     f"(42, 'fishy fish', '{INSERT_DATE}');"
 )
 
+
 with DAG(
-    dag_id,
-    schedule_interval="@once",
-    start_date=datetime(2021, 1, 1),
+    dag_id="example_async_bigquery_queries",
+    schedule_interval=None,
+    start_date=datetime(2022, 1, 1),
     catchup=False,
-    tags=["example"],
+    tags=["example", "async", "bigquery"],
     user_defined_macros={"DATASET": DATASET, "TABLE": TABLE_1},
-) as dag_with_locations:
+) as dag:
     create_dataset = BigQueryCreateEmptyDatasetOperator(
-        task_id="create-dataset",
+        task_id="create_dataset",
         dataset_id=DATASET,
-        location=location,
+        location=LOCATION,
+        bigquery_conn_id=GCP_CONN_ID,
     )
 
     create_table_1 = BigQueryCreateEmptyTableOperator(
@@ -63,15 +64,20 @@ with DAG(
         dataset_id=DATASET,
         table_id=TABLE_1,
         schema_fields=SCHEMA,
-        location=location,
+        location=LOCATION,
+        bigquery_conn_id=GCP_CONN_ID,
     )
 
     create_dataset >> create_table_1
 
     delete_dataset = BigQueryDeleteDatasetOperator(
-        task_id="delete_dataset", dataset_id=DATASET, delete_contents=True
+        task_id="delete_dataset",
+        dataset_id=DATASET,
+        delete_contents=True,
+        gcp_conn_id=GCP_CONN_ID,
     )
 
+    # [START howto_operator_bigquery_insert_job_async]
     insert_query_job = BigQueryInsertJobOperatorAsync(
         task_id="insert_query_job",
         configuration={
@@ -80,9 +86,12 @@ with DAG(
                 "useLegacySql": False,
             }
         },
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
+    # [END howto_operator_bigquery_insert_job_async]
 
+    # [START howto_operator_bigquery_select_job_async]
     select_query_job = BigQueryInsertJobOperatorAsync(
         task_id="select_query_job",
         configuration={
@@ -91,8 +100,10 @@ with DAG(
                 "useLegacySql": False,
             }
         },
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
+    # [END howto_operator_bigquery_select_job_async]
 
     # [START howto_operator_bigquery_value_check_async]
     check_value = BigQueryValueCheckOperatorAsync(
@@ -100,7 +111,8 @@ with DAG(
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
         pass_value=2,
         use_legacy_sql=False,
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_operator_bigquery_value_check_async]
 
@@ -111,10 +123,12 @@ with DAG(
         days_back=1,
         metrics_thresholds={"COUNT(*)": 1.5},
         use_legacy_sql=False,
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [START howto_operator_bigquery_interval_check_async]
 
+    # [START howto_operator_bigquery_multi_query_async]
     bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
         task_id="execute_multi_query",
         configuration={
@@ -126,32 +140,40 @@ with DAG(
                 "useLegacySql": False,
             }
         },
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
+    # [END howto_operator_bigquery_multi_query_async]
 
-    # [START howto_operator_bigquery_get_data]
+    # [START howto_operator_bigquery_get_data_async]
     get_data = BigQueryGetDataOperatorAsync(
         task_id="get_data",
         dataset_id=DATASET,
         table_id=TABLE_1,
         max_results=10,
         selected_fields="value,name",
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
-    # [END howto_operator_bigquery_get_data]
+    # [END howto_operator_bigquery_get_data_async]
 
     get_data_result = BashOperator(
         task_id="get_data_result",
         bash_command=f"echo {get_data.output}",
+        trigger_rule="all_done",
     )
 
+    # [START howto_operator_bigquery_check_async]
     check_count = BigQueryCheckOperatorAsync(
         task_id="check_count",
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
         use_legacy_sql=False,
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
+    # [END howto_operator_bigquery_check_async]
 
+    # [START howto_operator_bigquery_execute_query_save_async]
     execute_query_save = BigQueryInsertJobOperatorAsync(
         task_id="execute_query_save",
         configuration={
@@ -165,8 +187,10 @@ with DAG(
                 },
             }
         },
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
+    # [END howto_operator_bigquery_execute_query_save_async]
 
     execute_long_running_query = BigQueryInsertJobOperatorAsync(
         task_id="execute_long_running_query",
@@ -196,12 +220,11 @@ with DAG(
                 "useLegacySql": False,
             }
         },
-        location=location,
+        location=LOCATION,
+        gcp_conn_id=GCP_CONN_ID,
     )
 
     create_table_1 >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> get_data >> get_data_result
     insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
-    insert_query_job >> execute_long_running_query >> check_value >> check_interval >> delete_dataset
-
-globals()[dag_id] = dag_with_locations
+    (insert_query_job >> execute_long_running_query >> check_value >> check_interval >> delete_dataset)
