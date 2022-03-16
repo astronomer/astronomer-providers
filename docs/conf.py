@@ -85,7 +85,7 @@ html_theme_options = {
 # html_static_path = ["_static"]
 
 # -- AutoAPI ---------------------------------------------------------------
-autoapi_dirs = [str(prov_dir) for prov_dir in Path("../astronomer/providers/").iterdir()]
+autoapi_dirs = sorted([str(prov_dir) for prov_dir in Path("../astronomer/providers/").iterdir()])
 
 autoapi_generate_api_docs = True
 
@@ -116,6 +116,11 @@ autoapi_options = [
     "show-inheritance",
     "show-module-summary",
     "special-members",
+]
+
+# Ignore example DAGs from the API docs
+autoapi_ignore = [
+    "*example_dags*",
 ]
 
 suppress_warnings = [
