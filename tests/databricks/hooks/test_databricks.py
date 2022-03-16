@@ -3,13 +3,11 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from airflow import __version__ as provider_version
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
     SUBMIT_RUN_ENDPOINT,
-)
-from airflow.providers.databricks.hooks.databricks import (
-    __version__ as provider_version,
 )
 from packaging import version
 
