@@ -4,6 +4,7 @@ from typing import Any, Dict, Tuple, cast
 
 import aiohttp
 from aiohttp import ClientResponseError
+from airflow import __version__
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
@@ -11,9 +12,8 @@ from airflow.providers.databricks.hooks.databricks import (
     RunState,
 )
 from asgiref.sync import sync_to_async
-from airflow import __version__
 
-USER_AGENT_HEADER = {'user-agent': f'airflow-{__version__}'}
+USER_AGENT_HEADER = {"user-agent": f"airflow-{__version__}"}
 
 
 class DatabricksHookAsync(DatabricksHook):
