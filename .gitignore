@@ -37,10 +37,10 @@ docs/rtd-deprecation/_build/
 docs/_doctrees/
 docs/_inventory_cache/
 docs/*/_api/
+docs/_api/
 
 # test reports
 test-report/
-.coverage
 coverage.xml
 
 # Mypy Cache

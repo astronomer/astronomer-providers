@@ -1,3 +1,5 @@
+import json
+import os
 from datetime import timedelta
 
 from airflow.models.dag import DAG
@@ -8,7 +10,13 @@ from astronomer.providers.databricks.operators.databricks import (
     DatabricksSubmitRunOperatorAsync,
 )
 
-notebook_task = {"notebook_path": "/Users/andrew.godwin@astronomer.io/Quickstart Notebook"}
+DATABRICKS_CONN_ID = os.environ.get("ASTRO_DATABRICKS_CONN_ID", "databricks_default")
+DATABRICKS_CLUSTER_ID = os.environ.get("DATABRICKS_CLUSTER_ID", "0806-193014-swab896")
+DATABRICKS_JOB_ID = os.environ.get("DATABRICKS_JOB_ID", "1003")
+# Notebook path as a Json object
+# Example: {"notebook_path": "/Users/andrew.godwin@astronomer.io/quickstart_notebook"}
+notebook_path = '{"notebook_path": "/Users/andrew.godwin@astronomer.io/quickstart_notebook"}'
+NOTEBOOK_TASK = json.loads(os.environ.get("DATABRICKS_NOTEBOOK_TASK", notebook_path))
 
 default_args = {
     "owner": "airflow",
@@ -20,25 +28,25 @@ default_args = {
 }
 
 with DAG(
-    "databricks_dag",
+    dag_id="example_async_databricks",
     start_date=datetime(2022, 1, 1),
-    schedule_interval="@daily",
+    schedule_interval=None,
     catchup=False,
     default_args=default_args,
+    tags=["example", "async", "databricks"],
 ) as dag:
-
     opr_submit_run = DatabricksSubmitRunOperatorAsync(
         task_id="submit_run",
-        databricks_conn_id="databricks_default",
-        existing_cluster_id="0806-193014-swab896",
-        notebook_task=notebook_task,
+        databricks_conn_id=DATABRICKS_CONN_ID,
+        existing_cluster_id=DATABRICKS_CLUSTER_ID,
+        notebook_task=NOTEBOOK_TASK,
         polling_period_seconds=30,
     )
 
     opr_run_now = DatabricksRunNowOperatorAsync(
         task_id="run_now",
-        databricks_conn_id="databricks_default",
-        job_id="1003",
+        databricks_conn_id=DATABRICKS_CONN_ID,
+        job_id=DATABRICKS_JOB_ID,
         polling_period_seconds=30,
     )
 

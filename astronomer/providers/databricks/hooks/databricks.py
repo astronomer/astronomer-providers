@@ -4,14 +4,16 @@ from typing import Any, Dict, Tuple, cast
 
 import aiohttp
 from aiohttp import ClientResponseError
+from airflow import __version__
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
-    USER_AGENT_HEADER,
     DatabricksHook,
     RunState,
 )
 from asgiref.sync import sync_to_async
+
+USER_AGENT_HEADER = {"user-agent": f"airflow-{__version__}"}
 
 
 class DatabricksHookAsync(DatabricksHook):

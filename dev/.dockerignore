@@ -7,3 +7,5 @@ tests/
 .cache
 .idea
 .mypy_cache
+*.pyc
+__pycache__/

@@ -16,6 +16,9 @@ Astronomer Providers
 .. image:: https://codecov.io/gh/astronomer/astronomer-providers/branch/main/graph/badge.svg?token=LPHFRC3CB3
     :target: https://codecov.io/gh/astronomer/astronomer-providers
     :alt: CodeCov
+.. image:: https://readthedocs.org/projects/astronomer-providers/badge/?version=latest
+    :target: https://astronomer-providers.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 `Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
 
@@ -28,6 +31,49 @@ Install and update using `pip <https://pip.pypa.io/en/stable/getting-started/>`_
 
     pip install astronomer-providers
 
+This only installs dependencies for core provider. To install all dependencies, run:
+
+.. code-block:: bash
+
+    pip install 'astronomer-providers[all]'
+
+To only install the dependencies for a specific provider, specify the integration name as extra argument, example
+to install Kubernetes provider dependencies, run:
+
+.. code-block:: bash
+
+    pip install 'astronomer-providers[cncf.kubernetes]'
+
+Extras
+^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Extra Name
+     - Installation Command
+     - Dependencies
+   * - ``all``
+     - ``pip install 'astronomer-providers[all]'``
+     - All providers
+   * - ``amazon``
+     - ``pip install 'astronomer-providers[amazon]'``
+     - Amazon
+   * - ``cncf.kubernetes``
+     - ``pip install 'astronomer-providers[cncf.kubernetes]'``
+     - Kubernetes
+   * - ``databricks``
+     - ``pip install 'astronomer-providers[databricks]'``
+     - Databricks
+   * - ``google``
+     - ``pip install 'astronomer-providers[google]'``
+     - Google Cloud
+   * - ``http``
+     - ``pip install 'astronomer-providers[http]'``
+     - HTTP
+   * - ``snowflake``
+     - ``pip install 'astronomer-providers[snowflake]'``
+     - Snowflake
 
 Example Usage
 -------------
