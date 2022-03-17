@@ -397,7 +397,6 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         hook_params: Dict[str, Any],
         poll_interval: float = 4.0,
     ):
-        super().__init__()
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id

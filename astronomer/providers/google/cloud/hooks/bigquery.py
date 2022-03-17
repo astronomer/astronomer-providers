@@ -309,7 +309,16 @@ class BigQueryTableHookAsync(GoogleBaseHookAsync):
     async def get_table_client(
         self, dataset: str, table_id: str, project_id: str, session: ClientSession
     ) -> Table:
-        """Returns a Google Big Query Table object."""
+        """
+        Returns a Google Big Query Table object.
+
+        :param dataset:  The name of the dataset in which to look for the table storage bucket.
+        :param table_id: The name of the table to check the existence of.
+        :param project_id: The Google cloud project in which to look for the table.
+            The connection supplied to the hook must provide
+            access to the specified project.
+        :param session: aiohttp ClientSession
+        """
         with await self.service_file_as_context() as file:
             return Table(
                 dataset_name=dataset,
