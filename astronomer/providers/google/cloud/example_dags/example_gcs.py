@@ -67,7 +67,7 @@ with DAG(
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_exists_task",
         execution_timeout=timedelta(seconds=60),
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_exists_task]
     # [START howto_sensor_object_with_prefix_exists_task]
@@ -76,7 +76,7 @@ with DAG(
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
         task_id="gcs_object_with_prefix_exists_task",
         execution_timeout=timedelta(seconds=60),
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_with_prefix_exists_task]
     # [START howto_sensor_gcs_upload_session_complete_task]
@@ -89,7 +89,7 @@ with DAG(
         previous_objects=set(),
         task_id="gcs_upload_session_complete_task",
         execution_timeout=timedelta(seconds=60),
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_gcs_upload_session_complete_task]
     # [START howto_sensor_object_update_exists_task]
@@ -98,7 +98,7 @@ with DAG(
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_update_sensor_task_async",
         execution_timeout=timedelta(seconds=60),
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_update_exists_task]
     # [START howto_delete_buckettask]
