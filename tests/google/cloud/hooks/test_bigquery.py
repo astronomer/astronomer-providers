@@ -265,6 +265,7 @@ def test_convert_to_float_if_possible(test_input, expected):
 @pytest.mark.asyncio
 @mock.patch("aiohttp.client.ClientSession")
 async def test_get_table_client(mock_session):
+    """Test get_table_client async function and check whether the return value is a Table instance object"""
     hook = BigQueryTableHookAsync()
     result = await hook.get_table_client(
         dataset=DATASET_ID, project_id=PROJECT_ID, table_id=TABLE_ID, session=mock_session

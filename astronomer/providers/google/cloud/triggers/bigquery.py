@@ -393,7 +393,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         project_id: str,
         dataset_id: str,
         table_id: str,
-        google_cloud_conn_id: str,
+        gcp_conn_id: str,
         hook_params: Dict[str, Any],
         poll_interval: float = 4.0,
     ):
@@ -401,7 +401,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id
-        self.google_cloud_conn_id: str = google_cloud_conn_id
+        self.gcp_conn_id: str = gcp_conn_id
         self.poll_interval = poll_interval
         self.hook_params = hook_params
 
@@ -413,14 +413,14 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
-                "google_cloud_conn_id": self.google_cloud_conn_id,
+                "gcp_conn_id": self.gcp_conn_id,
                 "poll_interval": self.poll_interval,
                 "hook_params": self.hook_params,
             },
         )
 
     def _get_async_hook(self) -> BigQueryTableHookAsync:
-        return BigQueryTableHookAsync(gcp_conn_id=self.google_cloud_conn_id)
+        return BigQueryTableHookAsync(gcp_conn_id=self.gcp_conn_id)
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Will run until the table exists in the Google Big Query."""

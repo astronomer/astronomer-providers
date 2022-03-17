@@ -54,7 +54,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
                 table_id=self.table_id,
                 project_id=self.project_id,
                 poll_interval=self.polling_interval,
-                google_cloud_conn_id=self.gcp_conn_id,
+                gcp_conn_id=self.gcp_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,
                     "impersonation_chain": self.impersonation_chain,
