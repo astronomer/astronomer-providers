@@ -29,6 +29,7 @@ def create_context(task):
         "task": task,
         "ti": task_instance,
         "task_instance": task_instance,
+        "run_id": dag_run.run_id,
     }
 
 
