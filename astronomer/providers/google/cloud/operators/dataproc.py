@@ -3,10 +3,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
-from airflow.providers.google.cloud.links.dataproc import (
-    DATAPROC_JOB_LOG_LINK,
-    DataprocLink,
-)
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
 
 from astronomer.providers.google.cloud.triggers.dataproc import DataProcSubmitTrigger
@@ -65,8 +61,6 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         )
         job_id = job_object.reference.job_id
         self.log.info("Job %s submitted successfully.", job_id)
-        # Save data required by extra links no matter what the job status will be
-        DataprocLink.persist(context=context, task_instance=self, url=DATAPROC_JOB_LOG_LINK, resource=job_id)
         self.job_id = job_id
         self.defer(
             timeout=self.execution_timeout,
@@ -78,10 +72,6 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
             ),
             method_name="execute_complete",
         )
-
-    # def on_kill(self) -> None:
-    #     if self.job_id and self.cancel_on_kill:
-    #         self.hook.cancel_job(job_id=self.job_id, project_id=self.project_id, region=self.region)
 
     def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """

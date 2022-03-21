@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
@@ -29,22 +28,10 @@ class DataProcSubmitTrigger(BaseTrigger):
         dataproc_job_id: str,
         region: Optional[str] = None,
         project_id: Optional[str] = None,
-        location: Optional[str] = None,
         gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
-        if region is None:
-            if location is not None:
-                warnings.warn(
-                    "Parameter `location` will be deprecated. "
-                    "Please provide value through `region` parameter instead.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                region = location
-            else:
-                raise TypeError("missing 1 required keyword argument: 'region'")
         super().__init__(**kwargs)
         self.project_id = project_id
         self.gcp_conn_id = gcp_conn_id
@@ -95,7 +82,7 @@ class DataProcSubmitTrigger(BaseTrigger):
         }:
             return {"status": "error", "message": "Job got cancelled"}
         elif JobStatus.State.DONE == state:
-            return {"status": "success", "message": "Job  completed successfully"}
+            return {"status": "success", "message": "Job completed successfully"}
         elif JobStatus.State.ATTEMPT_FAILURE == state:
             return {"status": "pending", "message": "Job is in pending state"}
         return {"status": "pending", "message": "Job is in pending state"}
