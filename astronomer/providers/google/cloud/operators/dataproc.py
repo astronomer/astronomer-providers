@@ -71,7 +71,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         self.defer(
             timeout=self.execution_timeout,
             trigger=DataProcSubmitTrigger(
-                conngcp_conn_id_id=self.gcp_conn_id,
+                gcp_conn_id=self.gcp_conn_id,
                 dataproc_job_id=job_id,
                 project_id=self.project_id,
                 region=self.region,
