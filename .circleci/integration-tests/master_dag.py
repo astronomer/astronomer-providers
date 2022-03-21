@@ -1,27 +1,54 @@
+import os
 import time
 from datetime import datetime
-from typing import Dict, List
+from typing import List
 
 from airflow import DAG
-from airflow.models import DagRun, TaskInstance
+from airflow.models import DagRun
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.slack_operator import SlackAPIPostOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
+
+SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "")
+SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL", "#provider-alert")
+SLACK_USERNAME = os.environ.get("SLACK_USERNAME", "airflow")
 
 
 def get_report(dag_run_ids: List[str]) -> None:
     """Fetch dags run details and generate report"""
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
-        print(last_dags_runs)
+        message_list: List[str] = []
         for dr in last_dags_runs:
-            tis: Dict[str, TaskInstance] = {
-                ti.task_id: ti
-                for ti in dr.get_task_instances()
-                if not ((ti.task_id == "end") or (ti.task_id == "get_report"))
-            }
-            print("task instance: ", tis)
+            dr_status = f"========== {dr.dag_id} : {dr.get_state()} ========= \n"
+            message_list.append(dr_status)
+            for ti in dr.get_task_instances():
+                task_code = ":black_circle: "
+                if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
+                    if ti.state == "success":
+                        task_code = ":large_green_circle: "
+                    elif ti.state == "failed":
+                        task_code = ":red_circle: "
+                    elif ti.state == "upstream_failed":
+                        task_code = ":large_orange_circle: "
+                task_message_str = f"{task_code} {ti.task_id} {ti.state} \n"
+                message_list.append(task_message_str)
+            message_list.append("\n")
+
+            print("".join(message_list))
+
+            try:
+                SlackAPIPostOperator(
+                    task_id="slack_alert",
+                    token=SLACK_TOKEN,
+                    text="".join(message_list),
+                    channel=SLACK_CHANNEL,
+                    username=SLACK_USERNAME,
+                ).execute(context=None)
+            except Exception as e:
+                print(e)
 
 
 with DAG(
@@ -31,7 +58,7 @@ with DAG(
     catchup=False,
     tags=["master_dag"],
 ) as dag:
-    # Need to sleep for 30 sec so that all example dag will be available before master dag trigger it
+    # Sleep for 30 seconds so that all the example dag will be available before master dag trigger them
     start = PythonOperator(
         task_id="start",
         python_callable=lambda: time.sleep(30),

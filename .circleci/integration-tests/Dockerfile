@@ -10,6 +10,7 @@ RUN apt-get update -y \
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN pip install /tmp/astronomer-providers[all]
+RUN pip install apache-airflow[slack]
 
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
