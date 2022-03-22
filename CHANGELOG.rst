@@ -1,6 +1,94 @@
 Changelog
 =========
 
+1.1.0a2 (2022-03-19)
+--------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 6 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``S3KeySizeSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.s3 import S3KeySizeSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_s3.py>`__
+
+   * - ``S3KeysUnchangedSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_s3.py>`__
+
+   * - ``S3PrefixSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.s3 import S3PrefixSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_s3.py>`__
+
+   * - ``GCSObjectsWithPrefixExistenceSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+
+   * - ``GCSObjectUpdateSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.sensors.gcs import GCSObjectUpdateSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+
+   * - ``GCSUploadSessionCompleteSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.sensors.gcs import GCSUploadSessionCompleteSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+
+Improvements
+""""""""""""
+
+The dependencies for installing this repo are now split into multiple extras as follows (`#113 <https://github.com/astronomer/astronomer-providers/pull/113>`__)
+
+.. list-table::
+   :header-rows: 1
+
+   * - Extra Name
+     - Installation Command
+     - Dependencies
+   * - ``all``
+     - ``pip install 'astronomer-providers[all]'``
+     - All providers
+   * - ``amazon``
+     - ``pip install 'astronomer-providers[amazon]'``
+     - Amazon
+   * - ``cncf.kubernetes``
+     - ``pip install 'astronomer-providers[cncf.kubernetes]'``
+     - Kubernetes
+   * - ``databricks``
+     - ``pip install 'astronomer-providers[databricks]'``
+     - Databricks
+   * - ``google``
+     - ``pip install 'astronomer-providers[google]'``
+     - Google Cloud
+   * - ``http``
+     - ``pip install 'astronomer-providers[http]'``
+     - HTTP
+   * - ``snowflake``
+     - ``pip install 'astronomer-providers[snowflake]'``
+     - Snowflake
+
+This will allow users to just install dependencies of a single provider. For example, if a user
+wants to just use ``KubernetesPodOperatorAsync``, they should not need to install GCP, AWS or
+Snowflake dependencies by running ``pip install 'astronomer-providers[cncf.kubernetes]'``.
+
 1.0.0 (2022-03-01)
 ------------------
 
