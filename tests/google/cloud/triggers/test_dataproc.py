@@ -3,8 +3,10 @@ from unittest import mock
 
 import pytest
 from airflow.triggers.base import TriggerEvent
+from google.cloud.dataproc_v1 import Job
 from google.cloud.dataproc_v1.types import JobStatus
 
+from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from astronomer.providers.google.cloud.triggers.dataproc import DataProcSubmitTrigger
 
 TEST_PROJECT_ID = "test_project_id"
@@ -100,6 +102,7 @@ async def test_dataproc_submit_return_exception(mock_get_job_status):
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "state, response",
     [
@@ -110,15 +113,17 @@ async def test_dataproc_submit_return_exception(mock_get_job_status):
         (JobStatus.State.SETUP_DONE, {"status": "pending", "message": "Job is in pending state"}),
     ],
 )
-@mock.patch("airflow.providers.google.cloud.hooks.dataproc.DataprocHook")
-def test_dataproc_get_job_status(mock_hook, state, response):
+async def test_dataproc_get_job_status(state, response):
     """Tests that the get job status gives appropriate status for the job"""
-    mock_hook.get_job.return_value.status.state = state
+    hook = mock.AsyncMock(DataprocHookAsync)
+    get_job_instance = mock.AsyncMock(Job)
+    hook.get_job = get_job_instance
+    hook.get_job.return_value.status.state = state
     trigger = DataProcSubmitTrigger(
         dataproc_job_id=TEST_JOB_ID,
         project_id=TEST_PROJECT_ID,
         region=TEST_REGION,
         polling_interval=TEST_POLLING_INTERVAL,
     )
-    res = trigger._get_job_status(mock_hook)
+    res = await trigger._get_job_status(hook)
     assert res == response

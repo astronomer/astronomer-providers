@@ -2,9 +2,10 @@ import asyncio
 import logging
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
-from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from google.cloud.dataproc_v1.types import JobStatus
+
+from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 
 log = logging.getLogger(__name__)
 
@@ -55,9 +56,9 @@ class DataProcSubmitTrigger(BaseTrigger):
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Simple loop until the job running on Google Cloud DataProc is completed or not"""
         try:
-            hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+            hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
             while True:
-                job_status = self._get_job_status(hook)
+                job_status = await self._get_job_status(hook)
                 if "status" in job_status and job_status["status"] == "success":
                     yield TriggerEvent(job_status)
                     return
@@ -69,9 +70,9 @@ class DataProcSubmitTrigger(BaseTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
 
-    def _get_job_status(self, hook: DataprocHook) -> Dict[str, str]:
+    async def _get_job_status(self, hook: DataprocHookAsync) -> Dict[str, str]:
         """Gets the status of the given job_id from the Google Cloud DataProc"""
-        job = hook.get_job(job_id=self.dataproc_job_id, region=self.region, project_id=self.project_id)
+        job = await hook.get_job(job_id=self.dataproc_job_id, region=self.region, project_id=self.project_id)
         state = job.status.state
         if state == JobStatus.State.ERROR:
             return {"status": "error", "message": "Job Failed"}

@@ -1,14 +1,12 @@
 """This module contains Google Dataproc operators."""
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
+from airflow.utils.context import Context
 
+from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from astronomer.providers.google.cloud.triggers.dataproc import DataProcSubmitTrigger
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
@@ -49,7 +47,9 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self.log.info("Submitting job")
-        self.hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
+        self.hook = DataprocHookAsync(
+            gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain
+        )
         job_object = self.hook.submit_job(
             project_id=self.project_id,
             region=self.region,
