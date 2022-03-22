@@ -2,7 +2,7 @@
 import os
 from datetime import datetime
 
-from airflow import models
+from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
@@ -36,7 +36,7 @@ SCHEMA = [
 
 dag_id = "example_bigquery_sensors"
 
-with models.DAG(
+with DAG(
     dag_id,
     schedule_interval="None",  # Override to match your needs
     start_date=datetime(2021, 1, 1),
