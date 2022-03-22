@@ -1,11 +1,13 @@
 import warnings
-from typing import Optional, Sequence, Tuple
+from typing import Any, Optional, Sequence, Tuple, Union
 
 from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from asgiref.sync import sync_to_async
 from google.api_core.retry import Retry
 from google.cloud.dataproc_v1 import Job
+
+JobType = Union[Job, Any]
 
 
 class DataprocHookAsync(DataprocHook):
@@ -26,7 +28,7 @@ class DataprocHookAsync(DataprocHook):
         retry: Optional[Retry] = None,
         timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> Job:
+    ) -> JobType:
         """
         Gets the resource representation for a job in a project.
 
@@ -51,11 +53,11 @@ class DataprocHookAsync(DataprocHook):
                 region = location
             else:
                 raise TypeError("missing 1 required keyword argument: 'region'")
-        client = await sync_to_async(self.get_job_client)(region=region)  # type : ignore[no-any-return]
+        client = await sync_to_async(self.get_job_client)(region=region)
         job = client.get_job(
             request={"project_id": project_id, "region": region, "job_id": job_id},
             retry=retry,
             timeout=timeout,
             metadata=metadata,
-        )  # type : ignore[no-any-return]
+        )
         return job
