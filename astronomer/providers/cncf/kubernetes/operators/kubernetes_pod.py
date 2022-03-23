@@ -106,7 +106,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                 raise PodNotFoundException("Could not find pod after resuming from deferral")
 
             if self.get_logs:
-                last_log_time = event.get("last_log_time")
+                last_log_time = event and event.get("last_log_time")
                 if last_log_time:
                     self.log.info("Resuming logs read from time %r", last_log_time)
                 pod_log_status = self.pod_manager.fetch_container_logs(
@@ -129,6 +129,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                     pod=self.pod or self.pod_request_obj,
                     remote_pod=remote_pod,
                 )
+                raise e
         self.cleanup(
             pod=self.pod or self.pod_request_obj,
             remote_pod=remote_pod,

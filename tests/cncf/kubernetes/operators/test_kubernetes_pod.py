@@ -3,7 +3,9 @@ from unittest.mock import MagicMock
 
 import pendulum
 import pytest
+from airflow.exceptions import TaskDeferred
 from airflow.models import DAG, DagRun, TaskInstance
+from airflow.providers.cncf.kubernetes.utils.pod_manager import PodLoggingStatus
 from airflow.utils import timezone
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -48,20 +50,43 @@ def test_raise_for_trigger_status_done():
     assert KubernetesPodOperatorAsync.raise_for_trigger_status({"status": "done"}) is None
 
 
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
-)
+KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
+
+
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
-)
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
-)
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
-@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")
-def test_get_logs(
-    follow_container_logs,
+@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+def test_get_logs_running(
+    fetch_container_logs,
+    await_pod_completion,
+    find_pod,
+    raise_for_trigger_status,
+    get_kube_client,
+    cleanup,
+):
+    """When logs fetch exits with status running, raise task deferred"""
+    pod = MagicMock()
+    find_pod.return_value = pod
+    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+    context = create_context(op)
+    await_pod_completion.return_value = None
+    fetch_container_logs.return_value = PodLoggingStatus(True, None)
+    with pytest.raises(TaskDeferred):
+        op.trigger_reentry(context, None)
+    fetch_container_logs.is_called_with(pod, "base")
+
+
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
+@mock.patch("airflow.kubernetes.kube_client.get_kube_client")
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
+@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
+@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+def test_get_logs_not_running(
+    fetch_container_logs,
     await_pod_completion,
     find_pod,
     raise_for_trigger_status,
@@ -73,24 +98,19 @@ def test_get_logs(
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     context = create_context(op)
     await_pod_completion.return_value = None
-    op.execute_complete(context, None)
-    follow_container_logs.is_called_with(pod, "base")
+    fetch_container_logs.return_value = PodLoggingStatus(False, None)
+    op.trigger_reentry(context, None)
+    fetch_container_logs.is_called_with(pod, "base")
 
 
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
-)
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.raise_for_trigger_status"
-)
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
-)
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
-@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
 def test_no_pod(
-    follow_container_logs,
+    fetch_container_logs,
     await_pod_completion,
     find_pod,
     raise_for_trigger_status,
@@ -101,20 +121,16 @@ def test_no_pod(
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     context = create_context(op)
     with pytest.raises(PodNotFoundException):
-        op.execute_complete(context, None)
+        op.trigger_reentry(context, None)
 
 
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.cleanup"
-)
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.find_pod"
-)
+@mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
-@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.follow_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
 def test_trigger_error(
-    follow_container_logs,
+    fetch_container_logs,
     await_pod_completion,
     find_pod,
     get_kube_client,
@@ -124,7 +140,7 @@ def test_trigger_error(
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     with pytest.raises(PodLaunchTimeoutException):
         context = create_context(op)
-        op.execute_complete(
+        op.trigger_reentry(
             context,
             {
                 "status": "error",
