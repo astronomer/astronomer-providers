@@ -87,7 +87,7 @@ class DatabricksHookAsync(DatabricksHook):
             auth_str = f"{self.databricks_conn.login}:{self.databricks_conn.password}"
             encoded_bytes = auth_str.encode("utf-8")
             auth = base64.b64encode(encoded_bytes).decode("utf-8")
-            headers["Authorization"] = f"Basic: {auth}"
+            headers["Authorization"] = f"Basic {auth}"
             host = self.databricks_conn.host
             self.log.info(f"auth: {auth}")
             self.log.info(f"host: {host}")
