@@ -1,7 +1,6 @@
 import asyncio
 from typing import Any, AsyncIterator, Dict, Tuple
 
-from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
@@ -50,11 +49,12 @@ class DatabricksTrigger(BaseTrigger):  # noqa: D101
             run_state = await hook.get_run_state_async(self.run_id)
             if run_state.is_terminal:
                 if run_state.is_successful:
-                    yield TriggerEvent(True)
+                    yield TriggerEvent({"status": "success"})
                     return
                 else:
                     error_message = f"{self.task_id} failed with terminal state: {run_state}"
-                    raise AirflowException(error_message)
+                    yield TriggerEvent({"status": "error", "message": str(error_message)})
+                    return
             else:
                 self.log.info("%s in run state: %s", self.task_id, run_state)
                 self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)

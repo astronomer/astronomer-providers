@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
+from airflow.exceptions import AirflowException
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
@@ -54,6 +55,8 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
         self.log.info("%s completed successfully.", self.task_id)
         return None
 
