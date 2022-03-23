@@ -52,7 +52,7 @@ with DAG(
             "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
             "INSERT INTO fruit VALUES ( 3, 'Lemon', 'Yellow');",
             "INSERT INTO fruit VALUES ( 4, 'Grape', 'Purple');",
-            "INSERT INTO  VALUES ( 5, 'Pear', 'Green');",
+            "INSERT INTO fruit VALUES ( 5, 'Pear', 'Green');",
             "INSERT INTO fruit VALUES ( 6, 'Strawberry', 'Red');",
         ],
         redshift_conn_id=REDSHIFT_CONN_ID,
@@ -77,7 +77,9 @@ with DAG(
     )
 
     (
-        task_create_table
+        task_create_func
+        >> task_long_running_query_sleep
+        >> task_create_table
         >> task_insert_data
         >> task_get_all_data
         >> task_get_data_with_filter
