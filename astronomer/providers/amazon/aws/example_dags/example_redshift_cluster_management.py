@@ -29,7 +29,7 @@ with DAG(
         task_id="pause_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(seconds=60),
+        execution_timeout=timedelta(minutes=15),
     )
     # [END howto_operator_redshift_pause_cluster_async]
 
@@ -38,7 +38,7 @@ with DAG(
         task_id="resume_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(seconds=60),
+        execution_timeout=timedelta(minutes=15),
     )
     # [END howto_operator_redshift_resume_cluster_async]
 
@@ -48,7 +48,7 @@ with DAG(
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         target_status="available",
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(seconds=60),
+        execution_timeout=timedelta(minutes=15),
     )
     # [START howto_operator_redshift_cluster_sensor_async]
 
