@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.1.0 (2022-03-23)
+--------------------
+
+Improvements
+"""""""""""""
+
+This release fixes a bug on the Async Databricks Triggerer failing due to malformed authentication
+header along with improved exception handling to send the Triggerer errors back to the worker to understand
+why a particular job execution has failed.
+
+
+
 1.1.0a2 (2022-03-19)
 --------------------
 
