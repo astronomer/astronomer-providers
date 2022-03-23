@@ -3,13 +3,19 @@ import logging
 from unittest import mock
 
 import pytest
+from aiohttp import ClientResponseError, RequestInfo
 from airflow.triggers.base import TriggerEvent
+from gcloud.aio.bigquery import Table
+from multidict import CIMultiDict
+from yarl import URL
 
+from astronomer.providers.google.cloud.hooks.bigquery import BigQueryTableHookAsync
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
+    BigQueryTableExistenceTrigger,
     BigQueryValueCheckTrigger,
 )
 
@@ -32,6 +38,8 @@ TEST_DATE_FILTER_COLUMN = "ds"
 TEST_DAYS_BACK = -7
 TEST_RATIO_FORMULA = "max_over_min"
 TEST_IGNORE_ZERO = True
+TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
+TEST_HOOK_PARAMS = {}
 
 
 def test_bigquery_insert_job_op_trigger_serialization():
@@ -752,3 +760,179 @@ async def test_bigquery_value_check_trigger_exception(mock_job_status):
 
     assert len(task) == 1
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+def test_big_query_table_existence_trigger_serialization():
+    """
+    Asserts that the BigQueryTableExistenceTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger"
+    assert kwargs == {
+        "dataset_id": TEST_DATASET_ID,
+        "project_id": TEST_GCP_PROJECT_ID,
+        "table_id": TEST_TABLE_ID,
+        "gcp_conn_id": TEST_GCP_CONN_ID,
+        "poll_interval": POLLING_PERIOD_SECONDS,
+        "hook_params": TEST_HOOK_PARAMS,
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger._table_exists")
+async def test_big_query_table_existence_trigger_success(mock_table_exists):
+    """
+    Tests success case BigQueryTableExistenceTrigger
+    """
+    mock_table_exists.return_value = True
+
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "success", "message": "success"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger._table_exists")
+async def test_big_query_table_existence_trigger_pending(mock_table_exists):
+    """
+    Test that BigQueryTableExistenceTrigger is in loop till the table exist.
+    """
+    mock_table_exists.return_value = False
+
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger._table_exists")
+async def test_big_query_table_existence_trigger_exception(mock_table_exists):
+    """
+    Test BigQueryTableExistenceTrigger throws exception if any error.
+    """
+    mock_table_exists.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
+
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_get_table_client_value, expected_value",
+    [
+        (
+            Table,
+            True,
+        )
+    ],
+)
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryTableHookAsync.get_table_client")
+async def test_table_exists(mock_get_table_client, mock_get_table_client_value, expected_value):
+    """Test BigQueryTableExistenceTrigger._table_exists async function with mocked value and mocked return value"""
+    hook = mock.AsyncMock(BigQueryTableHookAsync)
+    mock_get_table_client.return_value = mock_get_table_client_value
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    res = await trigger._table_exists(hook, TEST_DATASET_ID, TEST_TABLE_ID, TEST_GCP_PROJECT_ID)
+    assert res == expected_value
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryTableHookAsync.get_table_client")
+async def test_table_exists_exception(mock_get_table_client):
+    """Test BigQueryTableExistenceTrigger._table_exists async function with exception and return False"""
+    hook = BigQueryTableHookAsync()
+    mock_get_table_client.side_effect = ClientResponseError(
+        history=(),
+        request_info=RequestInfo(
+            headers=CIMultiDict(),
+            real_url=URL("https://example.com"),
+            method="GET",
+            url=URL("https://example.com"),
+        ),
+        status=404,
+        message="Not Found",
+    )
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    res = await trigger._table_exists(hook, TEST_DATASET_ID, TEST_TABLE_ID, TEST_GCP_PROJECT_ID)
+    expected_response = False
+    assert res == expected_response
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryTableHookAsync.get_table_client")
+async def test_table_exists_raise_exception(mock_get_table_client):
+    """Test BigQueryTableExistenceTrigger._table_exists async function with raise exception"""
+    hook = BigQueryTableHookAsync()
+    mock_get_table_client.side_effect = ClientResponseError(
+        history=(),
+        request_info=RequestInfo(
+            headers=CIMultiDict(),
+            real_url=URL("https://example.com"),
+            method="GET",
+            url=URL("https://example.com"),
+        ),
+        status=400,
+        message="Not Found",
+    )
+    trigger = BigQueryTableExistenceTrigger(
+        TEST_GCP_PROJECT_ID,
+        TEST_DATASET_ID,
+        TEST_TABLE_ID,
+        TEST_GCP_CONN_ID,
+        TEST_HOOK_PARAMS,
+        POLLING_PERIOD_SECONDS,
+    )
+    with pytest.raises(ClientResponseError):
+        await trigger._table_exists(hook, TEST_DATASET_ID, TEST_TABLE_ID, TEST_GCP_PROJECT_ID)

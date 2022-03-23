@@ -2,10 +2,11 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException
-from gcloud.aio.bigquery import Job
+from gcloud.aio.bigquery import Job, Table
 
 from astronomer.providers.google.cloud.hooks.bigquery import (
     BigQueryHookAsync,
+    BigQueryTableHookAsync,
     _BigQueryHook,
 )
 
@@ -259,3 +260,14 @@ def test_convert_to_float_if_possible(test_input, expected):
     """
 
     assert BigQueryHookAsync._convert_to_float_if_possible(test_input) == expected
+
+
+@pytest.mark.asyncio
+@mock.patch("aiohttp.client.ClientSession")
+async def test_get_table_client(mock_session):
+    """Test get_table_client async function and check whether the return value is a Table instance object"""
+    hook = BigQueryTableHookAsync()
+    result = await hook.get_table_client(
+        dataset=DATASET_ID, project_id=PROJECT_ID, table_id=TABLE_ID, session=mock_session
+    )
+    assert isinstance(result, Table)

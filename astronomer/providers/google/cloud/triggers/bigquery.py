@@ -1,9 +1,14 @@
 import asyncio
 from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
 
+from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientResponseError
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer.providers.google.cloud.hooks.bigquery import BigQueryHookAsync
+from astronomer.providers.google.cloud.hooks.bigquery import (
+    BigQueryHookAsync,
+    BigQueryTableHookAsync,
+)
 
 
 class BigQueryInsertJobTrigger(BaseTrigger):  # noqa: D101
@@ -378,3 +383,82 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
                 self.log.exception("Exception occurred while checking for query completion")
                 yield TriggerEvent({"status": "error", "message": str(e)})
                 return
+
+
+class BigQueryTableExistenceTrigger(BaseTrigger):
+    """Initialise the BigQuery Table Existence Trigger with needed parameters"""
+
+    def __init__(
+        self,
+        project_id: str,
+        dataset_id: str,
+        table_id: str,
+        gcp_conn_id: str,
+        hook_params: Dict[str, Any],
+        poll_interval: float = 4.0,
+    ):
+        self.dataset_id = dataset_id
+        self.project_id = project_id
+        self.table_id = table_id
+        self.gcp_conn_id: str = gcp_conn_id
+        self.poll_interval = poll_interval
+        self.hook_params = hook_params
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes BigQueryTableExistenceTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger",
+            {
+                "dataset_id": self.dataset_id,
+                "project_id": self.project_id,
+                "table_id": self.table_id,
+                "gcp_conn_id": self.gcp_conn_id,
+                "poll_interval": self.poll_interval,
+                "hook_params": self.hook_params,
+            },
+        )
+
+    def _get_async_hook(self) -> BigQueryTableHookAsync:
+        return BigQueryTableHookAsync(gcp_conn_id=self.gcp_conn_id)
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """Will run until the table exists in the Google Big Query."""
+        while True:
+            try:
+                hook = self._get_async_hook()
+                response = await self._table_exists(
+                    hook=hook, dataset=self.dataset_id, table_id=self.table_id, project_id=self.project_id
+                )
+                if response:
+                    yield TriggerEvent({"status": "success", "message": "success"})
+                    return
+                await asyncio.sleep(self.poll_interval)
+            except Exception as e:
+                self.log.exception("Exception occurred while checking for Table existence")
+                yield TriggerEvent({"status": "error", "message": str(e)})
+                return
+
+    async def _table_exists(
+        self, hook: BigQueryTableHookAsync, dataset: str, table_id: str, project_id: str
+    ) -> bool:
+        """
+        Create client session and make call to BigQueryTableHookAsync and check for the table in Google Big Query.
+
+        :param hook: BigQueryTableHookAsync Hook class
+        :param dataset:  The name of the dataset in which to look for the table storage bucket.
+        :param table_id: The name of the table to check the existence of.
+        :param project_id: The Google cloud project in which to look for the table.
+            The connection supplied to the hook must provide
+            access to the specified project.
+        """
+        async with ClientSession() as session:
+            try:
+                client = await hook.get_table_client(
+                    dataset=dataset, table_id=table_id, project_id=project_id, session=session
+                )
+                response = await client.get()
+                return True if response else False
+            except ClientResponseError as err:
+                if err.status == 404:
+                    return False
+                raise err
