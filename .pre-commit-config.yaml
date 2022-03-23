@@ -89,6 +89,13 @@ repos:
           .*example_dags/.*|
         additional_dependencies: ['toml']
 
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.4
+    hooks:
+      - id: bandit
+        # Excluding Example DAGs temporarily until they can be fixed
+        exclude: ^tests/.*\.py$|.*example_dags/.*
+
   - repo: local
     hooks:
       - id: sync-all-extras-setup.cfg
