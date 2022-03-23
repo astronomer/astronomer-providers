@@ -143,4 +143,6 @@ intersphinx_mapping = {
         None,
     ),
     "airflow-snowflake": ("https://airflow.apache.org/docs/apache-airflow-providers-snowflake/stable/", None),
+    "airflow-amazon": ("https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/", None),
+    "airflow-http": ("https://airflow.apache.org/docs/apache-airflow-providers-http/stable/", None),
 }

@@ -1,4 +1,4 @@
-.PHONY: dev clean stop build build-run restart restart-all run-mypy run-tests run-static-checks help
+.PHONY: dev clean stop build build-run docs restart restart-all run-mypy run-tests run-static-checks help
 
 # If the first argument is "run"...
 ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
@@ -29,6 +29,9 @@ build: ## Build the Docker image (ignoring cache)
 
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
+
+docs:  ## Build the docs using Sphinx
+	cd docs && make clean html && cd .. && echo "Documentation built in $(shell pwd)/docs/_build/html/index.html"
 
 restart: ## Restart Triggerer & Scheduler container
 	docker-compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler

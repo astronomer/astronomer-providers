@@ -86,6 +86,7 @@ You can configure the Docker-based development environment as follows:
    - ``make logs`` - To view the logs of the all the containers
    - ``make stop`` - To stop all the containers
    - ``make clean`` - To remove all the containers along with volumes
+   - ``make docs`` - To build the docs using Sphinx
    - ``make help`` - To view the available commands
    - ``make build`` - To re-build the docker image
    - ``make build-run`` - To build the docker image and then run containers
