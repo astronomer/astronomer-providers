@@ -97,9 +97,12 @@ This will allow users to just install dependencies of a single provider. For exa
 wants to just use ``KubernetesPodOperatorAsync``, they should not need to install GCP, AWS or
 Snowflake dependencies by running ``pip install 'astronomer-providers[cncf.kubernetes]'``.
 
-This release also fixes a bug on the Async Databricks Triggerer failing due to malformed authentication
-header along with improved exception handling to send the Triggerer errors back to the worker to understand
-why a particular job execution has failed.
+Bug Fixes
+"""""""""
+
+* Fixes a bug on the **Async Databricks Triggerer** failing due to malformed authentication
+  header along with improved exception handling to send the Triggerer errors back to the worker to understand
+  why a particular job execution has failed. (`#147 <https://github.com/astronomer/astronomer-providers/pull/147>`_)
 
 1.0.0 (2022-03-01)
 ------------------
