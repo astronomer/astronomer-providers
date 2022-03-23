@@ -19,6 +19,9 @@ Astronomer Providers
 .. image:: https://readthedocs.org/projects/astronomer-providers/badge/?version=latest
     :target: https://astronomer-providers.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+.. image:: https://img.shields.io/badge/security-bandit-green.svg
+   :target: https://github.com/PyCQA/bandit
+   :alt: Security: bandit
 
 `Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
 
