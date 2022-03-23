@@ -1,13 +1,13 @@
 Changelog
 =========
 
-1.1.0a2 (2022-03-19)
+1.1.0 (2022-03-23)
 --------------------
 
 New Operators
 """""""""""""
 
-This release adds the following 6 new async sensors/operators:
+This release adds the following 7 new async sensors/operators:
 
 .. list-table::
    :header-rows: 1
@@ -38,19 +38,27 @@ This release adds the following 6 new async sensors/operators:
      - .. code-block:: python
 
         from astronomer.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
 
    * - ``GCSObjectUpdateSensorAsync``
      - .. code-block:: python
 
         from astronomer.providers.google.cloud.sensors.gcs import GCSObjectUpdateSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
 
    * - ``GCSUploadSessionCompleteSensorAsync``
      - .. code-block:: python
 
         from astronomer.providers.google.cloud.sensors.gcs import GCSUploadSessionCompleteSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main//Users/kaxilnaik/Documents/GitHub/astronomer/astronomer-providers/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_gcs.py>`__
+
+   * - ``BigQueryTableExistenceSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.sensors.bigquery import BigQueryTableExistenceSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_bigquery_sensors.py>`__
+
+
 
 Improvements
 """"""""""""
@@ -88,6 +96,13 @@ The dependencies for installing this repo are now split into multiple extras as 
 This will allow users to just install dependencies of a single provider. For example, if a user
 wants to just use ``KubernetesPodOperatorAsync``, they should not need to install GCP, AWS or
 Snowflake dependencies by running ``pip install 'astronomer-providers[cncf.kubernetes]'``.
+
+Bug Fixes
+"""""""""
+
+* Fixes a bug on the **Async Databricks Triggerer** failing due to malformed authentication
+  header along with improved exception handling to send the Triggerer errors back to the worker to understand
+  why a particular job execution has failed. (`#147 <https://github.com/astronomer/astronomer-providers/pull/147>`_)
 
 1.0.0 (2022-03-01)
 ------------------
