@@ -4,16 +4,16 @@ from datetime import datetime
 from typing import List
 
 from airflow import DAG
+from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 from airflow.models import DagRun
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
-from airflow.operators.slack_operator import SlackAPIPostOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
 
-SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "")
 SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL", "#provider-alert")
-SLACK_USERNAME = os.environ.get("SLACK_USERNAME", "airflow")
+SLACK_WEBHOOK_CONN = os.environ.get("SLACK_WEBHOOK_CONN", "http_slack")
+SLACK_USERNAME = os.environ.get("SLACK_USERNAME", "airflow_app")
 
 
 def get_report(dag_run_ids: List[str]) -> None:
@@ -22,7 +22,7 @@ def get_report(dag_run_ids: List[str]) -> None:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
         message_list: List[str] = []
         for dr in last_dags_runs:
-            dr_status = f"========== {dr.dag_id} : {dr.get_state()} ========= \n"
+            dr_status = f" *{dr.dag_id} : {dr.get_state()}* \n"
             message_list.append(dr_status)
             for ti in dr.get_task_instances():
                 task_code = ":black_circle: "
@@ -33,22 +33,22 @@ def get_report(dag_run_ids: List[str]) -> None:
                         task_code = ":red_circle: "
                     elif ti.state == "upstream_failed":
                         task_code = ":large_orange_circle: "
-                task_message_str = f"{task_code} {ti.task_id} {ti.state} \n"
-                message_list.append(task_message_str)
-            message_list.append("\n")
+                    task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
+                    message_list.append(task_message_str)
 
-            print("".join(message_list))
+        print("".join(message_list))
 
-            try:
-                SlackAPIPostOperator(
-                    task_id="slack_alert",
-                    token=SLACK_TOKEN,
-                    text="".join(message_list),
-                    channel=SLACK_CHANNEL,
-                    username=SLACK_USERNAME,
-                ).execute(context=None)
-            except Exception as e:
-                print(e)
+        try:
+            SlackWebhookOperator(
+                task_id="slack_alert",
+                http_conn_id=SLACK_WEBHOOK_CONN,
+                message="".join(message_list),
+                channel=SLACK_CHANNEL,
+                username=SLACK_USERNAME,
+            ).execute(context=None)
+        except Exception as e:
+            print("Error occur while sending slack alert.")
+            print(e)
 
 
 with DAG(
@@ -75,7 +75,7 @@ with DAG(
         {"databricks_dag": "example_async_databricks"},
         {"bigquery_dag": "example_async_bigquery_queries"},
         {"gcs_sensor_dag": "example_async_gcs_sensors"},
-        {"http_dag": "example_snowflake"},
+        {"http_dag": "example_async_http_sensor"},
         {"snowflake_dag": "example_snowflake"},
     ]
 
