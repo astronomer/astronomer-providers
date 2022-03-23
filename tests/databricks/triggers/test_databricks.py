@@ -3,8 +3,8 @@ import logging
 from unittest import mock
 
 import pytest
-from airflow import AirflowException
 from airflow.providers.databricks.hooks.databricks import RunState
+from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 
@@ -135,7 +135,15 @@ async def test_databricks_trigger_terminated(run_state):
         polling_period_seconds=POLLING_PERIOD_SECONDS,
     )
 
-    with pytest.raises(AirflowException) as exc:
-        await trigger.run().__anext__()
-
-    assert str(exc.value) == f"{TASK_ID} failed with terminal state: {run_state.return_value}"
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert (
+        TriggerEvent(
+            {
+                "status": "error",
+                "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
+                " 'result_state': 'TERMINATED', 'state_message': ''}",
+            }
+        )
+        in task
+    )
