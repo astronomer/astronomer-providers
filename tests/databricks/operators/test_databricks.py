@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-from airflow.exceptions import TaskDeferred
+from airflow.exceptions import AirflowException, TaskDeferred
 
 from astronomer.providers.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
@@ -86,3 +86,42 @@ def test_databricks_run_now_execute_complete():
     with mock.patch.object(operator.log, "info") as mock_log_info:
         operator.execute_complete({})
     mock_log_info.assert_called_with("%s completed successfully.", "databricks_check")
+
+
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+def test_databricks_run_now_execute_complete_error(submit_run_response, get_run_page_url_response, context):
+    """
+    Asserts that a task is completed with success status.
+    """
+    submit_run_response.return_value = {"run_id": RUN_ID}
+    get_run_page_url_response.return_value = RUN_PAGE_URL
+
+    operator = DatabricksSubmitRunOperatorAsync(
+        task_id="submit_run",
+        databricks_conn_id=CONN_ID,
+        existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+        notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+    )
+
+    with pytest.raises(AirflowException):
+        operator.execute_complete(context={}, event={"status": "error", "message": "error"})
+
+
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+def test_databricks_run_now_execute_complete_success(submit_run_response, get_run_page_url_response, context):
+    """
+    Asserts that a task is completed with success status.
+    """
+    submit_run_response.return_value = {"run_id": RUN_ID}
+    get_run_page_url_response.return_value = RUN_PAGE_URL
+
+    operator = DatabricksSubmitRunOperatorAsync(
+        task_id="submit_run",
+        databricks_conn_id=CONN_ID,
+        existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+        notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+    )
+
+    assert operator.execute_complete(context={}, event={"status": "success", "message": "success"}) is None

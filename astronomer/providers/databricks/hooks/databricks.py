@@ -87,7 +87,7 @@ class DatabricksHookAsync(DatabricksHook):
             auth_str = f"{self.databricks_conn.login}:{self.databricks_conn.password}"
             encoded_bytes = auth_str.encode("utf-8")
             auth = base64.b64encode(encoded_bytes).decode("utf-8")
-            headers["Authorization"] = f"Basic: {auth}"
+            headers["Authorization"] = f"Basic {auth}"
             host = self.databricks_conn.host
             self.log.info(f"auth: {auth}")
             self.log.info(f"host: {host}")
@@ -118,7 +118,7 @@ class DatabricksHookAsync(DatabricksHook):
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry.
-                        raise AirflowException(f"Response: {e.message}, Status Code: {e.status}")
+                        return {"Response": {e.message}, "Status Code": {e.status}}
                     self._log_request_error(attempt_num, str(e))
 
                 if attempt_num == self.retry_limit:
