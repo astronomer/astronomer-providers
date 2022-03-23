@@ -1,7 +1,4 @@
-"""
-Example Airflow DAG that show how to use various Dataproc
-operators to manage a cluster and submit jobs.
-"""
+"""Example Airflow DAG that shows how to use DataprocSubmitJobOperatorAsync."""
 
 import os
 from datetime import datetime
@@ -253,6 +250,3 @@ with models.DAG(
     scale_cluster >> spark_sql_task >> delete_cluster >> delete_bucket
     scale_cluster >> spark_task >> delete_cluster >> delete_bucket
     scale_cluster >> hadoop_task >> delete_cluster >> delete_bucket
-
-    # Task dependency created via `XComArgs`:
-    #   spark_task_async >> spark_task_async_sensor
