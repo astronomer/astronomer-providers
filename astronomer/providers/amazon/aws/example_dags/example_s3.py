@@ -29,7 +29,7 @@ PREFIX = os.environ.get("S3_PREFIX", "test")
 INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
-AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
+AWS_CONN_ID = os.environ.get("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
 
 with DAG(
     dag_id="example_s3_sensor",
