@@ -121,15 +121,14 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             if self.do_xcom_push:
                 result = self.extract_xcom(pod=self.pod)
             remote_pod = self.pod_manager.await_pod_completion(self.pod)
-        except Exception as e:
-            if isinstance(e, TaskDeferred):
-                raise e
-            else:
-                self.cleanup(
-                    pod=self.pod or self.pod_request_obj,
-                    remote_pod=remote_pod,
-                )
-                raise e
+        except TaskDeferred:
+            raise
+        except Exception:
+            self.cleanup(
+                pod=self.pod or self.pod_request_obj,
+                remote_pod=remote_pod,
+            )
+            raise
         self.cleanup(
             pod=self.pod or self.pod_request_obj,
             remote_pod=remote_pod,
