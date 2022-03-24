@@ -21,6 +21,14 @@ dev/logs/
 dev/connections.yaml
 dev/dags/
 
+# Integration Tests
+.circleci/integration-tests/astronomer-providers
+.circleci/integration-tests/packages.txt
+.circleci/integration-tests/requirements.txt
+.circleci/integration-tests/pyproject.toml
+.circleci/integration-tests/setup.cfg
+.circleci/integration-tests/example_*
+
 # OSX
 .DS_Store
 
