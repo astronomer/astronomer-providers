@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from datetime import datetime
@@ -37,7 +38,7 @@ def get_report(dag_run_ids: List[str]) -> None:
                     task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
                     message_list.append(task_message_str)
 
-        print("".join(message_list))
+        logging.info("%s", "".join(message_list))
         # Send dag run report on Slack
         try:
             SlackWebhookOperator(
@@ -48,8 +49,7 @@ def get_report(dag_run_ids: List[str]) -> None:
                 username=SLACK_USERNAME,
             ).execute(context=None)
         except Exception as e:
-            print("Error occur while sending slack alert.")
-            print(e)
+            logging.error("Error occur while sending slack alert. \n %s", e)
 
 
 def prepare_dag_dependency(task_info, execution_time):
