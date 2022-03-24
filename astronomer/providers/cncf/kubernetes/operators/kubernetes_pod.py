@@ -45,8 +45,13 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def defer(self, last_log_time=None):
+    def defer(self, last_log_time=None, **kwargs):
         """Defers to WaitContainerTrigger optionally with last log time."""
+        if kwargs:
+            raise ValueError(
+                f"Received keyword arguments {list(kwargs.keys())} but "
+                f"they are not used in this implementation of `defer`."
+            )
         super().defer(
             trigger=WaitContainerTrigger(
                 kubernetes_conn_id=None,
@@ -83,13 +88,11 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         """
         Point of re-entry from trigger.
 
-        If `logging_interval` is not None, the trigger will periodically resume with this method, and
-        this method will get the latest
+        If ``logging_interval`` is None, then at this point the pod should be done and we'll just fetch
+        the logs and exit.
 
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-
-
+        If ``logging_interval`` is not None, it could be that the pod is still running and we'll just
+        grab the latest logs and defer back to the trigger again.
         """
         remote_pod = None
         try:
