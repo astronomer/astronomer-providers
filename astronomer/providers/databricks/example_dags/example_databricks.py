@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import timedelta
+from typing import Dict, Optional
 
 from airflow.models.dag import DAG
 from airflow.utils.timezone import datetime
@@ -15,7 +16,7 @@ DATABRICKS_CONN_ID = os.environ.get("ASTRO_DATABRICKS_CONN_ID", "databricks_defa
 # Example: {"notebook_path": "/Users/pankaj.singh@astronomer.io/quick_start"}
 notebook_task = '{"notebook_path": "/Users/pankaj.singh@astronomer.io/quick_start"}'
 NOTEBOOK_TASK = json.loads(os.environ.get("DATABRICKS_NOTEBOOK_TASK", notebook_task))
-notebook_params = {"Variable": 5}
+notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
 
 default_args = {
     "execution_timeout": timedelta(minutes=10),

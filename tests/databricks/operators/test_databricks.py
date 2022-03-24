@@ -30,14 +30,18 @@ def context():
 
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_submit_run_operator_async(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_operator_async(
+    submit_run_response, get_job_id, get_run_page_url_response, context
+):
     """
     Asserts that a task is deferred and an DatabricksTrigger will be fired
     when the DatabricksSubmitRunOperatorAsync is executed.
     """
     submit_run_response.return_value = {"run_id": RUN_ID}
     get_run_page_url_response.return_value = RUN_PAGE_URL
+    get_job_id.return_value = None
 
     operator = DatabricksSubmitRunOperatorAsync(
         task_id="submit_run",
