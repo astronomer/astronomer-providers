@@ -20,6 +20,11 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     """
     Async (deferring) version of KubernetesPodOperator
 
+    .. warning::
+        The logs would not be available in the Airflow Webserver until the task completes. This is
+        the main difference between this operator and the
+        :class:`~airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator`.
+
     :param poll_interval: interval in seconds to sleep between checking pod status
     """
 
