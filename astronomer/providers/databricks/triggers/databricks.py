@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -15,11 +15,13 @@ class DatabricksTrigger(BaseTrigger):  # noqa: D101
         retry_limit: int,
         retry_delay: int,
         polling_period_seconds: int,
+        job_id: Optional[int] = None,
     ):
         super().__init__()
         self.conn_id = conn_id
         self.task_id = task_id
         self.run_id = run_id
+        self.job_id = job_id
         self.retry_limit = retry_limit
         self.retry_delay = retry_delay
         self.polling_period_seconds = polling_period_seconds
@@ -32,6 +34,7 @@ class DatabricksTrigger(BaseTrigger):  # noqa: D101
                 "conn_id": self.conn_id,
                 "task_id": self.task_id,
                 "run_id": self.run_id,
+                "job_id": self.job_id,
                 "retry_limit": self.retry_limit,
                 "retry_delay": self.retry_delay,
                 "polling_period_seconds": self.polling_period_seconds,
@@ -49,7 +52,7 @@ class DatabricksTrigger(BaseTrigger):  # noqa: D101
             run_state = await hook.get_run_state_async(self.run_id)
             if run_state.is_terminal:
                 if run_state.is_successful:
-                    yield TriggerEvent({"status": "success"})
+                    yield TriggerEvent({"status": "success", "job_id": self.job_id})
                     return
                 else:
                     error_message = f"{self.task_id} failed with terminal state: {run_state}"

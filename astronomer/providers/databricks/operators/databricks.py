@@ -26,6 +26,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         # Async calls (i.e. polling) are handled in the Trigger.
         hook = self._get_hook()
         self.run_id = hook.submit_run(self.json)
+        job_id = hook.get_job_id(self.run_id)
 
         if self.do_xcom_push:
             context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=self.run_id)
@@ -42,6 +43,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
                 conn_id=self.databricks_conn_id,
                 task_id=self.task_id,
                 run_id=str(self.run_id),
+                job_id=job_id,
                 retry_limit=self.databricks_retry_limit,
                 retry_delay=self.databricks_retry_delay,
                 polling_period_seconds=self.polling_period_seconds,
@@ -58,7 +60,8 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         if event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info("%s completed successfully.", self.task_id)
-        return None
+        if event.get("job_id"):
+            context["ti"].xcom_push(key="job_id", value=event["job_id"])
 
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
