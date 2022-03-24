@@ -30,6 +30,8 @@ def test_serialize():
         "pod_namespace": "pod_namespace",
         "pending_phase_timeout": 120,
         "poll_interval": 5,
+        "logging_interval": None,
+        "last_log_time": None,
     }
     trigger = WaitContainerTrigger(**expected_kwargs)
     classpath, actual_kwargs = trigger.serialize()
@@ -128,12 +130,14 @@ async def test_pending_running(load_kube_config, wait_completion):
     If we get Running phase within the timeout period we should move on to wait
     for pod completion.
     """
+    wait_completion.return_value = None
     trigger = WaitContainerTrigger(
         pod_name=mock.ANY,
         pod_namespace=mock.ANY,
         container_name=mock.ANY,
         pending_phase_timeout=5,
         poll_interval=2,
+        logging_interval=None,
     )
 
     assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
