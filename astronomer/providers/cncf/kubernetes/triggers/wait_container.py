@@ -94,7 +94,7 @@ class WaitContainerTrigger(BaseTrigger):
             await asyncio.sleep(self.poll_interval)
         raise PodLaunchTimeoutException("Pod did not leave 'Pending' phase within specified timeout")
 
-    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> Optional["TriggerEvent"]:
+    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> "TriggerEvent":
         """
         Waits until container ``self.container_name`` is no longer in running state.
         If trigger is configured with a logging period, then will emit an event to
@@ -102,12 +102,12 @@ class WaitContainerTrigger(BaseTrigger):
         """
         time_begin = timezone.utcnow()
         time_get_more_logs = None
-        if self.logging_interval:
+        if self.logging_interval is not None:
             time_get_more_logs = time_begin + timedelta(seconds=self.logging_interval)
         while True:
             pod = await v1_api.read_namespaced_pod(self.pod_name, self.pod_namespace)
             if not container_is_running(pod=pod, container_name=self.container_name):
-                break
+                return TriggerEvent({"status": "done"})
             if time_get_more_logs and timezone.utcnow() > time_get_more_logs:
                 return TriggerEvent({"status": "running", "last_log_time": self.last_log_time})
             await asyncio.sleep(self.poll_interval)
@@ -119,12 +119,11 @@ class WaitContainerTrigger(BaseTrigger):
             async with await hook.get_api_client_async() as api_client:
                 v1_api = CoreV1Api(api_client)
                 state = await self.wait_for_pod_start(v1_api)
-                if state not in PodPhase.terminal_states:
+                if state in PodPhase.terminal_states:
+                    event = TriggerEvent({"status": "done"})
+                else:
                     event = await self.wait_for_container_completion(v1_api)
-                    if event:
-                        yield event
-                        return
-            yield TriggerEvent({"status": "done"})
+            yield event
         except Exception as e:
             description = self._format_exception_description(e)
             yield TriggerEvent(
