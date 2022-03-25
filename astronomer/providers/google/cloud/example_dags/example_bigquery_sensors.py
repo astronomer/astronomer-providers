@@ -1,6 +1,6 @@
 """Example Airflow DAG for Google BigQuery Sensors."""
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -34,15 +34,15 @@ SCHEMA = [
     {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
 ]
 
-dag_id = "example_bigquery_sensors"
+default_args = {"execution_timeout": timedelta(minutes=15), "gcp_conn_id": GCP_CONN_ID}
 
 with DAG(
-    dag_id,
+    dag_id="example_bigquery_sensors",
     schedule_interval=None,  # Override to match your needs
     start_date=datetime(2021, 1, 1),
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "bigquery", "sensors"],
-    default_args={"gcp_conn_id": GCP_CONN_ID},
 ) as dag:
 
     create_dataset = BigQueryCreateEmptyDatasetOperator(

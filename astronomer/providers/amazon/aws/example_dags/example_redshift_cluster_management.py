@@ -15,11 +15,16 @@ from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
 REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-redshift-cluster-1")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
 with DAG(
     dag_id="example_async_redshift_cluster_management",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "redshift"],
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -29,7 +34,6 @@ with DAG(
         task_id="pause_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(minutes=15),
     )
     # [END howto_operator_redshift_pause_cluster_async]
 
@@ -38,7 +42,6 @@ with DAG(
         task_id="resume_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(minutes=15),
     )
     # [END howto_operator_redshift_resume_cluster_async]
 
@@ -48,7 +51,6 @@ with DAG(
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         target_status="available",
         aws_conn_id=AWS_CONN_ID,
-        execution_timeout=timedelta(minutes=15),
     )
     # [START howto_operator_redshift_cluster_sensor_async]
 

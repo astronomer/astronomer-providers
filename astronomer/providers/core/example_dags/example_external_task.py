@@ -18,11 +18,16 @@ from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
 with DAG(
     dag_id="test_external_task_async",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "core"],
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -32,7 +37,6 @@ with DAG(
         task_id="external_task_async",
         external_task_id="start",
         external_dag_id="test_external_task_async",
-        execution_timeout=timedelta(seconds=60),
     )
     # [END howto_operator_external_task_sensor_async]
 

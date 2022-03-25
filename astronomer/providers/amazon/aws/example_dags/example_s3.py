@@ -17,11 +17,6 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
     S3PrefixSensorAsync,
 )
 
-default_args = {
-    "retry": 5,
-    "retry_delay": timedelta(minutes=1),
-}
-
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
 S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "test/example_s3_test_file.txt")
 S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "test*")
@@ -30,6 +25,10 @@ INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 REGION_NAME = os.environ.get("REGION_NAME", "us-east-2")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
+
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
 
 with DAG(
     dag_id="example_s3_sensor",
@@ -60,7 +59,6 @@ with DAG(
         bucket_key=S3_BUCKET_KEY,
         wildcard_match=False,
         bucket_name=S3_BUCKET_NAME,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 
@@ -69,7 +67,6 @@ with DAG(
         bucket_key=S3_BUCKET_WILDCARD_KEY,
         wildcard_match=True,
         bucket_name=S3_BUCKET_NAME,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 
@@ -78,7 +75,6 @@ with DAG(
         bucket_key=S3_BUCKET_KEY,
         wildcard_match=False,
         bucket_name=S3_BUCKET_NAME,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 
@@ -87,7 +83,6 @@ with DAG(
         bucket_key=S3_BUCKET_WILDCARD_KEY,
         wildcard_match=True,
         bucket_name=S3_BUCKET_NAME,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 
@@ -99,7 +94,6 @@ with DAG(
         allow_delete=True,
         previous_objects=set(),
         inactivity_period=INACTIVITY_PERIOD,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 
@@ -107,7 +101,6 @@ with DAG(
         task_id="check_s3_prefix_sensor",
         bucket_name=S3_BUCKET_NAME,
         prefix=PREFIX,
-        execution_timeout=timedelta(seconds=60),
         aws_conn_id=AWS_CONN_ID,
     )
 

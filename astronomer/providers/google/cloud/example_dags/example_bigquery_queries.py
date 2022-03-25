@@ -3,7 +3,7 @@ Example Airflow DAG for Google BigQuery service.
 Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
 """
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
@@ -43,12 +43,16 @@ INSERT_ROWS_QUERY = (
     f"(42, 'fishy fish', '{INSERT_DATE}');"
 )
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
 
 with DAG(
     dag_id="example_async_bigquery_queries",
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "bigquery"],
     user_defined_macros={"DATASET": DATASET, "TABLE": TABLE_1},
 ) as dag:
