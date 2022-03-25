@@ -1,12 +1,10 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from airflow import AirflowException
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.utils.context import Context
 
 from astronomer.providers.apache.spark.triggers.spark_submit import SparkSubmitTrigger
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class SparkSubmitOperatorAsync(SparkSubmitOperator):
@@ -17,7 +15,7 @@ class SparkSubmitOperatorAsync(SparkSubmitOperator):
 
     :param application: The application that submitted as a job, either jar or py file. (templated)
     :param conf: Arbitrary Spark configuration properties (templated)
-    :param spark_conn_id: refer `spark connection id <howto/connection:spark>` as configured
+    :param conn_id: refer `spark connection id <howto/connection:spark>` as configured
         in Airflow administration. When an invalid connection_id is supplied, it will default to yarn.
     :param files: Upload additional files to the executor running the job, separated by a
                   comma. Files will be placed in the working directory of each executor.

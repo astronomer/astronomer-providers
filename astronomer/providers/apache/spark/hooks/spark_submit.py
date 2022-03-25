@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import Any, Dict, Optional
 
 from airflow import AirflowException
@@ -13,7 +12,7 @@ class SparkSubmitHookAsync(SparkSubmitHook):
     supplied.
 
     :param conf: Arbitrary Spark configuration properties
-    :param spark_conn_id: refer `spark connection id <howto/connection:spark>` as configured
+    :param conn_id: refer `spark connection id <howto/connection:spark>` as configured
         in Airflow administration. When an invalid connection_id is supplied, it will default
         to yarn.
     :param files: Upload additional files to the executor running the job, separated by a
@@ -68,11 +67,6 @@ class SparkSubmitHookAsync(SparkSubmitHook):
         # to build the spark submit command
 
         spark_cmd = " ".join(spark_submit_cmd)
-
-        if self._env:
-            env = os.environ.copy()
-            env.update(self._env)
-            kwargs["env"] = env
 
         self._submit_sp = await asyncio.create_subprocess_shell(
             spark_cmd,

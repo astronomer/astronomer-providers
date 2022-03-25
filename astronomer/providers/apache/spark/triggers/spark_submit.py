@@ -144,8 +144,8 @@ class SparkSubmitTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Makes a series of connections to snowflake to get the status of the query
-        by async get_query_status function
+        Makes a call to SparkSubmitHookAsync class and execute the spark-submit job in async mode
+        and based on the status it polls
         """
         hook = self._get_async_hook()
         try:
