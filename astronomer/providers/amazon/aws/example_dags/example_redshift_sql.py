@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow.models.dag import DAG
+from airflow.operators.bash import BashOperator
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
@@ -21,6 +22,17 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "redshift"],
 ) as dag:
+    create_redshift_cluster = BashOperator(
+        task_id="create_redshift_cluster",
+        bash_command="aws redshift create-cluster "
+        "--db-name dev "
+        "--cluster-identifier redshift-cluster-1 "
+        "--cluster-type single-node "
+        "--node-type dc2.large  "
+        "--master-username adminuser "
+        "--master-user-password TopSecret1 && sleep 2m",
+    )
+
     task_create_func = RedshiftSQLOperatorAsync(
         task_id="task_create_func",
         sql="""
@@ -81,12 +93,20 @@ with DAG(
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
+    delete_redshift_cluster = BashOperator(
+        task_id="delete_redshift_cluster",
+        bash_command="aws redshift delete-cluster "
+        "--cluster-identifier redshift-cluster-1 --skip-final-cluster-snapshot && sleep 2m",
+    )
+
     (
-        task_create_func
+        create_redshift_cluster
+        >> task_create_func
         >> task_long_running_query_sleep
         >> task_create_table
         >> task_insert_data
         >> task_get_all_data
         >> task_get_data_with_filter
         >> task_delete_table
+        >> delete_redshift_cluster
     )

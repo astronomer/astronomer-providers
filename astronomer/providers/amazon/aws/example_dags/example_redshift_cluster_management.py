@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
@@ -29,6 +30,17 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
+    create_redshift_cluster = BashOperator(
+        task_id="create_redshift_cluster",
+        bash_command="aws redshift create-cluster "
+        "--db-name dev "
+        "--cluster-identifier redshift-cluster-1 "
+        "--cluster-type single-node "
+        "--node-type dc2.large  "
+        "--master-username adminuser "
+        "--master-user-password TopSecret1 && sleep 2m",
+    )
+
     # [START howto_operator_redshift_pause_cluster_async]
     pause_cluster_task = RedshiftPauseClusterOperatorAsync(
         task_id="pause_redshift_cluster",
@@ -54,6 +66,19 @@ with DAG(
     )
     # [START howto_operator_redshift_cluster_sensor_async]
 
+    delete_redshift_cluster = BashOperator(
+        task_id="delete_redshift_cluster",
+        bash_command="aws redshift delete-cluster "
+        "--cluster-identifier redshift-cluster-1 --skip-final-cluster-snapshot && sleep 2m",
+    )
+
     end = DummyOperator(task_id="end")
 
-    start >> pause_cluster_task >> [resume_cluster_task, async_redshift_sensor_task] >> end
+    (
+        start
+        >> create_redshift_cluster
+        >> pause_cluster_task
+        >> [resume_cluster_task, async_redshift_sensor_task]
+        >> delete_redshift_cluster
+        >> end
+    )
