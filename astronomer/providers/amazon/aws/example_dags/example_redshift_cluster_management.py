@@ -30,6 +30,7 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
+    # Execute AWS command then sleep for 5 min so that cluster would be available
     create_redshift_cluster = BashOperator(
         task_id="create_redshift_cluster",
         bash_command="aws redshift create-cluster "
@@ -38,7 +39,7 @@ with DAG(
         "--cluster-type single-node "
         "--node-type dc2.large  "
         "--master-username adminuser "
-        "--master-user-password TopSecret1 && sleep 2m",
+        "--master-user-password TopSecret1 && sleep 5m",
     )
 
     # [START howto_operator_redshift_pause_cluster_async]
@@ -70,6 +71,7 @@ with DAG(
         task_id="delete_redshift_cluster",
         bash_command="aws redshift delete-cluster "
         "--cluster-identifier redshift-cluster-1 --skip-final-cluster-snapshot && sleep 2m",
+        trigger_rule="all_done",
     )
 
     end = DummyOperator(task_id="end")
