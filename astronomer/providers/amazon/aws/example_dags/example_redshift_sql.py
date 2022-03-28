@@ -3,12 +3,17 @@ from datetime import datetime, timedelta
 
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
 )
 
 REDSHIFT_CONN_ID = os.environ.get("ASTRO_REDSHIFT_CONN_ID", "redshift_default")
+REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
+REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "adminuser")
+REDSHIFT_CLUSTER_MASTER_PASSWORD = os.environ.get("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
+REDSHIFT_CLUSTER_DB_NAME = os.environ.get("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 
 default_args = {
     "execution_timeout": timedelta(minutes=30),
@@ -25,13 +30,13 @@ with DAG(
     # Execute AWS command then sleep for 5 min so that cluster would be available
     create_redshift_cluster = BashOperator(
         task_id="create_redshift_cluster",
-        bash_command="aws redshift create-cluster "
-        "--db-name dev "
-        "--cluster-identifier redshift-cluster-1 "
-        "--cluster-type single-node "
-        "--node-type dc2.large  "
-        "--master-username adminuser "
-        "--master-user-password TopSecret1 && sleep 5m",
+        bash_command=f"aws redshift create-cluster "
+        f"--db-name {REDSHIFT_CLUSTER_DB_NAME} "
+        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} "
+        f"--cluster-type single-node "
+        f"--node-type dc2.large  "
+        f"--master-username {REDSHIFT_CLUSTER_MASTER_USER} "
+        f"--master-user-password {REDSHIFT_CLUSTER_MASTER_PASSWORD} && sleep 5m",
     )
 
     task_create_func = RedshiftSQLOperatorAsync(
@@ -96,10 +101,12 @@ with DAG(
 
     delete_redshift_cluster = BashOperator(
         task_id="delete_redshift_cluster",
-        bash_command="aws redshift delete-cluster "
-        "--cluster-identifier redshift-cluster-1 --skip-final-cluster-snapshot && sleep 2m",
+        bash_command=f"aws redshift delete-cluster "
+        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} --skip-final-cluster-snapshot && sleep 2m",
         trigger_rule="all_done",
     )
+
+    end = DummyOperator(task_id="end")
 
     (
         create_redshift_cluster
@@ -112,3 +119,5 @@ with DAG(
         >> task_delete_table
         >> delete_redshift_cluster
     )
+
+    [task_delete_table, delete_redshift_cluster] >> end

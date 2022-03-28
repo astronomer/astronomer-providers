@@ -13,7 +13,10 @@ from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
     RedshiftClusterSensorAsync,
 )
 
-REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-redshift-cluster-1")
+REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
+REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "adminuser")
+REDSHIFT_CLUSTER_MASTER_PASSWORD = os.environ.get("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
+REDSHIFT_CLUSTER_DB_NAME = os.environ.get("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
 
 default_args = {
@@ -33,13 +36,16 @@ with DAG(
     # Execute AWS command then sleep for 5 min so that cluster would be available
     create_redshift_cluster = BashOperator(
         task_id="create_redshift_cluster",
-        bash_command="aws redshift create-cluster "
-        "--db-name dev "
-        "--cluster-identifier redshift-cluster-1 "
-        "--cluster-type single-node "
-        "--node-type dc2.large  "
-        "--master-username adminuser "
-        "--master-user-password TopSecret1 && sleep 5m",
+        bash_command=f"aws redshift create-cluster "
+        f"--db-name {REDSHIFT_CLUSTER_DB_NAME} "
+        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} "
+        f"--cluster-type single-node "
+        f"--node-type dc2.large  "
+        f"--master-username {REDSHIFT_CLUSTER_MASTER_USER} "
+        f"--master-user-password {REDSHIFT_CLUSTER_MASTER_PASSWORD} && sleep 4m && "
+        f"aws redshift create-cluster-snapshot "
+        f"--snapshot-identifier {REDSHIFT_CLUSTER_IDENTIFIER}-snapshot "
+        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} && sleep 5m",
     )
 
     # [START howto_operator_redshift_pause_cluster_async]
@@ -69,8 +75,10 @@ with DAG(
 
     delete_redshift_cluster = BashOperator(
         task_id="delete_redshift_cluster",
-        bash_command="aws redshift delete-cluster "
-        "--cluster-identifier redshift-cluster-1 --skip-final-cluster-snapshot && sleep 2m",
+        bash_command=f"aws redshift delete-cluster "
+        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} --skip-final-cluster-snapshot && sleep 2m && "
+        f"aws redshift delete-cluster-snapshot "
+        f"--snapshot-identifier {REDSHIFT_CLUSTER_IDENTIFIER}-snapshot",
         trigger_rule="all_done",
     )
 
@@ -84,3 +92,5 @@ with DAG(
         >> delete_redshift_cluster
         >> end
     )
+
+    [resume_cluster_task, async_redshift_sensor_task] >> end
