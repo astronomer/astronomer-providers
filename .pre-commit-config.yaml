@@ -110,3 +110,11 @@ repos:
         files: ^setup.cfg$|^docs/conf.py$
         pass_filenames: false
         entry: .circleci/scripts/pre_commit_sync_version_docs.py
+      - id: changelog-update
+        name: Verify changelog is updated when releasing a new version
+        language: python
+        files: ^setup.cfg$|^CHANGELOG.rst$
+        pass_filenames: false
+        entry: .circleci/scripts/pre_commit_changelog_upto_date.py
+        additional_dependencies:
+          - packaging

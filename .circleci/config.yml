@@ -4,19 +4,53 @@ version: 2.1
 orbs:
   codecov: codecov/codecov@3.2.2
 
+# Run jobs only for version-number tagged builds & All Branches
+all_branches_and_version_tag: &all_branches_and_version_tag
+  filters:
+    tags:
+      only: /^\d+[.\d]+.*/
+
+# Run jobs only for version-number tagged builds
+version_tag_only: &version_tag_only
+  filters:
+    tags:
+      only: /^\d+[.\d]+.*/
+    branches:
+      ignore: /.*/
+
 workflows:
   test:
     jobs:
-      - static-checks
-      - mypy
-      - build-docs
+      - static-checks:
+          <<: *all_branches_and_version_tag
+      - mypy:
+          <<: *all_branches_and_version_tag
+      - build-docs:
+          <<: *all_branches_and_version_tag
       - test:
           name: test-python<< matrix.python_version >>
           matrix:
             parameters:
               python_version: ["3.8", "3.9"]
+          <<: *all_branches_and_version_tag
           requires:
             - static-checks
+      - build-and-verify:
+          <<: *all_branches_and_version_tag
+          requires:
+            - test
+            - build-docs
+            - mypy
+      - hold:
+          name: Needs-Approval
+          type: approval
+          <<: *version_tag_only
+          requires:
+            - build-and-verify
+      - publish:
+          requires:
+            - Needs-Approval
+          <<: *version_tag_only
 
 executors:
   docker-executor:
@@ -141,3 +175,43 @@ jobs:
             - ~/.cache/pip
             - ~/.pyenv/versions/
           key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+
+  build-and-verify:
+    executor:
+      name: docker-executor
+      python_version: "3.9"
+    steps:
+      - checkout
+      - run:
+          name: verify tag
+          command: |-
+            python3 .circleci/scripts/verify_tag_and_version.py
+      - run:
+          name: build artifacts
+          command: |
+            pip install -U build
+            git clean -fxd
+            python -m build
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist/*
+
+  publish:
+    executor:
+      name: docker-executor
+      python_version: "3.9"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Deploy to Test PyPI
+          command: |-
+            pip install -U twine
+            twine check /tmp/workspace/dist/*
+            twine upload /tmp/workspace/dist/*
+      - store_artifacts:
+          path: /tmp/workspace/dist/
+          destination: dist
