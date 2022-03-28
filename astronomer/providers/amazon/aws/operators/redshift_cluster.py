@@ -17,7 +17,13 @@ if TYPE_CHECKING:
 
 class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
     """
-    Resume a paused AWS Redshift Cluster
+    Resume a paused AWS Redshift Cluster, and
+    Few points on the cluster creation to avoid this type of Exception
+    ex:- 'You can't Resume cluster redshift-cluster-1 because no recently available
+    backup was found. Create a manual snapshot or wait for an automated snapshot, then retry'
+    1.While creating the cluster make sure it is created in unique and snapshot is created (or)
+    2.If it is created with previously deleted cluster name make sure there is a snapshot in the cluster. (or)
+    3.Delete the cluster with snapshot created (it is not suggested because this snapshot storage is chargeable)
 
     :param cluster_identifier: id of the AWS Redshift Cluster
     :param aws_conn_id: aws connection to use
@@ -77,7 +83,13 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
 
 class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
     """
-    Pause an AWS Redshift Cluster if cluster status is in `available` state
+    Pause an AWS Redshift Cluster if cluster status is in `available` state, and
+    Few points on the cluster creation to avoid this type of Exception
+    ex:- 'You can't pause cluster redshift-cluster-1 because no recently available
+    backup was found. Create a manual snapshot or wait for an automated snapshot, then retry'
+    1.While creating the cluster make sure it is created in unique and snapshot is created (or)
+    2.If it is created with previously deleted cluster name make sure there is a snapshot in the cluster. (or)
+    3.Delete the cluster with snapshot created (it is not suggested because this snapshot storage is chargeable)
 
     :param cluster_identifier: id of the AWS Redshift Cluster
     :param aws_conn_id: aws connection to use
