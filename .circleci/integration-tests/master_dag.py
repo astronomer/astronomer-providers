@@ -101,6 +101,8 @@ with DAG(
     google_task_info = [
         {"bigquery_dag": "example_async_bigquery_queries"},
         {"gcs_sensor_dag": "example_async_gcs_sensors"},
+        {"big_query_sensor_dag": "example_bigquery_sensors"},
+        {"dataproc_dag": "example_gcp_dataproc"},
     ]
     google_trigger_tasks, ids = prepare_dag_dependency(google_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)

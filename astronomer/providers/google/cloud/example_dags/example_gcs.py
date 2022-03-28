@@ -26,12 +26,16 @@ PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 BUCKET_FILE_LOCATION = "example_gcs.py"
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
 
 with DAG(
     "example_async_gcs_sensors",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "gcs"],
 ) as dag:
     # [START howto_create_bucket_task]
@@ -66,7 +70,6 @@ with DAG(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_exists_task",
-        execution_timeout=timedelta(seconds=60),
         google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_exists_task]
@@ -75,7 +78,6 @@ with DAG(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
         task_id="gcs_object_with_prefix_exists_task",
-        execution_timeout=timedelta(seconds=60),
         google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_with_prefix_exists_task]
@@ -88,7 +90,6 @@ with DAG(
         allow_delete=True,
         previous_objects=set(),
         task_id="gcs_upload_session_complete_task",
-        execution_timeout=timedelta(seconds=60),
         google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_gcs_upload_session_complete_task]
@@ -97,7 +98,6 @@ with DAG(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_update_sensor_task_async",
-        execution_timeout=timedelta(seconds=60),
         google_cloud_conn_id=GCP_CONN_ID,
     )
     # [END howto_sensor_object_update_exists_task]

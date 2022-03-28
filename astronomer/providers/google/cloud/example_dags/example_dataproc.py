@@ -1,7 +1,7 @@
 """Example Airflow DAG that shows how to use DataprocSubmitJobOperatorAsync."""
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import (
@@ -142,12 +142,18 @@ WORKFLOW_TEMPLATE = {
     "jobs": [{"step_id": "pig_job_1", "pig_job": PIG_JOB["pig_job"]}],
 }
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
 
 with models.DAG(
-    "example_gcp_dataproc",
-    schedule_interval="@once",
+    dag_id="example_gcp_dataproc",
+    schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
+    default_args=default_args,
+    tags=["example", "async", "dataproc"],
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
     create_cluster = DataprocCreateClusterOperator(

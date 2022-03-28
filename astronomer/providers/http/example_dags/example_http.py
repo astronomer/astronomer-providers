@@ -8,11 +8,17 @@ from astronomer.providers.http.sensors.http import HttpSensorAsync
 
 HTTP_CONN_ID = os.environ.get("ASTRO_HTTP_CONN_ID", "http_default")
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
+
 with DAG(
     dag_id="example_async_http_sensor",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "http"],
 ) as dag:
     # [START howto_operator_http_sensor_async]
@@ -24,7 +30,6 @@ with DAG(
         # TODO response_check is currently not supported
         # response_check=lambda response: "httpbin" in response.text,
         poke_interval=5,
-        execution_timeout=timedelta(seconds=60),
     )
     # [START howto_operator_file_sensor_async]
 

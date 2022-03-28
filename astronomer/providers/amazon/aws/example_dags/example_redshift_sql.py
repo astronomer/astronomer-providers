@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow.models.dag import DAG
 
@@ -9,11 +9,16 @@ from astronomer.providers.amazon.aws.operators.redshift_sql import (
 
 REDSHIFT_CONN_ID = os.environ.get("ASTRO_REDSHIFT_CONN_ID", "redshift_default")
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
 with DAG(
     dag_id="example_async_redshift_sql",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "redshift"],
 ) as dag:
     task_create_func = RedshiftSQLOperatorAsync(

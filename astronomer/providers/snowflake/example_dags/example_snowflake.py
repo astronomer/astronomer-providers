@@ -1,6 +1,7 @@
 """Example use of SnowflakeAsync related providers."""
 
 import os
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.utils.timezone import datetime
@@ -22,11 +23,13 @@ SNOWFLAKE_SLACK_MESSAGE = (
     "Results in an ASCII table:\n```{{ results_df | tabulate(tablefmt='pretty', headers='keys') }}```"
 )
 
+default_args = {"execution_timeout": timedelta(minutes=30), "snowflake_conn_id": SNOWFLAKE_CONN_ID}
+
 with DAG(
     dag_id="example_snowflake",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
-    default_args={"snowflake_conn_id": SNOWFLAKE_CONN_ID},
+    default_args=default_args,
     tags=["example", "async", "snowflake"],
     catchup=False,
 ) as dag:

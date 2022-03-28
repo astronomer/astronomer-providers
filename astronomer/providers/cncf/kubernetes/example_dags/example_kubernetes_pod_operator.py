@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.configuration import conf
@@ -17,12 +17,16 @@ else:
     in_cluster = True
     config_file = None
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
 
 with DAG(
     dag_id="example_kubernetes_operator",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "async", "k8s"],
 ) as dag:
     create_k8s_pod = KubernetesPodOperatorAsync(
