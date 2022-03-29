@@ -31,7 +31,8 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
+    def execute(self, context: Dict[str, Any]) -> None:
+        """Check for the target_status and defers using the trigger"""
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftClusterSensorTrigger(

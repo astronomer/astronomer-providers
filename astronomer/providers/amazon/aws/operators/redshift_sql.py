@@ -22,7 +22,11 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:  # noqa: D102
+    def execute(self, context: "Context") -> None:
+        """
+        Makes a sync call to RedshiftDataHook and execute the query and gets back the query_ids list and
+        defers trigger to poll for the status for the query executed
+        """
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
         query_ids, response = redshift_data_hook.execute_query(sql=cast(str, self.sql), params=self.params)
         if response.get("status") == "error":

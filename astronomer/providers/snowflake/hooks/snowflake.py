@@ -10,7 +10,34 @@ from snowflake.connector.constants import QueryStatus
 from snowflake.connector.util_text import split_statements
 
 
-class SnowflakeHookAsync(SnowflakeHook):  # noqa: D101
+class SnowflakeHookAsync(SnowflakeHook):
+    """
+    A client to interact with Snowflake.
+
+    This hook requires the snowflake_conn_id connection. The snowflake host, login,
+    and, password field must be setup in the connection. Other inputs can be defined
+    in the connection or hook instantiation. If used with the S3ToSnowflakeOperator
+    add 'aws_access_key_id' and 'aws_secret_access_key' to extra field in the connection.
+
+    :param snowflake_conn_id: Reference to
+        :ref:`Snowflake connection id<howto/connection:snowflake>`
+    :param account: snowflake account name
+    :param authenticator: authenticator for Snowflake.
+        'snowflake' (default) to use the internal Snowflake authenticator
+        'externalbrowser' to authenticate using your web browser and
+        Okta, ADFS or any other SAML 2.0-compliant identify provider
+        (IdP) that has been defined for your account
+        'https://<your_okta_account_name>.okta.com' to authenticate
+        through native Okta.
+    :param warehouse: name of snowflake warehouse
+    :param database: name of snowflake database
+    :param region: name of snowflake region
+    :param role: name of snowflake role
+    :param schema: name of snowflake schema
+    :param session_parameters: You can set session-level parameters at
+        the time you connect to Snowflake
+    """
+
     def run(  # type: ignore[override]
         self,
         sql: Union[str, List[str]],

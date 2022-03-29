@@ -51,7 +51,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     def execute(self, context: Dict[str, Any]) -> None:
         """
         Make a sync connection to snowflake and run query in execute_async
-        function in snowflake and close the connection
+        function in snowflake and close the connection and with the query ids, fetch the status of the query.
+        By deferring the SnowflakeTrigger class pass along with query ids.
         """
         self.log.info("Executing: %s", self.sql)
         hook = self.get_db_hook()

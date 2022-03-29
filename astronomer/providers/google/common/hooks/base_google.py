@@ -4,7 +4,9 @@ from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
 
 
-class GoogleBaseHookAsync(BaseHook):  # noqa: D101
+class GoogleBaseHookAsync(BaseHook):
+    """GoogleBaseHookAsync inherits from BaseHook class, run on the trigger worker"""
+
     sync_hook_class: Any = None
 
     def __init__(self, **kwargs: Any):

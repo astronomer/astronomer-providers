@@ -74,7 +74,9 @@ class _BigQueryHook(BigQueryHook):
         return job
 
 
-class BigQueryHookAsync(GoogleBaseHookAsync):  # noqa: D101
+class BigQueryHookAsync(GoogleBaseHookAsync):
+    """Big query async hook inherits from GoogleBaseHookAsync class and connects to the google Big query"""
+
     sync_hook_class = _BigQueryHook
 
     async def get_job_instance(

@@ -10,7 +10,21 @@ from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
 log = logging.getLogger(__name__)
 
 
-class S3KeyTrigger(BaseTrigger):  # noqa: D101
+class S3KeyTrigger(BaseTrigger):
+    """
+    S3KeyTrigger is fired as deferred class with params to run the task in trigger worker
+
+    :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
+        is not provided as a full s3:// url.
+    :param bucket_key:  The key being waited on. Supports full s3:// style url
+        or relative path from root level. When it's specified as a full s3://
+        url, please leave bucket_name as `None`.
+    :param wildcard_match: whether the bucket_key should be interpreted as a
+        Unix wildcard pattern
+    :param aws_conn_id: reference to the s3 connection
+    :param hook_params: params for hook its optional
+    """
+
     def __init__(
         self,
         bucket_name: str,
@@ -55,7 +69,24 @@ class S3KeyTrigger(BaseTrigger):  # noqa: D101
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
 
 
-class S3KeySizeTrigger(BaseTrigger):  # noqa: D101
+class S3KeySizeTrigger(BaseTrigger):
+    """
+    S3KeySizeTrigger is fired as deferred class with params to run the task in trigger worker,
+    S3 Objects have size more than 0
+
+    :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
+        is not provided as a full s3:// url.
+    :param bucket_key:  The key being waited on. Supports full s3:// style url
+        or relative path from root level. When it's specified as a full s3://
+        url, please leave bucket_name as `None`.
+    :param wildcard_match: whether the bucket_key should be interpreted as a
+        Unix wildcard pattern
+    :param aws_conn_id: reference to the s3 connection
+    :param check_fn: Function that receives the list of the S3 objects,
+        and returns the boolean
+    :param hook_params: params for hook its optional
+    """
+
     def __init__(
         self,
         bucket_name: str,
@@ -122,7 +153,28 @@ class S3KeySizeTrigger(BaseTrigger):  # noqa: D101
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
 
 
-class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
+class S3KeysUnchangedTrigger(BaseTrigger):
+    """
+    S3KeyTrigger is fired as deferred class with params to run the task in trigger worker
+
+    :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
+        is not provided as a full s3:// url.
+    :param prefix: The prefix being waited on. Relative path from bucket root level.
+    :param inactivity_period: The total seconds of inactivity to designate
+        keys unchanged. Note, this mechanism is not real time and
+        this operator may not return until a poke_interval after this period
+        has passed with no additional objects sensed.
+    :param min_objects: The minimum number of objects needed for keys unchanged
+        sensor to be considered valid.
+    :param inactivity_seconds: reference to the seconds of inactivity
+    :param previous_objects: The set of object ids found during the last poke.
+    :param allow_delete: Should this sensor consider objects being deleted
+    :param aws_conn_id: reference to the s3 connection
+    :param last_activity_time: last modified or last active time
+    :param verify: Whether or not to verify SSL certificates for S3 connection.
+        By default SSL certificates are verified.
+    """
+
     def __init__(
         self,
         bucket_name: str,
@@ -200,7 +252,19 @@ class S3KeysUnchangedTrigger(BaseTrigger):  # noqa: D101
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.verify)
 
 
-class S3PrefixTrigger(BaseTrigger):  # noqa: D101
+class S3PrefixTrigger(BaseTrigger):
+    """
+    S3PrefixTrigger class is fired as deferred class with params to run the task in trigger worker
+
+    :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
+        is not provided as a full s3:// url.
+    :param prefix: The prefix being waited on. Relative path from bucket root level.
+    :param delimiter: The delimiter intended to show hierarchy.
+    :param aws_conn_id: reference to the s3 connection
+    :param verify: Whether or not to verify SSL certificates for S3 connection.
+    :param hook_params: params for hook its optional
+    """
+
     def __init__(
         self,
         *,
