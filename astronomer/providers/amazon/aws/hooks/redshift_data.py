@@ -7,7 +7,12 @@ from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from snowflake.connector.util_text import split_statements
 
 
-class RedshiftDataHook(AwsBaseHook):  # noqa: D101
+class RedshiftDataHook(AwsBaseHook):
+    """
+    RedshiftDataHook inherits from AwsBaseHook to connect with AWS redshift
+    by using boto3 client_type as redshift-data we can interact with redshift cluster database and execute the query
+    """
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"

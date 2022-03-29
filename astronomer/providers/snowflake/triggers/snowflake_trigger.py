@@ -13,7 +13,18 @@ def get_db_hook(snowflake_conn_id: str) -> SnowflakeHookAsync:
     return SnowflakeHookAsync(snowflake_conn_id=snowflake_conn_id)
 
 
-class SnowflakeTrigger(BaseTrigger):  # noqa: D101
+class SnowflakeTrigger(BaseTrigger):
+    """
+    Snowflake Trigger inherits from the BaseTrigger,it is fired as
+    deferred class with params to run the task in trigger worker and
+    fetch the status for the query ids passed
+
+    :param task_id: Reference to task id of the Dag
+    :param polling_period_seconds:  polling period in seconds to check for the status
+    :param query_ids: List of Query ids to run and poll for the status
+    :param snowflake_conn_id: Reference to Snowflake connection id
+    """
+
     def __init__(
         self,
         task_id: str,

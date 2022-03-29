@@ -6,7 +6,17 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.amazon.aws.hooks.redshift_cluster import RedshiftHookAsync
 
 
-class RedshiftClusterTrigger(BaseTrigger):  # noqa: D101
+class RedshiftClusterTrigger(BaseTrigger):
+    """
+    RedshiftClusterTrigger is fired as deferred class with params to run the task in trigger worker
+
+    :param task_id: Reference to task id of the Dag
+    :param polling_period_seconds:  polling period in seconds to check for the status
+    :param aws_conn_id: Reference to AWS connection id for redshift
+    :param cluster_identifier: unique identifier of a cluster
+    :param operation_type: Reference to the type of operation need to be performed eg: pause_cluster, resume_cluster
+    """
+
     def __init__(
         self,
         task_id: str,
@@ -67,7 +77,17 @@ class RedshiftClusterTrigger(BaseTrigger):  # noqa: D101
             return
 
 
-class RedshiftClusterSensorTrigger(BaseTrigger):  # noqa: D101
+class RedshiftClusterSensorTrigger(BaseTrigger):
+    """
+    RedshiftClusterSensorTrigger is fired as deferred class with params to run the task in trigger worker
+
+    :param task_id: Reference to task id of the Dag
+    :param aws_conn_id: Reference to AWS connection id for redshift
+    :param cluster_identifier: unique identifier of a cluster
+    :param target_status: Reference to the status which needs to be checked
+    :param polling_period_seconds:  polling period in seconds to check for the status
+    """
+
     def __init__(
         self,
         task_id: str,

@@ -70,7 +70,8 @@ class S3KeySensorAsync(BaseOperator):
             if parsed_url.scheme != "" or parsed_url.netloc != "":
                 raise AirflowException("If bucket_name provided, bucket_key must be relative path, not URI.")
 
-    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
+    def execute(self, context: Dict[str, Any]) -> None:
+        """Check for a key in s3 and defers using the trigger"""
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -139,7 +140,8 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         super().__init__(**kwargs)
         self.check_fn_user = check_fn
 
-    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
+    def execute(self, context: Dict[str, Any]) -> None:
+        """Defers using the trigger, and check for the file size"""
         self._resolve_bucket_and_key()
         self.defer(
             timeout=self.execution_timeout,
@@ -227,7 +229,8 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         self.verify = verify
         self.last_activity_time: Optional[datetime] = None
 
-    def execute(self, context: Dict[str, Any]) -> None:  # noqa: D102
+    def execute(self, context: Dict[str, Any]) -> None:
+        """Defers Trigger class to check for changes in the number of objects at prefix in AWS S3"""
         self.defer(
             timeout=self.execution_timeout,
             trigger=S3KeysUnchangedTrigger(
@@ -304,7 +307,8 @@ class S3PrefixSensorAsync(BaseOperator):
         self.aws_conn_id = aws_conn_id
         self.verify = verify
 
-    def execute(self, context: Dict[Any, Any]) -> None:  # noqa: D102
+    def execute(self, context: Dict[Any, Any]) -> None:
+        """Defers trigger class to poke for a prefix or all prefixes to exist"""
         self.log.info("Poking for prefix : %s in bucket s3://%s", self.prefix, self.bucket_name)
         self.defer(
             timeout=self.execution_timeout,

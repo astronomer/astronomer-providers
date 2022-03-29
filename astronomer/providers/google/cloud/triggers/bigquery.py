@@ -11,7 +11,18 @@ from astronomer.providers.google.cloud.hooks.bigquery import (
 )
 
 
-class BigQueryInsertJobTrigger(BaseTrigger):  # noqa: D101
+class BigQueryInsertJobTrigger(BaseTrigger):
+    """
+    BigQueryInsertJobTrigger run on the trigger worker to perform insert operation
+
+    :param conn_id: Reference to google cloud connection id
+    :param job_id:  The ID of the job. It will be suffixed with hash of job configuration
+    :param project_id: Google Cloud Project where the job is running
+    :param dataset_id: The dataset ID of the requested table. (templated)
+    :param table_id: The table ID of the requested table. (templated)
+    :param poll_interval: polling period in seconds to check for the status
+    """
+
     def __init__(
         self,
         conn_id: str,
@@ -79,7 +90,9 @@ class BigQueryInsertJobTrigger(BaseTrigger):  # noqa: D101
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
 
 
-class BigQueryCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
+class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
+    """BigQueryCheckTrigger run on the trigger worker"""
+
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes BigQueryCheckTrigger arguments and classpath."""
         return (
@@ -139,7 +152,9 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
                 return
 
 
-class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):  # noqa: D101
+class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
+    """BigQueryGetDataTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class"""
+
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes BigQueryInsertJobTrigger arguments and classpath."""
         return (
@@ -186,7 +201,26 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):  # noqa: D101
                 return
 
 
-class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
+class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
+    """
+    BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
+
+    :param conn_id: Reference to google cloud connection id
+    :param first_job_id:  The ID of the job 1 performed
+    :param second_job_id:  The ID of the job 2 performed
+    :param project_id: Google Cloud Project where the job is running
+    :param dataset_id: The dataset ID of the requested table. (templated)
+    :param table: table name
+    :param metrics_thresholds: dictionary of ratios indexed by metrics
+    :param date_filter_column: column name
+    :param days_back: number of days between ds and the ds we want to check
+        against
+    :param ratio_formula: ration formula
+    :param ignore_zero: boolean value to consider zero or not
+    :param table_id: The table ID of the requested table. (templated)
+    :param poll_interval: polling period in seconds to check for the status
+    """
+
     def __init__(
         self,
         conn_id: str,
@@ -314,7 +348,21 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
                 return
 
 
-class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):  # noqa: D101
+class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
+    """
+    BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
+
+    :param conn_id: Reference to google cloud connection id
+    :param sql: the sql to be executed
+    :param pass_value: pass value
+    :param job_id:  The ID of the job
+    :param project_id: Google Cloud Project where the job is running
+    :param tolerance: certain metrics for tolerance
+    :param dataset_id: The dataset ID of the requested table. (templated)
+    :param table_id: The table ID of the requested table. (templated)
+    :param poll_interval: polling period in seconds to check for the status
+    """
+
     def __init__(
         self,
         conn_id: str,

@@ -11,7 +11,9 @@ from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookA
 DEFAULT_TIMEOUT = 60
 
 
-class GCSHookAsync(GoogleBaseHookAsync):  # noqa: D101
+class GCSHookAsync(GoogleBaseHookAsync):
+    """GCSHookAsync run on the trigger worker, inherits from GoogleBaseHookAsync"""
+
     sync_hook_class = GCSHook
 
     async def get_storage_client(self, session: ClientSession) -> Storage:

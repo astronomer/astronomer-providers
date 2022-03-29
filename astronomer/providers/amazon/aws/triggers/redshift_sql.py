@@ -5,7 +5,16 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHookAsync
 
 
-class RedshiftSQLTrigger(BaseTrigger):  # noqa: D101
+class RedshiftSQLTrigger(BaseTrigger):
+    """
+    RedshiftSQLTrigger is fired as deferred class with params to run the task in trigger worker
+
+    :param task_id: Reference to task id of the Dag
+    :param polling_period_seconds:  polling period in seconds to check for the status
+    :param aws_conn_id: Reference to AWS connection id for redshift
+    :param query_ids: list of Query ids to run and poll for the status
+    """
+
     def __init__(
         self,
         task_id: str,
