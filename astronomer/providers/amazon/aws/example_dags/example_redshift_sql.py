@@ -1,9 +1,13 @@
 import os
+import time
 from datetime import datetime, timedelta
 
+import boto3
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
@@ -13,11 +17,71 @@ REDSHIFT_CONN_ID = os.environ.get("ASTRO_REDSHIFT_CONN_ID", "redshift_default")
 REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
 REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "adminuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.environ.get("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
+REDSHIFT_CLUSTER_TYPE = os.environ.get("REDSHIFT_CLUSTER_TYPE", "single-node")
+REDSHIFT_CLUSTER_NODE_TYPE = os.environ.get("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "**********")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "***********")
+AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 REDSHIFT_CLUSTER_DB_NAME = os.environ.get("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 
 default_args = {
     "execution_timeout": timedelta(minutes=30),
 }
+
+
+def get_cluster_status() -> str:
+    """Get the status of aws redshift cluster"""
+    client = boto3.client("redshift")
+
+    response = client.describe_clusters(
+        ClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
+    )
+    print(response)
+    cluster = response.get("Clusters")[0]
+    cluster_status: str = cluster.get("ClusterStatus")
+    return cluster_status
+
+
+def delete_redshift_cluster() -> None:
+    """Delete a redshift cluster and wait until it completely removed"""
+    client = boto3.client("redshift")
+
+    try:
+        client.delete_cluster(
+            ClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
+            SkipFinalClusterSnapshot=True,
+        )
+
+        while True:
+            if get_cluster_status() == "deleting":
+                time.sleep(30)
+                continue
+    except ClientError as e:
+        print(e)
+        return None
+
+
+def create_redshift_cluster() -> None:
+    """Create aws redshift cluster and wait until it available"""
+    client = boto3.client("redshift")
+
+    client.create_cluster(
+        DBName=REDSHIFT_CLUSTER_DB_NAME,
+        ClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
+        ClusterType=REDSHIFT_CLUSTER_TYPE,
+        NodeType=REDSHIFT_CLUSTER_NODE_TYPE,
+        MasterUsername=REDSHIFT_CLUSTER_MASTER_USER,
+        MasterUserPassword=REDSHIFT_CLUSTER_MASTER_PASSWORD,
+        Tags=[
+            {"Key": "Purpose", "Value": "ProviderTest"},
+        ],
+    )
+
+    while True:
+        if get_cluster_status() == "available":
+            break
+        time.sleep(30)
+
 
 with DAG(
     dag_id="example_async_redshift_sql",
@@ -27,16 +91,17 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "redshift"],
 ) as dag:
-    # Execute AWS command then sleep for 5 min so that cluster would be available
-    create_redshift_cluster = BashOperator(
+
+    config = BashOperator(
+        task_id="aws_config",
+        bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
+        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
+        f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
+    )
+
+    create_cluster_op = PythonOperator(
         task_id="create_redshift_cluster",
-        bash_command=f"aws redshift create-cluster "
-        f"--db-name {REDSHIFT_CLUSTER_DB_NAME} "
-        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} "
-        f"--cluster-type single-node "
-        f"--node-type dc2.large  "
-        f"--master-username {REDSHIFT_CLUSTER_MASTER_USER} "
-        f"--master-user-password {REDSHIFT_CLUSTER_MASTER_PASSWORD} && sleep 5m",
+        python_callable=create_redshift_cluster,
     )
 
     # Let use plpgsql procedure loop to defer RedshiftSQLOperatorAsync
@@ -107,17 +172,17 @@ with DAG(
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
-    delete_redshift_cluster = BashOperator(
+    delete_cluster_op = PythonOperator(
         task_id="delete_redshift_cluster",
-        bash_command=f"aws redshift delete-cluster "
-        f"--cluster-identifier {REDSHIFT_CLUSTER_IDENTIFIER} --skip-final-cluster-snapshot && sleep 2m",
+        python_callable=delete_redshift_cluster,
         trigger_rule="all_done",
     )
 
     end = DummyOperator(task_id="end")
 
     (
-        create_redshift_cluster
+        config
+        >> create_cluster_op
         >> task_create_func
         >> task_long_running_query
         >> task_create_table
@@ -128,4 +193,4 @@ with DAG(
         >> delete_redshift_cluster
     )
 
-    [task_delete_table, delete_redshift_cluster] >> end
+    [task_delete_table, delete_cluster_op] >> end
