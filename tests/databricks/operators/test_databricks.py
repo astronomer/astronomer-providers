@@ -1,7 +1,12 @@
+from datetime import datetime
 from unittest import mock
 
 import pytest
+from airflow import DAG
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.models.dagrun import DagRun
+from airflow.models.taskinstance import TaskInstance
+from airflow.utils.types import DagRunType
 
 from astronomer.providers.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
@@ -30,14 +35,18 @@ def context():
 
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_submit_run_operator_async(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_operator_async(
+    submit_run_response, get_job_id, get_run_page_url_response, context
+):
     """
     Asserts that a task is deferred and an DatabricksTrigger will be fired
     when the DatabricksSubmitRunOperatorAsync is executed.
     """
     submit_run_response.return_value = {"run_id": RUN_ID}
     get_run_page_url_response.return_value = RUN_PAGE_URL
+    get_job_id.return_value = None
 
     operator = DatabricksSubmitRunOperatorAsync(
         task_id="submit_run",
@@ -108,6 +117,27 @@ def test_databricks_run_now_execute_complete_error(submit_run_response, get_run_
         operator.execute_complete(context={}, event={"status": "error", "message": "error"})
 
 
+def create_context(task):
+    dag = DAG(dag_id="dag")
+    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    dag_run = DagRun(
+        dag_id=dag.dag_id,
+        execution_date=execution_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
+    )
+    task_instance = TaskInstance(task=task)
+    task_instance.dag_run = dag_run
+    task_instance.dag_id = dag.dag_id
+    task_instance.xcom_push = mock.Mock()
+    return {
+        "dag": dag,
+        "run_id": dag_run.run_id,
+        "task": task,
+        "ti": task_instance,
+        "task_instance": task_instance,
+    }
+
+
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
 def test_databricks_run_now_execute_complete_success(submit_run_response, get_run_page_url_response, context):
@@ -124,4 +154,10 @@ def test_databricks_run_now_execute_complete_success(submit_run_response, get_ru
         notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
     )
 
-    assert operator.execute_complete(context={}, event={"status": "success", "message": "success"}) is None
+    assert (
+        operator.execute_complete(
+            context=create_context(operator),
+            event={"status": "success", "message": "success", "job_id": "12345"},
+        )
+        is None
+    )
