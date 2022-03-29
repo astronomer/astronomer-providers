@@ -39,21 +39,29 @@ with DAG(
         f"--master-user-password {REDSHIFT_CLUSTER_MASTER_PASSWORD} && sleep 5m",
     )
 
+    # Let use plpgsql procedure loop to defer RedshiftSQLOperatorAsync
+    # since Python UDF require special permission to create and run
     task_create_func = RedshiftSQLOperatorAsync(
         task_id="task_create_func",
         sql="""
-            CREATE OR REPLACE FUNCTION janky_sleep (x float) RETURNS bool IMMUTABLE as $$
-                from time import sleep
-                sleep(x)
-                return True
-            $$ LANGUAGE plpythonu;
+            create or replace procedure just_a_loop() as $$
+            declare
+                CurrId INTEGER := 0;
+                MaxId INTEGER := 500000;
+            begin
+                while CurrId <= MaxId
+                LOOP
+                    CurrId = CurrId + 1;
+                end LOOP;
+            end;
+            $$ language plpgsql;
             """,
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
-    task_long_running_query_sleep = RedshiftSQLOperatorAsync(
-        task_id="task_long_running_query_sleep",
-        sql="select janky_sleep(10.0);",
+    task_long_running_query = RedshiftSQLOperatorAsync(
+        task_id="task_long_running_query",
+        sql="CALL just_a_loop();",
     )
 
     task_create_table = RedshiftSQLOperatorAsync(
@@ -111,7 +119,7 @@ with DAG(
     (
         create_redshift_cluster
         >> task_create_func
-        >> task_long_running_query_sleep
+        >> task_long_running_query
         >> task_create_table
         >> task_insert_data
         >> task_get_all_data
