@@ -35,6 +35,7 @@ class WaitContainerTrigger(BaseTrigger):
     :param poll_interval: number of seconds between reading pod state
     :param logging_interval: number of seconds to wait before kicking it back to
         the operator to print latest logs. If ``None`` will wait until container done.
+    :param last_log_time: where to resume logs from
     """
 
     def __init__(
