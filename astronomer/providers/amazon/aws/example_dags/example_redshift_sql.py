@@ -107,6 +107,7 @@ with DAG(
 
     # Let use plpgsql procedure loop to defer RedshiftSQLOperatorAsync
     # since Python UDF require special permission to create and run
+    # https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_FUNCTION.html
     task_create_func = RedshiftSQLOperatorAsync(
         task_id="task_create_func",
         sql="""
