@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from datetime import datetime, timedelta
@@ -40,7 +41,7 @@ def get_cluster_status() -> str:
     response = client.describe_clusters(
         ClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
     )
-    print(response)
+    logging.info("%s", response)
     cluster = response.get("Clusters")[0]
     cluster_status: str = cluster.get("ClusterStatus")
     return cluster_status
@@ -53,7 +54,7 @@ def get_snapshot_status() -> str:
     response = client.describe_cluster_snapshots(
         SnapshotIdentifier=f"{REDSHIFT_CLUSTER_IDENTIFIER}-snapshot",
     )
-    print(response)
+    logging.info("%s", response)
     snapshot = response.get("Snapshots")[0]
     snapshot_status: str = snapshot.get("Status")
     return snapshot_status
@@ -124,7 +125,7 @@ def delete_redshift_cluster_snapshot() -> None:
                 time.sleep(30)
                 continue
     except ClientError as e:
-        print(e)
+        logging.info("%s", e)
         return None
 
 
@@ -143,7 +144,7 @@ def delete_redshift_cluster() -> None:
                 time.sleep(30)
                 continue
     except ClientError as e:
-        print(e)
+        logging.info("%s", e)
         return None
 
 
