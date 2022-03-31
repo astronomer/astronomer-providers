@@ -78,7 +78,7 @@ class LivyOperatorAsync(LivyOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -91,3 +91,7 @@ class LivyOperatorAsync(LivyOperator):
             self.task_id,
             event["response"],
         )
+        if event["status"] == "success" and event["log_lines"] is not None:
+            for log_line in event["log_lines"]:
+                self.log.info(log_line)
+        return event["batch_id"]

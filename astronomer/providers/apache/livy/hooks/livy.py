@@ -263,8 +263,10 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
                 log_lines = self._parse_request_response(result["response"], "log")
                 for log_line in log_lines:
                     self.log.info(log_line)
+                return log_lines
             else:
                 self.log.info(result["response"])
+                return result["response"]
 
     @staticmethod
     def _validate_session_id(session_id: Union[int, str]) -> None:

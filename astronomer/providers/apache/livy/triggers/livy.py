@@ -73,6 +73,7 @@ class LivyTrigger(BaseTrigger):
                     "status": "success",
                     "batch_id": self._batch_id,
                     "response": f"Batch {self._batch_id} succeeded",
+                    "log_lines": None,
                 }
             )
         except Exception as exc:
@@ -99,10 +100,20 @@ class LivyTrigger(BaseTrigger):
             sleep(self._polling_interval)
             state = await hook.get_batch_state(batch_id)
         self.log.info("Batch with id %s terminated with state: %s", batch_id, state["batch_state"].value)
-        await hook.dump_batch_logs(batch_id)
+        log_lines = await hook.dump_batch_logs(batch_id)
         if state["batch_state"] != BatchState.SUCCESS:
-            return {"status": "error", "batch_id": batch_id, "response": f"Batch {batch_id} did not succeed"}
-        return {"status": "success", "batch_id": batch_id, "response": f"Batch {batch_id} succeeded"}
+            return {
+                "status": "error",
+                "batch_id": batch_id,
+                "response": f"Batch {batch_id} did not succeed",
+                "log_lines": log_lines,
+            }
+        return {
+            "status": "success",
+            "batch_id": batch_id,
+            "response": f"Batch {batch_id} succeeded",
+            "log_lines": log_lines,
+        }
 
     def _get_async_hook(self) -> LivyHookAsync:
         """
