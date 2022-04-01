@@ -23,7 +23,6 @@ class EmrContainerSensorAsync(EmrContainerSensor):
 
     def execute(self, context: Dict[Any, Any]) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        print("self.virtual_cluster_id ", self.virtual_cluster_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=EmrContainerSensorTrigger(
@@ -43,7 +42,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         successful.
         """
         if event:
-            if event["status"] == "success":
-                return event["message"]
-            raise AirflowException(event["message"])
+            if event["status"] == "error":
+                raise AirflowException(event["message"])
+            self.log.info(event["message"])
         return None

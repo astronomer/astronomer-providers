@@ -63,7 +63,9 @@ def test_emr_container_sensor_async_execute_complete():
         max_retries=1,
         aws_conn_id=AWS_CONN_ID,
     )
-    assert task.execute_complete(context=None, event={"status": "success", "message": "Job completed"})
+    assert (
+        task.execute_complete(context=None, event={"status": "success", "message": "Job completed"}) is None
+    )
 
 
 def test_emr_container_sensor_async_execute_complete_event_none():

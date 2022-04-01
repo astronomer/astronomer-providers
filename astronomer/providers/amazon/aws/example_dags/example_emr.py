@@ -5,6 +5,7 @@ from airflow import DAG
 from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
 
 # [START howto_operator_emr_eks_env_variables]
+# from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
 VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "astro-emr-cluster")
@@ -65,13 +66,14 @@ with DAG(
         job_driver=JOB_DRIVER_ARG,
         configuration_overrides=CONFIGURATION_OVERRIDES_ARG,
         name="pi.py",
+        max_tries=0,
     )
     # [END howto_operator_emr_eks_jobrun]
 
     # [START howto_sensor_emr_container_task]
     job_container_sensor = EmrContainerSensorAsync(
         task_id="check_container_sensor",
-        job_id=job_starter,
+        job_id=job_starter.output,
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         poll_interval=5,
         aws_conn_id=AWS_CONN_ID,

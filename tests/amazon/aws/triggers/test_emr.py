@@ -72,6 +72,31 @@ async def test_emr_container_sensors_trigger_run(mock_query_status, mock_status)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "mock_status",
+    ["COMPLETED"],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_sensors_trigger_completed(mock_query_status, mock_status):
+    """
+    Test if the task is run is in trigger failure status.
+    :return:
+    """
+    mock_query_status.return_value = mock_status
+    trigger = EmrContainerSensorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        max_retries=MAX_RETRIES,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    msg = "EMR Containers sensors completed"
+    assert TriggerEvent({"status": "success", "message": msg}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_status",
     ["FAILED", "CANCELLED", "CANCEL_PENDING"],
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")

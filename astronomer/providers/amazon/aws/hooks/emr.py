@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from botocore.exceptions import ClientError
 
@@ -22,21 +22,21 @@ class EmrContainerHookAsync(AwsBaseHookAsync):
         super().__init__(*args, **kwargs)
         self.virtual_cluster_id = virtual_cluster_id
 
-    async def check_job_status(self, job_id: str) -> Optional[str]:
+    async def check_job_status(self, job_id: str) -> Any:
         """
         Fetch the status of submitted job run. Returns None or one of valid query states.
 
         :param job_id: Id of submitted job run
         """
         async with await self.get_client_async() as client:
-            print("iiiiiiiiiiii=======>")
             try:
                 response = await client.describe_job_run(
                     virtualClusterId=self.virtual_cluster_id,
                     id=job_id,
                 )
-                print("response ", response)
-                return response["jobRun"]["state"]
-            except ClientError as error:
-                print("error ==========?", error)
-                raise str(error)
+                if "jobRun" in response and "state" in response["jobRun"]:
+                    return response["jobRun"]["state"]
+                else:
+                    return None
+            except ClientError as e:
+                raise e
