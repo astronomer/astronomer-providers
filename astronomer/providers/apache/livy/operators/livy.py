@@ -16,15 +16,13 @@
 # under the License.
 
 """This module contains the Apache Livy operator async."""
-from typing import TYPE_CHECKING, Any, Dict
+from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.apache.livy.operators.livy import LivyOperator
+from airflow.utils.context import Context
 
 from astronomer.providers.apache.livy.triggers.livy import LivyTrigger
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class LivyOperatorAsync(LivyOperator):
@@ -84,6 +82,11 @@ class LivyOperatorAsync(LivyOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        # dump the logs from livy to worker through triggerer.
+        if event["log_lines"] is not None:
+            for log_line in event["log_lines"]:
+                self.log.info(log_line)
+
         if event["status"] == "error":
             raise AirflowException(event["response"])
         self.log.info(
@@ -91,7 +94,4 @@ class LivyOperatorAsync(LivyOperator):
             self.task_id,
             event["response"],
         )
-        if event["status"] == "success" and event["log_lines"] is not None:
-            for log_line in event["log_lines"]:
-                self.log.info(log_line)
         return event["batch_id"]
