@@ -1,4 +1,4 @@
-from time import sleep
+import asyncio
 from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -68,6 +68,7 @@ class LivyTrigger(BaseTrigger):
                     return
                 else:
                     yield TriggerEvent(response)
+                    return
             yield TriggerEvent(
                 {
                     "status": "success",
@@ -97,7 +98,7 @@ class LivyTrigger(BaseTrigger):
         while state["batch_state"] not in hook.TERMINAL_STATES:
             self.log.info("Batch with id %s is in state: %s", batch_id, state["batch_state"].value)
             self.log.info("Sleeping for %s seconds", self._polling_interval)
-            sleep(self._polling_interval)
+            await asyncio.sleep(self._polling_interval)
             state = await hook.get_batch_state(batch_id)
         self.log.info("Batch with id %s terminated with state: %s", batch_id, state["batch_state"].value)
         log_lines = await hook.dump_batch_logs(batch_id)
