@@ -90,10 +90,11 @@ def test_databricks_run_now_execute_complete():
     operator = DatabricksRunNowOperatorAsync(
         task_id=TASK_ID,
         databricks_conn_id=CONN_ID,
+        do_xcom_push=True,
     )
     operator.run_page_url = RUN_PAGE_URL
     with mock.patch.object(operator.log, "info") as mock_log_info:
-        operator.execute_complete({})
+        operator.execute_complete(create_context(operator), {})
     mock_log_info.assert_called_with("%s completed successfully.", "databricks_check")
 
 
@@ -152,12 +153,19 @@ def test_databricks_run_now_execute_complete_success(submit_run_response, get_ru
         databricks_conn_id=CONN_ID,
         existing_cluster_id="xxxx-xxxxxx-xxxxxx",
         notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        do_xcom_push=True,
     )
 
     assert (
         operator.execute_complete(
             context=create_context(operator),
-            event={"status": "success", "message": "success", "job_id": "12345"},
+            event={
+                "status": "success",
+                "message": "success",
+                "job_id": "12345",
+                "run_id": RUN_ID,
+                "run_page_url": RUN_PAGE_URL,
+            },
         )
         is None
     )

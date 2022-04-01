@@ -39,6 +39,7 @@ def test_databricks_trigger_serialization():
         "retry_delay": 1.0,
         "polling_period_seconds": 1.0,
         "job_id": None,
+        "run_page_url": None,
     }
 
 

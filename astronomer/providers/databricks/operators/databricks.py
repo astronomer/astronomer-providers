@@ -44,6 +44,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
                 task_id=self.task_id,
                 run_id=str(self.run_id),
                 job_id=job_id,
+                run_page_url=self.run_page_url,
                 retry_limit=self.databricks_retry_limit,
                 retry_delay=self.databricks_retry_delay,
                 polling_period_seconds=self.polling_period_seconds,
@@ -62,6 +63,10 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         self.log.info("%s completed successfully.", self.task_id)
         if event.get("job_id"):
             context["ti"].xcom_push(key="job_id", value=event["job_id"])
+
+        if self.do_xcom_push:
+            context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=event.get("run_id"))
+            context["ti"].xcom_push(key=XCOM_RUN_PAGE_URL_KEY, value=event.get("run_page_url"))
 
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
@@ -92,6 +97,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
                 task_id=self.task_id,
                 conn_id=self.databricks_conn_id,
                 run_id=str(self.run_id),
+                run_page_url=self.run_page_url,
                 retry_limit=self.databricks_retry_limit,
                 retry_delay=self.databricks_retry_delay,
                 polling_period_seconds=self.polling_period_seconds,
@@ -108,4 +114,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         successful.
         """
         self.log.info("%s completed successfully.", self.task_id)
+        if self.do_xcom_push:
+            context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=event.get("run_id"))
+            context["ti"].xcom_push(key=XCOM_RUN_PAGE_URL_KEY, value=event.get("run_page_url"))
         return None
