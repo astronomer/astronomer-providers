@@ -92,6 +92,7 @@ async def test_livy_trigger_run_with_exception():
                 "batch_id": 1,
                 "response": "Batch 1 did not succeed with Cannot connect to host livy:8998 ssl:default "
                 "[Name or service not known]",
+                "log_lines": None,
             }
         )
         in task
