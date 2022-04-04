@@ -1,7 +1,9 @@
 import unittest
 from unittest import mock
 
+import multidict
 import pytest
+from aiohttp import ClientResponseError, RequestInfo
 from airflow.models import Connection
 from airflow.providers.apache.livy.hooks.livy import BatchState
 from airflow.utils import db
@@ -133,9 +135,9 @@ async def test_run_method_error(mock_do_api_call_async):
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
-async def test_do_api_call_async(mock_get_connection, mock_session):
+async def test_do_api_call_async_post_method_with_success(mock_get_connection, mock_session):
     """
-    Asserts the _do_api_call_async for success response.
+    Asserts the _do_api_call_async for success response for POST method.
     """
 
     async def mock_fun(arg1, arg2, arg3, arg4):
@@ -153,6 +155,133 @@ async def test_do_api_call_async(mock_get_connection, mock_session):
     hook.http_conn_id.password = "PASSWORD"
     response = await hook._do_api_call_async(GET_RUN_ENDPOINT)
     assert response == {"status": "success"}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
+async def test_do_api_call_async_get_method_with_success(mock_get_connection, mock_session):
+    """
+    Asserts the _do_api_call_async for GET method.
+    """
+
+    async def mock_fun(arg1, arg2, arg3, arg4):
+        return {"status": "success"}
+
+    mock_session.return_value.__aexit__.return_value = mock_fun
+    mock_session.return_value.__aenter__.return_value.get.return_value.json.return_value = {
+        "status": "success"
+    }
+    GET_RUN_ENDPOINT = "api/jobs/runs/get"
+    hook = LivyHookAsync(livy_conn_id="livy_default")
+    hook.method = "GET"
+    hook.http_conn_id = mock_get_connection
+    hook.http_conn_id.host = "test.com"
+    hook.http_conn_id.login = "login"
+    hook.http_conn_id.password = "PASSWORD"
+    hook.http_conn_id.extra_dejson = ""
+    response = await hook._do_api_call_async(GET_RUN_ENDPOINT)
+    assert response == {"status": "success"}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
+async def test_do_api_call_async_patch_method_with_success(mock_get_connection, mock_session):
+    """
+    Asserts the _do_api_call_async for PATCH method.
+    """
+
+    async def mock_fun(arg1, arg2, arg3, arg4):
+        return {"status": "success"}
+
+    mock_session.return_value.__aexit__.return_value = mock_fun
+    mock_session.return_value.__aenter__.return_value.patch.return_value.json.return_value = {
+        "status": "success"
+    }
+    GET_RUN_ENDPOINT = "api/jobs/runs/get"
+    hook = LivyHookAsync(livy_conn_id="livy_default")
+    hook.method = "PATCH"
+    hook.http_conn_id = mock_get_connection
+    hook.http_conn_id.host = "test.com"
+    hook.http_conn_id.login = "login"
+    hook.http_conn_id.password = "PASSWORD"
+    hook.http_conn_id.extra_dejson = ""
+    response = await hook._do_api_call_async(GET_RUN_ENDPOINT)
+    assert response == {"status": "success"}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
+async def test_do_api_call_async_unexpected_method_error(mock_get_connection, mock_session):
+    """
+    Asserts the _do_api_call_async for unexpected method error
+    """
+    GET_RUN_ENDPOINT = "api/jobs/runs/get"
+    hook = LivyHookAsync(livy_conn_id="livy_default")
+    hook.method = "abc"
+    hook.http_conn_id = mock_get_connection
+    hook.http_conn_id.host = "test.com"
+    hook.http_conn_id.login = "login"
+    hook.http_conn_id.password = "PASSWORD"
+    hook.http_conn_id.extra_dejson = ""
+    response = await hook._do_api_call_async(endpoint=GET_RUN_ENDPOINT, headers={})
+    assert response == {"Response": "Unexpected HTTP Method: abc", "status": "error"}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
+async def test_do_api_call_async_with_type_error(mock_get_connection, mock_session):
+    """
+    Asserts the _do_api_call_async for TypeError.
+    """
+
+    async def mock_fun(arg1, arg2, arg3, arg4):
+        return {"random value"}
+
+    mock_session.return_value.__aexit__.return_value = mock_fun
+    mock_session.return_value.__aenter__.return_value.patch.return_value.json.return_value = {}
+    hook = LivyHookAsync(livy_conn_id="livy_default")
+    hook.method = "PATCH"
+    hook.retry_limit = 1
+    hook.retry_delay = 1
+    hook.http_conn_id = mock_get_connection
+    with pytest.raises(TypeError):
+        await hook._do_api_call_async(endpoint="", data="test", headers=mock_fun, extra_options=mock_fun)
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.aiohttp.ClientSession")
+@mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_connection")
+async def test_do_api_call_async_with_client_response_error(mock_get_connection, mock_session):
+    """
+    Asserts the _do_api_call_async for Client Response Error.
+    """
+
+    async def mock_fun(arg1, arg2, arg3, arg4):
+        return {"random value"}
+
+    mock_session.return_value.__aexit__.return_value = mock_fun
+    mock_session.return_value.__aenter__.return_value.patch.return_value.json.side_effect = (
+        ClientResponseError(
+            request_info=RequestInfo(url="example.com", method="PATCH", headers=multidict.CIMultiDict()),
+            status=500,
+            history=[],
+        )
+    )
+    GET_RUN_ENDPOINT = ""
+    hook = LivyHookAsync(livy_conn_id="livy_default")
+    hook.method = "PATCH"
+    hook.base_url = ""
+    hook.http_conn_id = mock_get_connection
+    hook.http_conn_id.host = "test.com"
+    hook.http_conn_id.login = "login"
+    hook.http_conn_id.password = "PASSWORD"
+    hook.http_conn_id.extra_dejson = ""
+    response = await hook._do_api_call_async(GET_RUN_ENDPOINT)
+    assert response["status"] == "error"
 
 
 class TestLivyHookAsync(unittest.TestCase):
