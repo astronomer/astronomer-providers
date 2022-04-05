@@ -302,8 +302,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
     ) -> Dict[str, Any]:
         """
         Build the post batch request body.
-        For more information about the format refer to
-        .. seealso:: https://livy.apache.org/docs/latest/rest-api.html
+
         :param file: Path of the file containing the application to execute (required).
         :param proxy_user: User to impersonate when running the job.
         :param class_name: Application Java/Spark main class string.
@@ -322,6 +321,9 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         :param conf: Spark configuration properties.
         :return: request body
         :rtype: dict
+
+        For more information about the format refer to
+        .. seealso:: https://livy.apache.org/docs/latest/rest-api.html
         """
         body: Dict[str, Any] = {"file": file}
 
