@@ -4,12 +4,11 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
 
-# [START howto_operator_emr_eks_env_variables]
-# from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
+# [START howto_operator_emr_eks_env_variables]
 VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "astro-emr-cluster")
-AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
+AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
 JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::012345678912:role/emr_eks_default_role")
 
 default_args = {

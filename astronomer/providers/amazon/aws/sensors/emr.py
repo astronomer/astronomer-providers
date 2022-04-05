@@ -16,7 +16,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
     :param job_id: job_id to check the state
     :param max_retries: Number of times to poll for query state before
         returning the current state, defaults to None
-    :param aws_conn_id: aws connection to use, defaults to 'aws_default'
+    :param aws_conn_id: aws connection to use, defaults to ``aws_default``
     :param poll_interval: Time in seconds to wait between two consecutive call to
         check query status on athena, defaults to 10
     """

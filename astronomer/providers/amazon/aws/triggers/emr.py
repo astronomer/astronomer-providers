@@ -8,7 +8,8 @@ from astronomer.providers.amazon.aws.hooks.emr import EmrContainerHookAsync
 
 class EmrContainerSensorTrigger(BaseTrigger):
     """
-    EmrContainerSensorTrigger is fired as deferred class with params to run the task in trigger worker
+    The EmrContainerSensorTrigger is triggered when EMR container is created, it polls for the AWS EMR EKS Virtual
+    Cluster Job status. It is fired as deferred class with params to run the task in trigger worker
 
     :param virtual_cluster_id: Reference Emr cluster id
     :param job_id:  job_id to check the state

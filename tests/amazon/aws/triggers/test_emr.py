@@ -123,7 +123,7 @@ async def test_emr_container_sensors_trigger_failure_status(mock_query_status, m
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
 async def test_emr_container_sensors_trigger_exception(mock_query_status):
     """
-    Test RedshiftClusterTrigger with pause cluster failure
+    Test EMR container sensors with raise exception
     """
     mock_query_status.side_effect = Exception("Test exception")
     trigger = EmrContainerSensorTrigger(

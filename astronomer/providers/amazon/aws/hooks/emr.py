@@ -7,8 +7,8 @@ from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsyn
 
 class EmrContainerHookAsync(AwsBaseHookAsync):
     """
-    Async hook inherits AwsBaseHookAsync to interact with AWS EMR Virtual Cluster to run,
-    poll jobs and return job status
+    The EmrContainerHookAsync interact with AWS EMR EKS Virtual Cluster
+    to run, poll jobs and return job status
     Additional arguments (such as ``aws_conn_id``) may be specified and
     are passed down to the underlying AwsBaseHook.
 
