@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, Iterable, Tuple
+from typing import Any, AsyncIterator, Dict, Iterable, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -72,6 +72,7 @@ class EmrContainerSensorTrigger(BaseTrigger):
 class EmrStepSensorTrigger(BaseTrigger):
     """
     A trigger that fires once AWS EMR cluster step reaches either target or failed state
+
     :param job_flow_id: job_flow_id which contains the step check the state of
     :param step_id: step to check the state of
     :param aws_conn_id: aws connection to use, defaults to 'aws_default'
@@ -84,13 +85,13 @@ class EmrStepSensorTrigger(BaseTrigger):
     """
 
     def __init__(
-            self,
-            job_flow_id: str,
-            step_id: str,
-            aws_conn_id: str,
-            poke_interval: float,
-            target_states: Optional[Iterable[str]] = None,
-            failed_states: Optional[Iterable[str]] = None,
+        self,
+        job_flow_id: str,
+        step_id: str,
+        aws_conn_id: str,
+        poke_interval: float,
+        target_states: Optional[Iterable[str]] = None,
+        failed_states: Optional[Iterable[str]] = None,
     ):
         super().__init__()
         self.job_flow_id = job_flow_id
