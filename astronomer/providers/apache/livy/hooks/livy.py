@@ -185,7 +185,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
 
         if "state" not in result["response"]:
             self.log.info(
-                {"batch_state": "error", "response": f"Unable to get state for batch with id: {session_id}"}
+                f"batch_state: error with as it is unable to get state for batch with id: {session_id}"
             )
             return {
                 "batch_state": "error",
@@ -193,12 +193,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
                 "status": "error",
             }
 
-        self.log.info(
-            {
-                "batch_state ": BatchState(result["response"]["state"]),
-                "response": "successfully fetched the batch state.",
-            }
-        )
+        self.log.info("Successfully fetched the batch state.")
         return {
             "batch_state": BatchState(result["response"]["state"]),
             "response": "successfully fetched the batch state.",
@@ -265,7 +260,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
             raise TypeError("'session_id' must be an integer")
 
     @staticmethod
-    def _parse_post_response(response: Dict[Any, Any]) -> Any:
+    def _parse_post_response(response: Dict[Any, Any]) -> int:
         """
         Parse batch response for batch id
 
@@ -276,7 +271,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         return response.get("id")
 
     @staticmethod
-    def _parse_request_response(response: Dict[Any, Any], parameter: Any) -> Any:
+    def _parse_request_response(response: Dict[Any, Any], parameter: Any) -> Union[int, list]:
         """
         Parse batch response for batch id
 
@@ -304,7 +299,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         queue: Optional[str] = None,
         proxy_user: Optional[str] = None,
         conf: Optional[Dict[Any, Any]] = None,
-    ) -> Any:
+    ) -> Dict[str, Any]:
         """
         Build the post batch request body.
         For more information about the format refer to
