@@ -3,7 +3,9 @@ from typing import Any, Dict
 from airflow import AirflowException
 from airflow.providers.amazon.aws.sensors.emr import EmrJobFlowSensor
 
-from astronomer.providers.amazon.aws.triggers.emr import EmrJobFlowSensorTrigger
+from astronomer.providers.amazon.aws.triggers.emr_job_flow import (
+    EmrJobFlowSensorTrigger,
+)
 
 
 class EmrJobFlowSensorAsync(EmrJobFlowSensor):

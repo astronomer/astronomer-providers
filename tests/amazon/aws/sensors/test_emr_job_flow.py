@@ -2,7 +2,9 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
 from astronomer.providers.amazon.aws.sensors.emr_job_flow import EmrJobFlowSensorAsync
-from astronomer.providers.amazon.aws.triggers.emr import EmrJobFlowSensorTrigger
+from astronomer.providers.amazon.aws.triggers.emr_job_flow import (
+    EmrJobFlowSensorTrigger,
+)
 
 TASK_ID = "test_emr_job_flow_sensor"
 JOB_ID = "jobid-12122"

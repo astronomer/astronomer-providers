@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 from botocore.exceptions import ClientError
 
-from astronomer.providers.amazon.aws.hooks.emr import EmrJobFlowHookAsync
+from astronomer.providers.amazon.aws.hooks.emr_job_flow import EmrJobFlowHookAsync
 
 JOB_ID = "j-336EWEPYOZKOD"
 AWS_CONN_ID = "aws_default"

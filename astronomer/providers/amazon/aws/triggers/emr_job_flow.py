@@ -3,7 +3,7 @@ from typing import Any, AsyncIterator, Dict, Iterable, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer.providers.amazon.aws.hooks.emr import EmrJobFlowHookAsync
+from astronomer.providers.amazon.aws.hooks.emr_job_flow import EmrJobFlowHookAsync
 
 
 class EmrJobFlowSensorTrigger(BaseTrigger):

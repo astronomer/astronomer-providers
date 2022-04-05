@@ -4,7 +4,9 @@ from unittest import mock
 import pytest
 from airflow.triggers.base import TriggerEvent
 
-from astronomer.providers.amazon.aws.triggers.emr import EmrJobFlowSensorTrigger
+from astronomer.providers.amazon.aws.triggers.emr_job_flow import (
+    EmrJobFlowSensorTrigger,
+)
 
 JOB_ID = "jobid-12122"
 AWS_CONN_ID = "aws_default"
