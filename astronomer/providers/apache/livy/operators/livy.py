@@ -30,7 +30,9 @@ class LivyOperatorAsync(LivyOperator):
     :param conf: Spark configuration properties.
     :param proxy_user: user to impersonate when running the job.
     :param livy_conn_id: reference to a pre-defined Livy Connection.
-    :param polling_interval: time in seconds between polling for job completion. Don't poll for values >=0
+    :param polling_interval: time in seconds between polling for job completion. If poll_interval=0, in that case
+        return the batch_id and if polling_interval > 0, poll the livy job for termination in the polling interval
+        defined.
     :param extra_options: Additional option can be passed when creating a request.
             For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
     :param extra_headers: A dictionary of headers passed to the HTTP request to livy.
