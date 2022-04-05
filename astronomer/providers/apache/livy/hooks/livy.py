@@ -260,24 +260,24 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
             raise TypeError("'session_id' must be an integer")
 
     @staticmethod
-    def _parse_post_response(response: Dict[Any, Any]) -> int:
+    def _parse_post_response(response: Dict[Any, Any]) -> Any:
         """
         Parse batch response for batch id
 
         :param response: response body
         :return: session id
-        :rtype: int
+        :rtype: Any
         """
         return response.get("id")
 
     @staticmethod
-    def _parse_request_response(response: Dict[Any, Any], parameter: Any) -> Union[int, list]:
+    def _parse_request_response(response: Dict[Any, Any], parameter: Any) -> Any:
         """
         Parse batch response for batch id
 
         :param response: response body
         :return: value of parameter
-        :rtype: Union[int, list]
+        :rtype: Any
         """
         return response.get(parameter)
 
