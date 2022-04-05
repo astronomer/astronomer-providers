@@ -8,7 +8,7 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrTerminateJobFlowOperator,
 )
 
-from astronomer.providers.amazon.aws.sensors.emr_job_flow import EmrJobFlowSensorAsync
+from astronomer.providers.amazon.aws.sensors.emr import EmrJobFlowSensorAsync
 
 JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
@@ -35,7 +35,7 @@ JOB_FLOW_OVERRIDES = {
                 "Name": "Primary node",
                 "Market": "SPOT",
                 "InstanceRole": "MASTER",
-                "InstanceType": "m1.medium",
+                "InstanceType": "m4.large",
                 "InstanceCount": 1,
             }
         ],
