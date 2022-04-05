@@ -66,10 +66,9 @@ class LivyOperatorAsync(LivyOperator):
         successful.
         """
         # dump the logs from livy to worker through triggerer.
-        if "log_lines" in event:
-            if event["log_lines"] is not None:
-                for log_line in event["log_lines"]:
-                    self.log.info(log_line)
+        if event.get("log_lines", None) is not None:
+            for log_line in event["log_lines"]:
+                self.log.info(log_line)
 
         if event["status"] == "error":
             raise AirflowException(event["response"])
