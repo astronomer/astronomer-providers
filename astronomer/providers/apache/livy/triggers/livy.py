@@ -14,7 +14,9 @@ class LivyTrigger(BaseTrigger):
     :param batch_id: Batch job id
     :param spark_params: Spark parameters
     :param livy_conn_id: reference to a pre-defined Livy Connection.
-    :param polling_interval: time in seconds between polling for job completion. Don't poll for values >=0
+    :param polling_interval: time in seconds between polling for job completion.  If poll_interval=0, in that case
+        return the batch_id and if polling_interval > 0, poll the livy job for termination in the polling interval
+        defined.
     :param extra_options: A dictionary of options, where key is string and value
         depends on the option that's being modified.
     :param extra_headers: A dictionary of headers passed to the HTTP request to livy.
