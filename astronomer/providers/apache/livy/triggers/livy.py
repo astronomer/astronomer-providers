@@ -120,11 +120,6 @@ class LivyTrigger(BaseTrigger):
         }
 
     def _get_async_hook(self) -> LivyHookAsync:
-        """
-        Get valid LivyHookAsync.
-        :return: hook
-        :rtype: LivyHookAsync
-        """
         if self._livy_hook_async is None or not isinstance(self._livy_hook_async, LivyHookAsync):
             self._livy_hook_async = LivyHookAsync(
                 livy_conn_id=self._livy_conn_id,
