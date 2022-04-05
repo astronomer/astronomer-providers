@@ -1,11 +1,7 @@
 from typing import Any, Dict
 
 from airflow import AirflowException
-from airflow.providers.amazon.aws.sensors.emr import (
-    EmrContainerSensor,
-    EmrStepSensor,
-)
-
+from airflow.providers.amazon.aws.sensors.emr import EmrContainerSensor, EmrStepSensor
 
 from astronomer.providers.amazon.aws.triggers.emr import (
     EmrContainerSensorTrigger,
@@ -18,6 +14,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
     EmrContainerSensorAsync is async version of EmrContainerSensor,
     Asks for the state of the job run until it reaches a failure state or success state.
     If the job run fails, the task will fail.
+
     :param virtual_cluster_id: Reference Emr cluster id
     :param job_id: job_id to check the state
     :param max_retries: Number of times to poll for query state before
@@ -57,9 +54,11 @@ class EmrContainerSensorAsync(EmrContainerSensor):
 class EmrStepSensorAsync(EmrStepSensor):
     """
     Async (deferring) version of EmrStepSensor
+
     Asks for the state of the step until it reaches any of the target states.
     If the sensor errors out, then the task will fail
     With the default target states, sensor waits step to be COMPLETED.
+
     :param job_flow_id: job_flow_id which contains the step check the state of
     :param step_id: step to check the state of
     :param target_states: the target states, sensor waits until
