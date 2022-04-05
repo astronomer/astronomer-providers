@@ -32,7 +32,8 @@ def test_livy_trigger_serialization():
 @mock.patch("astronomer.providers.apache.livy.triggers.livy.LivyTrigger.poll_for_termination")
 async def test_livy_trigger_run_with_no_poll_interval(mock_poll_for_termination):
     """
-    Test if the task is run is in triggerr successfully with poll interval=0.
+    Test if the task ran in the triggerer successfully with poll interval=0. In the case when polling_interval=0, it
+    should return the batch_id
     :return:
     """
     mock_poll_for_termination.return_value = {"status": "success"}
@@ -49,7 +50,8 @@ async def test_livy_trigger_run_with_no_poll_interval(mock_poll_for_termination)
 @mock.patch("astronomer.providers.apache.livy.triggers.livy.LivyTrigger.poll_for_termination")
 async def test_livy_trigger_run_with_poll_interval_success(mock_poll_for_termination):
     """
-    Test if the task is run is in triggerr successfully with poll interval=30.
+    Test if the task ran in the triggerer successfully with poll interval>0. In the case when polling_interval > 0,
+    it should return a success or failure status.
     :return:
     """
     mock_poll_for_termination.return_value = {"status": "success"}
@@ -64,7 +66,7 @@ async def test_livy_trigger_run_with_poll_interval_success(mock_poll_for_termina
 @mock.patch("astronomer.providers.apache.livy.triggers.livy.LivyTrigger.poll_for_termination")
 async def test_livy_trigger_run_with_poll_interval_error(mock_poll_for_termination):
     """
-    Test if the task is run is in triggerr failed with poll interval=30.
+    Test if the task in the triggerer returned an error when poll_for_termination returned error.
     :return:
     """
     mock_poll_for_termination.return_value = {"status": "error"}
@@ -78,7 +80,7 @@ async def test_livy_trigger_run_with_poll_interval_error(mock_poll_for_terminati
 @pytest.mark.asyncio
 async def test_livy_trigger_run_with_exception():
     """
-    Test if the task is run is in triggerr failed with error message.
+    Test if the task in the triggerer failed with a connection error when no connection is mocked.
     :return:
     """
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
@@ -102,7 +104,8 @@ async def test_livy_trigger_run_with_exception():
 @pytest.mark.asyncio
 async def test_livy_trigger_poll_for_termination_with_client_error():
     """
-    Test if the poll_for_termination polls for batch with client error
+    Test if the poll_for_termination() in the triggerer failed with a ClientConnectionError when no connection is
+    mocked.
     :return:
     """
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
@@ -116,7 +119,8 @@ async def test_livy_trigger_poll_for_termination_with_client_error():
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.dump_batch_logs")
 async def test_livy_trigger_poll_for_termination_success(mock_dump_batch_logs, mock_get_batch_state):
     """
-    Test if the poll_for_termination polls for batch to terminate for success
+    Test if the poll_for_termination() in the triggerer returned success response when get_batch_state() runs
+    successfully.
     :return:
     """
     mock_get_batch_state.return_value = {"batch_state": BatchState.SUCCESS}
@@ -138,7 +142,7 @@ async def test_livy_trigger_poll_for_termination_success(mock_dump_batch_logs, m
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.dump_batch_logs")
 async def test_livy_trigger_poll_for_termination_error(mock_dump_batch_logs, mock_get_batch_state):
     """
-    Test if the poll_for_termination polls for batch to terminate with error.
+    Test if the poll_for_termination() in the triggerer returned error response when get_batch_state() failed.
     :return:
     """
     mock_get_batch_state.return_value = {"batch_state": BatchState.ERROR}
@@ -160,7 +164,8 @@ async def test_livy_trigger_poll_for_termination_error(mock_dump_batch_logs, moc
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.dump_batch_logs")
 async def test_livy_trigger_poll_for_termination_state(mock_dump_batch_logs, mock_get_batch_state):
     """
-    Test if the poll_for_termination polls for batch to terminate with error.
+    Test if the poll_for_termination() in the triggerer is still polling when get_batch_state() returned
+    NOT_STARTED.
     :return:
     """
     mock_get_batch_state.return_value = {"batch_state": BatchState.NOT_STARTED}
