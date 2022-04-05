@@ -205,6 +205,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
     ) -> Any:
         """
         Gets the session logs for a specified batch asynchronously.
+
         :param session_id: identifier of the batch sessions
         :param log_start_position: Position from where to pull the logs
         :param log_batch_size: Number of lines to pull in one batch
