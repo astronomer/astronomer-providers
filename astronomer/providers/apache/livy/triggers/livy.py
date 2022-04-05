@@ -12,7 +12,10 @@ class LivyTrigger(BaseTrigger):
     Check for the state of a previously submitted job with batch_id
 
     :param batch_id: Batch job id
-    :param spark_params: Spark parameters
+    :param spark_params: Spark parameters; for example,
+            spark_params = {"file": "test/pi.py", "class_name": "org.apache.spark.examples.SparkPi",
+            "args": ["/usr/lib/spark/bin/run-example", "SparkPi", "10"],"jars": "command-runner.jar",
+            "driver_cores": 1, "executor_cores": 4,"num_executors": 1}
     :param livy_conn_id: reference to a pre-defined Livy Connection.
     :param polling_interval: time in seconds between polling for job completion.  If poll_interval=0, in that case
         return the batch_id and if polling_interval > 0, poll the livy job for termination in the polling interval
