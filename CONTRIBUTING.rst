@@ -268,7 +268,7 @@ Considerations while writing Async or Deferrable Operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Writing a deferrable or async operator takes a bit more work. There are some main points to consider:
     - Deferrable Operators & Triggers rely on more recent asyncio features, and as a result only work on Python 3.7 or higher.
-    - Any Deferrable Operator implementation must use an execution handle in order to poll for the status in the Trigger.
+    - Any Deferrable **Operator** implementation needs the API used to give you a unique identifier in order to poll for the status in the Trigger. This does not affect creating an async Sensor as "sensors" are just poll-based whereas "Operators" are "Submit + Poll" operation.
       For example in the below code snippet, the Google BigQuery API returns a job_id using which we can track the status of the job execution from the Trigger.
         .. code-block:: python
 
