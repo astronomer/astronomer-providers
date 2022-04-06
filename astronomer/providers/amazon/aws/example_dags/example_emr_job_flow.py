@@ -14,6 +14,10 @@ JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
+
 SPARK_STEPS = [
     {
         "Name": "calculate_pi",
@@ -50,11 +54,11 @@ JOB_FLOW_OVERRIDES = {
 
 with DAG(
     dag_id="example_emr_job_flow_sensor",
-    dagrun_timeout=timedelta(hours=2),
     start_date=datetime(2021, 1, 1),
-    schedule_interval="0 3 * * *",
+    schedule_interval=None,
     catchup=False,
-    tags=["example"],
+    default_args=default_args,
+    tags=["example", "async", "emr"],
 ) as dag:
 
     # [START howto_operator_emr_create_job_flow_steps_tasks]
