@@ -93,6 +93,7 @@ with DAG(
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
+        {"emr_job_flow_sensor_dag": "example_emr_job_flow_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
@@ -101,8 +102,6 @@ with DAG(
     google_task_info = [
         {"bigquery_dag": "example_async_bigquery_queries"},
         {"gcs_sensor_dag": "example_async_gcs_sensors"},
-        {"big_query_sensor_dag": "example_bigquery_sensors"},
-        {"dataproc_dag": "example_gcp_dataproc"},
     ]
     google_trigger_tasks, ids = prepare_dag_dependency(google_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)

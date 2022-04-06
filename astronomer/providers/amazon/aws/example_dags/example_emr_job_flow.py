@@ -49,7 +49,7 @@ JOB_FLOW_OVERRIDES = {
 # [END howto_operator_emr_automatic_steps_config]
 
 with DAG(
-    dag_id="emr_job_flow_dag",
+    dag_id="example_emr_job_flow_sensor",
     dagrun_timeout=timedelta(hours=2),
     start_date=datetime(2021, 1, 1),
     schedule_interval="0 3 * * *",
