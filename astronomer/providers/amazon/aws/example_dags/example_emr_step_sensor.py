@@ -84,7 +84,7 @@ with DAG(
     Defer and poll until it reaches the target state
     The Default value of target state is COMPLETED
     For more detail see here
-    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
     """
     step_checker = EmrStepSensorAsync(
         task_id="watch_step",
