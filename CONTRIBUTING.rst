@@ -270,21 +270,22 @@ Considerations while writing Async or Deferrable Operator
     - Deferrable Operators & Triggers rely on more recent asyncio features, and as a result only work on Python 3.7 or higher.
     - Any Deferrable **Operator** implementation needs the API used to give you a unique identifier in order to poll for the status in the Trigger. This does not affect creating an async Sensor as "sensors" are just poll-based whereas "Operators" are "Submit + Poll" operation.
       For example in the below code snippet, the Google BigQuery API returns a job_id using which we can track the status of the job execution from the Trigger.
-        .. code-block:: python
 
-            job = self._submit_job(hook, configuration=configuration)
-            self.job_id = job.job_id
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=BigQueryGetDataTrigger(
-                    conn_id=self.gcp_conn_id,
-                    job_id=self.job_id,
-                    dataset_id=self.dataset_id,
-                    table_id=self.table_id,
-                    project_id=hook.project_id,
-                ),
-                method_name="execute_complete",
-            )
+    .. code-block:: python
+
+        job = self._submit_job(hook, configuration=configuration)
+        self.job_id = job.job_id
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryGetDataTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=self.job_id,
+                dataset_id=self.dataset_id,
+                table_id=self.table_id,
+                project_id=hook.project_id,
+            ),
+            method_name="execute_complete",
+        )
     - Your Operator must defer itself with a Trigger. If there is a Trigger in core Airflow you can use, great; otherwise, you will have to write one.
     - Your Operator will be stopped and removed from its worker while deferred, and no state will persist automatically. You can persist state by asking Airflow to resume you at a certain method or pass certain kwargs, but that’s it.
     - You can defer multiple times, and you can defer before/after your Operator does significant work, or only defer if certain conditions are met (e.g. a system does not have an immediate answer). Deferral is entirely under your control.
