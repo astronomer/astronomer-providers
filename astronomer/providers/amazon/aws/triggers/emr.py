@@ -1,9 +1,12 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, Iterable, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
-from astronomer.providers.amazon.aws.hooks.emr import EmrContainerHookAsync
+from astronomer.providers.amazon.aws.hooks.emr import (
+    EmrContainerHookAsync,
+    EmrStepSensorHookAsync,
+)
 
 
 class EmrContainerSensorTrigger(BaseTrigger):
@@ -62,6 +65,76 @@ class EmrContainerSensorTrigger(BaseTrigger):
                     msg = "EMR Containers sensors completed"
                     yield TriggerEvent({"status": "success", "message": msg})
                     return
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return
+
+
+class EmrStepSensorTrigger(BaseTrigger):
+    """
+    A trigger that fires once AWS EMR cluster step reaches either target or failed state
+
+    :param job_flow_id: job_flow_id which contains the step check the state of
+    :param step_id: step to check the state of
+    :param aws_conn_id: aws connection to use, defaults to 'aws_default'
+    :param poke_interval: Time in seconds to wait between two consecutive call to
+        check emr cluster step state
+    :param target_states: the target states, sensor waits until
+        step reaches any of these states
+    :param failed_states: the failure states, sensor fails when
+        step reaches any of these states
+    """
+
+    def __init__(
+        self,
+        job_flow_id: str,
+        step_id: str,
+        aws_conn_id: str,
+        poke_interval: float,
+        target_states: Optional[Iterable[str]] = None,
+        failed_states: Optional[Iterable[str]] = None,
+    ):
+        super().__init__()
+        self.job_flow_id = job_flow_id
+        self.step_id = step_id
+        self.aws_conn_id = aws_conn_id
+        self.poke_interval = poke_interval
+        self.target_states = target_states or ["COMPLETED"]
+        self.failed_states = failed_states or ["CANCELLED", "FAILED", "INTERRUPTED"]
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes EmrStepSensorTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.amazon.aws.triggers.emr.EmrStepSensorTrigger",
+            {
+                "job_flow_id": self.job_flow_id,
+                "step_id": self.step_id,
+                "aws_conn_id": self.aws_conn_id,
+                "poke_interval": self.poke_interval,
+                "target_states": self.target_states,
+                "failed_states": self.failed_states,
+            },
+        )
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """Run until AWS EMR cluster step reach target or failed state"""
+        hook = EmrStepSensorHookAsync(
+            aws_conn_id=self.aws_conn_id, job_flow_id=self.job_flow_id, step_id=self.step_id
+        )
+        try:
+            while True:
+                response = await hook.emr_describe_step()
+                state = hook.state_from_response(response)
+                if state in self.target_states:
+                    yield TriggerEvent({"status": "success", "message": f"Job flow currently {state}"})
+                    return
+                elif state in self.failed_states:
+                    yield TriggerEvent(
+                        {"status": "error", "message": hook.failure_message_from_response(response)}
+                    )
+                    return
+                self.log.info(f"EMR step state is {state}. Sleeping for {self.poke_interval} seconds.")
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
