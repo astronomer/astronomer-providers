@@ -93,6 +93,7 @@ with DAG(
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
+        {"emr_job_flow_sensor_dag": "example_emr_job_flow_sensor"},
         {"emr_cluster_dag": "example_emr_step_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
