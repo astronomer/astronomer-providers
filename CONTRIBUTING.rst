@@ -282,6 +282,7 @@ Considerations while writing Async or Deferrable Operator
     - ``run``, an asynchronous method that runs its logic and yields one or more TriggerEvent instances as an asynchronous generator
     - ``serialize``, which returns the information needed to re-construct this trigger, as a tuple of the classpath, and keyword arguments to pass to ``__init__``
 - There’s also some design constraints in the Trigger to be aware of:
+    - From operator we cannot send a class object to trigger because ``serialize`` method will only support JSON-serializable values.
     - The ``run`` method must be asynchronous (using Python’s asyncio), and correctly ``await`` whenever it does a blocking operation.
     - ``run`` must ``yield`` its TriggerEvents, not return them. If it returns before yielding at least one event, Airflow will consider this an error and fail any Task Instances waiting on it. If it throws an exception, Airflow will also fail any dependent task instances.
     - You should assume that a trigger instance may run more than once (this can happen if a network partition occurs and Airflow re-launches a trigger on a separated machine). So you must be mindful about side effects. For example you might not want to use a trigger to insert database rows.
@@ -316,6 +317,20 @@ Some Common Pitfalls
                         "hook_params": self.hook_params,
                     },
                 )
+- While implentating operator its important when deferred is called with proper serializable values. In the below code block a cursor object is passed which is not JSON-serializable so we cannot access the object properly inside the trigger.
+   .. code-block:: python
+
+            cursor = self.hook.get_hive_client().cursor()
+            cursor.execute(self.hql, async_=True)
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=HiveTrigger(
+                    cursor=cursor,
+                ),
+                method_name="execute_complete",
+            )
+
+
 - Add the github issue-id as part of the PR request
 - Write unit tests which respect the code coverage toleration
 - Git commit messages aligned to open source standards
