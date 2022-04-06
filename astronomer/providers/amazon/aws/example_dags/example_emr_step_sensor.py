@@ -56,7 +56,7 @@ DEFAULT_ARGS = {
 }
 
 with DAG(
-    dag_id="example_emr_job_flow_manual_steps",
+    dag_id="example_emr_step_sensor",
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     default_args=DEFAULT_ARGS,
@@ -80,6 +80,8 @@ with DAG(
     # [END howto_operator_emr_add_steps]
 
     # [START howto_sensor_emr_step_sensor_async]
+    # Defer and poll until it reaches the target state
+    # The Default value of target state is COMPLETED
     step_checker = EmrStepSensorAsync(
         task_id="watch_step",
         job_flow_id=cluster_creator.output,

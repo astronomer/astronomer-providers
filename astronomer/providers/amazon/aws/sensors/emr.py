@@ -59,6 +59,9 @@ class EmrStepSensorAsync(EmrStepSensor):
     If the sensor errors out, then the task will fail
     With the default target states, sensor waits step to be COMPLETED.
 
+    For more details see
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
+
     :param job_flow_id: job_flow_id which contains the step check the state of
     :param step_id: step to check the state of
     :param target_states: the target states, sensor waits until
