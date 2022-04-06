@@ -4,11 +4,13 @@ from airflow import AirflowException
 from airflow.providers.amazon.aws.sensors.emr import (
     EmrContainerSensor,
     EmrJobFlowSensor,
+    EmrStepSensor,
 )
 
 from astronomer.providers.amazon.aws.triggers.emr import (
     EmrContainerSensorTrigger,
     EmrJobFlowSensorTrigger,
+    EmrStepSensorTrigger,
 )
 
 
@@ -54,12 +56,59 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         return None
 
 
+class EmrStepSensorAsync(EmrStepSensor):
+    """
+    Async (deferring) version of EmrStepSensor
+
+    Asks for the state of the step until it reaches any of the target states.
+    If the sensor errors out, then the task will fail
+    With the default target states, sensor waits step to be COMPLETED.
+
+    For more details see
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
+
+    :param job_flow_id: job_flow_id which contains the step check the state of
+    :param step_id: step to check the state of
+    :param target_states: the target states, sensor waits until
+        step reaches any of these states
+    :param failed_states: the failure states, sensor fails when
+        step reaches any of these states
+    """
+
+    def execute(self, context: Dict[str, Any]) -> None:
+        """Deferred and give control to trigger"""
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=EmrStepSensorTrigger(
+                job_flow_id=self.job_flow_id,
+                step_id=self.step_id,
+                target_states=self.target_states,
+                failed_states=self.failed_states,
+                aws_conn_id=self.aws_conn_id,
+                poke_interval=self.poke_interval,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context: Dict[str, Any], event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        if event:
+            if event["status"] == "error":
+                raise AirflowException(event["message"])
+
+            self.log.info(f"{event.get('message')}")
+            self.log.info(f"{self.job_flow_id} completed successfully.")
+
+
 class EmrJobFlowSensorAsync(EmrJobFlowSensor):
     """
     Async EMR Job flow sensor polls for the cluster state until it reaches
     any of the target states.
     If it fails the sensor errors, failing the task.
-
     With the default target states, sensor waits cluster to be terminated.
     When target_states is set to ['RUNNING', 'WAITING'] sensor waits
     until job flow to be ready (after 'STARTING' and 'BOOTSTRAPPING' states)

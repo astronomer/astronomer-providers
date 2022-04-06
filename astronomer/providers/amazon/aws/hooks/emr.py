@@ -42,11 +42,74 @@ class EmrContainerHookAsync(AwsBaseHookAsync):
                 raise e
 
 
+class EmrStepSensorHookAsync(AwsBaseHookAsync):
+    """
+    A thin wrapper to interact with AWS EMR API
+
+    Additional arguments may be specified and are passed down to the underlying AwsBaseHook.
+
+    For more details see here.
+        - airflow.providers.amazon.aws.hooks.base_aws.AwsBaseHook
+    """
+
+    def __init__(self, job_flow_id: str, step_id: str, *args: Any, **kwargs: Any) -> None:
+        kwargs["client_type"] = "emr"
+        kwargs["resource_type"] = "emr-containers"
+        super().__init__(*args, **kwargs)
+        self.job_flow_id = job_flow_id
+        self.step_id = step_id
+
+    async def emr_describe_step(self) -> Dict[str, Any]:
+        """
+        Make an API call with boto3 and get details about the cluster step.
+
+        For AWS API definition see here::
+            https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
+
+        :return: AWS EMR.Client.describe_step Api response Dict
+        """
+        async with await self.get_client_async() as client:
+            try:
+                response: Dict[str, Any] = await client.describe_step(
+                    ClusterId=self.job_flow_id, StepId=self.step_id
+                )
+                self.log.debug(f"Response from AwsBaseHookAsync: {response}")
+                return response
+            except ClientError as error:
+                raise error
+
+    @staticmethod
+    def state_from_response(response: Dict[str, Any]) -> str:
+        """
+        Get state from response dictionary.
+
+        :param response: response from AWS API
+        :return: execution state of the cluster step
+        """
+        state: str = response["Step"]["Status"]["State"]
+        return state
+
+    @staticmethod
+    def failure_message_from_response(response: Dict[str, Any]) -> Optional[str]:
+        """
+        Get failure message from response dictionary.
+
+        :param response: response from AWS API
+        :return: failure message
+        """
+        fail_details = response["Step"]["Status"].get("FailureDetails")
+        if fail_details:
+            return (
+                f"for reason {fail_details.get('Reason')} with message {fail_details.get('Message')} "
+                f"and log file {fail_details.get('LogFile')}"
+            )
+        return None
+
+
 class EmrJobFlowHookAsync(AwsBaseHookAsync):
     """
     EmrJobFlowHookAsync is wrapper Interact with AWS EMR.Using Aiobotocore client makes API
     call to get cluster-level details by job_flow_id.
-
     Additional arguments (such as ``aws_conn_id``) may be specified and
     are passed down to the underlying AwsBaseHookAsync.
     """
@@ -59,7 +122,6 @@ class EmrJobFlowHookAsync(AwsBaseHookAsync):
         """
         Using Aiobotocore client makes API call to ``describe_cluster`` get the cluster
         details, from cluster details fetch the cluster status
-
         :param job_flow_id: job_flow_id to check the state of cluster
         """
         async with await self.get_client_async() as client:
@@ -73,7 +135,6 @@ class EmrJobFlowHookAsync(AwsBaseHookAsync):
     def state_from_response(response: Dict[str, Any]) -> str:
         """
         Get state from response dictionary.
-
         :param response: response from AWS API
         :return: current state of the cluster
         """
@@ -84,7 +145,6 @@ class EmrJobFlowHookAsync(AwsBaseHookAsync):
     def failure_message_from_response(response: Dict[str, Any]) -> Optional[str]:
         """
         Get failure message from response dictionary.
-
         :param response: response from EMR AWS API
         """
         cluster_status = response["Cluster"]["Status"]

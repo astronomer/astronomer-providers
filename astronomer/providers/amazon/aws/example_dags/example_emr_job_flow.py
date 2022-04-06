@@ -12,7 +12,7 @@ from astronomer.providers.amazon.aws.sensors.emr import EmrJobFlowSensorAsync
 
 JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
-AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
+AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "s3_default")
 
 default_args = {
     "execution_timeout": timedelta(minutes=30),
