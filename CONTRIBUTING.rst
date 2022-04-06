@@ -268,6 +268,24 @@ Considerations while writing Async or Deferrable Operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Writing a deferrable or async operator takes a bit more work. There are some main points to consider:
     - Deferrable Operators & Triggers rely on more recent asyncio features, and as a result only work on Python 3.7 or higher.
+    - Any Deferrable **Operator** implementation needs the API used to give you a unique identifier in order to poll for the status in the Trigger. This does not affect creating an async Sensor as "sensors" are just poll-based whereas "Operators" are "Submit + Poll" operation.
+      For example in the below code snippet, the Google BigQuery API returns a job_id using which we can track the status of the job execution from the Trigger.
+
+    .. code-block:: python
+
+        job = self._submit_job(hook, configuration=configuration)
+        self.job_id = job.job_id
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=BigQueryGetDataTrigger(
+                conn_id=self.gcp_conn_id,
+                job_id=self.job_id,
+                dataset_id=self.dataset_id,
+                table_id=self.table_id,
+                project_id=hook.project_id,
+            ),
+            method_name="execute_complete",
+        )
     - Your Operator must defer itself with a Trigger. If there is a Trigger in core Airflow you can use, great; otherwise, you will have to write one.
     - Your Operator will be stopped and removed from its worker while deferred, and no state will persist automatically. You can persist state by asking Airflow to resume you at a certain method or pass certain kwargs, but that’s it.
     - You can defer multiple times, and you can defer before/after your Operator does significant work, or only defer if certain conditions are met (e.g. a system does not have an immediate answer). Deferral is entirely under your control.
@@ -282,6 +300,7 @@ Considerations while writing Async or Deferrable Operator
     - ``run``, an asynchronous method that runs its logic and yields one or more TriggerEvent instances as an asynchronous generator
     - ``serialize``, which returns the information needed to re-construct this trigger, as a tuple of the classpath, and keyword arguments to pass to ``__init__``
 - There’s also some design constraints in the Trigger to be aware of:
+    - From Operator we cannot pass a class object to Trigger because ``serialize`` method will only support JSON-serializable values.
     - The ``run`` method must be asynchronous (using Python’s asyncio), and correctly ``await`` whenever it does a blocking operation.
     - ``run`` must ``yield`` its TriggerEvents, not return them. If it returns before yielding at least one event, Airflow will consider this an error and fail any Task Instances waiting on it. If it throws an exception, Airflow will also fail any dependent task instances.
     - You should assume that a trigger instance may run more than once (this can happen if a network partition occurs and Airflow re-launches a trigger on a separated machine). So you must be mindful about side effects. For example you might not want to use a trigger to insert database rows.
@@ -316,6 +335,7 @@ Some Common Pitfalls
                         "hook_params": self.hook_params,
                     },
                 )
+
 - Add the github issue-id as part of the PR request
 - Write unit tests which respect the code coverage toleration
 - Git commit messages aligned to open source standards
