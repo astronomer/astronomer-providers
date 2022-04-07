@@ -60,11 +60,11 @@ DEFAULT_ARGS = {
 
 with DAG(
     dag_id="example_emr_sensor",
-    start_date=datetime(2021, 1, 1),
     schedule_interval=None,
-    catchup=False,
+    start_date=datetime(2022, 1, 1),
     default_args=DEFAULT_ARGS,
     tags=["example", "async", "emr"],
+    catchup=False,
 ) as dag:
     # [START howto_operator_emr_create_job_flow_steps_tasks]
     cluster_creator = EmrCreateJobFlowOperator(
