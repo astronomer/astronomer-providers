@@ -6,7 +6,7 @@ This page contains auto-generated API reference documentation.
 .. toctree::
    :titlesonly:
 
-   {% for page in pages %}
+   {% for page in pages | sort %}
    {#
       Add the top most levels in "astronomer.providers.X" to the index file
       This is needed because we don't have __init__.py file in astronomer
