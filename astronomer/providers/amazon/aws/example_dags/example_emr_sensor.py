@@ -53,7 +53,7 @@ JOB_FLOW_OVERRIDES = {
     "ServiceRole": SERVICE_ROLE,
 }
 
-default_args = {
+DEFAULT_ARGS = {
     "execution_timeout": timedelta(minutes=30),
 }
 
@@ -63,7 +63,7 @@ with DAG(
     start_date=datetime(2021, 1, 1),
     schedule_interval=None,
     catchup=False,
-    default_args=default_args,
+    default_args=DEFAULT_ARGS,
     tags=["example", "async", "emr"],
 ) as dag:
     # [START howto_operator_emr_create_job_flow_steps_tasks]
