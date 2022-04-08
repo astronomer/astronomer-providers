@@ -4,14 +4,16 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.models.baseoperator import chain
 from airflow.providers.amazon.aws.operators.emr import (
     EmrAddStepsOperator,
     EmrCreateJobFlowOperator,
     EmrTerminateJobFlowOperator,
 )
 
-from astronomer.providers.amazon.aws.sensors.emr import EmrStepSensorAsync
+from astronomer.providers.amazon.aws.sensors.emr import (
+    EmrJobFlowSensorAsync,
+    EmrStepSensorAsync,
+)
 
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
@@ -55,20 +57,22 @@ DEFAULT_ARGS = {
     "execution_timeout": timedelta(minutes=30),
 }
 
+
 with DAG(
-    dag_id="example_emr_step_sensor",
+    dag_id="example_emr_sensor",
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     default_args=DEFAULT_ARGS,
     tags=["example", "async", "emr"],
     catchup=False,
 ) as dag:
-
+    # [START howto_operator_emr_create_job_flow_steps_tasks]
     cluster_creator = EmrCreateJobFlowOperator(
         task_id="create_job_flow",
         job_flow_overrides=JOB_FLOW_OVERRIDES,
         emr_conn_id=EMR_CONN_ID,
     )
+    # [END howto_operator_emr_create_job_flow_steps_tasks]
 
     # [START howto_operator_emr_add_steps]
     step_adder = EmrAddStepsOperator(
@@ -78,6 +82,12 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
     )
     # [END howto_operator_emr_add_steps]
+
+    # [START howto_sensor_emr_job_flow_sensor_async]
+    job_flow_sensor = EmrJobFlowSensorAsync(
+        task_id="job_flow_sensor", job_flow_id=cluster_creator.output, aws_conn_id=AWS_CONN_ID
+    )
+    # [END howto_sensor_emr_job_flow_sensor_async]
 
     # [START howto_sensor_emr_step_sensor_async]
     """
@@ -103,8 +113,5 @@ with DAG(
     )
     # [END howto_operator_emr_terminate_job_flow]
 
-    chain(
-        step_adder,
-        step_checker,
-        cluster_remover,
-    )
+    [job_flow_sensor, step_checker] >> cluster_remover
+    step_adder >> step_checker
