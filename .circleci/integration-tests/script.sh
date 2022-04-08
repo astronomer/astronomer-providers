@@ -8,9 +8,8 @@ function echo_help() {
     echo "Usage:"
     echo "BASEDOMAIN:        Astro cloud instance domain"
     echo "RELEASE_NAME:      Astro release name of a deployment"
-    echo "BUILD_NUMBER       Docker image tag"
-    echo "API_KEY            Deployment service account api key"
-    echo "sh script.sh <BASEDOMAIN> <RELEASE_NAME> <BUILD_NUMBER> <API_KEY>"
+    echo "ASTRO_API_KEY      Deployment service account api key"
+    echo "bash script.sh <BASEDOMAIN> <RELEASE_NAME>  <ASTRO_API_KEY>"
 }
 
 # Delete if source old source files exist
@@ -23,15 +22,14 @@ function clean() {
   find  . -name "example_*" -exec rm {} \;
 }
 
-if [ "$1" == "-h" ] || [ "$#" -ne 4 ]; then
+if [ "$1" == "-h" ] || [ "$#" -ne 3 ]; then
   echo_help
   exit
 fi
 
 BASE_DOMAIN=$1
 RELEASE_NAME=$2
-BUILD_NUMBER=$3
-API_KEY=$4
+ASTRO_API_KEY=$3
 
 clean
 
@@ -47,9 +45,10 @@ touch requirements.txt
 for dag in $(find "${PROVIDER_PATH}" -type f -name 'example_*'); do cp "${dag}" "${SCRIPT_PATH}"; done;
 
 # Build image and deploy
+BUILD_NUMBER=`awk 'BEGIN {srand(); print srand()}'`
 IMAGE_NAME=registry.${BASE_DOMAIN}/${RELEASE_NAME}/airflow:ci-${BUILD_NUMBER}
 docker build -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile "${SCRIPT_PATH}"
-docker login registry.staging.astronomer.io  -u _ -p "${API_KEY}"
+docker login registry.staging.astronomer.io  -u _ -p "${ASTRO_API_KEY}"
 docker push "${IMAGE_NAME}"
 
 clean
