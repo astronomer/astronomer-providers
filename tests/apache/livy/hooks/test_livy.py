@@ -314,8 +314,9 @@ class TestLivyHookAsync(unittest.TestCase):
         for conn_id, expected in connection_url_mapping.items():
             with self.subTest(conn_id):
                 hook = LivyHookAsync(livy_conn_id=conn_id)
-                response_conn = hook.get_connection(conn_id=conn_id)
+                response_conn: Connection = hook.get_connection(conn_id=conn_id)
                 assert isinstance(response_conn, Connection)
+                assert hook._generate_base_url(response_conn) == expected
 
     def test_build_body(self):
         with self.subTest("minimal request"):

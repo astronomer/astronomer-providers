@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import aiohttp
 from aiohttp import ClientResponseError
+from airflow.models import Connection
 from airflow.providers.apache.livy.hooks.livy import BatchState
 from airflow.utils.log.logging_mixin import LoggingMixin
 from asgiref.sync import sync_to_async
@@ -76,16 +77,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         if self.http_conn_id:
             conn = await sync_to_async(self.get_connection)(self.http_conn_id)
 
-            if conn.host and "://" in conn.host:
-                self.base_url = conn.host
-            else:
-                # schema defaults to HTTP
-                schema = conn.schema if conn.schema else "http"
-                host = conn.host if conn.host else ""
-                self.base_url = schema + "://" + host
-
-            if conn.port:
-                self.base_url = self.base_url + ":" + str(conn.port)
+            self.base_url = self._generate_base_url(conn)
             if conn.login:
                 auth = self.auth_type(conn.login, conn.password)
             if conn.extra:
@@ -139,6 +131,18 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
 
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
+
+    def _generate_base_url(self, conn: Connection) -> str:
+        if conn.host and "://" in conn.host:
+            base_url: str = conn.host
+        else:
+            # schema defaults to HTTP
+            schema = conn.schema if conn.schema else "http"
+            host = conn.host if conn.host else ""
+            base_url = f"{schema}://{host}"
+        if conn.port:
+            base_url = f"{base_url}:{conn.port}"
+        return base_url
 
     async def run_method(
         self,

@@ -61,6 +61,7 @@ repos:
           - flake8-assertive
           - flake8-typing-imports
           - flake8-logging-format
+          - flake8-bugbear
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.1.0

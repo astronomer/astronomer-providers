@@ -211,7 +211,7 @@ class S3HookAsync(AwsBaseHookAsync):
         prefix: str,
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
-        previous_objects: Set[str] = set(),
+        previous_objects: Optional[Set[str]] = None,
         inactivity_seconds: int = 0,
         allow_delete: bool = True,
         last_activity_time: Optional[datetime] = None,
@@ -238,6 +238,8 @@ class S3HookAsync(AwsBaseHookAsync):
         :return: dictionary with status and message
         :rtype: Dict
         """
+        if previous_objects is None:
+            previous_objects = set()
         list_keys = await self._list_keys(client=client, bucket_name=bucket_name, prefix=prefix)
         current_objects = set(list_keys)
         current_num_objects = len(current_objects)
