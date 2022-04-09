@@ -182,7 +182,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
         inactivity_seconds: int = 0,
-        previous_objects: Optional[Set[str]] = set(),
+        previous_objects: Optional[Set[str]] = None,
         allow_delete: bool = True,
         aws_conn_id: str = "aws_default",
         last_activity_time: Optional[datetime] = None,
@@ -193,9 +193,11 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         self.prefix = prefix
         if inactivity_period < 0:
             raise ValueError("inactivity_period must be non-negative")
+        if previous_objects is None:
+            previous_objects = set()
         self.inactivity_period = inactivity_period
         self.min_objects = min_objects
-        self.previous_objects = previous_objects or set()
+        self.previous_objects = previous_objects
         self.inactivity_seconds = inactivity_seconds
         self.allow_delete = allow_delete
         self.aws_conn_id = aws_conn_id

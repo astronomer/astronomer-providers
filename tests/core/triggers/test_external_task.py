@@ -82,7 +82,3 @@ def test_task_state_trigger_serialization():
         "execution_dates": [DEFAULT_DATE],
         "poll_interval": TEST_POLL_INTERVAL,
     }
-
-
-def hello(abc={}):
-    print(abc)
