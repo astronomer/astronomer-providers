@@ -132,7 +132,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
                         url,
                     )
                     if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
-                        self.log.error("HTTP error: %s", e)
+                        self.log.exception("HTTP error, status code: %s", e.status)
                         # In this case, the user probably made a mistake.
                         # Don't retry.
                         return {"Response": {e.message}, "Status Code": {e.status}, "status": "error"}
@@ -185,7 +185,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
 
         if "state" not in result["response"]:
             self.log.info(
-                f"batch_state: error with as it is unable to get state for batch with id: {session_id}"
+                "batch_state: error with as it is unable to get state for batch with id: %s", session_id
             )
             return {
                 "batch_state": "error",

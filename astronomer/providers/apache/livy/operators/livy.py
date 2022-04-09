@@ -46,7 +46,7 @@ class LivyOperatorAsync(LivyOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self._batch_id = self.get_hook().post_batch(**self.spark_params)
-        self.log.info(f"Generated batch-id is {self._batch_id}")
+        self.log.info("Generated batch-id is %s", self._batch_id)
 
         self.defer(
             timeout=self.execution_timeout,

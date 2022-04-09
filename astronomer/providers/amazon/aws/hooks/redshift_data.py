@@ -92,7 +92,7 @@ class RedshiftDataHook(AwsBaseHook):
             conn_params = self.get_conn_params()
             query_ids: List[str] = []
             for sql_statement in sql:
-                self.log.info(f"Executing statement: {sql_statement}")
+                self.log.info("Executing statement: %s", sql_statement)
                 response = client.execute_statement(
                     Database=conn_params["database"],
                     ClusterIdentifier=conn_params["cluster_identifier"],

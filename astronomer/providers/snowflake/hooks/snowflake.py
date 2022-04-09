@@ -126,5 +126,5 @@ class SnowflakeHookAsync(SnowflakeHook):
                 self.log.error("error_message ", error_message)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:
-            self.log.error(str(e))
+            self.log.exception("Unexpected error when retrieving query status:")
             return {"status": "error", "message": str(e), "type": "ERROR"}
