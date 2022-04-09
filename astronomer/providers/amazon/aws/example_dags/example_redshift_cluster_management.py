@@ -124,8 +124,8 @@ def delete_redshift_cluster_snapshot() -> None:
             if get_cluster_status() == "available":
                 time.sleep(30)
                 continue
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error when deleting the cluster")
         return None
 
 
@@ -143,8 +143,8 @@ def delete_redshift_cluster() -> None:
             if get_cluster_status() == "deleting":
                 time.sleep(30)
                 continue
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error when deleting the cluster")
         return None
 
 

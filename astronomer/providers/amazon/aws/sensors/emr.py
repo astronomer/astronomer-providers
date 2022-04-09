@@ -100,8 +100,8 @@ class EmrStepSensorAsync(EmrStepSensor):
             if event["status"] == "error":
                 raise AirflowException(event["message"])
 
-            self.log.info(f"{event.get('message')}")
-            self.log.info(f"{self.job_flow_id} completed successfully.")
+            self.log.info(event.get("message"))
+            self.log.info("%s completed successfully.", self.job_flow_id)
 
 
 class EmrJobFlowSensorAsync(EmrJobFlowSensor):

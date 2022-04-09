@@ -48,8 +48,8 @@ def get_report(dag_run_ids: List[str]) -> None:
                 channel=SLACK_CHANNEL,
                 username=SLACK_USERNAME,
             ).execute(context=None)
-        except Exception as e:
-            logging.error("Error occur while sending slack alert. \n %s", e)
+        except Exception:
+            logging.exception("Error occur while sending slack alert.")
 
 
 def prepare_dag_dependency(task_info, execution_time):

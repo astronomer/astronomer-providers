@@ -73,7 +73,7 @@ class EmrStepSensorHookAsync(AwsBaseHookAsync):
                 response: Dict[str, Any] = await client.describe_step(
                     ClusterId=self.job_flow_id, StepId=self.step_id
                 )
-                self.log.debug(f"Response from AwsBaseHookAsync: {response}")
+                self.log.debug("Response from AwsBaseHookAsync: %s", response)
                 return response
             except ClientError as error:
                 raise error

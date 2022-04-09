@@ -89,8 +89,7 @@ class DatabricksHookAsync(DatabricksHook):
             auth = base64.b64encode(encoded_bytes).decode("utf-8")
             headers["Authorization"] = f"Basic {auth}"
             host = self.databricks_conn.host
-            self.log.info(f"auth: {auth}")
-            self.log.info(f"host: {host}")
+            self.log.info("Auth: %s; Host: %s", auth, host)
 
         url = f"https://{self._parse_host(host)}/{endpoint}"
         async with aiohttp.ClientSession() as session:
