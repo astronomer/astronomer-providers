@@ -197,7 +197,6 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
                 elif cluster_state in self.failed_states:
                     final_message = "EMR job failed"
                     failure_message = hook.failure_message_from_response(cluster_details)
-                    print("failure_message ", failure_message)
                     if failure_message:
                         final_message += " " + failure_message
                     yield TriggerEvent({"status": "error", "message": final_message})
