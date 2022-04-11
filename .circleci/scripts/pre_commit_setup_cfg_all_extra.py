@@ -26,7 +26,7 @@ if not found_all_extra:
 
 """
 Use XOR operator ^ to find the missing dependencies instead of set A - set B
-set A - set B will only show difference of set A from set B, but not set B from set A
+set A - set B will only show difference of set A from set B, but we want see overall diff
 """
 diff_extras = expected_all_extra ^ found_all_extra
 if diff_extras:
