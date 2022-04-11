@@ -62,6 +62,9 @@ Extras
    * - ``amazon``
      - ``pip install 'astronomer-providers[amazon]'``
      - Amazon
+   * - ``apache.livy``
+     - ``pip install 'astronomer-providers[apache.livy]'``
+     - Apache Livy
    * - ``cncf.kubernetes``
      - ``pip install 'astronomer-providers[cncf.kubernetes]'``
      - Kubernetes
@@ -77,6 +80,7 @@ Extras
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
+
 
 Example Usage
 -------------
