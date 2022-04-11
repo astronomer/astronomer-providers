@@ -24,7 +24,11 @@ found_all_extra = set(config["options.extras_require"].get("all", "").split())
 if not found_all_extra:
     raise SystemExit("Missing 'all' extra in setup.cfg")
 
-diff_extras = expected_all_extra - found_all_extra
+"""
+Use XOR operator ^ to find the missing dependencies instead of set A - set B
+set A - set B will only show difference of set A from set B, but we want see overall diff
+"""
+diff_extras = expected_all_extra ^ found_all_extra
 if diff_extras:
     diff_extras_str = "\n \t" + "\n \t".join(sorted(diff_extras))
     raise SystemExit(f"'all' extra in setup.cfg is missing some dependencies:\n {diff_extras_str}")
