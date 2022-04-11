@@ -77,6 +77,10 @@ Extras
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
+   * - ``apache.livy``
+     - ``pip install 'astronomer-providers[apache.livy]'``
+     - Apache Livy
+
 
 Example Usage
 -------------
