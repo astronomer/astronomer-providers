@@ -19,7 +19,7 @@ from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
 )
 
 REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
-REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "adminuser")
+REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "awsuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.environ.get("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
 REDSHIFT_CLUSTER_DB_NAME = os.environ.get("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 REDSHIFT_CLUSTER_TYPE = os.environ.get("REDSHIFT_CLUSTER_TYPE", "single-node")
@@ -124,8 +124,8 @@ def delete_redshift_cluster_snapshot() -> None:
             if get_cluster_status() == "available":
                 time.sleep(30)
                 continue
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error when deleting the cluster")
         return None
 
 
@@ -143,8 +143,8 @@ def delete_redshift_cluster() -> None:
             if get_cluster_status() == "deleting":
                 time.sleep(30)
                 continue
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error when deleting the cluster")
         return None
 
 

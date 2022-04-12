@@ -41,7 +41,7 @@ def test_emr_step_sensor_execute_complete_success():
         task.execute_complete(
             context={}, event={"status": "success", "message": "Job flow currently COMPLETED"}
         )
-    mock_log_info.assert_called_with(f"{JOB_FLOW_ID} completed successfully.")
+    mock_log_info.assert_called_with("%s completed successfully.", "j-T0CT8Z0C20NT")
 
 
 def test_emr_step_sensor_execute_complete_failure():

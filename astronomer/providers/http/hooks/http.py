@@ -128,7 +128,7 @@ class HttpHookAsync(BaseHook):
                         url,
                     )
                     if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
-                        self.log.error("HTTP error: %s", e)
+                        self.log.exception("HTTP error with status: %s", e.status)
                         # In this case, the user probably made a mistake.
                         # Don't retry.
                         raise AirflowException(str(e.status) + ":" + e.message)

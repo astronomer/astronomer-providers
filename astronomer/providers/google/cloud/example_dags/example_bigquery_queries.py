@@ -79,6 +79,7 @@ with DAG(
         dataset_id=DATASET,
         delete_contents=True,
         gcp_conn_id=GCP_CONN_ID,
+        trigger_rule="all_done",
     )
 
     # [START howto_operator_bigquery_insert_job_async]

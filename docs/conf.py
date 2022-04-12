@@ -12,7 +12,6 @@
 #
 import os
 import sys
-from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -85,8 +84,9 @@ html_theme_options = {
 # html_static_path = ["_static"]
 
 # -- AutoAPI ---------------------------------------------------------------
-autoapi_dirs = sorted([str(prov_dir) for prov_dir in Path("../astronomer/providers/").iterdir()])
+autoapi_dirs = ["../astronomer"]
 
+autoapi_template_dir = "_templates/autoapi"
 autoapi_generate_api_docs = True
 
 # The default options for autodoc directives. They are applied to all autodoc directives automatically.

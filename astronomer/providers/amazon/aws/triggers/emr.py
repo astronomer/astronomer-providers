@@ -134,7 +134,7 @@ class EmrStepSensorTrigger(BaseTrigger):
                         {"status": "error", "message": hook.failure_message_from_response(response)}
                     )
                     return
-                self.log.info(f"EMR step state is {state}. Sleeping for {self.poke_interval} seconds.")
+                self.log.info("EMR step state is %s. Sleeping for %s seconds.", state, self.poke_interval)
                 await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
