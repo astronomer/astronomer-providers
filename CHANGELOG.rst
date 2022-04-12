@@ -32,13 +32,13 @@ This release adds the following 5 new async sensors/operators:
      - .. code-block:: python
 
         from astronomer.providers.amazon.aws.sensors.emr import EmrStepSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_step_sensor.py>`__
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_sensor.py>`__
 
    * - ``EmrJobFlowSensorAsync``
      - .. code-block:: python
 
         from astronomer.providers.amazon.aws.sensors.emr import EmrJobFlowSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_job_flow.py>`__
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_sensor.py>`__
 
    * - ``LivyOperatorAsync``
      - .. code-block:: python
