@@ -21,11 +21,12 @@ RUN eksctl version
 
 # install kubectl
 RUN curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
-RUN curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/arm64/kubectl
 
 RUN chmod +x ./kubectl
-RUN mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
-RUN echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+RUN echo $PATH
+RUN mv ./kubectl /usr/local/bin
+# RUN mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+# RUN echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
 RUN kubectl version --short --client
 
 COPY astronomer-providers /tmp/astronomer-providers

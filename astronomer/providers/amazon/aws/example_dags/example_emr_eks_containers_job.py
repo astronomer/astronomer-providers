@@ -1,6 +1,8 @@
 import logging
 import os
+import time
 from datetime import datetime, timedelta
+from typing import Optional
 
 import boto3
 from airflow import DAG
@@ -11,53 +13,74 @@ from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
-VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "xxxx")
+VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "xxxxxxx")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
 JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::475538383708:role/test_job_execution_role")
 # [END howto_operator_emr_eks_env_variables]
 
-
 EKS_CONTAINER_PROVIDER_CLUSTER_NAME = os.getenv(
     "EKS_CONTAINER_PROVIDER_CLUSTER_NAME", "providers-team-eks-cluster"
 )
-KUBECTL_CLUSTER_NAME = os.getenv("KUBECTL_CLUSTER_NAME", "xxxxxxxxxx")
-VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "xxxxx")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxx")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxx")
+KUBECTL_CLUSTER_NAME = os.getenv("KUBECTL_CLUSTER_NAME", "providers-team-eks-namespace")
+VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "providers-team-virtual-eks-cluster")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 
+default_args = {
+    "execution_timeout": timedelta(minutes=30),
+}
 
-def delete_emr_container_virtual_cluster_by_id(virtual_cluster_id) -> None:
+
+def get_virtual_cluster_status(virtual_cluster_id) -> str:
+    """Get the virtual cluster status"""
+    boto_client = boto3.client("emr-containers")
+
+    cluster_response = boto_client.describe_virtual_cluster(
+        id=virtual_cluster_id,
+    )
+    logging.info("%s", cluster_response)
+    virtual_cluster = cluster_response.get("virtualCluster")
+    cluster_state: str = virtual_cluster.get("state")
+    return cluster_state
+
+
+def delete_emr_container_virtual_cluster_by_id(virtual_cluster_id) -> Optional[str]:
     """Deletes an EMR on EKS virtual cluster"""
-    client = boto3.client("emr-containers")
+    emr_container_client = boto3.client("emr-containers")
+
     try:
-        client.delete_virtual_cluster(id=virtual_cluster_id)
-    except ClientError as e:
-        logging.info("%s", e)
+        emr_container_client.delete_virtual_cluster(id=virtual_cluster_id)
+        while True:
+            virtual_cluster_state = get_virtual_cluster_status(virtual_cluster_id)
+            if virtual_cluster_state == "TERMINATING":
+                time.sleep(30)
+                continue
+            elif virtual_cluster_state == "TERMINATED":
+                return virtual_cluster_state
+    except ClientError:
+        logging.exception("Error when deleting the cluster")
         return None
 
 
 def get_virtual_cluster_id():
     """Get list of virtual cluster in container"""
-    client = boto3.client("emr-containers")
+    emr_client = boto3.client("emr-containers")
     try:
-        response = client.list_virtual_clusters(
+        list_cluster_response = emr_client.list_virtual_clusters(
             containerProviderId=EKS_CONTAINER_PROVIDER_CLUSTER_NAME,
             containerProviderType="EKS",
             states=[
                 "RUNNING",
-                "TERMINATING",
-                "TERMINATED",
-                "ARRESTED",
             ],
             maxResults=123,
         )
-        for cluster in response["virtualClusters"]:
+        for cluster in list_cluster_response["virtualClusters"]:
             if cluster["name"] == VIRTUAL_CLUSTER_NAME:
                 return cluster
         return None
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error when getting the list of virtual cluster ")
         return None
 
 
@@ -65,10 +88,16 @@ def delete_eks_cluster():
     """Delete EKS cluster"""
     try:
         client = boto3.client("eks")
-        client.delete_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
-    except ClientError as e:
-        logging.info("%s", e)
-        return None
+        status = client.describe_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
+        if status and status == "ACTIVE":
+            client.delete_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
+            while True:
+                status = client.describe_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
+                if status == "DELETING":
+                    time.sleep(30)
+                    continue
+    except ClientError:
+        logging.exception("Error while deleting EKS cluster")
 
 
 def delete_cluster():
@@ -82,7 +111,7 @@ def delete_cluster():
     delete_eks_cluster()
 
 
-def create_emr_virtual_cluster():
+def create_emr_virtual_cluster_func():
     """Create EMR virtual cluster in container"""
     client = boto3.client("emr-containers")
     try:
@@ -95,8 +124,8 @@ def create_emr_virtual_cluster():
             },
         )
         os.environ["VIRTUAL_CLUSTER_ID"] = response["id"]
-    except ClientError as e:
-        logging.info("%s", e)
+    except ClientError:
+        logging.exception("Error while creating EMR virtual cluster")
         return None
 
 
@@ -128,10 +157,10 @@ CONFIGURATION_OVERRIDES_ARG = {
 
 with DAG(
     dag_id="emr_eks_pi_job",
-    dagrun_timeout=timedelta(hours=2),
-    start_date=datetime(2021, 1, 1),
-    schedule_interval="@once",
+    start_date=datetime(2022, 1, 1),
+    schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["emr_containers", "example"],
 ) as dag:
     # Task steps for DAG to be self-sufficient
@@ -151,13 +180,13 @@ with DAG(
     # Task to create EMR clusters on EKS
     create_EKS_cluster_kube_namespace = BashOperator(
         task_id="create_EKS_cluster_kube_namespace",
-        bash_command="sh /usr/local/airflow/dags/create_emr_on_eks_cluster.sh ",
+        bash_command="sh /usr/local/airflow/dags/example_create_emr_on_eks_cluster.sh ",
     )
 
     # Task to create EMR virtual cluster
     create_EMR_virtual_cluster = PythonOperator(
         task_id="create_EMR_virtual_cluster",
-        python_callable=create_emr_virtual_cluster,
+        python_callable=create_emr_virtual_cluster_func,
     )
 
     # An example of how to get the cluster id and arn from an Airflow connection
