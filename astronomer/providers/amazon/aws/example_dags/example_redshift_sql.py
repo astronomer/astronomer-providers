@@ -16,7 +16,7 @@ from astronomer.providers.amazon.aws.operators.redshift_sql import (
 
 REDSHIFT_CONN_ID = os.environ.get("ASTRO_REDSHIFT_CONN_ID", "redshift_default")
 REDSHIFT_CLUSTER_IDENTIFIER = os.environ.get("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
-REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "adminuser")
+REDSHIFT_CLUSTER_MASTER_USER = os.environ.get("REDSHIFT_CLUSTER_MASTER_USER", "awsuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.environ.get("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
 REDSHIFT_CLUSTER_TYPE = os.environ.get("REDSHIFT_CLUSTER_TYPE", "single-node")
 REDSHIFT_CLUSTER_NODE_TYPE = os.environ.get("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
