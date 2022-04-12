@@ -50,11 +50,10 @@ This release adds the following 5 new async sensors/operators:
 Improvements
 """"""""""""
 
-* Added ``make docs`` top-level command for building docs, so that it will be convenient to build docs
   (`#155 <https://github.com/astronomer/astronomer-providers/pull/155>`_)
 * Improved example DAGs so that resource creation and clean up is handled during system tests rather
   than doing it manually
-* Enhanced the  **Async Databricks Operator**   to persist ``run_id`` and ``run_page_url`` in XCOM
+* Enhanced the  **Async Databricks Operator**  to persist ``run_id`` and ``run_page_url`` in ``XCom``
   (`#175 <https://github.com/astronomer/astronomer-providers/pull/175>`_)
 
 
