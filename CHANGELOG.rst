@@ -1,6 +1,61 @@
 Changelog
 =========
 
+1.2.0 (2022-04-12)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 5 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``DataprocSubmitJobOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_dataproc.py>`__
+
+   * - ``EmrContainerSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr.py>`__
+
+   * - ``EmrStepSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.emr import EmrStepSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_sensor.py>`__
+
+   * - ``EmrJobFlowSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.emr import EmrJobFlowSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_sensor.py>`__
+
+   * - ``LivyOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.apache.livy.operators.livy import LivyOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/apache/livy/example_dags/example_livy.py>`__
+
+
+Improvements
+""""""""""""
+
+* Improved example DAGs so that resource creation and clean up is handled during system tests rather
+  than doing it manually
+* Enhanced the  **Async Databricks Operator**  to persist ``run_id`` and ``run_page_url`` in ``XCom``
+  (`#175 <https://github.com/astronomer/astronomer-providers/pull/175>`_)
+
+
 1.1.0 (2022-03-23)
 --------------------
 
