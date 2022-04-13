@@ -111,6 +111,7 @@ async def test_get_job_status_exception(mock_job_instance, caplog):
     assert "Query execution finished with errors..." in caplog.text
 
 
+@pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.ClientSession")
 async def test_get_job_output_assert_once_with(mock_session, mock_job_instance):
