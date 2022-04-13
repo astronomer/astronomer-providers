@@ -149,3 +149,17 @@ intersphinx_mapping = {
     "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable/", None),
     **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in prov_deps},
 }
+
+
+# This explicitly defines __init__ not to be skipped (which it is by default).
+def _inclue_init_in_docs(app, what, name, obj, would_skip, options):
+    """This is needed to document __init__ from parent classes."""
+    if name == "__init__":
+        return False
+    return would_skip
+
+
+def setup(app):
+    """Sphinx Application API"""
+    if "autoapi.extension" in extensions:
+        app.connect("autodoc-skip-member", _inclue_init_in_docs)
