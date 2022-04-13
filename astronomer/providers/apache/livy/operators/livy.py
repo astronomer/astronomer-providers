@@ -40,7 +40,7 @@ class LivyOperatorAsync(LivyOperator):
             See Tenacity documentation at https://github.com/jd/tenacity
     """
 
-    def execute(self, context: "Context") -> Any:
+    def execute(self, context: "Context") -> None:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger

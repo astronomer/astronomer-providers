@@ -6,15 +6,19 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import configparser
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
-
+repo_dir = Path(__file__).parent.parent
 
 # -- Project information -----------------------------------------------------
 
@@ -131,18 +135,17 @@ suppress_warnings = [
 autoapi_python_use_implicit_namespaces = True
 
 # -- Intersphinx configuration ------------------------------------------------
+# Get all the providers from setup.cfg and use them to generate the intersphinx inventories
+# for all the providers
+config = configparser.ConfigParser(strict=False)
+config.read(repo_dir / "setup.cfg")
+
+prov_deps = [
+    re.match(r"([a-zA-Z-]+)", dep).groups()[0]
+    for dep in config["options.extras_require"]["all"].split()
+    if dep.startswith("apache-airflow-providers-")
+]
 intersphinx_mapping = {
     "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable/", None),
-    "airflow-databricks": (
-        "https://airflow.apache.org/docs/apache-airflow-providers-databricks/stable/",
-        None,
-    ),
-    "airflow-google": ("https://airflow.apache.org/docs/apache-airflow-providers-google/stable/", None),
-    "airflow-kubernetes": (
-        "https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/",
-        None,
-    ),
-    "airflow-snowflake": ("https://airflow.apache.org/docs/apache-airflow-providers-snowflake/stable/", None),
-    "airflow-amazon": ("https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/", None),
-    "airflow-http": ("https://airflow.apache.org/docs/apache-airflow-providers-http/stable/", None),
+    **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in prov_deps},
 }
