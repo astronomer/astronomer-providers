@@ -34,7 +34,7 @@ release = "1.3.0.dev1"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-_EXTENSIONS = [
+extensions = [
     "autoapi.extension",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
@@ -161,5 +161,5 @@ def _inclue_init_in_docs(app, what, name, obj, would_skip, options):
 
 def setup(app):
     """Sphinx Application API"""
-    if "autoapi.extension" in _EXTENSIONS:
+    if "autoapi.extension" in extensions:
         app.connect("autodoc-skip-member", _inclue_init_in_docs)
