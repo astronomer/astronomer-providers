@@ -289,7 +289,7 @@ with DAG(
     )
     # [END create_airflow_connection_for_livy]
 
-    # [START run_pi_example_with_no_polling_interval]
+    # [START run_pi_example_without_polling_interval]
     livy_java_task = LivyOperatorAsync(
         task_id="livy_java_task",
         file=LIVY_JAVA_FILE,
@@ -299,7 +299,7 @@ with DAG(
         },
         class_name="org.apache.spark.examples.SparkPi",
     )
-    # [END run_pi_spark_with_no_polling_interval]
+    # [END run_pi_spark_without_polling_interval]
 
     # [START run_py_example_with_polling_interval]
     livy_python_task = LivyOperatorAsync(
