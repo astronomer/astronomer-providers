@@ -138,6 +138,11 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
 
+    livy_task_info = [{"livy_dag": "example_livy_operator"}]
+    livy_trigger_tasks, ids = prepare_dag_dependency(livy_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*livy_trigger_tasks)
+
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -158,6 +163,7 @@ with DAG(
         databricks_trigger_tasks[0],
         http_trigger_tasks[0],
         snowflake_trigger_tasks[0],
+        livy_trigger_tasks[0],
     ]
 
     last_task = [
@@ -168,6 +174,7 @@ with DAG(
         databricks_trigger_tasks[-1],
         http_trigger_tasks[-1],
         snowflake_trigger_tasks[-1],
+        livy_trigger_tasks[-1],
     ]
 
     last_task >> end
