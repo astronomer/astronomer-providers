@@ -6,6 +6,7 @@ using the Java and Python executables provided in the example library.
 import os
 import time
 from datetime import datetime
+from typing import Any, List
 
 import boto3
 import paramiko
@@ -28,17 +29,17 @@ PEM_FILENAME = os.environ.get("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY", "AKIAW5OCL4NOA3GPHC2D"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_KEY", "ab8bGfz1HPzYBlBMiaFCB/ZauzVva/gX2Te1gtxj"),
+    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY", "sample_aws_access_key_id"),
+    "aws_secret_access_key": os.environ.get("AWS_SECRET_KEY", "sample_aws_secret_access_key"),
     "region_name": os.environ.get("AWS_REGION_NAME", "us-east-2"),
 }
 
-COMMAND_TO_CREATE_PI_FILE = [
+COMMAND_TO_CREATE_PI_FILE: List[str] = [
     "curl https://raw.githubusercontent.com/apache/spark/master/examples/src/main/python/pi.py >> pi.py",
     "hadoop fs -copyFromLocal pi.py /user/hadoop",
 ]
 
-SPARK_STEPS = []
+SPARK_STEPS: List[Any] = []
 
 JOB_FLOW_OVERRIDES = {
     "Name": "team-provider-example-dag-livy-test",
@@ -75,7 +76,7 @@ JOB_FLOW_OVERRIDES = {
 }
 
 
-def create_airflow_connection(task_instance):
+def create_airflow_connection(task_instance: Any) -> None:
     """
     Checks if airflow connection exists, if yes then deletes it.
     Then, create a new livy_default connection.
@@ -90,7 +91,9 @@ def create_airflow_connection(task_instance):
         password="",
         port=8998,
     )  # create a connection object
-    session = settings.Session()  # get the session
+
+    # type should be ignored below as session is by default None and its not Callable.
+    session = settings.Session()
     connection = session.query(Connection).filter_by(conn_id=conn.conn_id).one_or_none()
     if connection is None:
         print(f"Connection {conn.conn_id} doesn't exist.")
@@ -104,7 +107,7 @@ def create_airflow_connection(task_instance):
     print("Connection livy_default is created")
 
 
-def add_inbound_rule_for_security_group(task_instance):
+def add_inbound_rule_for_security_group(task_instance: Any) -> None:
     """
     Sets the inbound rule for the aws security group, based on
     current ip address of the system.
@@ -162,7 +165,7 @@ def add_inbound_rule_for_security_group(task_instance):
         print(f"Added {current_docker_ip}/32 for SSH with port 22 open.")
 
 
-def create_key_pair():
+def create_key_pair() -> None:
     """
     Load the private_key from airflow variable and creates a pem_file
     at /tmp/.
@@ -179,7 +182,7 @@ def create_key_pair():
     os.chmod(f"/tmp/{PEM_FILENAME}.pem", 0o400)
 
 
-def ssh_and_run_command(task_instance, **kwargs):
+def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     """
     SSH into the machine and execute the bash script from the list
     of commands.
@@ -205,7 +208,7 @@ def ssh_and_run_command(task_instance, **kwargs):
         print(f"Got an exception as {exc}.")
 
 
-def get_cluster_details(task_instance):
+def get_cluster_details(task_instance: Any) -> None:
     """
     Fetches the cluster details and stores EmrManagedMasterSecurityGroup and
     MasterPublicDnsName in the XCOM.
