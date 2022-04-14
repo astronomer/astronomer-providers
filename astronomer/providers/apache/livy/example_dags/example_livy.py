@@ -40,8 +40,6 @@ COMMAND_TO_CREATE_PI_FILE: List[str] = [
     "hadoop fs -copyFromLocal pi.py /user/hadoop",
 ]
 
-SPARK_STEPS: List[Any] = []
-
 JOB_FLOW_OVERRIDES = {
     "Name": "team-provider-example-dag-livy-test",
     "ReleaseLabel": "emr-5.35.0",
@@ -71,7 +69,7 @@ JOB_FLOW_OVERRIDES = {
         "KeepJobFlowAliveWhenNoSteps": True,
         "TerminationProtected": False,
     },
-    "Steps": SPARK_STEPS,
+    "Steps": [],
     "JobFlowRole": JOB_FLOW_ROLE,
     "ServiceRole": SERVICE_ROLE,
 }
@@ -147,7 +145,6 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
-        logging.info("Added %s/32 for livy with port 8998 open.", str(current_docker_ip))
 
         # open port for port 22 for ssh and copy file for hdfs
         client.authorize_security_group_ingress(
@@ -163,7 +160,6 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
-        logging.info("Added %s/32 for SSH with port 22 open.", str(current_docker_ip))
 
 
 def create_key_pair() -> None:
