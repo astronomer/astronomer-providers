@@ -167,10 +167,16 @@ def create_key_pair():
     Load the private_key from airflow variable and creates a pem_file
     at /tmp/.
     """
+    # remove the file if it exists
+    if os.path.exists(f"/tmp/{PEM_FILENAME}.pem"):
+        os.remove(f"/tmp/{PEM_FILENAME}.pem")
+
     # read the content for pem file from Variable set on Airflow UI.
+    with open(f"/tmp/{PEM_FILENAME}.pem", "w+") as fh:
+        fh.write(PRIVATE_KEY)
+
     # write private key to file with 400 permissions
-    with os.fdopen(os.open(f"/tmp/{PEM_FILENAME}.pem", os.O_WRONLY | os.O_CREAT, 0o400), "w+") as handle:
-        handle.write(PRIVATE_KEY)
+    os.chmod(f"/tmp/{PEM_FILENAME}.pem", 0o400)
 
 
 def ssh_and_run_command(task_instance, **kwargs):
