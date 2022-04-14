@@ -18,15 +18,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
-REPO_DIR = Path(__file__).parent.parent
+_REPO_DIR = Path(__file__).parent.parent
 
 # -- Project information -----------------------------------------------------
 
-PROJECT = "Astronomer Providers"
-AUTHOR = "Astronomer Inc."
+project = "Astronomer Providers"
+author = "Astronomer Inc."
 
 # The full version, including alpha/beta/rc tags
-RELEASE = "1.3.0.dev1"
+release = "1.3.0.dev1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,7 +34,7 @@ RELEASE = "1.3.0.dev1"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-EXTENSIONS = [
+_EXTENSIONS = [
     "autoapi.extension",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
@@ -42,13 +42,13 @@ EXTENSIONS = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-TEMPLATES_PATH = ["_templates"]
+templates_path = ["_templates"]
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
-KEEP_WARNINGS = True
+keep_warnings = True
 
 # The master toctree document.
-MASTER_DOC = "index"
+master_doc = "index"
 
 # -- Options for HTML output ---------------------------------------------------
 # See: https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -57,7 +57,7 @@ MASTER_DOC = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-EXCLUDE_PATTERNS = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -65,13 +65,13 @@ EXCLUDE_PATTERNS = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-HTML_THEME = "alabaster"
+html_theme = "alabaster"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-HTML_THEME_OPTIONS = {
+html_theme_options = {
     "description": "Airflow Providers containing Deferrable Operators & Sensors from Astronomer",
     "github_user": "astronomer",
     "github_repo": "astronomer-providers",
@@ -88,33 +88,33 @@ HTML_THEME_OPTIONS = {
 # html_static_path = ["_static"]
 
 # -- AutoAPI ---------------------------------------------------------------
-AUTOAPI_DIRS = ["../astronomer"]
+autoapi_dirs = ["../astronomer"]
 
-AUTOAPI_TEMPLATE_DIR = "_templates/autoapi"
-AUTOAPI_GENERATE_API_DOCS = True
+autoapi_template_dir = "_templates/autoapi"
+autoapi_generate_api_docs = True
 
 # The default options for autodoc directives. They are applied to all autodoc directives automatically.
-AUTODOC_DEFAULT_OPTIONS = {"show-inheritance": True, "members": True}
+autodoc_default_options = {"show-inheritance": True, "members": True}
 
-AUTODOC_TYPEHINTS = "description"
-AUTODOC_TYPEHINTS_DESCRIPTION_TARGET = "documented"
-AUTODOC_TYPEHINTS_FORMAT = "short"
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
+autodoc_typehints_format = "short"
 
 # Keep the AutoAPI generated files on the filesystem after the run.
 # Useful for debugging.
-AUTOAPI_KEEP_FILES = True
+autoapi_keep_files = True
 
 # Relative path to output the AutoAPI files into. This can also be used to place the generated documentation
 # anywhere in your documentation hierarchy.
-AUTOAPI_ROOT = "_api"
+autoapi_root = "_api"
 
 # Whether to insert the generated documentation into the TOC tree. If this is False, the default AutoAPI
 # index page is not generated and you will need to include the generated documentation in a
 # TOC tree entry yourself.
-AUTOAPI_ADD_TOCTREE_ENTRY = True
+autoapi_add_toctree_entry = True
 
 # By default autoapi will include private members -- we don't want that!
-AUTOAPI_OPTIONS = [
+autoapi_options = [
     "members",
     "undoc-members",
     "show-inheritance",
@@ -123,31 +123,31 @@ AUTOAPI_OPTIONS = [
 ]
 
 # Ignore example DAGs from the API docs
-AUTOAPI_IGNORE = [
+autoapi_ignore = [
     "*example_dags*",
 ]
 
-SUPPRESS_WARNINGS = [
+suppress_warnings = [
     "autoapi.python_import_resolution",
     "ref.doc",
 ]
 
-AUTOAPI_PYTHON_USE_IMPLICIT_NAMESPACES = True
+autoapi_python_use_implicit_namespaces = True
 
 # -- Intersphinx configuration ------------------------------------------------
 # Get all the providers from setup.cfg and use them to generate the intersphinx inventories
 # for all the providers
-CONFIG = configparser.ConfigParser(strict=False)
-CONFIG.read(REPO_DIR / "setup.cfg")
+config = configparser.ConfigParser(strict=False)
+config.read(_REPO_DIR / "setup.cfg")
 
-PROV_DEPS = [
+_PROV_DEPS = [
     re.match(r"([a-zA-Z-]+)", dep).groups()[0]
-    for dep in CONFIG["options.extras_require"]["all"].split()
+    for dep in config["options.extras_require"]["all"].split()
     if dep.startswith("apache-airflow-providers-")
 ]
-INTERSPHINX_MAPPING = {
+intersphinx_mapping = {
     "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable/", None),
-    **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in PROV_DEPS},
+    **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in _PROV_DEPS},
 }
 
 
@@ -161,5 +161,5 @@ def _inclue_init_in_docs(app, what, name, obj, would_skip, options):
 
 def setup(app):
     """Sphinx Application API"""
-    if "autoapi.extension" in EXTENSIONS:
+    if "autoapi.extension" in _EXTENSIONS:
         app.connect("autodoc-skip-member", _inclue_init_in_docs)
