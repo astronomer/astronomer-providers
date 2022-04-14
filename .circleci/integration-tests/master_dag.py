@@ -93,8 +93,7 @@ with DAG(
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
-        {"emr_job_flow_sensor_dag": "example_emr_job_flow_sensor"},
-        {"emr_cluster_dag": "example_emr_step_sensor"},
+        {"emr_sensor_dag": "example_emr_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
@@ -139,6 +138,11 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
 
+    livy_task_info = [{"livy_dag": "example_livy_operator"}]
+    livy_trigger_tasks, ids = prepare_dag_dependency(livy_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*livy_trigger_tasks)
+
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -159,6 +163,7 @@ with DAG(
         databricks_trigger_tasks[0],
         http_trigger_tasks[0],
         snowflake_trigger_tasks[0],
+        livy_trigger_tasks[0],
     ]
 
     last_task = [
@@ -169,6 +174,7 @@ with DAG(
         databricks_trigger_tasks[-1],
         http_trigger_tasks[-1],
         snowflake_trigger_tasks[-1],
+        livy_trigger_tasks[-1],
     ]
 
     last_task >> end
