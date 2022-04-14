@@ -91,7 +91,6 @@ def create_airflow_connection(task_instance: Any) -> None:
         port=8998,
     )  # create a connection object
 
-    # type should be ignored below as session is by default None and its not Callable.
     session = settings.Session()
     connection = session.query(Connection).filter_by(conn_id=conn.conn_id).one_or_none()
     if connection is None:
