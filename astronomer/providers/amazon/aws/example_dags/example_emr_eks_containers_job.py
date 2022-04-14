@@ -1,8 +1,6 @@
 import logging
 import os
-import time
 from datetime import datetime, timedelta
-from typing import Optional
 
 import boto3
 from airflow import DAG
@@ -13,10 +11,20 @@ from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
-VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "xxxxxxx")
+# [START howto_operator_emr_eks_env_variables]
+VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "xxxxxxxx")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
-JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::475538383708:role/test_job_execution_role")
+JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::121212121212:role/test_iam_job_execution_role")
 # [END howto_operator_emr_eks_env_variables]
+
+# Job role name and policy name attached to the role
+JOB_EXECUTION_ROLE = os.getenv("JOB_EXECUTION_ROLE", "test_iam_job_execution_role")
+DEBUGGING_MONITORING_POLICY = os.getenv("DEBUGGING_MONITORING_POLICY", "test_debugging_monitoring_policy")
+CONTAINER_SUBMIT_JOB_POLICY = os.getenv(
+    "CONTAINER_SUBMIT_JOB_POLICY", "test_emr_container_submit_jobs_policy"
+)
+JOB_EXECUTION_POLICY = os.getenv("JOB_EXECUTION_POLICY", "test_job_execution_policy")
+MANAGE_VIRTUAL_CLUSTERS = os.getenv("MANAGE_VIRTUAL_CLUSTERS", "test_manage_virtual_clusters")
 
 EKS_CONTAINER_PROVIDER_CLUSTER_NAME = os.getenv(
     "EKS_CONTAINER_PROVIDER_CLUSTER_NAME", "providers-team-eks-cluster"
@@ -30,85 +38,6 @@ AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 default_args = {
     "execution_timeout": timedelta(minutes=30),
 }
-
-
-def get_virtual_cluster_status(virtual_cluster_id) -> str:
-    """Get the virtual cluster status"""
-    boto_client = boto3.client("emr-containers")
-
-    cluster_response = boto_client.describe_virtual_cluster(
-        id=virtual_cluster_id,
-    )
-    logging.info("%s", cluster_response)
-    virtual_cluster = cluster_response.get("virtualCluster")
-    cluster_state: str = virtual_cluster.get("state")
-    return cluster_state
-
-
-def delete_emr_container_virtual_cluster_by_id(virtual_cluster_id) -> Optional[str]:
-    """Deletes an EMR on EKS virtual cluster"""
-    emr_container_client = boto3.client("emr-containers")
-
-    try:
-        emr_container_client.delete_virtual_cluster(id=virtual_cluster_id)
-        while True:
-            virtual_cluster_state = get_virtual_cluster_status(virtual_cluster_id)
-            if virtual_cluster_state == "TERMINATING":
-                time.sleep(30)
-                continue
-            elif virtual_cluster_state == "TERMINATED":
-                return virtual_cluster_state
-    except ClientError:
-        logging.exception("Error when deleting the cluster")
-        return None
-
-
-def get_virtual_cluster_id():
-    """Get list of virtual cluster in container"""
-    emr_client = boto3.client("emr-containers")
-    try:
-        list_cluster_response = emr_client.list_virtual_clusters(
-            containerProviderId=EKS_CONTAINER_PROVIDER_CLUSTER_NAME,
-            containerProviderType="EKS",
-            states=[
-                "RUNNING",
-            ],
-            maxResults=123,
-        )
-        for cluster in list_cluster_response["virtualClusters"]:
-            if cluster["name"] == VIRTUAL_CLUSTER_NAME:
-                return cluster
-        return None
-    except ClientError:
-        logging.exception("Error when getting the list of virtual cluster ")
-        return None
-
-
-def delete_eks_cluster():
-    """Delete EKS cluster"""
-    try:
-        client = boto3.client("eks")
-        status = client.describe_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
-        if status and status == "ACTIVE":
-            client.delete_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
-            while True:
-                status = client.describe_cluster(name=EKS_CONTAINER_PROVIDER_CLUSTER_NAME)
-                if status == "DELETING":
-                    time.sleep(30)
-                    continue
-    except ClientError:
-        logging.exception("Error while deleting EKS cluster")
-
-
-def delete_cluster():
-    """Delete EMR, EKS and virtual cluster"""
-    # delete virtual cluster
-    virtual_cluster_details = get_virtual_cluster_id()
-    if virtual_cluster_details and virtual_cluster_details["state"] == "RUNNING":
-        delete_emr_container_virtual_cluster_by_id(virtual_cluster_details["id"])
-
-    # delete eks cluster
-    delete_eks_cluster()
 
 
 def create_emr_virtual_cluster_func():
@@ -171,15 +100,9 @@ with DAG(
         f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
     )
 
-    # Delete clusters, container providers
-    delete_existing_emr_virtual_cluster_container = PythonOperator(
-        task_id="delete_existing_emr_virtual_cluster_container",
-        python_callable=delete_cluster,
-    )
-
     # Task to create EMR clusters on EKS
-    create_EKS_cluster_kube_namespace = BashOperator(
-        task_id="create_EKS_cluster_kube_namespace",
+    create_EKS_cluster_kube_namespace_with_role = BashOperator(
+        task_id="create_EKS_cluster_kube_namespace_with_role",
         bash_command="sh /usr/local/airflow/dags/example_create_emr_on_eks_cluster.sh ",
     )
 
@@ -215,18 +138,18 @@ with DAG(
     )
     # [END howto_sensor_emr_container_task]
 
-    # Delete clusters, container providers
-    last_step_delete_cluster = PythonOperator(
-        task_id="last_step_delete_cluster",
-        python_callable=delete_cluster,
+    # Delete clusters, container providers, role, policy
+    last_step_clean_clusters = BashOperator(
+        task_id="last_step_clean_up_cluster_role_policy",
+        bash_command="sh /usr/local/airflow/dags/example_delete_eks_cluster_and_role_policies.sh ",
+        trigger_rule="all_done",
     )
 
     (
         setup_aws_config
-        >> delete_existing_emr_virtual_cluster_container
-        >> create_EKS_cluster_kube_namespace
+        >> create_EKS_cluster_kube_namespace_with_role
         >> create_EMR_virtual_cluster
         >> job_starter
         >> job_container_sensor
-        >> last_step_delete_cluster
+        >> last_step_clean_clusters
     )
