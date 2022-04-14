@@ -140,6 +140,8 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             event["message"],
         )
 
+        context["ti"].xcom_push(key="job_id", value=event["jobId"])
+
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     """
