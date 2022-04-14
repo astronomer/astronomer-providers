@@ -3,6 +3,7 @@ This is an example DAG which uses the LivyOperatorAsync.
 The tasks below trigger the computation of pi on the Spark instance
 using the Java and Python executables provided in the example library.
 """
+import logging
 import os
 import time
 from datetime import datetime
@@ -96,15 +97,15 @@ def create_airflow_connection(task_instance: Any) -> None:
     session = settings.Session()
     connection = session.query(Connection).filter_by(conn_id=conn.conn_id).one_or_none()
     if connection is None:
-        print(f"Connection {conn.conn_id} doesn't exist.")
+        logging.info("Connection %s doesn't exist.", str(conn.conn_id))
     else:
         session.delete(connection)
         session.commit()
-        print(f"Connection {conn.conn_id} deleted.")
+        logging.info("Connection %s deleted.", str(conn.conn_id))
 
     session.add(conn)
     session.commit()  # it will insert the connection object programmatically.
-    print("Connection livy_default is created")
+    logging.info("Connection livy_default is created")
 
 
 def add_inbound_rule_for_security_group(task_instance: Any) -> None:
@@ -113,7 +114,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
     current ip address of the system.
     """
     current_docker_ip = get("https://api.ipify.org").text
-    print(f"Current ip address is: {current_docker_ip}")
+    logging.info("Current ip address is: %s", str(current_docker_ip))
     client = boto3.client("ec2", **AWS_S3_CREDS)
 
     response = client.describe_security_groups(
@@ -146,7 +147,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
-        print(f"Added {current_docker_ip}/32 for livy with port 8998 open.")
+        logging.info("Added %s/32 for livy with port 8998 open.", str(current_docker_ip))
 
         # open port for port 22 for ssh and copy file for hdfs
         client.authorize_security_group_ingress(
@@ -162,7 +163,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
-        print(f"Added {current_docker_ip}/32 for SSH with port 22 open.")
+        logging.info("Added %s/32 for SSH with port 22 open.", str(current_docker_ip))
 
 
 def create_key_pair() -> None:
@@ -205,7 +206,7 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
         # close the client connection once the job is done
         client.close()
     except Exception as exc:
-        print(f"Got an exception as {exc}.")
+        raise Exception("Got an exception as %s.", str(exc))
 
 
 def get_cluster_details(task_instance: Any) -> None:
@@ -221,12 +222,12 @@ def get_cluster_details(task_instance: Any) -> None:
         "MasterPublicDnsName" not in response["Cluster"]
         and response["Cluster"]["Status"]["State"] != "WAITING"
     ):
-        print("wait for 11 minutes to get the MasterPublicDnsName")
+        logging.info("wait for 11 minutes to get the MasterPublicDnsName")
         time.sleep(660)
         response = client.describe_cluster(
             ClusterId=str(task_instance.xcom_pull(key="return_value", task_ids=["cluster_creator"])[0])
         )
-        print("current response from ams emr: ", response)
+        logging.info("current response from ams emr: %s", str(response))
     task_instance.xcom_push(
         key="cluster_response_master_public_dns", value=response["Cluster"]["MasterPublicDnsName"]
     )
