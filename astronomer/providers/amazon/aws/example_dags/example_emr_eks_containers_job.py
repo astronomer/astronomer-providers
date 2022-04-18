@@ -34,13 +34,14 @@ VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "providers-team-vir
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+AIRFLOW_HOME = os.getenv("AIRFLOW_HOME", "/usr/local/airflow")
 
 default_args = {
     "execution_timeout": timedelta(minutes=30),
 }
 
 
-def create_emr_virtual_cluster_func():
+def create_emr_virtual_cluster_func() -> None:
     """Create EMR virtual cluster in container"""
     client = boto3.client("emr-containers")
     try:
@@ -103,7 +104,7 @@ with DAG(
     # Task to create EMR clusters on EKS
     create_EKS_cluster_kube_namespace_with_role = BashOperator(
         task_id="create_EKS_cluster_kube_namespace_with_role",
-        bash_command="sh /usr/local/airflow/dags/example_create_emr_on_eks_cluster.sh ",
+        bash_command="sh $AIRFLOW_HOME/dags/example_create_emr_on_eks_cluster.sh ",
     )
 
     # Task to create EMR virtual cluster
@@ -139,9 +140,9 @@ with DAG(
     # [END howto_sensor_emr_container_task]
 
     # Delete clusters, container providers, role, policy
-    last_step_clean_clusters = BashOperator(
+    remove_clusters_role_policy = BashOperator(
         task_id="last_step_clean_up_cluster_role_policy",
-        bash_command="sh /usr/local/airflow/dags/example_delete_eks_cluster_and_role_policies.sh ",
+        bash_command="sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
         trigger_rule="all_done",
     )
 
@@ -151,5 +152,5 @@ with DAG(
         >> create_EMR_virtual_cluster
         >> job_starter
         >> job_container_sensor
-        >> last_step_clean_clusters
+        >> remove_clusters_role_policy
     )

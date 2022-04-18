@@ -2,13 +2,13 @@
 
 # create cluster
 eksctl create cluster \
---name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
---region us-east-2 \
---with-oidc \
---ssh-access \
---ssh-public-key providers_team_keypair \
---instance-types=m4.large \
---managed
+    --name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
+    --region us-east-2 \
+    --with-oidc \
+    --ssh-access \
+    --ssh-public-key providers_team_keypair \
+    --instance-types=m4.large \
+    --managed
 
 # create kubectl cluster namespace
 kubectl create namespace $KUBECTL_CLUSTER_NAME
