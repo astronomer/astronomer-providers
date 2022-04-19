@@ -5,9 +5,6 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.microsoft.azure.operators.data_factory import (
-    AzureDataFactoryRunPipelineOperator,
-)
 from azure.identity import ClientSecretCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 from azure.mgmt.datafactory.models import (
@@ -26,6 +23,9 @@ from azure.mgmt.datafactory.models import (
 )
 from azure.mgmt.resource import ResourceManagementClient
 
+from astronomer.providers.microsoft.azure.operators.data_factory import (
+    AzureDataFactoryRunPipelineOperatorAsync,
+)
 from astronomer.providers.microsoft.azure.sensors.data_factory import (
     AzureDataFactoryPipelineRunStatusSensorAsync,
 )
@@ -160,7 +160,7 @@ def delete_azure_data_factory_storage_pipeline() -> None:
 
 
 with DAG(
-    dag_id="example_adf_run_pipeline",
+    dag_id="example_async_adf_run_pipeline",
     start_date=datetime(2021, 8, 13),
     schedule_interval=None,
     catchup=False,
@@ -175,17 +175,24 @@ with DAG(
     # [END howto_create_resource_group]
 
     # [START howto_operator_adf_run_pipeline]
-    run_pipeline = AzureDataFactoryRunPipelineOperator(
-        task_id="run_pipeline",
+    run_pipeline_op = AzureDataFactoryRunPipelineOperatorAsync(
+        task_id="run_pipeline_op",
         pipeline_name=PIPELINE_NAME,
         wait_for_termination=False,
+    )
+    # [END howto_operator_adf_run_pipeline]
+
+    # [START howto_operator_adf_run_pipeline]
+    run_pipeline_op1 = AzureDataFactoryRunPipelineOperatorAsync(
+        task_id="run_pipeline_op1",
+        pipeline_name=PIPELINE_NAME,
     )
     # [END howto_operator_adf_run_pipeline]
 
     # [START howto_sensor_pipeline_run_sensor_async]
     pipeline_run_sensor_async = AzureDataFactoryPipelineRunStatusSensorAsync(
         task_id="pipeline_run_sensor_async",
-        run_id=run_pipeline.output["run_id"],
+        run_id=run_pipeline_op1.output["run_id"],
     )
     # [END howto_sensor_pipeline_run_sensor_async]
 
@@ -197,7 +204,8 @@ with DAG(
 
     (
         create_azure_data_factory_storage_pipeline
-        >> run_pipeline
+        >> run_pipeline_op
+        >> run_pipeline_op1
         >> pipeline_run_sensor_async
         >> remove_azure_data_factory_storage_pipeline
     )
