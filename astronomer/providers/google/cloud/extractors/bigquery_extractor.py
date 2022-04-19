@@ -36,14 +36,14 @@ class BigQueryExtractor(BaseExtractor):
 
     @classmethod
     def get_operator_classnames(cls) -> List[str]:
-        return ["BigQueryOperator", "BigQueryExecuteQueryOperator", "BigQueryInsertJobOperatorAsync"]
+        return ["BigQueryInsertJobOperatorAsync"]
 
     def extract(self) -> Optional[TaskMetadata]:
         return None
 
     def extract_on_complete(self, task_instance) -> Optional[TaskMetadata]:
         log.debug(f"extract_on_complete({task_instance})")
-        context = self.parse_sql_context()
+        # context = self.parse_sql_context()
 
         try:
             bigquery_job_id = self._get_xcom_bigquery_job_id(task_instance)
@@ -53,31 +53,31 @@ class BigQueryExtractor(BaseExtractor):
             log.error(f"Cannot retrieve job details from BigQuery.Client. {e}", exc_info=True)
             return TaskMetadata(
                 name=get_job_name(task=self.operator),
-                run_facets={
-                    "bigQuery_error": BigQueryErrorRunFacet(
-                        clientError=f"{e}: {traceback.format_exc()}", parserError=context.parser_error
-                    )
-                },
+                # run_facets={
+                #     "bigQuery_error": BigQueryErrorRunFacet(
+                #         clientError=f"{e}: {traceback.format_exc()}", parserError=context.parser_error
+                #     )
+                # },
             )
 
         stats = BigQueryDatasetsProvider().get_facets(bigquery_job_id)
         inputs = stats.inputs
         output = stats.output
         run_facets = stats.run_facets
-        job_facets = {"sql": SqlJobFacet(context.sql)}
+        # job_facets = {"sql": SqlJobFacet(context.sql)}
 
         return TaskMetadata(
             name=get_job_name(task=self.operator),
             inputs=[ds.to_openlineage_dataset() for ds in inputs],
             outputs=[output.to_openlineage_dataset()] if output else [],
             run_facets=run_facets,
-            job_facets=job_facets,
+            # job_facets=job_facets,
         )
 
     def _get_xcom_bigquery_job_id(self, task_instance):
         bigquery_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="job_id")
 
-        log.debug(f"bigquery_job_id: {bigquery_job_id}")
+        log.info(f"bigquery_job_id: {bigquery_job_id}")
         return bigquery_job_id
 
     def parse_sql_context(self) -> SqlContext:

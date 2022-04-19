@@ -21,11 +21,10 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "5"
     ASTRONOMER_ENVIRONMENT: local
     AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
-    OPENLINEAGE_URL: <YOUR_OPENLINEAGE_URL>
-    OPENLINEAGE_API_KEY: <YOUR_OPENLINEAGE_API_KEY>
-    OPENLINEAGE_NAMESPACE: dev
-    OPENLINEAGE_EXTRACTOR_BIGQUERYINSERTJOBOPERATORASYNC_OPERATOR: |
-      astronomer.providers.google.cloud.extractors.bigquery_extractor.BigQueryExtractor
+    OPENLINEAGE_URL: http://host.docker.internal:5050/
+#    OPENLINEAGE_API_KEY: <YOUR_OPENLINEAGE_API_KEY>
+#    OPENLINEAGE_NAMESPACE: dev
+    OPENLINEAGE_EXTRACTOR_BigQueryInsertJobOperatorAsync: astronomer.providers.google.cloud.extractors.bigquery_extractor.BigQueryExtractor
   volumes:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
