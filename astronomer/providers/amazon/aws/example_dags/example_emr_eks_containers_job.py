@@ -34,6 +34,7 @@ VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "providers-team-vir
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+INSTANCE_TYPE = os.getenv("INSTANCE_TYPE", "m4.large")
 AIRFLOW_HOME = os.getenv("AIRFLOW_HOME", "/usr/local/airflow")
 
 default_args = {
@@ -91,7 +92,7 @@ with DAG(
     schedule_interval=None,
     catchup=False,
     default_args=default_args,
-    tags=["emr_containers", "example"],
+    tags=["emr", "example"],
 ) as dag:
     # Task steps for DAG to be self-sufficient
     setup_aws_config = BashOperator(
@@ -104,7 +105,7 @@ with DAG(
     # Task to create EMR clusters on EKS
     create_EKS_cluster_kube_namespace_with_role = BashOperator(
         task_id="create_EKS_cluster_kube_namespace_with_role",
-        bash_command="sh $AIRFLOW_HOME/dags/example_create_emr_on_eks_cluster.sh ",
+        bash_command="sh $AIRFLOW_HOME/dags/example_create_EKS_kube_namespace_with_role.sh ",
     )
 
     # Task to create EMR virtual cluster
@@ -113,13 +114,9 @@ with DAG(
         python_callable=create_emr_virtual_cluster_func,
     )
 
-    # An example of how to get the cluster id and arn from an Airflow connection
-    # VIRTUAL_CLUSTER_ID = '{{ conn.emr_eks.extra_dejson["virtual_cluster_id"] }}'
-    # JOB_ROLE_ARN = '{{ conn.emr_eks.extra_dejson["job_role_arn"] }}'
-
-    # [START howto_operator_emr_eks_jobrun]
-    job_starter = EmrContainerOperator(
-        task_id="start_job",
+    # [START howto_operator_run_emr_container_job]
+    run_emr_container_job = EmrContainerOperator(
+        task_id="run_emr_container_job",
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         execution_role_arn=JOB_ROLE_ARN,
         release_label="emr-6.2.0-latest",
@@ -129,19 +126,19 @@ with DAG(
     )
     # [END howto_operator_emr_eks_jobrun]
 
-    # [START howto_sensor_emr_container_task]
-    job_container_sensor = EmrContainerSensorAsync(
-        task_id="check_container_sensor",
-        job_id=job_starter.output,
+    # [START howto_sensor_emr_job_container_sensor]
+    emr_job_container_sensor = EmrContainerSensorAsync(
+        task_id="emr_job_container_sensor",
+        job_id=run_emr_container_job.output,
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         poll_interval=5,
         aws_conn_id=AWS_CONN_ID,
     )
-    # [END howto_sensor_emr_container_task]
+    # [END howto_sensor_emr_job_container_sensor]
 
     # Delete clusters, container providers, role, policy
-    remove_clusters_role_policy = BashOperator(
-        task_id="last_step_clean_up_cluster_role_policy",
+    remove_clusters_container_role_policy = BashOperator(
+        task_id="remove_clusters_container_role_policy",
         bash_command="sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
         trigger_rule="all_done",
     )
@@ -150,7 +147,7 @@ with DAG(
         setup_aws_config
         >> create_EKS_cluster_kube_namespace_with_role
         >> create_EMR_virtual_cluster
-        >> job_starter
-        >> job_container_sensor
-        >> remove_clusters_role_policy
+        >> run_emr_container_job
+        >> emr_job_container_sensor
+        >> remove_clusters_container_role_policy
     )

@@ -3,11 +3,11 @@
 # create cluster
 eksctl create cluster \
     --name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
-    --region us-east-2 \
+    --region $AWS_DEFAULT_REGION \
     --with-oidc \
     --ssh-access \
     --ssh-public-key providers_team_keypair \
-    --instance-types=m4.large \
+    --instance-types=$INSTANCE_TYPE \
     --managed
 
 # create kubectl cluster namespace
