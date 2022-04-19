@@ -108,6 +108,13 @@ jobs:
             - mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
             - mypy-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
+          name: Install Dependencies for sasl
+          command: |
+            sudo apt-get install -y --no-install-recommends build-essential
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install libsasl2-dev
+      - run:
           name: Install Dependencies
           command: pip install -U -e .[all,mypy]
       - run:
@@ -132,6 +139,13 @@ jobs:
           keys:
             - docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
             - docs-main-{{ checksum "setup.cfg" }}-{ checksum ".readthedocs.yaml" }}
+      - run:
+          name: Install Dependencies for sasl
+          command: |
+            sudo apt-get install -y --no-install-recommends build-essential
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install libsasl2-dev
       - run:
           name: Install Dependencies
           command: pip install -U -e .[all,docs,mypy]
@@ -163,6 +177,13 @@ jobs:
           keys:
             - deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
             - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+      - run:
+          name: Install Dependencies for sasl
+          command: |
+            sudo apt-get install -y --no-install-recommends build-essential
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install libsasl2-dev
       - run:
           name: Install Dependencies
           command: pip install -U -e .[all,tests]
