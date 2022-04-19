@@ -15,11 +15,12 @@ class HiveCliHookAsync(BaseHook):
         self.conn = self.get_connection(conn_id=conn_id)
 
     def get_hive_client(self) -> HiveServer2Connection:
-        """Makes a connection to the hive client using im library"""
+        """Makes a connection to the hive client using impyla library"""
+        auth_mechanism = self.conn.extra_dejson.get("authMechanism", "PLAIN")
         return connect(
             host=self.conn.host,
             port=self.conn.port,
-            auth_mechanism="PLAIN",
+            auth_mechanism=auth_mechanism,
             user=self.conn.login,
             password=self.conn.password,
         )

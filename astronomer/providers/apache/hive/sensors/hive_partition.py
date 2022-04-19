@@ -13,9 +13,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     Waits for a given partition to show up in Hive.
     Note: HivePartitionSensorAsync uses implya library instead of pyhive
     since pyhive is currently unsupported. Refer https://github.com/dropbox/PyHive.
-    Since we use implya library connection happens for port 10000 rather than
-    9083 which happens on HivePartitionSensor.  So while creating the connection in
-    airflow we need to give port as 10000.
+    Since we use implya library, please set the connection to use the port 10000 instead of 9083
 
     :param table: the table where the partition is present.
     :param partition: The partition clause to wait for. This is passed as

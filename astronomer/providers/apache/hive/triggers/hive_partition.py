@@ -5,8 +5,6 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 
-1
-
 
 class HivePartitionTrigger(BaseTrigger):
     """
@@ -49,7 +47,7 @@ class HivePartitionTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Simple loop until the relevant file/folder is found."""
+        """Simple loop until the relevant table partition is present in the table or wait for it."""
         try:
             hook = self._get_async_hook()
             while True:
@@ -69,7 +67,7 @@ class HivePartitionTrigger(BaseTrigger):
 
     async def _partition_exists(self, hook: HiveCliHookAsync, table: str, schema: str, partition: str) -> str:
         """
-        Checks for the existence of a file in Google Cloud Storage.
+        Checks for the existence of a partition in the given hive table.
 
         :param table: The Google Cloud Storage bucket where the object is.
         :param schema: The name of the blob_name to check in the Google cloud
