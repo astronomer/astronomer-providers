@@ -69,11 +69,10 @@ class HivePartitionTrigger(BaseTrigger):
         """
         Checks for the existence of a partition in the given hive table.
 
-        :param table: The Google Cloud Storage bucket where the object is.
-        :param schema: The name of the blob_name to check in the Google cloud
-            storage bucket.
-        :param partition: The name of the blob_name to check in the Google cloud
-            storage bucket.
+        :param hook: HiveCliHookAsync get connection to hive.
+        :param table: table in hive where the partition exists.
+        :param schema: database where the hive table exists
+        :param partition: partition to check for in given hive database and hive table.
         """
         client = hook.get_hive_client()
         cursor = client.cursor()

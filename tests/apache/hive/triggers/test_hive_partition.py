@@ -40,8 +40,8 @@ def test_hive_partition_trigger_serialization():
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._partition_exists")
-@mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._get_async_hook")
-async def test_hive_partition_trigger_success(mock_get_async_hook, mock_partition_exists):
+@mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
+async def test_hive_partition_trigger_success(mock_get_connection, mock_partition_exists):
     """Tests that the HivePartitionTrigger is success case"""
     mock_partition_exists.return_value = "success"
 
@@ -60,8 +60,8 @@ async def test_hive_partition_trigger_success(mock_get_async_hook, mock_partitio
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._partition_exists")
-@mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._get_async_hook")
-async def test_hive_partition_trigger_pending(mock_get_async_hook, mock_partition_exists):
+@mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
+async def test_hive_partition_trigger_pending(mock_get_connection, mock_partition_exists):
     """Test that HivePartitionTrigger is in loop if partition isn't found."""
     mock_partition_exists.return_value = "pending"
 
@@ -82,8 +82,8 @@ async def test_hive_partition_trigger_pending(mock_get_async_hook, mock_partitio
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._partition_exists")
-@mock.patch("astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger._get_async_hook")
-async def test_gcs_blob_trigger_exception(mock_get_async_hook, mock_partition_exists):
+@mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
+async def test_hive_partition_trigger_exception(mock_get_connection, mock_partition_exists):
     """Tests the HivePartitionTrigger does fire if there is an exception."""
     mock_partition_exists.side_effect = mock.AsyncMock(side_effect=Exception("Test exception"))
     trigger = HivePartitionTrigger(
