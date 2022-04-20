@@ -89,16 +89,26 @@ with DAG(
     )
 
     dag_run_ids = []
+    # AWS S3 and Redshift DAG
     amazon_task_info = [
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
-        {"emr_sensor_dag": "example_emr_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*amazon_trigger_tasks)
 
+    # AWS EMR DAG
+    emr_task_info = [
+        {"emr_sensor_dag": "example_emr_sensor"},
+        {"emr_eks_pi_job_dag", "example_emr_eks_pi_job"},
+    ]
+    emr_trigger_tasks, ids = prepare_dag_dependency(emr_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*emr_trigger_tasks)
+
+    # Google DAG
     google_task_info = [
         {"bigquery_dag": "example_async_bigquery_queries"},
         {"gcs_sensor_dag": "example_async_gcs_sensors"},
@@ -109,6 +119,7 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*google_trigger_tasks)
 
+    # Core DAG
     core_task_info = [
         {"external_task_wait_dag": "test_external_task_async_waits_for_me"},
         {"external_task_dag": "test_external_task_async"},
@@ -118,26 +129,31 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*core_trigger_tasks)
 
+    # CNCF Kubernetes DAG
     kubernetes_task_info = [{"kubernetes_pod_dag": "example_kubernetes_operator"}]
     kubernetes_trigger_tasks, ids = prepare_dag_dependency(kubernetes_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*kubernetes_trigger_tasks)
 
+    # Databricks DAG
     databricks_task_info = [{"databricks_dag": "example_async_databricks"}]
     databricks_trigger_tasks, ids = prepare_dag_dependency(databricks_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*databricks_trigger_tasks)
 
+    # HTTP DAG
     http_task_info = [{"http_dag": "example_async_http_sensor"}]
     http_trigger_tasks, ids = prepare_dag_dependency(http_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*http_trigger_tasks)
 
+    # Snowflake DAG
     snowflake_task_info = [{"snowflake_dag": "example_snowflake"}]
     snowflake_trigger_tasks, ids = prepare_dag_dependency(snowflake_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
 
+    # Apache livy DAG
     livy_task_info = [{"livy_dag": "example_livy_operator"}]
     livy_trigger_tasks, ids = prepare_dag_dependency(livy_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
@@ -157,6 +173,7 @@ with DAG(
 
     start >> [
         amazon_trigger_tasks[0],
+        emr_trigger_tasks[0],
         google_trigger_tasks[0],
         core_trigger_tasks[0],
         kubernetes_trigger_tasks[0],
@@ -168,6 +185,7 @@ with DAG(
 
     last_task = [
         amazon_trigger_tasks[-1],
+        emr_trigger_tasks[-1],
         google_trigger_tasks[-1],
         core_trigger_tasks[-1],
         kubernetes_trigger_tasks[-1],

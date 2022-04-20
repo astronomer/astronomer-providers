@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -8,7 +9,7 @@ from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
 )
 
 namespace = conf.get("kubernetes", "NAMESPACE")
-
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 if namespace == "default":
     config_file = None
@@ -18,7 +19,7 @@ else:
     config_file = None
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 with DAG(

@@ -17,9 +17,10 @@ DATABRICKS_CONN_ID = os.environ.get("ASTRO_DATABRICKS_CONN_ID", "databricks_defa
 notebook_task = '{"notebook_path": "/Users/pankaj.singh@astronomer.io/quick_start"}'
 NOTEBOOK_TASK = json.loads(os.environ.get("DATABRICKS_NOTEBOOK_TASK", notebook_task))
 notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
-    "execution_timeout": timedelta(minutes=10),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 new_cluster = {

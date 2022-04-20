@@ -36,9 +36,10 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 INSTANCE_TYPE = os.getenv("INSTANCE_TYPE", "m4.large")
 AIRFLOW_HOME = os.getenv("AIRFLOW_HOME", "/usr/local/airflow")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 
@@ -87,12 +88,12 @@ CONFIGURATION_OVERRIDES_ARG = {
 # [END howto_operator_emr_eks_config]
 
 with DAG(
-    dag_id="emr_eks_pi_job",
+    dag_id="example_emr_eks_pi_job",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
     default_args=default_args,
-    tags=["emr", "example"],
+    tags=["example", "async", "emr"],
 ) as dag:
     # Task steps for DAG to be self-sufficient
     setup_aws_config = BashOperator(
