@@ -114,7 +114,6 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-            sudo apt-get install libgsasl-dev
       - run:
           name: Install Dependencies
           command: pip install -U -e .[all,mypy]
@@ -147,7 +146,6 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-            sudo apt-get install libgsasl-dev
       - run:
           name: Install Dependencies
           command: pip install -U -e .[all,docs,mypy]
@@ -186,7 +184,6 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-            sudo apt-get install libgsasl-dev
       - run:
           name: Install Dependencies
           command: pip install -U -e .[all,tests]
