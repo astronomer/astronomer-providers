@@ -73,6 +73,18 @@ executors:
       - image: cimg/python:<<parameters.python_version>>
 
 jobs:
+  install-build-essentials:
+    description: "Build Essentials"
+    executor: docker-executor
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt-get install -y --no-install-recommends build-essential
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install libsasl2-dev
+
   static-checks:
     description: "Static checks"
     executor: docker-executor
