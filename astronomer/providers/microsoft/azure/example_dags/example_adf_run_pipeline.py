@@ -118,12 +118,11 @@ def create_adf_storage_pipeline() -> None:
     )
 
     # Create a pipeline with the copy activity
-    params_for_pipeline = {}
-    p_obj = PipelineResource(activities=[copy_activity], parameters=params_for_pipeline)
+    p_obj = PipelineResource(activities=[copy_activity], parameters={})
     adf_client.pipelines.create_or_update(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, PIPELINE_NAME, p_obj)
 
 
-def delete_azure_data_factory_storage_pipeline():
+def delete_azure_data_factory_storage_pipeline() -> None:
     """
     TODO
     - delete data factory, storage linked service pipeline

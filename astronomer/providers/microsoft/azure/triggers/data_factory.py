@@ -27,7 +27,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
         self,
         run_id: str,
         azure_data_factory_conn_id: str,
-        poll_interval: int,
+        poll_interval: float,
         resource_group_name: Optional[str] = None,
         factory_name: Optional[str] = None,
     ):
@@ -56,25 +56,25 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
         hook = AzureDataFactoryHookAsync(azure_data_factory_conn_id=self.azure_data_factory_conn_id)
         try:
             while True:
-                pipeline_status = await hook.get_pipeline_run_status(
+                pipeline_status = await hook.get_adf_pipeline_run_status(
                     run_id=self.run_id,
                     resource_group_name=self.resource_group_name,
                     factory_name=self.factory_name,
                 )
                 if pipeline_status == AzureDataFactoryPipelineRunStatus.FAILED:
                     yield TriggerEvent(
-                        {"status": "error", "message": f"Pipeline run {self.run_id} has failed."}
+                        {"status": "error", "message": f"Pipeline run {self.run_id} has Failed."}
                     )
                     return
                 elif pipeline_status == AzureDataFactoryPipelineRunStatus.CANCELLED:
-                    msg = f"Pipeline run {self.run_id} has been cancelled."
+                    msg = f"Pipeline run {self.run_id} has been Cancelled."
                     yield TriggerEvent({"status": "error", "message": msg})
                     return
                 elif pipeline_status == AzureDataFactoryPipelineRunStatus.SUCCEEDED:
-                    msg = f"Pipeline run {self.run_id} has been succeeded."
+                    msg = f"Pipeline run {self.run_id} has been Succeeded."
                     yield TriggerEvent({"status": "success", "message": msg})
                     return
-                await asyncio.sleep(self.poll_interval)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return

@@ -1,6 +1,8 @@
 from typing import Any, Optional, Union
 
+from airflow import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
+from asgiref.sync import sync_to_async
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.datafactory.aio import DataFactoryManagementClient
 from azure.mgmt.datafactory.models import PipelineRun
@@ -20,12 +22,12 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
         self.conn_id = azure_data_factory_conn_id
         super().__init__()
 
-    def get_async_conn(self):
+    async def get_async_conn(self) -> DataFactoryManagementClient:
         """Get async connection and connect to azure data factory"""
         if self._conn is not None:
             return self._conn
 
-        conn = self.get_connection(self.conn_id)
+        conn = await sync_to_async(self.get_connection)(self.conn_id)
         tenant = conn.extra_dejson.get("extra__azure_data_factory__tenantId")
 
         try:
@@ -63,15 +65,14 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
         :param resource_group_name: The resource group name.
         :param factory_name: The factory name.
         """
-        try:
-            pipeline_run = await self.get_async_conn().pipeline_runs.get(
-                resource_group_name, factory_name, run_id
-            )
-            return pipeline_run
-        except Exception as e:
-            raise e
+        async with await self.get_async_conn() as client:
+            try:
+                pipeline_run = await client.pipeline_runs.get(resource_group_name, factory_name, run_id)
+                return pipeline_run
+            except Exception as e:
+                raise AirflowException(e)
 
-    async def get_pipeline_run_status(
+    async def get_adf_pipeline_run_status(
         self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
     ) -> str:
         """
@@ -87,6 +88,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 factory_name=factory_name,
                 resource_group_name=resource_group_name,
             )
-            return pipeline_run.status
+            status: str = pipeline_run.status
+            return status
         except Exception as e:
-            raise e
+            raise AirflowException(e)
