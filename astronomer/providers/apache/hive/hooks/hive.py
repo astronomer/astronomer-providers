@@ -1,3 +1,4 @@
+"""This module contains the Apache HiveCli hook async."""
 from airflow.hooks.base import BaseHook
 from impala.dbapi import connect
 from impala.hiveserver2 import HiveServer2Connection

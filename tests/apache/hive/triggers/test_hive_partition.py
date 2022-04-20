@@ -3,7 +3,9 @@ from unittest import mock
 
 import pytest
 from airflow.triggers.base import TriggerEvent
+from impala.hiveserver2 import HiveServer2Connection, HiveServer2Cursor
 
+from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
@@ -96,3 +98,34 @@ async def test_hive_partition_trigger_exception(mock_get_connection, mock_partit
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "result,response",
+    [
+        (["123"], "success"),
+        ([], "failure"),
+    ],
+)
+async def test_partition_exists(result, response):
+    """
+    Tests to check if a partition in given table in hive
+    is found or not
+    """
+    hook = mock.AsyncMock(HiveCliHookAsync)
+    hiveserver_connection = mock.AsyncMock(HiveServer2Connection)
+    hook.get_hive_client.return_value = hiveserver_connection
+    cursor = mock.AsyncMock(HiveServer2Cursor)
+    hiveserver_connection.cursor.return_value = cursor
+    cursor.is_executing.return_value = False
+    cursor.fetchall.return_value = result
+    trigger = HivePartitionTrigger(
+        table=TEST_TABLE,
+        partition=TEST_PARTITION,
+        schema=TEST_SCHEMA,
+        polling_period_seconds=TEST_POLLING_INTERVAL,
+        metastore_conn_id=TEST_METASTORE_CONN_ID,
+    )
+    res = await trigger._partition_exists(hook, TEST_TABLE, TEST_SCHEMA, TEST_PARTITION)
+    assert res == response
