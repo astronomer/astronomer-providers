@@ -1,14 +1,19 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.datafactory.aio import DataFactoryManagementClient
+from azure.mgmt.datafactory.models import PipelineRun
 
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 
 
 class AzureDataFactoryHookAsync(AzureDataFactoryHook):
-    """Async AzureDataFactoryHook connects to azure datafactory and execute the pipeline and monitor the pipeline"""
+    """
+    An Async Hook connects to Azure DataFactory to perform pipeline operations
+
+    :param azure_data_factory_conn_id: The :ref:`Azure Data Factory connection id<howto/connection:adf>`.
+    """
 
     def __init__(self, azure_data_factory_conn_id: str):
         self._async_conn: DataFactoryManagementClient = None
@@ -38,31 +43,50 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
             )
         else:
             credential = DefaultAzureCredential()
-        self._async_conn = self._create_client(credential, subscription_id)
 
-        return self._async_conn
-
-    @staticmethod
-    def _create_async_client(credential: Credentials, subscription_id: str):
         return DataFactoryManagementClient(
             credential=credential,
             subscription_id=subscription_id,
         )
 
-    async def get_pipeline_run_status(
-        self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
-    ) -> str:
+    async def get_pipeline_run(
+        self,
+        run_id: str,
+        resource_group_name: Optional[str] = None,
+        factory_name: Optional[str] = None,
+        **config: Any,
+    ) -> PipelineRun:
         """
-        Connect to azure Data factory and gets the pipeline status by run_id
+        Connects to Azure Data Factory asynchronously to get the pipeline run details by run id
 
         :param run_id: The pipeline run identifier.
         :param resource_group_name: The resource group name.
         :param factory_name: The factory name.
         """
-        pipeline_run_status = self.get_pipeline_run(
-            run_id=run_id,
-            factory_name=factory_name,
-            resource_group_name=resource_group_name,
-        ).status
+        try:
+            pipeline_run = await self.get_async_conn().pipeline_runs.get(
+                resource_group_name, factory_name, run_id
+            )
+            return pipeline_run
+        except Exception as e:
+            raise e
 
-        return pipeline_run_status
+    async def get_pipeline_run_status(
+        self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
+    ) -> str:
+        """
+        Connects to Azure Data Factory asynchronously and gets the pipeline status by run_id
+
+        :param run_id: The pipeline run identifier.
+        :param resource_group_name: The resource group name.
+        :param factory_name: The factory name.
+        """
+        try:
+            pipeline_run = await self.get_pipeline_run(
+                run_id=run_id,
+                factory_name=factory_name,
+                resource_group_name=resource_group_name,
+            )
+            return pipeline_run.status
+        except Exception as e:
+            raise e
