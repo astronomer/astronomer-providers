@@ -21,12 +21,18 @@ version_tag_only: &version_tag_only
 workflows:
   test:
     jobs:
+      - install-build-essentials:
+          <<: *all_branches_and_version_tag
       - static-checks:
           <<: *all_branches_and_version_tag
       - mypy:
           <<: *all_branches_and_version_tag
+          requires:
+            - install-build-essentials
       - build-docs:
           <<: *all_branches_and_version_tag
+          requires:
+            - install-build-essentials
       - test:
           name: test-python<< matrix.python_version >>
           matrix:
