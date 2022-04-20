@@ -46,6 +46,7 @@ def context():
 
 
 def _emr_emr_container_operator_init():
+    """Return an instance of EmrContainerOperatorAsync operator"""
     return EmrContainerOperatorAsync(
         task_id="start_job",
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
@@ -59,8 +60,8 @@ def _emr_emr_container_operator_init():
 
 @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
 def test_emr_container_operator_async(check_job_status):
-    check_job_status.return_value = JOB_ID
     """Assert EmrContainerOperatorAsync defer"""
+    check_job_status.return_value = JOB_ID
     with pytest.raises(TaskDeferred) as exc:
         _emr_emr_container_operator_init().execute(context)
 

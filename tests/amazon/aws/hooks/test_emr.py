@@ -16,12 +16,7 @@ AWS_CONN_ID = "aws_default"
 JOB_FLOW_ID = "j-T0CT8Z0C20NT"
 STEP_ID = "s-34RJO0CKERRPL"
 JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::012345678912:role/emr_eks_default_role")
-JOB_NAME = "JOB_NAME"
-EXECUTION_ROLE_ARN = JOB_ROLE_ARN
-RELEASE_LABEL = "emr-6.3.0-latest"
-JOB_DRIVER = {}
-CONFIGURATION_OVERRIDES = {}
-CLIENT_REQUEST_TOKEN = "********"
+JOB_NAME = "test-emr-job"
 
 
 @pytest.mark.asyncio
@@ -295,6 +290,7 @@ def test_job_flow_failure_message_from_response_without_state_change():
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_success(mock_client):
+    """Assert get_job_failure_reason_success failure reason"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
         "jobRun": {
             "failureReason": "Unknown",
@@ -310,6 +306,7 @@ async def test_get_job_failure_reason_success(mock_client):
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_key_error(mock_client):
+    """Assert get_job_failure_reason_key_error return None if failure reason not found"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
         "jobRun": {
             "failureReason": "Unknown",
@@ -323,6 +320,7 @@ async def test_get_job_failure_reason_key_error(mock_client):
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_exception(mock_client):
+    """Assert get_job_failure_reason_exception return None on ClientError"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.side_effect = ClientError(
         {
             "Error": {
