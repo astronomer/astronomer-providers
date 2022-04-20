@@ -8,8 +8,10 @@ from astronomer.providers.core.sensors.filesystem import FileSensorAsync
 
 FS_CONN_ID = os.environ.get("ASTRO_FS_CONN_ID", "fs_default")
 
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 with DAG(

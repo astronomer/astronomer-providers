@@ -21,6 +21,7 @@ PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
 DATASET_NAME = os.environ.get("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
 GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
 LOCATION = os.environ.get("GCP_LOCATION", "us")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "partitioned_table")
 INSERT_DATE = datetime.now().strftime("%Y-%m-%d")
@@ -34,7 +35,7 @@ SCHEMA = [
     {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
 ]
 
-default_args = {"execution_timeout": timedelta(minutes=15), "gcp_conn_id": GCP_CONN_ID}
+default_args = {"execution_timeout": timedelta(hours=EXECUTION_TIMEOUT), "gcp_conn_id": GCP_CONN_ID}
 
 with DAG(
     dag_id="example_bigquery_sensors",

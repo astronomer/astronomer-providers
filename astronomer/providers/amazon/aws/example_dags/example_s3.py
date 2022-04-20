@@ -25,11 +25,12 @@ INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
 AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
     "retry": 5,
     "retry_delay": timedelta(minutes=1),
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 with DAG(

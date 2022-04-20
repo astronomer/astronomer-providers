@@ -27,6 +27,7 @@ CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "example-cluster-astr
 REGION = os.environ.get("GCP_LOCATION", "us-central1")
 ZONE = os.environ.get("GCP_REGION", "us-central1-a")
 BUCKET = os.environ.get("GCP_DATAPROC_BUCKET", "dataproc-system-tests-astronomer-providers")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 OUTPUT_FOLDER = "wordcount"
 OUTPUT_PATH = f"gs://{BUCKET}/{OUTPUT_FOLDER}/"
 
@@ -143,7 +144,7 @@ WORKFLOW_TEMPLATE = {
 }
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 

@@ -19,7 +19,7 @@ JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
 EMR_CONN_ID = os.getenv("ASTRO_EMR_CONN_ID", "emr_default")
-
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 SPARK_STEPS = [
     {
@@ -54,7 +54,7 @@ JOB_FLOW_OVERRIDES = {
 }
 
 DEFAULT_ARGS = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 

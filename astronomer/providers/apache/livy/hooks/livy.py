@@ -239,10 +239,9 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         log_batch_size = 100
 
         while log_start_line <= log_total_lines:
-            # Livy log  endpoint is paginated.
+            # Livy log endpoint is paginated.
             result = await self.get_batch_logs(session_id, log_start_line, log_batch_size)
             if result["status"] == "success":
-                log_total_lines = self._parse_request_response(result["response"], "total")
                 log_start_line += log_batch_size
                 log_lines = self._parse_request_response(result["response"], "log")
                 for log_line in log_lines:
