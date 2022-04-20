@@ -44,6 +44,7 @@ class EmrContainerHookAsync(AwsBaseHookAsync):
     async def get_job_failure_reason(self, job_id: str) -> Optional[str]:
         """
         Fetch the reason for a job failure (e.g. error message). Returns None or reason string.
+
         :param job_id: Id of submitted job run
         :return: str
         """

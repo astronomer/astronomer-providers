@@ -290,7 +290,7 @@ def test_job_flow_failure_message_from_response_without_state_change():
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_success(mock_client):
-    """Assert get_job_failure_reason_success failure reason"""
+    """Assert get_job_failure_reason return failure reason as string"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
         "jobRun": {
             "failureReason": "Unknown",
@@ -306,7 +306,7 @@ async def test_get_job_failure_reason_success(mock_client):
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_key_error(mock_client):
-    """Assert get_job_failure_reason_key_error return None if failure reason not found"""
+    """Assert get_job_failure_reason return None if failure reason not found"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
         "jobRun": {
             "failureReason": "Unknown",
@@ -320,7 +320,7 @@ async def test_get_job_failure_reason_key_error(mock_client):
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
 async def test_get_job_failure_reason_exception(mock_client):
-    """Assert get_job_failure_reason_exception return None on ClientError"""
+    """Assert get_job_failure_reason return None on ClientError"""
     mock_client.return_value.__aenter__.return_value.describe_job_run.side_effect = ClientError(
         {
             "Error": {
