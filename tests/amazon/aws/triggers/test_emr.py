@@ -379,7 +379,6 @@ async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
     :return:
     """
     MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
-    print("MOCK_FAILED_RESPONSE ", MOCK_FAILED_RESPONSE)
     mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
     trigger = EmrJobFlowSensorTrigger(
         job_flow_id=JOB_ID,
@@ -394,8 +393,6 @@ async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
     error_code = "1111"
     msg = f"for code: {error_code} with message Failed"
     final_message += " " + msg
-    print("final_message ", final_message)
-    print("task ", task)
     assert TriggerEvent({"status": "error", "message": final_message}) in task
 
 
@@ -452,7 +449,7 @@ def test_emr_container_operator_trigger_serialization():
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
 async def test_emr_container_operator_trigger_run(mock_query_status, mock_status):
-    """Assert EmrContainerOperatorTrigger sleep"""
+    """Assert EmrContainerOperatorTrigger task run in trigger and sleep if state is intermediate"""
     mock_query_status.return_value = mock_status
     trigger = EmrContainerOperatorTrigger(
         name=NAME,
