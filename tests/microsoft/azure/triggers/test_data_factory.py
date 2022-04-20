@@ -69,7 +69,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_run(mock_data_factory, mo
     await asyncio.sleep(0.5)
 
     # TriggerEvent was not returned
-    assert task.done() is True
+    assert task.done() is False
     asyncio.get_event_loop().stop()
 
 

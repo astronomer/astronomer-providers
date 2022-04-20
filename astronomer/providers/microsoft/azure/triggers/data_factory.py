@@ -74,7 +74,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
                     msg = f"Pipeline run {self.run_id} has been Succeeded."
                     yield TriggerEvent({"status": "success", "message": msg})
                     return
-                await asyncio.sleep(self.poke_interval)
+                await asyncio.sleep(self.poll_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
