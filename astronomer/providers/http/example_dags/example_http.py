@@ -9,7 +9,7 @@ from astronomer.providers.http.sensors.http import HttpSensorAsync
 HTTP_CONN_ID = os.environ.get("ASTRO_HTTP_CONN_ID", "http_default")
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 

@@ -19,7 +19,7 @@ NOTEBOOK_TASK = json.loads(os.environ.get("DATABRICKS_NOTEBOOK_TASK", notebook_t
 notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
 
 default_args = {
-    "execution_timeout": timedelta(minutes=10),
+    "execution_timeout": timedelta(hours=6),
 }
 
 new_cluster = {

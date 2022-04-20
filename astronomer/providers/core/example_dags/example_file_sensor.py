@@ -9,7 +9,7 @@ from astronomer.providers.core.sensors.filesystem import FileSensorAsync
 FS_CONN_ID = os.environ.get("ASTRO_FS_CONN_ID", "fs_default")
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

@@ -29,7 +29,7 @@ AWS_CONN_ID = os.environ.get("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
 default_args = {
     "retry": 5,
     "retry_delay": timedelta(minutes=1),
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

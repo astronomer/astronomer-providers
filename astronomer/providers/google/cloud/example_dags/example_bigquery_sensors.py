@@ -34,7 +34,7 @@ SCHEMA = [
     {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
 ]
 
-default_args = {"execution_timeout": timedelta(minutes=15), "gcp_conn_id": GCP_CONN_ID}
+default_args = {"execution_timeout": timedelta(hours=6), "gcp_conn_id": GCP_CONN_ID}
 
 with DAG(
     dag_id="example_bigquery_sensors",

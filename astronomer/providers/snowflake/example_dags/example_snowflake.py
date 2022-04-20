@@ -23,7 +23,7 @@ SNOWFLAKE_SLACK_MESSAGE = (
     "Results in an ASCII table:\n```{{ results_df | tabulate(tablefmt='pretty', headers='keys') }}```"
 )
 
-default_args = {"execution_timeout": timedelta(minutes=30), "snowflake_conn_id": SNOWFLAKE_CONN_ID}
+default_args = {"execution_timeout": timedelta(hours=6), "snowflake_conn_id": SNOWFLAKE_CONN_ID}
 
 with DAG(
     dag_id="example_snowflake",

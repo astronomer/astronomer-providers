@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.sensors.time_sensor import TimeSensorAsync
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

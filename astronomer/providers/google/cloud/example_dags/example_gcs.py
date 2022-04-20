@@ -27,7 +27,7 @@ PATH_TO_UPLOAD_FILE_PREFIX = "example_"
 BUCKET_FILE_LOCATION = "example_gcs.py"
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

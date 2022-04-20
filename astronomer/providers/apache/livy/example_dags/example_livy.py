@@ -6,7 +6,7 @@ using the Java and Python executables provided in the example library.
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, List
 
 import boto3
@@ -232,12 +232,17 @@ def get_cluster_details(task_instance: Any) -> None:
     )
 
 
+default_args = {
+    "execution_timeout": timedelta(hours=6),
+}
+
 with DAG(
     dag_id="example_livy_operator",
     schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=["example", "async", "deferrable", "LivyOperatorAsync"],
+    default_args=default_args,
+    tags=["example", "async", "livy"],
 ) as dag:
     # [START howto_create_key_pair_file]
     create_key_pair_file = PythonOperator(

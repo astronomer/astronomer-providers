@@ -93,11 +93,18 @@ with DAG(
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
-        {"emr_sensor_dag": "example_emr_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*amazon_trigger_tasks)
+
+    emr_task_info = [
+        {"emr_sensor_dag": "example_emr_sensor"},
+        {"emr_eks_pi_job_dag", "example_emr_eks_pi_job"},
+    ]
+    emr_trigger_tasks, ids = prepare_dag_dependency(emr_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*emr_trigger_tasks)
 
     google_task_info = [
         {"bigquery_dag": "example_async_bigquery_queries"},
@@ -157,6 +164,7 @@ with DAG(
 
     start >> [
         amazon_trigger_tasks[0],
+        emr_trigger_tasks[0],
         google_trigger_tasks[0],
         core_trigger_tasks[0],
         kubernetes_trigger_tasks[0],
@@ -168,6 +176,7 @@ with DAG(
 
     last_task = [
         amazon_trigger_tasks[-1],
+        emr_trigger_tasks[-1],
         google_trigger_tasks[-1],
         core_trigger_tasks[-1],
         kubernetes_trigger_tasks[-1],

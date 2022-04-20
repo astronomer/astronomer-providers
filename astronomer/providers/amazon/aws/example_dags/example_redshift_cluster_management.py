@@ -30,7 +30,7 @@ AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 

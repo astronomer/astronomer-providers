@@ -54,7 +54,7 @@ JOB_FLOW_OVERRIDES = {
 }
 
 DEFAULT_ARGS = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 

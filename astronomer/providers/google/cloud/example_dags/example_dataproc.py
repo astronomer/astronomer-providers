@@ -143,7 +143,7 @@ WORKFLOW_TEMPLATE = {
 }
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 

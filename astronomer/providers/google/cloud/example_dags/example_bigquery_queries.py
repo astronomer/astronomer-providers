@@ -44,7 +44,7 @@ INSERT_ROWS_QUERY = (
 )
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

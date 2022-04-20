@@ -19,7 +19,7 @@ from airflow.utils.timezone import datetime
 from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=6),
 }
 
 with DAG(

@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:4.2.4-base
+FROM quay.io/astronomer/ap-airflow:2.2.4
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
 
