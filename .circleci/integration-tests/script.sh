@@ -22,7 +22,7 @@ function clean() {
   find  . -name "example_*" -exec rm {} \;
 }
 
-if [ "$1" == "-h" ] || [ "$#" -ne 3 ]; then
+if [ "$1" == "-h" ] || [ "$#" -ne 4 ]; then
   echo_help
   exit
 fi
@@ -30,6 +30,7 @@ fi
 BASE_DOMAIN=$1
 RELEASE_NAME=$2
 ASTRO_API_KEY=$3
+DEPLOYMENT_TARGET=$4
 
 clean
 
@@ -47,7 +48,7 @@ for dag in $(find "${PROVIDER_PATH}" -type f -name 'example_*'); do cp "${dag}" 
 # Build image and deploy
 BUILD_NUMBER=`awk 'BEGIN {srand(); print srand()}'`
 IMAGE_NAME=registry.${BASE_DOMAIN}/${RELEASE_NAME}/airflow:ci-${BUILD_NUMBER}
-docker build -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile "${SCRIPT_PATH}"
+docker build --target "${DEPLOYMENT_TARGET}" -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile "${SCRIPT_PATH}"
 docker login registry.staging.astronomer.io  -u _ -p "${ASTRO_API_KEY}"
 docker push "${IMAGE_NAME}"
 

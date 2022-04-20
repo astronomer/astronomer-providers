@@ -36,9 +36,10 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 INSTANCE_TYPE = os.getenv("INSTANCE_TYPE", "m4.large")
 AIRFLOW_HOME = os.getenv("AIRFLOW_HOME", "/usr/local/airflow")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
-    "execution_timeout": timedelta(hours=6),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 

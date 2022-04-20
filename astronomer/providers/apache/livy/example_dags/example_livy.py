@@ -28,6 +28,7 @@ JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 PEM_FILENAME = os.environ.get("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 AWS_S3_CREDS = {
     "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY", "sample_aws_access_key_id"),
@@ -233,7 +234,7 @@ def get_cluster_details(task_instance: Any) -> None:
 
 
 default_args = {
-    "execution_timeout": timedelta(hours=6),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 with DAG(
