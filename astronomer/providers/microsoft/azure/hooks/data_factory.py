@@ -20,7 +20,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     def __init__(self, azure_data_factory_conn_id: str):
         self._async_conn: DataFactoryManagementClient = None
         self.conn_id = azure_data_factory_conn_id
-        super().__init__()
+        super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
 
     async def get_async_conn(self) -> DataFactoryManagementClient:
         """Get async connection and connect to azure data factory"""

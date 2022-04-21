@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from datetime import datetime, timedelta
@@ -40,17 +41,17 @@ CLIENT_ID = os.getenv("CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
 TENANT_ID = os.getenv("TENANT_ID", "")
 SUBSCRIPTION_ID = os.getenv("SUBSCRIPTION_ID", "")
-RESOURCE_GROUP_NAME = os.getenv("REGION_NAME", "")
+RESOURCE_GROUP_NAME = os.getenv("RESOURCE_GROUP_NAME", "")
 DATAFACTORY_NAME = os.getenv("DATAFACTORY_NAME", "")
 LOCATION = os.getenv("LOCATION", "eastus")
 CONNECTION_STRING = os.getenv("CONNECTION_STRING", "")
-PIPELINE_NAME = os.getenv("PIPELINE_NAME", "copyPipeline")
+PIPELINE_NAME = os.getenv("PIPELINE_NAME", "pipeline1")
 ACTIVITY_NAME = os.getenv("ACTIVITY_NAME", "copyBlobtoBlob")
 DATASET_INPUT_NAME = os.getenv("DATASET_INPUT_NAME", "ds_in")
 DATASET_OUTPUT_NAME = os.getenv("DATASET_OUTPUT_NAME", "ds_out")
-BLOB_FILE_NAME = os.getenv("BLOB_FILE_NAME", "")
-OUTPUT_BLOB_PATH = os.getenv("OUTPUT_BLOB_PATH", "<container>/<folder path>")
-BLOB_PATH = os.getenv("BLOB_PATH", "<container>/<folder path>")
+BLOB_FILE_NAME = os.getenv("BLOB_FILE_NAME", "test.txt")
+OUTPUT_BLOB_PATH = os.getenv("OUTPUT_BLOB_PATH", "container1/output")
+BLOB_PATH = os.getenv("BLOB_PATH", "container1/input")
 STORAGE_LINKED_SERVICE_NAME = os.getenv("STORAGE_LINKED_SERVICE_NAME", "storageLinkedService001")
 rg_params = {"location": LOCATION}
 df_params = {"location": LOCATION}
@@ -65,8 +66,12 @@ def create_adf_storage_pipeline() -> None:
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET, tenant_id=TENANT_ID
     )
     resource_client = ResourceManagementClient(credentials, SUBSCRIPTION_ID)
-    resource_group_exist = resource_client.resource_groups.get(RESOURCE_GROUP_NAME)
-    if not resource_group_exist.id:
+    resource_group_exist = None
+    try:
+        resource_group_exist = resource_client.resource_groups.get(RESOURCE_GROUP_NAME)
+    except Exception:
+        logging.info("Resource group not found, so creating one")
+    if not resource_group_exist:
         resource_client.resource_groups.create_or_update(RESOURCE_GROUP_NAME, rg_params)
 
     # Create a data factory
@@ -123,10 +128,35 @@ def create_adf_storage_pipeline() -> None:
 
 
 def delete_azure_data_factory_storage_pipeline() -> None:
-    """
-    TODO
-    - delete data factory, storage linked service pipeline
-    """
+    """Delete data factory, storage linked service pipeline, dataset"""
+    credentials = ClientSecretCredential(
+        client_id=CLIENT_ID, client_secret=CLIENT_SECRET, tenant_id=TENANT_ID
+    )
+    # create resource client
+    resource_client = ResourceManagementClient(credentials, SUBSCRIPTION_ID)
+
+    # create Data factory client
+    adf_client = DataFactoryManagementClient(credentials, SUBSCRIPTION_ID)
+
+    # Delete pipeline
+    adf_client.pipelines.delete(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, PIPELINE_NAME)
+
+    # Delete input dataset
+    adf_client.datasets.delete(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, DATASET_INPUT_NAME)
+
+    # Delete output dataset
+    adf_client.datasets.delete(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, DATASET_OUTPUT_NAME)
+
+    # Delete Linked services
+    adf_client.linked_services.delete(
+        RESOURCE_GROUP_NAME, DATAFACTORY_NAME, linked_service_name=STORAGE_LINKED_SERVICE_NAME
+    )
+
+    # Delete Data factory
+    adf_client.factories.delete(RESOURCE_GROUP_NAME, DATAFACTORY_NAME)
+
+    # Delete Resource Group
+    resource_client.resource_groups.begin_delete(RESOURCE_GROUP_NAME)
 
 
 with DAG(
@@ -148,7 +178,7 @@ with DAG(
     run_pipeline = AzureDataFactoryRunPipelineOperator(
         task_id="run_pipeline",
         pipeline_name=PIPELINE_NAME,
-        parameters={"myParam": "value"},
+        wait_for_termination=False,
     )
     # [END howto_operator_adf_run_pipeline]
 
@@ -162,6 +192,7 @@ with DAG(
     remove_azure_data_factory_storage_pipeline = PythonOperator(
         task_id="remove_azure_data_factory_storage_pipeline",
         python_callable=delete_azure_data_factory_storage_pipeline,
+        trigger_rule="all_done",
     )
 
     (
