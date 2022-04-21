@@ -23,14 +23,6 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     :param polling_interval: The interval in seconds to wait between checks for partition.
     """
 
-    def __init__(
-        self,
-        polling_interval: float = 5,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(**kwargs)
-        self.polling_interval = polling_interval
-
     def execute(self, context: Dict[str, Any]) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
@@ -39,7 +31,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
                 table=self.table,
                 schema=self.schema,
                 partition=self.partition,
-                polling_period_seconds=self.polling_interval,
+                polling_interval=self.poke_interval,
                 metastore_conn_id=self.metastore_conn_id,
             ),
             method_name="execute_complete",

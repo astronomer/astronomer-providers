@@ -22,14 +22,14 @@ class HivePartitionTrigger(BaseTrigger):
         self,
         table: str,
         partition: str,
-        polling_period_seconds: float,
+        polling_interval: float,
         metastore_conn_id: str,
         schema: str,
     ):
         super().__init__()
         self.table = table
         self.partition = partition
-        self.polling_period_seconds = polling_period_seconds
+        self.polling_interval = polling_interval
         self.metastore_conn_id: str = metastore_conn_id
         self.schema = schema
 
@@ -40,7 +40,7 @@ class HivePartitionTrigger(BaseTrigger):
             {
                 "table": self.table,
                 "partition": self.partition,
-                "polling_period_seconds": self.polling_period_seconds,
+                "polling_interval": self.polling_interval,
                 "metastore_conn_id": self.metastore_conn_id,
                 "schema": self.schema,
             },
@@ -51,36 +51,19 @@ class HivePartitionTrigger(BaseTrigger):
         try:
             hook = self._get_async_hook()
             while True:
-                res = await self._partition_exists(
-                    hook=hook, table=self.table, schema=self.schema, partition=self.partition
+                res = await hook.partition_exists(
+                    table=self.table,
+                    schema=self.schema,
+                    partition=self.partition,
+                    polling_interval=self.polling_interval,
                 )
                 if res == "success":
                     yield TriggerEvent({"status": "success", "message": res})
                     return
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.polling_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
 
     def _get_async_hook(self) -> HiveCliHookAsync:
-        return HiveCliHookAsync(conn_id=self.metastore_conn_id)
-
-    async def _partition_exists(self, hook: HiveCliHookAsync, table: str, schema: str, partition: str) -> str:
-        """
-        Checks for the existence of a partition in the given hive table.
-
-        :param hook: HiveCliHookAsync get connection to hive.
-        :param table: table in hive where the partition exists.
-        :param schema: database where the hive table exists
-        :param partition: partition to check for in given hive database and hive table.
-        """
-        client = hook.get_hive_client()
-        cursor = client.cursor()
-        query = f"show partitions {schema}.{table} partition({partition})"
-        cursor.execute_async(query)
-        while cursor.is_executing():
-            asyncio.sleep(self.polling_period_seconds)
-        results = cursor.fetchall()
-        if len(results) == 0:
-            return "failure"
-        return "success"
+        return HiveCliHookAsync(metastore_conn_id=self.metastore_conn_id)
