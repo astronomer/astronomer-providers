@@ -74,7 +74,7 @@ JOB_FLOW_OVERRIDES = {
 }
 
 
-def create_hive_metastore_airflow_connection(task_instance: Any) -> None:
+def create_airflow_connection_for_hive_metastore_(task_instance: Any) -> None:
     """
     Checks if airflow connection exists, if yes then deletes it.
     Then, create a new metastore_default connection.
@@ -105,7 +105,7 @@ def create_hive_metastore_airflow_connection(task_instance: Any) -> None:
     logging.info("Connection metastore_default is created")
 
 
-def create_hive_cli_airflow_connection(task_instance: Any) -> None:
+def create_airflow_connection_for_hive_cli(task_instance: Any) -> None:
     """
     Checks if airflow connection exists, if yes then deletes it.
     Then, create a new metastore_default connection.
@@ -316,14 +316,14 @@ with DAG(
 
     # [START create_hive_cli_airflow_connection]
     create_hive_cli_airflow_connection = PythonOperator(
-        task_id="create_hive_cli_airflow_connection", python_callable=create_hive_cli_airflow_connection
+        task_id="create_hive_cli_airflow_connection", python_callable=create_airflow_connection_for_hive_cli
     )
     # [END create_hive_cli_airflow_connection]
 
     # [START create_hive_metastore_airflow_connection]
     create_hive_metastore_airflow_connection = PythonOperator(
         task_id="create_hive_metastore_airflow_connection",
-        python_callable=create_hive_metastore_airflow_connection,
+        python_callable=create_airflow_connection_for_hive_metastore_,
     )
     # [END create_hive_metastore_airflow_connection]
 
