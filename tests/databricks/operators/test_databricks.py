@@ -94,13 +94,15 @@ def test_databricks_run_now_execute_complete():
     )
     operator.run_page_url = RUN_PAGE_URL
     with mock.patch.object(operator.log, "info") as mock_log_info:
-        operator.execute_complete(create_context(operator), {})
+        operator.execute_complete(create_context(operator), {"status": "success", "message": "success"})
     mock_log_info.assert_called_with("%s completed successfully.", "databricks_check")
 
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_run_now_execute_complete_error(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_execute_complete_error(
+    submit_run_response, get_run_page_url_response, context
+):
     """
     Asserts that a task is completed with success status.
     """
@@ -112,6 +114,25 @@ def test_databricks_run_now_execute_complete_error(submit_run_response, get_run_
         databricks_conn_id=CONN_ID,
         existing_cluster_id="xxxx-xxxxxx-xxxxxx",
         notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+    )
+
+    with pytest.raises(AirflowException):
+        operator.execute_complete(context={}, event={"status": "error", "message": "error"})
+
+
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+def test_databricks_run_now_execute_complete_error(submit_run_response, get_run_page_url_response, context):
+    """
+    Asserts that a task is completed with success status.
+    """
+    submit_run_response.return_value = {"run_id": RUN_ID}
+    get_run_page_url_response.return_value = RUN_PAGE_URL
+
+    operator = DatabricksRunNowOperatorAsync(
+        task_id="submit_run",
+        databricks_conn_id=CONN_ID,
+        job_id="12345",
     )
 
     with pytest.raises(AirflowException):
@@ -141,7 +162,9 @@ def create_context(task):
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_run_now_execute_complete_success(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_execute_complete_success(
+    submit_run_response, get_run_page_url_response, context
+):
     """
     Asserts that a task is completed with success status.
     """
@@ -153,6 +176,37 @@ def test_databricks_run_now_execute_complete_success(submit_run_response, get_ru
         databricks_conn_id=CONN_ID,
         existing_cluster_id="xxxx-xxxxxx-xxxxxx",
         notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        do_xcom_push=True,
+    )
+
+    assert (
+        operator.execute_complete(
+            context=create_context(operator),
+            event={
+                "status": "success",
+                "message": "success",
+                "job_id": "12345",
+                "run_id": RUN_ID,
+                "run_page_url": RUN_PAGE_URL,
+            },
+        )
+        is None
+    )
+
+
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+@mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+def test_databricks_run_now_execute_complete_success(submit_run_response, get_run_page_url_response, context):
+    """
+    Asserts that a task is completed with success status.
+    """
+    submit_run_response.return_value = {"run_id": RUN_ID}
+    get_run_page_url_response.return_value = RUN_PAGE_URL
+
+    operator = DatabricksRunNowOperatorAsync(
+        task_id="submit_run",
+        databricks_conn_id=CONN_ID,
+        job_id="12345",
         do_xcom_push=True,
     )
 
