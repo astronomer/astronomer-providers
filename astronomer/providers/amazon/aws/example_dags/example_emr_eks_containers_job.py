@@ -6,9 +6,9 @@ import boto3
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
 from botocore.exceptions import ClientError
 
+from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
 # [START howto_operator_emr_eks_env_variables]
@@ -116,7 +116,7 @@ with DAG(
     )
 
     # [START howto_operator_run_emr_container_job]
-    run_emr_container_job = EmrContainerOperator(
+    run_emr_container_job = EmrContainerOperatorAsync(
         task_id="run_emr_container_job",
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         execution_role_arn=JOB_ROLE_ARN,

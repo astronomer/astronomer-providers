@@ -22,7 +22,7 @@ REDSHIFT_CLUSTER_TYPE = os.environ.get("REDSHIFT_CLUSTER_TYPE", "single-node")
 REDSHIFT_CLUSTER_NODE_TYPE = os.environ.get("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "**********")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "***********")
-AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-2")
 REDSHIFT_CLUSTER_DB_NAME = os.environ.get("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 

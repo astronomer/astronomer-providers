@@ -239,4 +239,4 @@ jobs:
           name: Deploy
           command: |
             cd .circleci/integration-tests
-            bash script.sh $ASTRO_BASE_DOMAIN $ASTRO_RELEASE_NAME $ASTRO_API_KEY
+            bash script.sh $DEPLOYMENT_INSTANCE $ASTRO_BASE_DOMAIN $ASTRO_RELEASE_NAME $ASTRO_API_KEY
