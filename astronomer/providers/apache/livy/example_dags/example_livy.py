@@ -31,9 +31,9 @@ PRIVATE_KEY = Variable.get("providers_team_keypair")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY", "sample_aws_access_key_id"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_KEY", "sample_aws_secret_access_key"),
-    "region_name": os.environ.get("AWS_REGION_NAME", "us-east-2"),
+    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "sample_aws_access_key_id"),
+    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "sample_aws_secret_access_key"),
+    "region_name": os.environ.get("AWS_DEFAULT_REGION", "us-east-2"),
 }
 
 COMMAND_TO_CREATE_PI_FILE: List[str] = [
