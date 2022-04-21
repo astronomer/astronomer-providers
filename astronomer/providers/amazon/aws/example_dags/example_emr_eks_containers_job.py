@@ -106,7 +106,7 @@ with DAG(
     # Task to create EMR clusters on EKS
     create_EKS_cluster_kube_namespace_with_role = BashOperator(
         task_id="create_EKS_cluster_kube_namespace_with_role",
-        bash_command="sh $AIRFLOW_HOME/dags/example_create_EKS_kube_namespace_with_role.sh ",
+        bash_command="sh $AIRFLOW_HOME/dags/example_create_eks_kube_namespace_with_role.sh ",
     )
 
     # Task to create EMR virtual cluster

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# create cluster
+# Make the script exit with the status if one of the commands fails. Without this, the Airflow task calling this script
+# will be marked as 'success' and the DAG will proceed on to the subsequent tasks.
+set -e
+
+# Create EKS cluster.
 eksctl create cluster \
     --name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
     --region $AWS_DEFAULT_REGION \
@@ -10,7 +14,7 @@ eksctl create cluster \
     --instance-types=$INSTANCE_TYPE \
     --managed
 
-# create kubectl cluster namespace
+# Create kubectl cluster namespace.
 kubectl create namespace $KUBECTL_CLUSTER_NAME
 
 eksctl create iamidentitymapping \
