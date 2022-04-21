@@ -42,7 +42,7 @@ def test_hive_partition_trigger_serialization():
 @mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.partition_exists")
 @mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
 async def test_hive_partition_trigger_success(mock_get_connection, mock_partition_exists):
-    """Tests that the HivePartitionTrigger is success case"""
+    """Tests that the HivePartitionTrigger is success case when a partition exists in the given table"""
     mock_partition_exists.return_value = "success"
 
     trigger = HivePartitionTrigger(
