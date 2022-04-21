@@ -8,7 +8,7 @@ from impala.hiveserver2 import HiveServer2Connection
 
 class HiveCliHookAsync(BaseHook):
     """
-    Wrapper to interact with the Hive using impyla library
+    HiveCliHookAsync to interact with the Hive using impyla library
 
     :param metastore_conn_id: connection string for the hive
     :param auth_mechanism: auth mechanism to use for authentication
