@@ -100,7 +100,9 @@ def test_databricks_run_now_execute_complete():
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_submit_run_execute_complete_error(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_execute_complete_error(
+    submit_run_response, get_run_page_url_response, context
+):
     """
     Asserts that a task is completed with success status.
     """
@@ -160,7 +162,9 @@ def create_context(task):
 
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
 @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-def test_databricks_submit_run_execute_complete_success(submit_run_response, get_run_page_url_response, context):
+def test_databricks_submit_run_execute_complete_success(
+    submit_run_response, get_run_page_url_response, context
+):
     """
     Asserts that a task is completed with success status.
     """
