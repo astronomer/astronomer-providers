@@ -27,6 +27,9 @@ clean: ## Remove all the containers along with volumes
 build: ## Build the Docker image (ignoring cache)
 	docker build -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
 
+build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS containers example DAG (ignoring cache)
+	docker build -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest --no-cache
+
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
 
@@ -59,4 +62,4 @@ run-mypy: ## Run MyPy in Container
 		-- mypy --install-types --cache-dir /home/astro/.cache/.mypy_cache $(RUN_ARGS)
 
 help: ## Prints this message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
