@@ -166,7 +166,7 @@ with DAG(
     chain(*hive_trigger_tasks)
 
     # microsoft Azure Data factory pipeline DAG
-    adf_pipeline_task_info = [{"adf_pipeline_dag": "example_adf_run_pipeline"}]
+    adf_pipeline_task_info = [{"adf_pipeline_dag": "example_async_adf_run_pipeline"}]
     adf_pipeline_trigger_tasks, ids = prepare_dag_dependency(adf_pipeline_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*adf_pipeline_trigger_tasks)

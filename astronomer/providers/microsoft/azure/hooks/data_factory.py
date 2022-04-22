@@ -1,6 +1,6 @@
 from typing import Any, Optional, Union
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
 from asgiref.sync import sync_to_async
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
