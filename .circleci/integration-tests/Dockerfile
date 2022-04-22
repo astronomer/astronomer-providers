@@ -6,6 +6,11 @@ USER root
 RUN apt-get update -y \
     && apt-get install -y git \
     && apt-get install -y unzip \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libsasl2-2 \
+        libsasl2-dev \
+        libsasl2-modules \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -44,6 +49,11 @@ USER root
 RUN apt-get update -y \
     && apt-get install -y git \
     && apt-get install -y unzip \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libsasl2-2 \
+        libsasl2-dev \
+        libsasl2-modules \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
