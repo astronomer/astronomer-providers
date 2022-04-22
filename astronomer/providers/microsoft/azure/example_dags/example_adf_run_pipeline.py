@@ -33,8 +33,8 @@ from astronomer.providers.microsoft.azure.sensors.data_factory import (
 default_args = {
     "execution_timeout": timedelta(minutes=30),
     "azure_data_factory_conn_id": "azure_data_factory_default",
-    "factory_name": "ADFProvidersTeamDataFactory",  # This can also be specified in the ADF connection.
-    "resource_group_name": "team_provider_resource_group_test",  # This can also be specified in the ADF connection.
+    "factory_name": "ADFProvidersTeamDataFactoryTest",  # This can also be specified in the ADF connection.
+    "resource_group_name": "team_provider_resource_group_test_1",  # This can also be specified in the ADF connection.
 }
 
 CLIENT_ID = os.getenv("CLIENT_ID", "")
