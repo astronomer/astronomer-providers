@@ -7,9 +7,10 @@ from airflow.utils.timezone import datetime
 from astronomer.providers.http.sensors.http import HttpSensorAsync
 
 HTTP_CONN_ID = os.environ.get("ASTRO_HTTP_CONN_ID", "http_default")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 

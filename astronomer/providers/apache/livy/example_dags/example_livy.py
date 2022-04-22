@@ -6,7 +6,7 @@ using the Java and Python executables provided in the example library.
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, List
 
 import boto3
@@ -28,11 +28,12 @@ JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 PEM_FILENAME = os.environ.get("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY", "sample_aws_access_key_id"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_KEY", "sample_aws_secret_access_key"),
-    "region_name": os.environ.get("AWS_REGION_NAME", "us-east-2"),
+    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "sample_aws_access_key_id"),
+    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "sample_aws_secret_access_key"),
+    "region_name": os.environ.get("AWS_DEFAULT_REGION", "us-east-2"),
 }
 
 COMMAND_TO_CREATE_PI_FILE: List[str] = [
@@ -232,12 +233,17 @@ def get_cluster_details(task_instance: Any) -> None:
     )
 
 
+default_args = {
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+}
+
 with DAG(
     dag_id="example_livy_operator",
     schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=["example", "async", "deferrable", "LivyOperatorAsync"],
+    default_args=default_args,
+    tags=["example", "async", "livy"],
 ) as dag:
     # [START howto_create_key_pair_file]
     create_key_pair_file = PythonOperator(
