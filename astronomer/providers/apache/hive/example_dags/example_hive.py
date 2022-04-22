@@ -37,7 +37,7 @@ EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 COMMAND_TO_CREATE_TABLE_DATA_FILE: List[str] = [
     "curl https://raw.githubusercontent.com/astronomer/astronomer-providers/\
-implement-async-hivepartitionsensor/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
+main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
  >> zipcodes.csv",
     "hdfs dfs -put zipcodes.csv /user/root",
 ]
