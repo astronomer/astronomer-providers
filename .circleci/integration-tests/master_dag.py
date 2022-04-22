@@ -163,6 +163,11 @@ with DAG(
     hive_trigger_tasks, ids = prepare_dag_dependency(hive_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*hive_trigger_tasks)
+    # microsoft Azure Data factory pipeline DAG
+    adf_pipeline_task_info = [{"adf_pipeline_dag": "example_adf_run_pipeline"}]
+    adf_pipeline_trigger_tasks, ids = prepare_dag_dependency(adf_pipeline_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*adf_pipeline_trigger_tasks)
 
     report = PythonOperator(
         task_id="get_report",
@@ -187,6 +192,7 @@ with DAG(
         snowflake_trigger_tasks[0],
         livy_trigger_tasks[0],
         hive_trigger_tasks[0],
+        adf_pipeline_trigger_tasks[0],
     ]
 
     last_task = [
@@ -200,6 +206,7 @@ with DAG(
         snowflake_trigger_tasks[-1],
         livy_trigger_tasks[-1],
         hive_trigger_tasks[-1],
+        adf_pipeline_trigger_tasks[-1],
     ]
 
     last_task >> end
