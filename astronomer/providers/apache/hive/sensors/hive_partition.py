@@ -14,7 +14,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     Note: HivePartitionSensorAsync uses implya library instead of pyhive
     since pyhive is currently unsupported. Refer https://github.com/dropbox/PyHive.
     Since we use implya library, please set the connection to use the port 10000 instead of 9083
-    The sesnors currently supports auth_mechansim='PLAIN'
+    The sensor currently supports auth_mechansim='PLAIN' only.
 
     :param table: the table where the partition is present.
     :param partition: The partition clause to wait for. This is passed as
