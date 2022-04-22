@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -14,6 +15,8 @@ JOB_ID = "jobid-12122"
 AWS_CONN_ID = "aws_default"
 JOB_FLOW_ID = "j-T0CT8Z0C20NT"
 STEP_ID = "s-34RJO0CKERRPL"
+JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::012345678912:role/emr_eks_default_role")
+JOB_NAME = "test-emr-job"
 
 
 @pytest.mark.asyncio
@@ -131,7 +134,6 @@ async def test_emr_describe_step_failed(mock_client):
         await hook.emr_describe_step()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "state",
     [
@@ -283,3 +285,58 @@ def test_job_flow_failure_message_from_response_without_state_change():
     }
     expected_error_message = EmrJobFlowHookAsync.failure_message_from_response(response)
     assert expected_error_message is None
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
+async def test_get_job_failure_reason_success(mock_client):
+    """Assert get_job_failure_reason return failure reason as string"""
+    mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
+        "jobRun": {
+            "failureReason": "Unknown",
+            "stateDetails": "TERMINATED",
+        }
+    }
+    hook = EmrContainerHookAsync(virtual_cluster_id=VIRTUAL_CLUSTER_ID, aws_conn_id=AWS_CONN_ID)
+    reason = await hook.get_job_failure_reason(JOB_ID)
+    expected = "Unknown - TERMINATED"
+    assert reason == expected
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
+async def test_get_job_failure_reason_key_error(mock_client):
+    """Assert get_job_failure_reason return None if failure reason not found"""
+    mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = {
+        "jobRun": {
+            "failureReason": "Unknown",
+        }
+    }
+    hook = EmrContainerHookAsync(virtual_cluster_id=VIRTUAL_CLUSTER_ID, aws_conn_id=AWS_CONN_ID)
+    reason = await hook.get_job_failure_reason(JOB_ID)
+    assert reason is None
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_client_async")
+async def test_get_job_failure_reason_exception(mock_client):
+    """Assert get_job_failure_reason return None on ClientError"""
+    mock_client.return_value.__aenter__.return_value.describe_job_run.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "SomeServiceException",
+                "Message": "Details/context around the exception or error",
+            },
+            "ResponseMetadata": {
+                "RequestId": "1234567890ABCDEF",
+                "HostId": "host ID data will appear here as a hash",
+                "HTTPStatusCode": 404,
+                "HTTPHeaders": {"header metadata key/values will appear here"},
+                "RetryAttempts": 0,
+            },
+        },
+        operation_name="emr",
+    )
+    hook = EmrContainerHookAsync(virtual_cluster_id=VIRTUAL_CLUSTER_ID, aws_conn_id=AWS_CONN_ID)
+    reason = await hook.get_job_failure_reason(JOB_ID)
+    assert reason is None

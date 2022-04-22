@@ -113,6 +113,9 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+
         self.log.info("%s completed successfully.", self.task_id)
         if self.do_xcom_push:
             context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=event.get("run_id"))

@@ -5,6 +5,7 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.amazon.aws.triggers.emr import (
+    EmrContainerOperatorTrigger,
     EmrContainerSensorTrigger,
     EmrJobFlowSensorTrigger,
     EmrStepSensorTrigger,
@@ -20,6 +21,7 @@ JOB_FLOW_ID = "j-U0CTOZ0R20QG"
 STEP_ID = "s-34RIO9CJERRJL"
 TARGET_STATE = ["TERMINATED"]
 FAILED_STATE = ["TERMINATED_WITH_ERRORS"]
+NAME = "test-emr-job"
 MOCK_RESPONSE = {
     "Cluster": {
         "Id": "j-336EWEPYOZKOD",
@@ -377,7 +379,6 @@ async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
     :return:
     """
     MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
-    print("MOCK_FAILED_RESPONSE ", MOCK_FAILED_RESPONSE)
     mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
     trigger = EmrJobFlowSensorTrigger(
         job_flow_id=JOB_ID,
@@ -390,10 +391,8 @@ async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
     assert len(task) == 1
     final_message = "EMR job failed"
     error_code = "1111"
-    msg = f"for code: { error_code } with message Failed"
+    msg = f"for code: {error_code} with message Failed"
     final_message += " " + msg
-    print("final_message ", final_message)
-    print("task ", task)
     assert TriggerEvent({"status": "error", "message": final_message}) in task
 
 
@@ -414,3 +413,144 @@ async def test_emr_job_flow_sensors_trigger_exception(mock_cluster_detaile):
     task = [i async for i in trigger.run()]
     assert len(task) == 1
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+def test_emr_container_operator_trigger_serialization():
+    """Asserts EmrContainerOperatorTrigger correctly serializes its arguments and classpath."""
+    trigger = EmrContainerOperatorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        name=NAME,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        max_tries=MAX_RETRIES,
+        poll_interval=POLL_INTERVAL,
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger"
+    assert kwargs == {
+        "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
+        "name": NAME,
+        "job_id": JOB_ID,
+        "aws_conn_id": AWS_CONN_ID,
+        "poll_interval": POLL_INTERVAL,
+        "max_tries": MAX_RETRIES,
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_status",
+    [
+        "PENDING",
+        "SUBMITTED",
+        "RUNNING",
+        None,
+    ],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_operator_trigger_run(mock_query_status, mock_status):
+    """Assert EmrContainerOperatorTrigger task run in trigger and sleep if state is intermediate"""
+    mock_query_status.return_value = mock_status
+    trigger = EmrContainerOperatorTrigger(
+        name=NAME,
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+        max_tries=MAX_RETRIES,
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_operator_trigger_completed(mock_query_status):
+    """Assert EmrContainerOperatorTrigger succeed."""
+    mock_query_status.return_value = "COMPLETED"
+    trigger = EmrContainerOperatorTrigger(
+        name=NAME,
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+        max_tries=MAX_RETRIES,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    msg = "EMR Containers Operator success COMPLETED"
+    assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) in task
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_status",
+    ["FAILED", "CANCELLED", "CANCEL_PENDING"],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_job_failure_reason")
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_operator_trigger_failure_status(
+    mock_query_status, mock_failure_reason, mock_status
+):
+    """Assert EmrContainerOperatorTrigger failed."""
+    mock_query_status.return_value = mock_status
+    mock_failure_reason.return_value = None
+    trigger = EmrContainerOperatorTrigger(
+        name=NAME,
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+        max_tries=MAX_RETRIES,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    message = (
+        f"EMR Containers job failed. Final state is {mock_status}. "
+        f"query_execution_id is {JOB_ID}. Error: {None}"
+    )
+    assert TriggerEvent({"status": "error", "message": message, "job_id": JOB_ID}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_operator_trigger_exception(mock_query_status):
+    """Assert EmrContainerOperatorTrigger raise exception"""
+    mock_query_status.side_effect = Exception("Test exception")
+    trigger = EmrContainerOperatorTrigger(
+        name=NAME,
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+        max_tries=MAX_RETRIES,
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_operator_trigger_timeout(mock_query_status):
+    """Assert EmrContainerOperatorTrigger max_tries exceed"""
+    mock_query_status.return_value = "PENDING"
+    trigger = EmrContainerOperatorTrigger(
+        name=NAME,
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=1,
+        max_tries=2,
+    )
+
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert (
+        TriggerEvent({"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID})
+        in task
+    )
