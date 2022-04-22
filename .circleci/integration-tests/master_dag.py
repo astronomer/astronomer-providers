@@ -158,11 +158,13 @@ with DAG(
     livy_trigger_tasks, ids = prepare_dag_dependency(livy_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*livy_trigger_tasks)
-
+    
+    # Apache Hive Dag
     hive_task_info = [{"hive_dag": "example_hive"}]
     hive_trigger_tasks, ids = prepare_dag_dependency(hive_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*hive_trigger_tasks)
+
     # microsoft Azure Data factory pipeline DAG
     adf_pipeline_task_info = [{"adf_pipeline_dag": "example_adf_run_pipeline"}]
     adf_pipeline_trigger_tasks, ids = prepare_dag_dependency(adf_pipeline_task_info, "{{ ds }}")
