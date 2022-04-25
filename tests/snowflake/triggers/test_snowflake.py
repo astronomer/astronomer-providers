@@ -37,8 +37,8 @@ def test_snowflake_trigger_serialization():
     [
         (
             ["uuid", "uuid"],
-            {"status": "error", "message": "test error", "type": "FAILED_WITH_ERROR"},
-            TriggerEvent({"status": "error", "message": "test error", "type": "FAILED_WITH_ERROR"}),
+            {"status": "error", "message": "test error"},
+            TriggerEvent({"status": "error", "message": "test error"}),
         ),
         (
             ["uuid", "uuid"],
@@ -52,7 +52,6 @@ def test_snowflake_trigger_serialization():
                 {
                     "status": "error",
                     "message": f"{TASK_ID} " f"failed with terminal state: False",
-                    "type": "ERROR",
                 }
             ),
         ),
@@ -60,9 +59,7 @@ def test_snowflake_trigger_serialization():
 )
 @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 async def test_snowflake_trigger_running(mock_get_query_status, query_ids, return_value, response):
-    """
-    Tests that the SnowflakeTrigger in
-    """
+    """Tests that the SnowflakeTrigger in"""
     mock_get_query_status.return_value = return_value
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
@@ -71,9 +68,9 @@ async def test_snowflake_trigger_running(mock_get_query_status, query_ids, retur
         snowflake_conn_id="test_conn",
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert response in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert response == actual
 
 
 @pytest.mark.asyncio
@@ -85,9 +82,7 @@ async def test_snowflake_trigger_running(mock_get_query_status, query_ids, retur
     ],
 )
 async def test_snowflake_trigger_success(mock_get_first, query_ids):
-    """
-    Tests that the SnowflakeTrigger in success case
-    """
+    """Tests that the SnowflakeTrigger in success case"""
     mock_get_first.return_value = {"status": "success", "query_ids": query_ids}
 
     trigger = SnowflakeTrigger(
@@ -115,9 +110,7 @@ async def test_snowflake_trigger_success(mock_get_first, query_ids):
     ],
 )
 async def test_snowflake_trigger_failed(mock_get_first, query_ids):
-    """
-    Tests the SnowflakeTrigger does not fire if it reaches a failed state.
-    """
+    """Tests the SnowflakeTrigger does not fire if it reaches a failed state."""
     mock_get_first.return_value = {
         "status": "error",
         "message": "The query is in the process of being aborted on the server side.",
@@ -154,9 +147,7 @@ async def test_snowflake_trigger_failed(mock_get_first, query_ids):
 )
 @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
 async def test_snowflake_trigger_exception(mock_query_status, query_ids):
-    """
-    Tests the SnowflakeTrigger does not fire if there is an exception.
-    """
+    """Tests the SnowflakeTrigger does not fire if there is an exception."""
     mock_query_status.side_effect = Exception("Test exception")
 
     trigger = SnowflakeTrigger(
@@ -168,4 +159,4 @@ async def test_snowflake_trigger_exception(mock_query_status, query_ids):
 
     task = [i async for i in trigger.run()]
     assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception", "type": "ERROR"}) in task
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task

@@ -60,9 +60,9 @@ async def test_dataproc_submit_return_success_and_failure(mock_get_job_status, s
         region=TEST_REGION,
         polling_interval=TEST_POLLING_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent(status) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent(status) == actual
 
 
 @pytest.mark.asyncio

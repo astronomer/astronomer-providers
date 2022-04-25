@@ -60,17 +60,16 @@ class RedshiftClusterTrigger(BaseTrigger):
                     yield TriggerEvent(response)
                 else:
                     error_message = f"{self.task_id} failed"
-                    yield TriggerEvent({"status": "error", "message": str(error_message)})
+                    yield TriggerEvent({"status": "error", "message": error_message})
             else:
                 response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
                 if response:
                     yield TriggerEvent(response)
                 else:
                     error_message = f"{self.task_id} failed"
-                    yield TriggerEvent({"status": "error", "message": str(error_message)})
+                    yield TriggerEvent({"status": "error", "message": error_message})
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
 
 class RedshiftClusterSensorTrigger(BaseTrigger):
