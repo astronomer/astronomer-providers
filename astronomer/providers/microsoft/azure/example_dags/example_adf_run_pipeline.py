@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 from azure.mgmt.datafactory.models import (
@@ -71,8 +72,8 @@ def create_adf_storage_pipeline() -> None:
     resource_group_exist = None
     try:
         resource_group_exist = resource_client.resource_groups.get(RESOURCE_GROUP_NAME)
-    except Exception:
-        logging.info("Resource group not found, so creating one")
+    except HttpResponseError as e:
+        logging.exception("Resource group not found, so creating one %s", e.__str__())
     if not resource_group_exist:
         resource_client.resource_groups.create_or_update(RESOURCE_GROUP_NAME, rg_params)
 
