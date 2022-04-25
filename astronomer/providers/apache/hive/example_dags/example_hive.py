@@ -42,6 +42,9 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
     "hdfs dfs -put zipcodes.csv /user/root",
 ]
 
+# emr-5.34.0 cluster has been used and same versions of hive and hadoop binaries
+# has been used for integration testing. If the versions of emr cluster changes then we need to
+# update and match the hive and hadoop libraries versions in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
     "Name": "team-provider-example-dag-hive-test",
     "ReleaseLabel": "emr-5.34.0",
