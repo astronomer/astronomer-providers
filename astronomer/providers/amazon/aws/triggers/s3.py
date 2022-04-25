@@ -141,11 +141,9 @@ class S3KeySizeTrigger(BaseTrigger):
                         if self.check_fn_user is not None:
                             if self.check_fn_user(s3_objects):
                                 yield TriggerEvent({"status": "success"})
-                                return
 
                         if self._check_fn(s3_objects):
                             yield TriggerEvent({"status": "success"})
-                            return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
@@ -241,7 +239,6 @@ class S3KeysUnchangedTrigger(BaseTrigger):
                     )
                     if result.get("status") == "success" or result.get("status") == "error":
                         yield TriggerEvent(result)
-                        return
                     elif result.get("status") == "pending":
                         self.previous_objects = result.get("previous_objects", set())
                         self.last_activity_time = result.get("last_activity_time")
@@ -314,7 +311,6 @@ class S3PrefixTrigger(BaseTrigger):
                         buffer.append(await elem)
                     if all(buffer):
                         yield TriggerEvent({"status": "success", "message": "Success criteria met. Exiting."})
-                        return
 
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

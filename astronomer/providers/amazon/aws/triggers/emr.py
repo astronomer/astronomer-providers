@@ -61,14 +61,11 @@ class EmrContainerSensorTrigger(BaseTrigger):
                 elif query_status in ("FAILED", "CANCELLED", "CANCEL_PENDING"):
                     msg = f"EMR Containers sensor failed {query_status}"
                     yield TriggerEvent({"status": "error", "message": msg})
-                    return
                 else:
                     msg = "EMR Containers sensors completed"
                     yield TriggerEvent({"status": "success", "message": msg})
-                    return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
 
 class EmrContainerOperatorTrigger(BaseTrigger):
@@ -151,7 +148,6 @@ class EmrContainerOperatorTrigger(BaseTrigger):
                             "job_id": self.job_id,
                         }
                     )
-                    return
                 elif query_state in self.SUCCESS_STATES:
                     self.log.info(
                         "Try %s: Query execution completed. Final state is %s", try_number, query_state
@@ -163,7 +159,6 @@ class EmrContainerOperatorTrigger(BaseTrigger):
                             "job_id": self.job_id,
                         }
                     )
-                    return
                 else:
                     self.log.info(
                         "Try %s: Query is still in non-terminal state - %s", try_number, query_state
@@ -177,12 +172,10 @@ class EmrContainerOperatorTrigger(BaseTrigger):
                             "job_id": self.job_id,
                         }
                     )
-                    return
 
                 try_number += 1
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
 
 class EmrStepSensorTrigger(BaseTrigger):
@@ -242,17 +235,14 @@ class EmrStepSensorTrigger(BaseTrigger):
                 state = hook.state_from_response(response)
                 if state in self.target_states:
                     yield TriggerEvent({"status": "success", "message": f"Job flow currently {state}"})
-                    return
                 elif state in self.failed_states:
                     yield TriggerEvent(
                         {"status": "error", "message": hook.failure_message_from_response(response)}
                     )
-                    return
                 self.log.info("EMR step state is %s. Sleeping for %s seconds.", state, self.poke_interval)
                 await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
 
 class EmrJobFlowSensorTrigger(BaseTrigger):
@@ -307,15 +297,12 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
                     yield TriggerEvent(
                         {"status": "success", "message": f"Job flow currently {cluster_state}"}
                     )
-                    return
                 elif cluster_state in self.failed_states:
                     final_message = "EMR job failed"
                     failure_message = hook.failure_message_from_response(cluster_details)
                     if failure_message:
                         final_message += " " + failure_message
                     yield TriggerEvent({"status": "error", "message": final_message})
-                    return
                 await asyncio.sleep(self.poll_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return

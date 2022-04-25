@@ -61,10 +61,8 @@ class DataProcSubmitTrigger(BaseTrigger):
                 job_status = await self._get_job_status(hook)
                 if "status" in job_status and job_status["status"] == "success":
                     yield TriggerEvent(job_status)
-                    return
                 elif "status" in job_status and job_status["status"] == "error":
                     yield TriggerEvent(job_status)
-                    return
                 await asyncio.sleep(self.polling_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

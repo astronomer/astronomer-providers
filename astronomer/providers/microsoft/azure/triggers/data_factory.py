@@ -66,19 +66,15 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
                     yield TriggerEvent(
                         {"status": "error", "message": f"Pipeline run {self.run_id} has Failed."}
                     )
-                    return
                 elif pipeline_status == AzureDataFactoryPipelineRunStatus.CANCELLED:
                     msg = f"Pipeline run {self.run_id} has been Cancelled."
                     yield TriggerEvent({"status": "error", "message": msg})
-                    return
                 elif pipeline_status == AzureDataFactoryPipelineRunStatus.SUCCEEDED:
                     msg = f"Pipeline run {self.run_id} has been Succeeded."
                     yield TriggerEvent({"status": "success", "message": msg})
-                    return
                 await asyncio.sleep(self.poll_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
 
 class AzureDataFactoryTrigger(BaseTrigger):
@@ -165,7 +161,6 @@ class AzureDataFactoryTrigger(BaseTrigger):
                                 "run_id": self.run_id,
                             }
                         )
-                        return
                     elif pipeline_status in self.SUCCESS_STATES:
                         yield TriggerEvent(
                             {
@@ -174,7 +169,6 @@ class AzureDataFactoryTrigger(BaseTrigger):
                                 "run_id": self.run_id,
                             }
                         )
-                        return
                     self.log.info(
                         "Sleeping for %s. The pipeline state is %s.", self.check_interval, pipeline_status
                     )
@@ -187,7 +181,6 @@ class AzureDataFactoryTrigger(BaseTrigger):
                         "run_id": self.run_id,
                     }
                 )
-                return
             else:
                 yield TriggerEvent(
                     {
@@ -196,7 +189,5 @@ class AzureDataFactoryTrigger(BaseTrigger):
                         "run_id": self.run_id,
                     }
                 )
-                return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e), "run_id": self.run_id})
-            return
