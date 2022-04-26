@@ -14,10 +14,12 @@ class HivePartitionSensorAsync(HivePartitionSensor):
 
     .. note::
        HivePartitionSensorAsync uses implya library instead of pyhive.
-       Note that pyhive is currently `unsupported <https://github.com/dropbox/PyHive>`_.
+       The sync version of this sensor uses `pyhive <https://github.com/dropbox/PyHive>`_,
+       but `pyhive <https://github.com/dropbox/PyHive>`_ is currently unsupported.
 
-       Since we use implya library, please set the connection to use the port ``10000`` instead of ``9083``
-       The sensor currently supports ``auth_mechansim='PLAIN'`` only.
+       Since we use `implya <https://github.com/cloudera/impyla>`_ library,
+       please set the connection to use the port ``10000`` instead of ``9083``.
+       This sensor currently supports ``auth_mechansim='PLAIN'`` only.
 
        The library version of hive and hadoop in ``Dockerfile`` should match the remote cluster where the
        hadoop and hive is running.
