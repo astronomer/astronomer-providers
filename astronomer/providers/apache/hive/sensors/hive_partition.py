@@ -21,8 +21,8 @@ class HivePartitionSensorAsync(HivePartitionSensor):
        please set the connection to use the port ``10000`` instead of ``9083``.
        This sensor currently supports ``auth_mechansim='PLAIN'`` only.
 
-       The library version of hive and hadoop in ``Dockerfile`` should match the remote cluster where the
-       hadoop and hive is running.
+       The library version of hive and hadoop in ``Dockerfile`` should match the remote
+       cluster where they are running.
 
     :param table: the table where the partition is present.
     :param partition: The partition clause to wait for. This is passed as

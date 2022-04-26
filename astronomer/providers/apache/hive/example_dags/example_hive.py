@@ -180,7 +180,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             ],
         )
 
-        # Allow SSH traffic on port 22 and copy file to hdfs
+        # Allow SSH traffic on port 22 and copy file to HDFS
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
