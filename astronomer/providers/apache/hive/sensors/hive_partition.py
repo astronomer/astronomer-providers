@@ -10,11 +10,19 @@ from astronomer.providers.apache.hive.triggers.hive_partition import (
 
 class HivePartitionSensorAsync(HivePartitionSensor):
     """
-    Waits for a given partition to show up in Hive.
-    Note: HivePartitionSensorAsync uses implya library instead of pyhive
-    since pyhive is currently unsupported. Refer https://github.com/dropbox/PyHive.
-    Since we use implya library, please set the connection to use the port 10000 instead of 9083
-    The sensor currently supports auth_mechansim='PLAIN' only.
+    Waits for a given partition to show up in Hive table asynchronously.
+
+    .. note::
+       HivePartitionSensorAsync uses implya library instead of pyhive.
+       The sync version of this sensor uses `pyhive <https://github.com/dropbox/PyHive>`_,
+       but `pyhive <https://github.com/dropbox/PyHive>`_ is currently unsupported.
+
+       Since we use `implya <https://github.com/cloudera/impyla>`_ library,
+       please set the connection to use the port ``10000`` instead of ``9083``.
+       This sensor currently supports ``auth_mechansim='PLAIN'`` only.
+
+       The library version of hive and hadoop in ``Dockerfile`` should match the remote
+       cluster where they are running.
 
     :param table: the table where the partition is present.
     :param partition: The partition clause to wait for. This is passed as
