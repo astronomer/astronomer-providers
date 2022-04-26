@@ -47,7 +47,7 @@ RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_L
     && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
 ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
 
-#install Apache Hadoop (Download same version of library to match EMR hadopp version created by DAG)
+#install Apache Hadoop (Download same version of library to match EMR hadoop version created by DAG)
 RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
     && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
 ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
@@ -117,7 +117,7 @@ RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_L
     && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
 ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
 
-#install Apache Hadoop (Download same version of library to match EMR hadopp version created by DAG)
+#install Apache Hadoop (Download same version of library to match EMR hadoop version created by DAG)
 RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
     && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
 ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION

@@ -165,7 +165,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 ip_exists = True
 
     if not ip_exists:
-        # open port for port 10000
+        # Port 10000 need to be open for Impyla connectivity to Hive
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -180,7 +180,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             ],
         )
 
-        # open port for port 22 for ssh and copy file for hdfs
+        # Allow SSH traffic on port 22 and copy file to hdfs
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
