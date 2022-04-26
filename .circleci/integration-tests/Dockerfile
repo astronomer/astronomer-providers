@@ -6,12 +6,12 @@ USER root
 
 RUN apt-get update -y \
     && apt-get install -y software-properties-common \
-    && apt-get install -y wget procps gnupg2 \
-    && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
+    && apt-get install -y wget procps gnupg2
 
-RUN add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/de
-RUN apt-get update -y && apt-get install -y adoptopenjdk-8-hotspot
-ENV JAVA_HOME=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64
+# Install openjdk-8
+RUN apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update -y \
     && apt-get install -y git \
@@ -45,14 +45,14 @@ ENV HIVE_HOME=/usr/local/apache-hive-2.3.9-bin
 
 #install Apache Hadoop 2.10.1 (Download same version of library to match EMR hadopp version created by DAG)
 RUN curl "https://archive.apache.org/dist/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz" -o "/tmp/hadoop-2.10.1.tar.gz" \
-    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local/
+    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local
 ENV HADOOP_HOME=/usr/local/hadoop-2.10.1
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
 
 RUN curl "https://raw.githubusercontent.com/apache/hive/master/data/conf/hive-site.xml" -o "/tmp/hive-site.xml" \
-    && mv /tmp/hive-site.xml $HADOOP_HOME/conf
+    && mkdir $HADOOP_HOME/conf && mv /tmp/hive-site.xml $HADOOP_HOME/conf/hive-site.xml
 
-ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin:$SPARK_HOME:$SPARK_HOME/bin:$HADOOP_CONF_DIR
+ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN pip install /tmp/astronomer-providers[all]
@@ -75,12 +75,12 @@ USER root
 
 RUN apt-get update -y \
     && apt-get install -y software-properties-common \
-    && apt-get install -y wget procps gnupg2 \
-    && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
+    && apt-get install -y wget procps gnupg2
 
-RUN add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/
-RUN apt-get update && apt-get install -y adoptopenjdk-8-hotspot
-ENV JAVA_HOME=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64
+# Install openjdk-8
+RUN apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update -y \
     && apt-get install -y git \
@@ -114,14 +114,14 @@ ENV HIVE_HOME=/usr/local/apache-hive-2.3.9-bin
 
 #install Apache Hadoop 2.10.1 (Download same version of library to match EMR hadopp version created by DAG)
 RUN curl "https://archive.apache.org/dist/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz" -o "/tmp/hadoop-2.10.1.tar.gz" \
-    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local/
+    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local
 ENV HADOOP_HOME=/usr/local/hadoop-2.10.1
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
 
 RUN curl "https://raw.githubusercontent.com/apache/hive/master/data/conf/hive-site.xml" -o "/tmp/hive-site.xml" \
-    && mv /tmp/hive-site.xml $HADOOP_HOME/conf
+    && mkdir $HADOOP_HOME/conf && mv /tmp/hive-site.xml $HADOOP_HOME/conf/hive-site.xml
 
-ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin:$SPARK_HOME:$SPARK_HOME/bin:$HADOOP_CONF_DIR
+ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN pip install /tmp/astronomer-providers[all]

@@ -42,7 +42,7 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
     "hdfs dfs -put zipcodes.csv /user/root",
 ]
 
-# emr-5.34.0 cluster has been used and same versions of hive and hadoop binaries
+# emr-5.34.0 cluster has been used and apache-hive-2.3.9-bin and hadoop-2.10.1
 # has been used for integration testing. If the versions of emr cluster changes then we need to
 # update and match the hive and hadoop libraries versions in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
@@ -165,7 +165,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 ip_exists = True
 
     if not ip_exists:
-        # open port for port 8998
+        # open port for port 10000
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -179,6 +179,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
+
         # open port for port 22 for ssh and copy file for hdfs
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
