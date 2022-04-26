@@ -10,7 +10,7 @@ from astronomer.providers.apache.hive.triggers.hive_partition import (
 
 class HivePartitionSensorAsync(HivePartitionSensor):
     """
-    Waits for a given partition to show up in Hive table.
+    Waits for a given partition to show up in Hive table asynchronously.
 
     .. note::
        HivePartitionSensorAsync uses implya library instead of pyhive.
