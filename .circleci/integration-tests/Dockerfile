@@ -24,6 +24,10 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Set Hive and hadoop versions.
+ENV HIVE_LIBRARY_VERSION=hive-2.3.9
+ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
+
 # install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
@@ -38,19 +42,16 @@ RUN curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03
     && chmod +x ./kubectl \
     && mv ./kubectl /usr/local/bin
 
-#install Apache Hive 2.3.9 (Download same version of library to match EMR hive version created by DAG)
-RUN curl "https://downloads.apache.org/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz" -o  "/tmp/apache-hive-2.3.9-bin.tar.gz"  \
-    && tar -xf /tmp/apache-hive-2.3.9-bin.tar.gz -C /usr/local
-ENV HIVE_HOME=/usr/local/apache-hive-2.3.9-bin
+#install Apache Hive (Download same version of library to match EMR hive version created by DAG)
+RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz" -o  "/tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz"  \
+    && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
+ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
 
-#install Apache Hadoop 2.10.1 (Download same version of library to match EMR hadopp version created by DAG)
-RUN curl "https://archive.apache.org/dist/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz" -o "/tmp/hadoop-2.10.1.tar.gz" \
-    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local
-ENV HADOOP_HOME=/usr/local/hadoop-2.10.1
+#install Apache Hadoop (Download same version of library to match EMR hadopp version created by DAG)
+RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
+    && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
+ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
-
-RUN curl "https://raw.githubusercontent.com/apache/hive/master/data/conf/hive-site.xml" -o "/tmp/hive-site.xml" \
-    && mkdir $HADOOP_HOME/conf && mv /tmp/hive-site.xml $HADOOP_HOME/conf/hive-site.xml
 
 ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin
 
@@ -93,6 +94,10 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Set Hive and hadoop versions.
+ENV HIVE_LIBRARY_VERSION=hive-2.3.9
+ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
+
 # install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
@@ -107,19 +112,16 @@ RUN curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03
     && chmod +x ./kubectl \
     && mv ./kubectl /usr/local/bin
 
-#install Apache Hive 2.3.9 (Download same version of library to match EMR hive version created by DAG)
-RUN curl "https://downloads.apache.org/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz" -o  "/tmp/apache-hive-2.3.9-bin.tar.gz"  \
-    && tar -xf /tmp/apache-hive-2.3.9-bin.tar.gz -C /usr/local
-ENV HIVE_HOME=/usr/local/apache-hive-2.3.9-bin
+#install Apache Hive (Download same version of library to match EMR hive version created by DAG)
+RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz" -o  "/tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz"  \
+    && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
+ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
 
-#install Apache Hadoop 2.10.1 (Download same version of library to match EMR hadopp version created by DAG)
-RUN curl "https://archive.apache.org/dist/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz" -o "/tmp/hadoop-2.10.1.tar.gz" \
-    && tar -xf /tmp/hadoop-2.10.1.tar.gz -C /usr/local
-ENV HADOOP_HOME=/usr/local/hadoop-2.10.1
+#install Apache Hadoop (Download same version of library to match EMR hadopp version created by DAG)
+RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
+    && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
+ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
-
-RUN curl "https://raw.githubusercontent.com/apache/hive/master/data/conf/hive-site.xml" -o "/tmp/hive-site.xml" \
-    && mkdir $HADOOP_HOME/conf && mv /tmp/hive-site.xml $HADOOP_HOME/conf/hive-site.xml
 
 ENV PATH $PATH:$JAVA_HOME/bin:$HIVE_HOME:$HIVE_HOME/bin:$HADOOP_HOME:$HADOOP_HOME/bin
 
