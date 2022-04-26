@@ -12,7 +12,8 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     """
     Waits for a given partition to show up in Hive table.
 
-    .. note:: HivePartitionSensorAsync uses implya library instead of pyhive.
+    .. note::
+       HivePartitionSensorAsync uses implya library instead of pyhive.
        Note that pyhive is currently `unsupported <https://github.com/dropbox/PyHive>`_.
 
        Since we use implya library, please set the connection to use the port ``10000`` instead of ``9083``
