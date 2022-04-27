@@ -23,4 +23,4 @@ with DAG(
         task_id="wait_for_me",
         target_time=(datetime.utcnow() + timedelta(seconds=3)).time(),
     )
-    # [START howto_operator_time_sensor_async]
+    # [END howto_operator_time_sensor_async]

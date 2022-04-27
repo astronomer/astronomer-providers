@@ -199,7 +199,7 @@ with DAG(
         target_status="available",
         aws_conn_id=AWS_CONN_ID,
     )
-    # [START howto_operator_redshift_cluster_sensor_async]
+    # [END howto_operator_redshift_cluster_sensor_async]
 
     delete_cluster_snapshot_op = PythonOperator(
         task_id="delete_redshift_cluster_snapshot",

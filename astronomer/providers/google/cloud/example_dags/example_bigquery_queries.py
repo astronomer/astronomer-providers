@@ -132,7 +132,7 @@ with DAG(
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
     )
-    # [START howto_operator_bigquery_interval_check_async]
+    # [END howto_operator_bigquery_interval_check_async]
 
     # [START howto_operator_bigquery_multi_query_async]
     bigquery_execute_multi_query = BigQueryInsertJobOperatorAsync(
