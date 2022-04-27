@@ -1,0 +1,13 @@
+---
+regions:
+  - us-east-2
+account-blocklist:
+  - '999999999999'
+resource-types:
+  targets:
+    - EMRCluster
+    - EC2Instance
+    - EKSCluster
+    - S3MultipartUpload
+accounts:
+  '475538383708':  # aws-nuke-example
