@@ -42,6 +42,9 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
     "hdfs dfs -put zipcodes.csv /user/root",
 ]
 
+# This example uses an emr-5.34.0 cluster, apache-hive-2.3.9 and hadoop-2.10.1.
+# If you would like to use a different version of the EMR cluster, then we need to
+# match the hive and hadoop versions same as specified in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
     "Name": "team-provider-example-dag-hive-test",
     "ReleaseLabel": "emr-5.34.0",
@@ -162,7 +165,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 ip_exists = True
 
     if not ip_exists:
-        # open port for port 8998
+        # Port 10000 need to be open for Impyla connectivity to Hive
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -176,7 +179,8 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
-        # open port for port 22 for ssh and copy file for hdfs
+
+        # Allow SSH traffic on port 22 and copy file to HDFS
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]

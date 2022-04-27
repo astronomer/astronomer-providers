@@ -160,7 +160,7 @@ with DAG(
     chain(*livy_trigger_tasks)
 
     # Apache Hive Dag
-    hive_task_info = [{"hive_dag": "example_hive"}]
+    hive_task_info = [{"hive_dag": "example_hive_dag"}]
     hive_trigger_tasks, ids = prepare_dag_dependency(hive_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*hive_trigger_tasks)
