@@ -21,7 +21,7 @@ with DAG(
     schedule_interval=timedelta(hours=1),
     catchup=False,
     default_args=default_args,
-    tags=["example", "async", "aws-nuke"],
+    tags=["example", "aws-nuke"],
 ) as dag:
     start = DummyOperator(task_id="start")
 
