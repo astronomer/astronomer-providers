@@ -34,8 +34,6 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && unzip awscliv2.zip \
     && ./aws/install;
 
-RUN apt-get update && apt-get install -y wget
-
 # install AWS nuke
 RUN wget --quiet  \
     "https://github.com/rebuy-de/aws-nuke/releases/download/${AWS_NUKE_VERSION}/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz" \
@@ -112,8 +110,6 @@ ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install;
-
-RUN apt-get update && apt-get install -y wget
 
 # install AWS nuke
 RUN wget --quiet  \
