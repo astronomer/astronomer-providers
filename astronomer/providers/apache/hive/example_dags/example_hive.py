@@ -20,6 +20,9 @@ from requests import get
 from astronomer.providers.apache.hive.sensors.hive_partition import (
     HivePartitionSensorAsync,
 )
+from astronomer.providers.apache.hive.sensors.named_hive_partition import (
+    NamedHivePartitionSensorAsync,
+)
 
 AWS_S3_CREDS = {
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "aws_access_key"),
@@ -29,6 +32,7 @@ AWS_S3_CREDS = {
 
 PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
+HIVE_SCHEMA = os.getenv("HIVE_SCHEMA", "default")
 HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")
 HIVE_PARTITION = os.getenv("HIVE_PARTITION", "state='FL'")
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
@@ -355,6 +359,14 @@ with DAG(
     )
     # [END howto_hive_partition_check]
 
+    # [START howto_named_hive_partition_sensor_async]
+    wait_for_partition = NamedHivePartitionSensorAsync(
+        task_id="wait_for_partition",
+        partition_names=[f"{HIVE_SCHEMA}.{HIVE_TABLE}/{HIVE_PARTITION}"],
+        poke_interval=5,
+    )
+    # [END howto_named_hive_partition_sensor_async]
+
     # [START howto_operator_emr_terminate_job_flow]
     remove_cluster = EmrTerminateJobFlowOperator(
         task_id="remove_cluster",
@@ -372,5 +384,6 @@ with DAG(
         >> create_hive_metastore_airflow_connection
         >> load_to_hive
         >> hive_sensor
+        >> wait_for_partition
         >> remove_cluster
     )
