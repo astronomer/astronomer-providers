@@ -1,0 +1,56 @@
+{
+  "kind": "bigquery#job",
+  "id": "astronomer-airflow-providers:US.airflow_example_async_bigquery_queries_insert_query_job_2022_04_28T18_32_32_169270_00_00_9dad4c2a5b6b4be168a3d32a14476144",
+  "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/astronomer-airflow-providers/jobs/airflow_example_async_bigquery_queries_insert_query_job_2022_04_28T18_32_32_169270_00_00_9dad4c2a5b6b4be168a3d32a14476144?location=US",
+  "user_email": "user@email.com",
+  "jobReference": {
+    "projectId": "astronomer-airflow-providers",
+    "jobId": "airflow_example_async_bigquery_queries_insert_query_job_2022_04_28T18_32_32_169270_00_00_9dad4c2a5b6b4be168a3d32a14476144",
+    "location": "US"
+  },
+  "statistics": {
+    "creationTime": 1651170770441.0,
+    "startTime": 1651170770591.0,
+    "endTime": 1651170772087.0,
+    "totalBytesProcessed": "0",
+    "query": {
+      "queryPlan": [
+        {
+          "recordsRead": "0",
+          "recordsWritten": "2",
+          "status": "COMPLETE"
+        }
+      ],
+      "estimatedBytesProcessed": "0",
+      "totalPartitionsProcessed": "0",
+      "totalBytesProcessed": "0",
+      "totalBytesBilled": "0",
+      "referencedTables": [
+        {
+          "projectId": "astronomer-airflow-providers",
+          "datasetId": "astro_dataset",
+          "tableId": "table1"
+        }
+      ],
+      "numDmlAffectedRows": "2",
+      "statementType": "INSERT",
+      "dmlStats": {
+        "insertedRowCount": "2"
+      }
+    }
+  },
+  "status": {
+    "state": "DONE"
+  },
+  "configuration": {
+    "query": {
+      "query": "INSERT test-dataset.test-table VALUES (42, 'monthy python', '2022-01-01'), (42, 'fishy fish', '2022-01-01');",
+      "destinationTable": {
+        "projectId": "astronomer-airflow-providers",
+        "datasetId": "astro_dataset",
+        "tableId": "table1"
+      }
+    },
+    "jobType": "QUERY"
+  }
+}
