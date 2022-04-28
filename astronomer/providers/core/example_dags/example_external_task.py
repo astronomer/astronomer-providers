@@ -10,6 +10,7 @@ until the second DAG is complete.
     6. Confirm that "test_external_task_async" defers until "test_external_task_async_waits_for_me"
        successfully completes, then resumes execution and finishes without issue.
 """
+import os
 from datetime import timedelta
 
 from airflow import DAG
@@ -18,8 +19,10 @@ from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.external_task import ExternalTaskSensorAsync
 
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 with DAG(

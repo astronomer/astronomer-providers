@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
-repo_dir = Path(__file__).parent.parent
+_REPO_DIR = Path(__file__).parent.parent
 
 # -- Project information -----------------------------------------------------
 
@@ -138,16 +138,16 @@ autoapi_python_use_implicit_namespaces = True
 # Get all the providers from setup.cfg and use them to generate the intersphinx inventories
 # for all the providers
 config = configparser.ConfigParser(strict=False)
-config.read(repo_dir / "setup.cfg")
+config.read(_REPO_DIR / "setup.cfg")
 
-prov_deps = [
+_PROV_DEPS = [
     re.match(r"([a-zA-Z-]+)", dep).groups()[0]
     for dep in config["options.extras_require"]["all"].split()
     if dep.startswith("apache-airflow-providers-")
 ]
 intersphinx_mapping = {
     "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable/", None),
-    **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in prov_deps},
+    **{provider: (f"https://airflow.apache.org/docs/{provider}/stable", None) for provider in _PROV_DEPS},
 }
 
 

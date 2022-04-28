@@ -10,6 +10,7 @@ from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperator
 
 SNOWFLAKE_CONN_ID = os.environ.get("ASTRO_SNOWFLAKE_CONN_ID", "snowflake_default")
 SNOWFLAKE_SAMPLE_TABLE = os.environ.get("SNOWFLAKE_SAMPLE_TABLE", "sample_table")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
@@ -23,7 +24,10 @@ SNOWFLAKE_SLACK_MESSAGE = (
     "Results in an ASCII table:\n```{{ results_df | tabulate(tablefmt='pretty', headers='keys') }}```"
 )
 
-default_args = {"execution_timeout": timedelta(minutes=30), "snowflake_conn_id": SNOWFLAKE_CONN_ID}
+default_args = {
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    "snowflake_conn_id": SNOWFLAKE_CONN_ID,
+}
 
 with DAG(
     dag_id="example_snowflake",

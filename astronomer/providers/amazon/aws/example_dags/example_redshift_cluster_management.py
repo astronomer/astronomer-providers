@@ -26,11 +26,12 @@ REDSHIFT_CLUSTER_TYPE = os.environ.get("REDSHIFT_CLUSTER_TYPE", "single-node")
 REDSHIFT_CLUSTER_NODE_TYPE = os.environ.get("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "**********")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "***********")
-AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-2")
 AWS_CONN_ID = os.environ.get("ASTRO_AWS_CONN_ID", "aws_default")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
-    "execution_timeout": timedelta(minutes=30),
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
 }
 
 
@@ -198,7 +199,7 @@ with DAG(
         target_status="available",
         aws_conn_id=AWS_CONN_ID,
     )
-    # [START howto_operator_redshift_cluster_sensor_async]
+    # [END howto_operator_redshift_cluster_sensor_async]
 
     delete_cluster_snapshot_op = PythonOperator(
         task_id="delete_redshift_cluster_snapshot",

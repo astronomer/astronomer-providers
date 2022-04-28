@@ -41,6 +41,31 @@ class EmrContainerHookAsync(AwsBaseHookAsync):
             except ClientError as e:
                 raise e
 
+    async def get_job_failure_reason(self, job_id: str) -> Optional[str]:
+        """
+        Fetch the reason for a job failure (e.g. error message). Returns None or reason string.
+
+        :param job_id: Id of submitted job run
+        :return: str
+        """
+        # We absorb any errors if we can't retrieve the job status
+        reason = None
+
+        async with await self.get_client_async() as client:
+            try:
+                response = await client.describe_job_run(
+                    virtualClusterId=self.virtual_cluster_id,
+                    id=job_id,
+                )
+                failure_reason = response["jobRun"]["failureReason"]
+                state_details = response["jobRun"]["stateDetails"]
+                reason = f"{failure_reason} - {state_details}"
+            except KeyError:
+                self.log.exception("Could not get status of the EMR on EKS job")
+            except ClientError as ex:
+                self.log.exception("AWS request failed, check logs for more info: %s", ex.__str__())
+        return reason
+
 
 class EmrStepSensorHookAsync(AwsBaseHookAsync):
     """
