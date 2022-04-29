@@ -10,6 +10,10 @@ from openlineage.airflow.utils import get_job_name, try_import_from_string
 from openlineage.common.provider.bigquery import BigQueryDatasetsProvider
 from pkg_resources import parse_version
 
+from astronomer.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperatorAsync,
+)
+
 log = logging.getLogger(__name__)
 
 
@@ -20,11 +24,11 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
     ``BigQueryInsertJobOperatorAsync`` operator.
     """
 
-    def __init__(self, operator):
+    def __init__(self, operator: BigQueryInsertJobOperatorAsync):
         super().__init__(operator)
         self._big_query_client = self._get_big_query_client()
 
-    def _get_big_query_client(self):
+    def _get_big_query_client(self) -> Client:
         """
         Gets the BigQuery client to fetch job metadata.
         The method checks whether a connection hook is available with the Airflow configuration for the operator, and
@@ -48,7 +52,7 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
         return Client()
 
     @staticmethod
-    def _get_xcom_bigquery_job_id(task_instance: TaskInstance):
+    def _get_xcom_bigquery_job_id(task_instance: TaskInstance) -> str:
         """
         Pulls the BigQuery Job ID from XCOM for the task instance whose metadata needs to be extracted.
 
