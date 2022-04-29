@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 
 from dateutil.parser import parse
 from flask import Flask, request
 
 APP = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 DUMPS_DIR = "dumps"
 os.makedirs(DUMPS_DIR, exist_ok=True)
@@ -25,7 +27,7 @@ def dump():
         content = str(request.data, "UTF-8")
     file_path = f"{DUMPS_DIR}/{event_name}.json"
 
-    print(f"Written event {event_name} to file {file_path}")
+    logger.info("Written event %s to file %s", event_name, file_path)
     with open(file_path, "a") as f:
         f.write(content)
     return "", 200
