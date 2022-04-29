@@ -43,7 +43,7 @@ Tag and push the commit
 -----------------------
 
 Tag that commit with a tag that matches the version number (``git tag 1.2.1``),
-and then push up both the commit and its tags (``git push --tags``).
+and then push the tag (``git push origin 1.2.1``).
 
 CircleCI will handle the rest - building, testing, and pushing the resulting
 artifacts to PyPI. Keep an eye out for test failures, though.
@@ -66,6 +66,11 @@ Verify that new docs are published on `ReadTheDocs <https://astronomer-providers
 The ``stable`` version of the docs should be the same as the version number of the release.
 You can verify this checking the changelog entries.
 
+Close the Milestone
+-------------------
+
+Close the milestone on GitHub for that particular version.
+Example: https://github.com/astronomer/astronomer-providers/milestone/2
 
 Create Stable Branch
 --------------------
