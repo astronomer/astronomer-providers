@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.models.taskinstance import TaskInstance
@@ -52,7 +52,7 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
         return Client()
 
     @staticmethod
-    def _get_xcom_bigquery_job_id(task_instance: TaskInstance) -> str:
+    def _get_xcom_bigquery_job_id(task_instance: TaskInstance) -> Any:
         """
         Pulls the BigQuery Job ID from XCOM for the task instance whose metadata needs to be extracted.
 
