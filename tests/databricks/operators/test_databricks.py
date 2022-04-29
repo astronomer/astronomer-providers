@@ -56,7 +56,7 @@ def test_databricks_submit_run_operator_async(
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        operator.execute(context)
+        operator.execute(context=create_context(operator))
 
     assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
@@ -80,7 +80,7 @@ def test_databricks_run_now_operator_async(
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        operator.execute(context)
+        operator.execute(context=create_context(operator))
 
     assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
