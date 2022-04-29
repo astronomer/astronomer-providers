@@ -1,6 +1,7 @@
 FROM quay.io/astronomer/ap-airflow:2.2.5 as staging
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+ENV AWS_NUKE_VERSION=v2.17.0
 
 USER root
 
@@ -31,7 +32,13 @@ ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 # install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
-    && ./aws/install
+    && ./aws/install;
+
+# install AWS nuke
+RUN wget --quiet  \
+    "https://github.com/rebuy-de/aws-nuke/releases/download/${AWS_NUKE_VERSION}/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz" \
+    && tar -xzvf aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz -C /usr/local/bin \
+    && mv /usr/local/bin/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64 /usr/local/bin/aws-nuke
 
 # install eksctl
 RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
@@ -64,6 +71,7 @@ RUN mkdir -p ${AIRFLOW_HOME}/dags
 COPY . .
 RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
+RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
 
 USER astro
 
@@ -101,7 +109,13 @@ ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 # install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
-    && ./aws/install
+    && ./aws/install;
+
+# install AWS nuke
+RUN wget --quiet  \
+    "https://github.com/rebuy-de/aws-nuke/releases/download/${AWS_NUKE_VERSION}/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz" \
+    && tar -xzvf aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz -C /usr/local/bin \
+    && mv /usr/local/bin/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64 /usr/local/bin/aws-nuke
 
 # install eksctl
 RUN curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp \
@@ -134,5 +148,6 @@ RUN mkdir -p ${AIRFLOW_HOME}/dags
 COPY . .
 RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
+RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
 
 USER astro
