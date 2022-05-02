@@ -76,7 +76,7 @@ RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
 USER astro
 
 # Deploy from astro runtime image
-FROM quay.io/astronomer/astro-runtime:4.2.4-base as astro-cloud
+FROM quay.io/astronomer/astro-runtime:5.0.0-base as astro-cloud
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
 
