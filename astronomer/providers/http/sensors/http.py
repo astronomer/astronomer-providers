@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
 from airflow.providers.http.sensors.http import HttpSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.http.triggers.http import HttpTrigger
 
@@ -49,7 +50,7 @@ class HttpSensorAsync(HttpSensor):
         depends on the option that's being modified.
     """
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """
         Logic that the sensor uses to correctly identify which trigger to
         execute, and defer execution as expected.

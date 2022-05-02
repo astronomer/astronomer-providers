@@ -205,7 +205,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
@@ -272,7 +272,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,

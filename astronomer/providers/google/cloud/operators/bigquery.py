@@ -163,7 +163,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
+    def execute(self, context: Context) -> None:  # noqa: D102
         hook = _BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
         )

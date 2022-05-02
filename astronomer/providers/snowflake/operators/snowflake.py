@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from airflow.exceptions import AirflowException
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+from airflow.utils.context import Context
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
@@ -48,7 +49,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         """Get the Snowflake Hook"""
         return get_db_hook(self.snowflake_conn_id)
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """
         Make a sync connection to snowflake and run query in execute_async
         function in snowflake and close the connection and with the query ids, fetch the status of the query.
