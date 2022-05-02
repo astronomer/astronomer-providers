@@ -74,6 +74,10 @@ def context():
 @mock.patch("airflow.models.TaskInstance.xcom_pull")
 @mock.patch("openlineage.common.provider.bigquery.BigQueryDatasetsProvider.get_facets")
 def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook):
+    """
+    Tests that  the custom extractor's implementation for the BigQueryInsertJobOperatorAsync is able to process the
+    operator's metadata that needs to be extracted as per OpenLineage.
+    """
     configuration = {
         "query": {
             "query": INSERT_ROWS_QUERY,
@@ -122,6 +126,7 @@ def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook
 
 
 def test_extractor_works_on_operator():
+    """Tests that the custom extractor implementation is available for the BigQueryInsertJobOperatorAsync Operator."""
     task_id = "insert_query_job"
     operator = BigQueryInsertJobOperatorAsync(task_id=task_id, configuration={})
     assert type(operator).__name__ in BigQueryInsertJobOperatorAsyncExtractor.get_operator_classnames()
@@ -129,6 +134,10 @@ def test_extractor_works_on_operator():
 
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 def test_unavailable_xcom_raises_exception(mock_hook):
+    """
+    Tests that an exception is raised when the custom extractor is not available to retrieve required XCOM for the
+    BigQueryInsertJobOperatorAsync Operator.
+    """
     configuration = {
         "query": {
             "query": INSERT_ROWS_QUERY,
