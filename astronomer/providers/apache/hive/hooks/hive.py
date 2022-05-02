@@ -43,7 +43,7 @@ class HiveCliHookAsync(BaseHook):
         query = f"show partitions {schema}.{table} partition({partition})"
         cursor.execute_async(query)
         while cursor.is_executing():
-            asyncio.sleep(polling_interval)
+            await asyncio.sleep(polling_interval)
         results = cursor.fetchall()
         if len(results) == 0:
             return "failure"
