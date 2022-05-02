@@ -14,8 +14,8 @@ from openlineage.common.provider.bigquery import (
     BigQueryStatisticsDatasetFacet,
 )
 
-from astronomer.providers.google.cloud.extractors.bigquery_insertjoboperatorasync_extractor import (
-    BigQueryInsertJobOperatorAsyncExtractor,
+from astronomer.providers.google.cloud.extractors.bigquery_async_extractor import (
+    BigQueryAsyncExtractor,
 )
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
@@ -103,7 +103,7 @@ def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook
     with pytest.raises(TaskDeferred):
         operator.execute(context)
 
-    bq_extractor = BigQueryInsertJobOperatorAsyncExtractor(operator)
+    bq_extractor = BigQueryAsyncExtractor(operator)
     task_meta_extract = bq_extractor.extract()
     assert task_meta_extract is None
 
@@ -129,7 +129,7 @@ def test_extractor_works_on_operator():
     """Tests that the custom extractor implementation is available for the BigQueryInsertJobOperatorAsync Operator."""
     task_id = "insert_query_job"
     operator = BigQueryInsertJobOperatorAsync(task_id=task_id, configuration={})
-    assert type(operator).__name__ in BigQueryInsertJobOperatorAsyncExtractor.get_operator_classnames()
+    assert type(operator).__name__ in BigQueryAsyncExtractor.get_operator_classnames()
 
 
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
@@ -160,7 +160,7 @@ def test_unavailable_xcom_raises_exception(mock_hook):
     with pytest.raises(TaskDeferred):
         operator.execute(context)
 
-    bq_extractor = BigQueryInsertJobOperatorAsyncExtractor(operator)
+    bq_extractor = BigQueryAsyncExtractor(operator)
     with mock.patch.object(bq_extractor.log, "exception") as mock_log_exception:
         task_meta = bq_extractor.extract_on_complete(task_instance)
 

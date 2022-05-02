@@ -13,7 +13,7 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 )
 
 
-class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor, LoggingMixin):
+class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
     """
     This extractor provides visibility on the metadata of a BigQuery Insert Job
     including ``billedBytes``, ``rowCount``, ``size``, etc. submitted from a
