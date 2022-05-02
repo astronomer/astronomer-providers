@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# Make the script exit with the status if one of the commands fails. Without this, the Airflow task calling this script
+# will be marked as 'success' and the DAG will proceed on to the subsequent tasks.
+set -e
+
 # This script use to update a staging Astro staging and cloud Airflow deployment.
 # It currently does not support creating a new deployment.
 # To deploy on 'staging' execute the script with below positional params

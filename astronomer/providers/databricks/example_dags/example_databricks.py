@@ -13,8 +13,7 @@ from astronomer.providers.databricks.operators.databricks import (
 
 DATABRICKS_CONN_ID = os.environ.get("ASTRO_DATABRICKS_CONN_ID", "databricks_default")
 # Notebook path as a Json object
-# Example: {"notebook_path": "/Users/pankaj.singh@astronomer.io/quick_start"}
-notebook_task = '{"notebook_path": "/Users/pankaj.singh@astronomer.io/quick_start"}'
+notebook_task = '{"notebook_path": "/Users/phani.kumar@astronomer.io/quick_start"}'
 NOTEBOOK_TASK = json.loads(os.environ.get("DATABRICKS_NOTEBOOK_TASK", notebook_task))
 notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
@@ -24,9 +23,23 @@ default_args = {
 }
 
 new_cluster = {
-    "spark_version": "7.3.x-scala2.12",
-    "num_workers": 2,
-    "node_type_id": "i3en.large",
+    "num_workers": 1,
+    "spark_version": "10.4.x-scala2.12",
+    "spark_conf": {},
+    "aws_attributes": {
+        "first_on_demand": 2,
+        "availability": "SPOT_WITH_FALLBACK",
+        "spot_bid_price_percent": 100,
+        "ebs_volume_type": "GENERAL_PURPOSE_SSD",
+        "ebs_volume_count": 1,
+        "ebs_volume_size": 100,
+    },
+    "node_type_id": "m4.large",
+    "ssh_public_keys": [],
+    "custom_tags": {},
+    "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
+    "cluster_source": "JOB",
+    "init_scripts": [],
 }
 
 

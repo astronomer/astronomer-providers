@@ -233,6 +233,7 @@ with models.DAG(
     hive_task = DataprocSubmitJobOperatorAsync(
         task_id="hive_task", job=HIVE_JOB, region=REGION, project_id=PROJECT_ID
     )
+    # [END howto_DataprocSubmitJobOperatorAsync]
     # [START howto_DataprocSubmitJobOperatorAsync]
     hadoop_task = DataprocSubmitJobOperatorAsync(
         task_id="hadoop_task", job=HADOOP_JOB, region=REGION, project_id=PROJECT_ID

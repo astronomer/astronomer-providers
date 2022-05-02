@@ -32,6 +32,6 @@ with DAG(
         # response_check=lambda response: "httpbin" in response.text,
         poke_interval=5,
     )
-    # [START howto_operator_file_sensor_async]
+    # [END howto_operator_file_sensor_async]
 
     async_http_sensor
