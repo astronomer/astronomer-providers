@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/ap-airflow:2.2.5 as staging
+FROM quay.io/astronomer/ap-airflow:2.3.0-1 as staging
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
 ENV AWS_NUKE_VERSION=v2.17.0
