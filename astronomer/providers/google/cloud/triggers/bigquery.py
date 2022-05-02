@@ -68,7 +68,7 @@ class BigQueryInsertJobTrigger(BaseTrigger):
                 if response_from_hook == "success":
                     yield TriggerEvent(
                         {
-                            "jobId": self.job_id,
+                            "job_id": self.job_id,
                             "status": "success",
                             "message": "Job completed",
                         }

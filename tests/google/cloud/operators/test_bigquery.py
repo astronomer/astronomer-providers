@@ -137,7 +137,7 @@ def test_bigquery_insert_job_operator_execute_complete():
     with mock.patch.object(operator.log, "info") as mock_log_info:
         operator.execute_complete(
             context=create_context(operator),
-            event={"status": "success", "message": "Job completed", "jobId": job_id},
+            event={"status": "success", "message": "Job completed", "job_id": job_id},
         )
     mock_log_info.assert_called_with("%s completed with response %s ", "insert_query_job", "Job completed")
 

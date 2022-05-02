@@ -92,7 +92,7 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
     # so we validate for length of task to be 1
     assert len(task) == 1
 
-    assert TriggerEvent({"status": "success", "message": "Job completed", "jobId": TEST_JOB_ID}) in task
+    assert TriggerEvent({"status": "success", "message": "Job completed", "job_id": TEST_JOB_ID}) in task
 
 
 @pytest.mark.parametrize(
