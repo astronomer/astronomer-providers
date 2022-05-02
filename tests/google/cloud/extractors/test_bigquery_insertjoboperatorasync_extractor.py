@@ -119,3 +119,9 @@ def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook
     assert task_meta.run_facets["bigQuery_job"].billedBytes == 0
     run_facet_properties = json.loads(task_meta.run_facets["bigQuery_job"].properties)
     assert run_facet_properties == JOB_PROPERTIES
+
+
+def test_extractor_works_on_operator():
+    task_id = "insert_query_job"
+    operator = BigQueryInsertJobOperatorAsync(task_id=task_id, configuration={})
+    assert type(operator).__name__ in BigQueryInsertJobOperatorAsyncExtractor.get_operator_classnames()

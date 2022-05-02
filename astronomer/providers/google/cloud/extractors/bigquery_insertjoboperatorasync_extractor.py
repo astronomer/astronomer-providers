@@ -3,12 +3,10 @@ from typing import Any, List, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.models.taskinstance import TaskInstance
-from airflow.version import version as AIRFLOW_VERSION
 from google.cloud.bigquery import Client
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
-from openlineage.airflow.utils import get_job_name, try_import_from_string
+from openlineage.airflow.utils import get_job_name
 from openlineage.common.provider.bigquery import BigQueryDatasetsProvider
-from pkg_resources import parse_version
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
@@ -37,18 +35,6 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
         if hasattr(self.operator, "hook") and self.operator.hook:
             hook = self.operator.hook
             return hook.get_client(project_id=hook.project_id, location=hook.location)
-        elif parse_version(AIRFLOW_VERSION) >= parse_version("2.0.0"):
-            BigQueryHook = try_import_from_string(
-                "airflow.providers.google.cloud.operators.bigquery.BigQueryHook"
-            )
-            if BigQueryHook is not None:
-                hook = BigQueryHook(
-                    gcp_conn_id=self.operator.gcp_conn_id,
-                    delegate_to=self.operator.delegate_to,
-                    location=self.operator.location,
-                    impersonation_chain=self.operator.impersonation_chain,
-                )
-                return hook.get_client(project_id=hook.project_id, location=hook.location)
         return Client()
 
     @staticmethod
