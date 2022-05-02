@@ -125,3 +125,35 @@ def test_extractor_works_on_operator():
     task_id = "insert_query_job"
     operator = BigQueryInsertJobOperatorAsync(task_id=task_id, configuration={})
     assert type(operator).__name__ in BigQueryInsertJobOperatorAsyncExtractor.get_operator_classnames()
+
+
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+def test_unavailable_xcom_raises_exception(mock_hook):
+    configuration = {
+        "query": {
+            "query": INSERT_ROWS_QUERY,
+            "useLegacySql": False,
+        }
+    }
+    job_id = "123456"
+    mock_hook.return_value.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
+    task_id = "insert_query_job"
+    operator = BigQueryInsertJobOperatorAsync(
+        task_id=task_id,
+        configuration=configuration,
+        location=TEST_DATASET_LOCATION,
+        job_id=job_id,
+        project_id=TEST_GCP_PROJECT_ID,
+    )
+
+    task_instance = TaskInstance(task=operator)
+
+    with pytest.raises(TaskDeferred):
+        operator.execute(context)
+
+    bq_extractor = BigQueryInsertJobOperatorAsyncExtractor(operator)
+    with mock.patch.object(bq_extractor.log, "exception") as mock_log_exception:
+        task_meta = bq_extractor.extract_on_complete(task_instance)
+
+    mock_log_exception.assert_called_with("Failed pulling XCOM for task; XCOM not found in database")
+    assert task_meta.name == f"adhoc_airflow.{task_id}"

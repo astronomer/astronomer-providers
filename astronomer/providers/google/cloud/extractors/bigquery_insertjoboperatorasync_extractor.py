@@ -1,8 +1,8 @@
-import logging
 from typing import Any, List, Optional
 
-from airflow.exceptions import AirflowException
+import sqlalchemy
 from airflow.models.taskinstance import TaskInstance
+from airflow.utils.log.logging_mixin import LoggingMixin
 from google.cloud.bigquery import Client
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
 from openlineage.airflow.utils import get_job_name
@@ -12,10 +12,8 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
 )
 
-log = logging.getLogger(__name__)
 
-
-class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
+class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor, LoggingMixin):
     """
     This extractor provides visibility on the metadata of a BigQuery Insert Job
     including ``billedBytes``, ``rowCount``, ``size``, etc. submitted from a
@@ -37,15 +35,14 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
             return hook.get_client(project_id=hook.project_id, location=hook.location)
         return Client()
 
-    @staticmethod
-    def _get_xcom_bigquery_job_id(task_instance: TaskInstance) -> Any:
+    def _get_xcom_bigquery_job_id(self, task_instance: TaskInstance) -> Any:
         """
         Pulls the BigQuery Job ID from XCOM for the task instance whose metadata needs to be extracted.
 
         :param task_instance: Instance of the Airflow task whose BigQuery ``job_id`` needs to be pulled from XCOM.
         """
         bigquery_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="job_id")
-        log.debug("Big Query Job Id %s", bigquery_job_id)
+        self.log.debug("Big Query Job Id %s", bigquery_job_id)
         return bigquery_job_id
 
     @classmethod
@@ -65,10 +62,8 @@ class BigQueryInsertJobOperatorAsyncExtractor(BaseExtractor):
         """
         try:
             bigquery_job_id = self._get_xcom_bigquery_job_id(task_instance)
-            if bigquery_job_id is None:
-                raise AirflowException("Xcom could not resolve BigQuery job id." + "Job may have failed.")
-        except AirflowException:
-            log.exception("Cannot retrieve job details from BigQuery Client.")
+        except sqlalchemy.orm.exc.NoResultFound:
+            self.log.exception("Failed pulling XCOM for task; XCOM not found in database")
             return TaskMetadata(name=get_job_name(task=self.operator))
         stats = BigQueryDatasetsProvider(client=self._big_query_client).get_facets(bigquery_job_id)
         inputs = stats.inputs
