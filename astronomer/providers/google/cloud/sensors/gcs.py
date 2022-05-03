@@ -26,13 +26,8 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
     Checks for the existence of a file in Google Cloud Storage.
 
     :param bucket: The Google Cloud Storage bucket where the object is.
-    :param object: The name of the object to check in the Google cloud
-        storage bucket.
-    :param google_cloud_conn_id: The connection ID to use when
-        connecting to Google Cloud Storage.
-    :param bucket: The bucket name where the objects in GCS will be present
-    :param object: the object name of the file or folder present in the google
-          cloud storage
+    :param object: The name of the object to check in the Google cloud storage bucket.
+    :param google_cloud_conn_id: The connection ID to use when connecting to Google Cloud Storage.
     :param delegate_to: The account to impersonate using domain-wide delegation of authority,
         if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
