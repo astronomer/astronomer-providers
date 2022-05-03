@@ -24,10 +24,6 @@ class HttpTrigger(BaseTrigger):
     :param extra_options: Additional kwargs to pass when creating a request.
         For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
     :type extra_options: dict
-    :param extra_options: Extra options for the 'requests' library, see the
-        'requests' documentation (options to modify timeout, ssl, etc.)
-    :type extra_options: A dictionary of options, where key is string and value
-        depends on the option that's being modified.
     :param poll_interval: Time to sleep using asyncio
     :type poll_interval: float
     """
