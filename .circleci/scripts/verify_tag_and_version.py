@@ -10,7 +10,7 @@ config = configparser.ConfigParser(strict=False)
 config.read(repo_dir / "setup.cfg")
 
 version_in_setup_cfg = config["metadata"]["version"]
-git_tag = os.environ.get("CIRCLE_TAG")
+git_tag = os.getenv("CIRCLE_TAG")
 
 if git_tag is not None:
     if version_in_setup_cfg != git_tag:

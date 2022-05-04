@@ -17,14 +17,14 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
     S3PrefixSensorAsync,
 )
 
-S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
-S3_BUCKET_KEY = os.environ.get("S3_BUCKET_KEY", "test/example_s3_test_file.txt")
-S3_BUCKET_WILDCARD_KEY = os.environ.get("S3_BUCKET_WILDCARD_KEY", "test*")
-PREFIX = os.environ.get("S3_PREFIX", "test")
-INACTIVITY_PERIOD = float(os.environ.get("INACTIVITY_PERIOD", 5))
-AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-2")
-LOCAL_FILE_PATH = os.environ.get("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
-AWS_CONN_ID = os.environ.get("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
+S3_BUCKET_KEY = os.getenv("S3_BUCKET_KEY", "test/example_s3_test_file.txt")
+S3_BUCKET_WILDCARD_KEY = os.getenv("S3_BUCKET_WILDCARD_KEY", "test*")
+PREFIX = os.getenv("S3_PREFIX", "test")
+INACTIVITY_PERIOD = float(os.getenv("INACTIVITY_PERIOD", 5))
+AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+LOCAL_FILE_PATH = os.getenv("LOCAL_FILE_PATH", "/usr/local/airflow/dags/example_s3_test_file.txt")
+AWS_CONN_ID = os.getenv("ASTRO_AWS_S3_CONN_ID", "aws_s3_default")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {

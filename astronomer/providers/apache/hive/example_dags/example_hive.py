@@ -22,17 +22,17 @@ from astronomer.providers.apache.hive.sensors.hive_partition import (
 )
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "aws_access_key"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "aws_secret_key"),
-    "region_name": os.environ.get("AWS_DEFAULT_REGION", "us-east-2"),
+    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "aws_access_key"),
+    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "aws_secret_key"),
+    "region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-2"),
 }
 
-PEM_FILENAME = os.environ.get("PEM_FILENAME", "providers_team_keypair")
+PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
-HIVE_TABLE = os.environ.get("HIVE_TABLE", "zipcode")
-HIVE_PARTITION = os.environ.get("HIVE_PARTITION", "state='FL'")
-JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
-SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
+HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")
+HIVE_PARTITION = os.getenv("HIVE_PARTITION", "state='FL'")
+JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
+SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 COMMAND_TO_CREATE_TABLE_DATA_FILE: List[str] = [

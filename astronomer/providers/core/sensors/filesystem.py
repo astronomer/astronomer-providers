@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from airflow.hooks.filesystem import FSHook
 from airflow.sensors.filesystem import FileSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.core.triggers.filesystem import FileTrigger
 
@@ -24,7 +25,7 @@ class FileSensorAsync(FileSensor):
         ``**`` in glob filepath parameter. Defaults to ``False``.
     """
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         if not self.poke(context=context):
             hook = FSHook(self.fs_conn_id)

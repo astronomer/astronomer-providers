@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.sensors.bigquery import BigQueryTableExistenceSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryTableExistenceTrigger,
@@ -46,7 +47,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         self.polling_interval = polling_interval
         self.gcp_conn_id = gcp_conn_id
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,

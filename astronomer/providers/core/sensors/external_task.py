@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.context import Context
 from airflow.utils.session import provide_session
 
 from astronomer.providers.core.triggers.external_task import (
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Correctly identify which trigger to execute, and defer execution as expected."""
         execution_dates = self.get_execution_dates(context)
 
@@ -48,7 +49,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
 
     @provide_session
     def execute_complete(
-        self, context: Dict[str, Any], session: "Session", event: Optional[Dict[str, Any]] = None
+        self, context: Context, session: "Session", event: Optional[Dict[str, Any]] = None
     ) -> None:
         """Verifies that there is a success status for each task via execution date."""
         execution_dates = self.get_execution_dates(context)
@@ -62,7 +63,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
                 raise AirflowException(f"The external DAG {self.external_dag_id} failed.")
         return None
 
-    def get_execution_dates(self, context: Dict[str, Any]) -> List[datetime.datetime]:
+    def get_execution_dates(self, context: Context) -> List[datetime.datetime]:
         """Helper function to set execution dates depending on which context and/or internal fields are populated."""
         if self.execution_delta:
             execution_date = context["execution_date"] - self.execution_delta

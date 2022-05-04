@@ -21,10 +21,10 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperatorAsync,
 )
 
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
-DATASET_NAME = os.environ.get("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
-GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
-LOCATION = os.environ.get("GCP_LOCATION", "us")
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
+DATASET_NAME = os.getenv("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
+GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
+LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 TABLE_1 = "table1"

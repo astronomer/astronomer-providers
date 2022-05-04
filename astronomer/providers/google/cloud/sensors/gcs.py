@@ -1,6 +1,6 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectUpdateSensor,
     GCSUploadSessionCompleteSensor,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
@@ -16,9 +17,6 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class GCSObjectExistenceSensorAsync(BaseOperator):
@@ -200,7 +198,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
@@ -267,7 +265,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
