@@ -60,11 +60,8 @@ class SnowflakeTrigger(BaseTrigger):
             run_state = await hook.get_query_status(self.query_ids)
             if run_state:
                 yield TriggerEvent(run_state)
-                return
             else:
                 error_message = f"{self.task_id} failed with terminal state: {run_state}"
-                yield TriggerEvent({"status": "error", "message": str(error_message), "type": "ERROR"})
-                return
+                yield TriggerEvent({"status": "error", "message": error_message})
         except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e), "type": "ERROR"})
-            return
+            yield TriggerEvent({"status": "error", "message": str(e)})

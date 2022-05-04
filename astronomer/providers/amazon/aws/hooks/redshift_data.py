@@ -11,6 +11,19 @@ class RedshiftDataHook(AwsBaseHook):
     """
     RedshiftDataHook inherits from AwsBaseHook to connect with AWS redshift
     by using boto3 client_type as redshift-data we can interact with redshift cluster database and execute the query
+
+    :param aws_conn_id: The Airflow connection used for AWS credentials.
+        If this is None or empty then the default boto3 behaviour is used. If
+        running Airflow in a distributed manner and aws_conn_id is None or
+        empty, then default boto3 configuration would be used (and must be
+        maintained on each worker node).
+    :param verify: Whether or not to verify SSL certificates.
+        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html
+    :param region_name: AWS region_name. If not specified then the default boto3 behaviour is used.
+    :param client_type: boto3.client client_type. Eg 's3', 'emr' etc
+    :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
+    :param config: Configuration for botocore client.
+        (https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html)
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

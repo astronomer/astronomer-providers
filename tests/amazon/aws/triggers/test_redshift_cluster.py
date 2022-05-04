@@ -57,9 +57,7 @@ def test_redshift_cluster_resume_trigger_serialization():
 async def test_redshift_cluster_resume_trigger_run(
     mock_resume_cluster, operation_type, return_value, response
 ):
-    """
-    Test RedshiftClusterTrigger resume cluster with success
-    """
+    """Test RedshiftClusterTrigger resume cluster with success"""
     mock_resume_cluster.return_value = return_value
     trigger = RedshiftClusterTrigger(
         task_id=TASK_ID,
@@ -68,17 +66,15 @@ async def test_redshift_cluster_resume_trigger_run(
         cluster_identifier="mock_cluster_identifier",
         operation_type=operation_type,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert response in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert response == actual
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.resume_cluster")
 async def test_redshift_cluster_resume_trigger_failure(mock_resume_cluster):
-    """
-    Test RedshiftClusterTrigger resume cluster with failure status
-    """
+    """Test RedshiftClusterTrigger resume cluster with failure status"""
     mock_resume_cluster.side_effect = Exception("Test exception")
     trigger = RedshiftClusterTrigger(
         task_id=TASK_ID,
@@ -145,17 +141,15 @@ async def test_redshift_cluster_pause_trigger_run(mock_pause_cluster, operation_
         cluster_identifier="mock_cluster_identifier",
         operation_type=operation_type,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert response in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert response == actual
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.pause_cluster")
 async def test_redshift_cluster_pause_trigger_failure(mock_pause_cluster):
-    """
-    Test RedshiftClusterTrigger with pause cluster failure
-    """
+    """Test RedshiftClusterTrigger with pause cluster failure"""
     mock_pause_cluster.side_effect = Exception("Test exception")
     trigger = RedshiftClusterTrigger(
         task_id=TASK_ID,
@@ -215,12 +209,9 @@ async def test_redshift_cluster_sensor_trigger_success(mock_cluster_status, expe
         polling_period_seconds=POLLING_PERIOD_SECONDS,
     )
 
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
-    assert TriggerEvent(expected_result) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent(expected_result) == actual
 
 
 @pytest.mark.asyncio
@@ -232,9 +223,7 @@ async def test_redshift_cluster_sensor_trigger_success(mock_cluster_status, expe
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
 async def test_redshift_cluster_sensor_trigger_resuming_status(mock_cluster_status, expected_result):
-    """
-    Test RedshiftClusterSensorTrigger with the success status
-    """
+    """Test RedshiftClusterSensorTrigger with the success status"""
     mock_cluster_status.return_value = expected_result
     trigger = RedshiftClusterSensorTrigger(
         task_id=TASK_ID,
@@ -256,9 +245,7 @@ async def test_redshift_cluster_sensor_trigger_resuming_status(mock_cluster_stat
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
 async def test_redshift_cluster_sensor_trigger_exception(mock_cluster_status):
-    """
-    Test RedshiftClusterSensorTrigger with exception
-    """
+    """Test RedshiftClusterSensorTrigger with exception"""
     mock_cluster_status.side_effect = Exception("Test exception")
     trigger = RedshiftClusterSensorTrigger(
         task_id=TASK_ID,

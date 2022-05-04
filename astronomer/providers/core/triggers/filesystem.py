@@ -54,9 +54,7 @@ class FileTrigger(BaseTrigger):
                     mod_time = datetime.datetime.fromtimestamp(mod_time_f).strftime("%Y%m%d%H%M%S")
                     log.info("Found File %s last modified: %s", str(path), str(mod_time))
                     yield TriggerEvent(True)
-                    return
                 for _, _, files in os.walk(self.filepath):
                     if len(files) > 0:
                         yield TriggerEvent(True)
-                        return
             await asyncio.sleep(self.poll_interval)
