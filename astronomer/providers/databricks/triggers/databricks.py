@@ -63,11 +63,9 @@ class DatabricksTrigger(BaseTrigger):  # noqa: D101
                             "run_page_url": self.run_page_url,
                         }
                     )
-                    return
                 else:
                     error_message = f"{self.task_id} failed with terminal state: {run_state}"
                     yield TriggerEvent({"status": "error", "message": str(error_message)})
-                    return
             else:
                 self.log.info("%s in run state: %s", self.task_id, run_state)
                 self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)

@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 from airflow import AirflowException
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
@@ -32,7 +33,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     :param polling_interval: The interval in seconds to wait between checks for partition.
     """
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,

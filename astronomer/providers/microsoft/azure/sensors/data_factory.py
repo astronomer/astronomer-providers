@@ -4,6 +4,7 @@ from airflow import AirflowException
 from airflow.providers.microsoft.azure.sensors.data_factory import (
     AzureDataFactoryPipelineRunStatusSensor,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.microsoft.azure.triggers.data_factory import (
     ADFPipelineRunStatusSensorTrigger,
@@ -29,7 +30,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=self.execution_timeout,

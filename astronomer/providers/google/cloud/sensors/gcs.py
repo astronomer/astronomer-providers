@@ -1,6 +1,6 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectUpdateSensor,
     GCSUploadSessionCompleteSensor,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
@@ -17,22 +18,14 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSUploadSessionTrigger,
 )
 
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
-
 
 class GCSObjectExistenceSensorAsync(BaseOperator):
     """
     Checks for the existence of a file in Google Cloud Storage.
 
     :param bucket: The Google Cloud Storage bucket where the object is.
-    :param object: The name of the object to check in the Google cloud
-        storage bucket.
-    :param google_cloud_conn_id: The connection ID to use when
-        connecting to Google Cloud Storage.
-    :param bucket: The bucket name where the objects in GCS will be present
-    :param object: the object name of the file or folder present in the google
-          cloud storage
+    :param object: The name of the object to check in the Google cloud storage bucket.
+    :param google_cloud_conn_id: The connection ID to use when connecting to Google Cloud Storage.
     :param delegate_to: The account to impersonate using domain-wide delegation of authority,
         if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
@@ -205,7 +198,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,
@@ -272,7 +265,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=self.execution_timeout,

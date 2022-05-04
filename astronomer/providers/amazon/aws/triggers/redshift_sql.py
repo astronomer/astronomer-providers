@@ -47,11 +47,8 @@ class RedshiftSQLTrigger(BaseTrigger):
             response = await hook.get_query_status(self.query_ids)
             if response:
                 yield TriggerEvent(response)
-                return
             else:
                 error_message = f"{self.task_id} failed"
                 yield TriggerEvent({"status": "error", "message": error_message})
-                return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return

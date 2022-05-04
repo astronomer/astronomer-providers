@@ -55,9 +55,9 @@ async def test_redshiftsql_trigger_run(mock_get_query_status, query_ids, return_
         aws_conn_id=TEST_CONN_ID,
         query_ids=query_ids,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert response in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert response == actual
 
 
 @pytest.mark.asyncio

@@ -11,7 +11,17 @@ if TYPE_CHECKING:
 
 
 class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
-    """Executes SQL Statements against an Amazon Redshift cluster"""
+    """
+    Executes SQL Statements against an Amazon Redshift cluster"
+
+    :param sql: the SQL code to be executed as a single string, or
+        a list of str (sql statements), or a reference to a template file.
+        Template references are recognized by str ending in '.sql'
+    :param redshift_conn_id: reference to Amazon Redshift connection id
+    :param parameters: (optional) the parameters to render the SQL query with.
+    :param autocommit: if True, each command is automatically committed.
+        (default value: False)
+    """
 
     def __init__(
         self,

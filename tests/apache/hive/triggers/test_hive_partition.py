@@ -53,9 +53,9 @@ async def test_hive_partition_trigger_success(mock_get_connection, mock_partitio
         metastore_conn_id=TEST_METASTORE_CONN_ID,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success", "message": "success"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "message": "success"}) == actual
 
 
 @pytest.mark.asyncio

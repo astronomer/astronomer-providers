@@ -1,4 +1,5 @@
 from unittest import mock
+from unittest.mock import PropertyMock
 
 import pytest
 from airflow import models
@@ -51,7 +52,7 @@ async def test_partition_exists(mock_get_client, mock_get_connection, result, re
     mock_get_client.return_value = hiveserver_connection
     cursor = mock.AsyncMock(HiveServer2Cursor)
     hiveserver_connection.cursor.return_value = cursor
-    cursor.is_executing.return_value = False
+    cursor.is_executing = PropertyMock(side_effect=[True, False])
     cursor.fetchall.return_value = result
     res = await hook.partition_exists(TEST_TABLE, TEST_SCHEMA, TEST_PARTITION, TEST_POLLING_INTERVAL)
     assert res == response

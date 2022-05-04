@@ -6,6 +6,7 @@ from airflow.providers.amazon.aws.sensors.emr import (
     EmrJobFlowSensor,
     EmrStepSensor,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.emr import (
     EmrContainerSensorTrigger,
@@ -29,7 +30,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         check query status on athena, defaults to 10
     """
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=self.execution_timeout,
@@ -75,7 +76,7 @@ class EmrStepSensorAsync(EmrStepSensor):
         step reaches any of these states
     """
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Deferred and give control to trigger"""
         self.defer(
             timeout=self.execution_timeout,
@@ -129,7 +130,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Dict[Any, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=self.execution_timeout,

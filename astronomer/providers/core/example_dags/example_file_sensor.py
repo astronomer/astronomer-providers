@@ -6,7 +6,7 @@ from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.filesystem import FileSensorAsync
 
-FS_CONN_ID = os.environ.get("ASTRO_FS_CONN_ID", "fs_default")
+FS_CONN_ID = os.getenv("ASTRO_FS_CONN_ID", "fs_default")
 
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
