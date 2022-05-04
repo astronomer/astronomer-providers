@@ -4,8 +4,10 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import TaskDeferred
+from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.timezone import datetime
+from airflow.utils.types import DagRunType
 from openlineage.client.facet import OutputStatisticsOutputDatasetFacet
 from openlineage.common.dataset import Dataset, Source
 from openlineage.common.provider.bigquery import (
@@ -156,13 +158,14 @@ def test_unavailable_xcom_raises_exception(mock_hook):
     )
 
     task_instance = TaskInstance(task=operator)
+    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    task_instance.run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
 
     with pytest.raises(TaskDeferred):
         operator.execute(context)
-
     bq_extractor = BigQueryAsyncExtractor(operator)
     with mock.patch.object(bq_extractor.log, "exception") as mock_log_exception:
         task_meta = bq_extractor.extract_on_complete(task_instance)
 
-    mock_log_exception.assert_called_with("Failed pulling XCOM for task; XCOM not found in database")
+    mock_log_exception.assert_called_with("Could not pull relevant BigQuery job ID from XCOM")
     assert task_meta.name == f"adhoc_airflow.{task_id}"

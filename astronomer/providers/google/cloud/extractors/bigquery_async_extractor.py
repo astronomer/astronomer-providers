@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 
-import sqlalchemy
+from airflow.exceptions import AirflowException
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.log.logging_mixin import LoggingMixin
 from google.cloud.bigquery import Client
@@ -42,6 +42,8 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
         :param task_instance: Instance of the Airflow task whose BigQuery ``job_id`` needs to be pulled from XCOM.
         """
         bigquery_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="job_id")
+        if not bigquery_job_id:
+            raise AirflowException("Could not pull relevant BigQuery job ID from XCOM")
         self.log.debug("Big Query Job Id %s", bigquery_job_id)
         return bigquery_job_id
 
@@ -62,8 +64,9 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
         """
         try:
             bigquery_job_id = self._get_xcom_bigquery_job_id(task_instance)
-        except sqlalchemy.orm.exc.NoResultFound:
-            self.log.exception("Failed pulling XCOM for task; XCOM not found in database")
+        except AirflowException as ae:
+            exception_message = str(ae)
+            self.log.exception("%s", exception_message)
             return TaskMetadata(name=get_job_name(task=self.operator))
         stats = BigQueryDatasetsProvider(client=self._big_query_client).get_facets(bigquery_job_id)
         inputs = stats.inputs
