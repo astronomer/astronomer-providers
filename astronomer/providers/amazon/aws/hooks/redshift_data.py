@@ -1,8 +1,9 @@
 from io import StringIO
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
+from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from snowflake.connector.util_text import split_statements
 
@@ -86,7 +87,7 @@ class RedshiftDataHook(AwsBaseHook):
         return conn_params
 
     def execute_query(
-        self, sql: Union[Dict[Any, Any], Iterable[Any]], params: Optional[Dict[Any, Any]]
+        self, sql: Union[Dict[Any, Any], Iterable[Any]], params: Union[ParamsDict, Dict[Any, Any]]
     ) -> Tuple[List[str], Dict[str, str]]:
         """
         Runs an SQL statement, which can be data manipulation language (DML)

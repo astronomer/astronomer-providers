@@ -1,15 +1,13 @@
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
 )
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """Check for the target_status and defers using the trigger"""
         self.defer(
             timeout=self.execution_timeout,
