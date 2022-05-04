@@ -137,8 +137,8 @@ async def test_databricks_trigger_terminated(run_state):
         polling_period_seconds=POLLING_PERIOD_SECONDS,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     assert (
         TriggerEvent(
             {
@@ -147,5 +147,5 @@ async def test_databricks_trigger_terminated(run_state):
                 " 'result_state': 'TERMINATED', 'state_message': ''}",
             }
         )
-        in task
+        == actual
     )

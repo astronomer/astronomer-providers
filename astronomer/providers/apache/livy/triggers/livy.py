@@ -70,7 +70,6 @@ class LivyTrigger(BaseTrigger):
             if self._polling_interval > 0:
                 response = await self.poll_for_termination(self._batch_id)
                 yield TriggerEvent(response)
-                return
             yield TriggerEvent(
                 {
                     "status": "success",

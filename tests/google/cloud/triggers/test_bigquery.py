@@ -84,15 +84,9 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
         POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
-
-    assert TriggerEvent({"status": "success", "message": "Job completed"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "message": "Job completed"}) == actual
 
 
 @pytest.mark.parametrize(
@@ -153,15 +147,9 @@ async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
-
-    assert TriggerEvent({"status": "error", "message": "error"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "error"}) == actual
 
 
 @pytest.mark.parametrize(
@@ -186,14 +174,9 @@ async def test_bigquery_op_trigger_exception(mock_job_status, caplog, trigger_cl
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) == actual
 
 
 def test_bigquery_check_op_trigger_serialization():
@@ -254,18 +237,10 @@ async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock
         POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
 
-    # The extracted row will be parsed and formatted to retrieve the value [22] from the
-    # structure - 'rows': [{'f': [{'v': '22'}]}]
-
-    assert TriggerEvent({"status": "success", "records": [22]}) in task
+    assert TriggerEvent({"status": "success", "records": [22]}) == actual
 
 
 @pytest.mark.asyncio
@@ -306,14 +281,9 @@ async def test_bigquery_check_op_trigger_success_without_data(mock_job_output, m
         TEST_TABLE_ID,
         POLLING_PERIOD_SECONDS,
     )
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success", "records": None}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "records": None}) == actual
 
 
 def test_bigquery_get_data_trigger_serialization():
@@ -374,13 +344,8 @@ async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock
         POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     # # The extracted row will be parsed and formatted to retrieve the value from the
     # # structure - 'rows":[{"f":[{"v":"42"},{"v":"monthy python"}]},{"f":[{"v":"42"},{"v":"fishy fish"}]}]
 
@@ -392,7 +357,7 @@ async def test_bigquery_get_data_trigger_success_with_data(mock_job_output, mock
                 "records": [["42", "monthy python"], ["42", "fishy fish"]],
             }
         )
-        in task
+        == actual
     )
     # Prevents error when task is destroyed while in "pending" state
     asyncio.get_event_loop().stop()
@@ -466,14 +431,9 @@ async def test_bigquery_interval_check_trigger_success(
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert actual == TriggerEvent({"status": "error", "message": "The second SQL query returned None"})
 
 
 @pytest.mark.parametrize(
@@ -547,15 +507,10 @@ async def test_bigquery_interval_check_trigger_terminated(mock_job_status, trigg
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
 
-    assert TriggerEvent({"status": "error", "message": "error", "data": None}) in task
+    assert TriggerEvent({"status": "error", "message": "error", "data": None}) == actual
 
 
 @pytest.mark.parametrize(
@@ -655,17 +610,12 @@ async def test_bigquery_value_check_op_trigger_success(mock_job_status, get_job_
         poll_interval=POLLING_PERIOD_SECONDS,
     )
 
-    task = asyncio.create_task(trigger.run().__anext__())
+    asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert actual == TriggerEvent({"status": "success", "message": "Job completed", "records": [4]})
 
 
 @pytest.mark.asyncio
@@ -723,15 +673,9 @@ async def test_bigquery_value_check_op_trigger_fail(mock_job_status):
         POLLING_PERIOD_SECONDS,
     )
 
-    # trigger event is yielded so it creates a generator object
-    # so i have used async for to get all the values and added it to task
-    task = [i async for i in trigger.run()]
-    # since we use return as soon as we yield the trigger event
-    # at any given point there should be one trigger event returned to the task
-    # so we validate for length of task to be 1
-
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "dummy", "records": None}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "dummy", "records": None}) == actual
 
 
 @pytest.mark.asyncio
@@ -804,9 +748,9 @@ async def test_big_query_table_existence_trigger_success(mock_table_exists):
         POLLING_PERIOD_SECONDS,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success", "message": "success"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "message": "success"}) == actual
 
 
 @pytest.mark.asyncio

@@ -59,11 +59,9 @@ class HivePartitionTrigger(BaseTrigger):
                 )
                 if res == "success":
                     yield TriggerEvent({"status": "success", "message": res})
-                    return
                 await asyncio.sleep(self.polling_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
     def _get_async_hook(self) -> HiveCliHookAsync:
         return HiveCliHookAsync(metastore_conn_id=self.metastore_conn_id)

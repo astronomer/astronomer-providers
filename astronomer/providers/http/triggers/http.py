@@ -77,7 +77,6 @@ class HttpTrigger(BaseTrigger):
                     extra_options=self.extra_options,
                 )
                 yield TriggerEvent(True)
-                return
             except AirflowException as exc:
                 if str(exc).startswith("404"):
                     await asyncio.sleep(self.poll_interval)

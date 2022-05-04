@@ -34,15 +34,14 @@ async def test_livy_trigger_run_with_no_poll_interval(mock_poll_for_termination)
     """
     Test if the task ran in the triggerer successfully with poll interval=0. In the case when polling_interval=0, it
     should return the batch_id
-    :return:
     """
     mock_poll_for_termination.return_value = {"status": "success"}
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=0)
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     assert (
         TriggerEvent({"status": "success", "batch_id": 1, "response": "Batch 1 succeeded", "log_lines": None})
-        in task
+        == actual
     )
 
 
@@ -52,37 +51,30 @@ async def test_livy_trigger_run_with_poll_interval_success(mock_poll_for_termina
     """
     Test if the task ran in the triggerer successfully with poll interval>0. In the case when polling_interval > 0,
     it should return a success or failure status.
-    :return:
     """
     mock_poll_for_termination.return_value = {"status": "success"}
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success"}) == actual
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.apache.livy.triggers.livy.LivyTrigger.poll_for_termination")
 async def test_livy_trigger_run_with_poll_interval_error(mock_poll_for_termination):
-    """
-    Test if the task in the triggerer returned an error when poll_for_termination returned error.
-    :return:
-    """
+    """Test if the task in the trigger returned an error when poll_for_termination returned error."""
     mock_poll_for_termination.return_value = {"status": "error"}
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
 
     task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    assert len(task) == 2
     assert TriggerEvent({"status": "error"}) in task
 
 
 @pytest.mark.asyncio
 async def test_livy_trigger_run_with_exception():
-    """
-    Test if the task in the triggerer failed with a connection error when no connection is mocked.
-    :return:
-    """
+    """Test if the task in the trigger failed with a connection error when no connection is mocked."""
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
 
     task = [i async for i in trigger.run()]
@@ -104,9 +96,7 @@ async def test_livy_trigger_run_with_exception():
 @pytest.mark.asyncio
 async def test_livy_trigger_poll_for_termination_with_client_error():
     """
-    Test if the poll_for_termination() in the triggerer failed with a ClientConnectionError when no connection is
-    mocked.
-    :return:
+    Test if the poll_for_termination() in the trigger failed with a ClientConnectionError when no connection is mocked.
     """
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
 
@@ -141,10 +131,7 @@ async def test_livy_trigger_poll_for_termination_success(mock_dump_batch_logs, m
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.get_batch_state")
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.dump_batch_logs")
 async def test_livy_trigger_poll_for_termination_error(mock_dump_batch_logs, mock_get_batch_state):
-    """
-    Test if the poll_for_termination() in the triggerer returned error response when get_batch_state() failed.
-    :return:
-    """
+    """Test if the poll_for_termination() in the trigger returned error response when get_batch_state() failed."""
     mock_get_batch_state.return_value = {"batch_state": BatchState.ERROR}
     mock_dump_batch_logs.return_value = ["mock_log"]
     trigger = LivyTrigger(batch_id=1, spark_params={}, livy_conn_id="livy_default", polling_interval=30)
@@ -164,9 +151,7 @@ async def test_livy_trigger_poll_for_termination_error(mock_dump_batch_logs, moc
 @mock.patch("astronomer.providers.apache.livy.hooks.livy.LivyHookAsync.dump_batch_logs")
 async def test_livy_trigger_poll_for_termination_state(mock_dump_batch_logs, mock_get_batch_state):
     """
-    Test if the poll_for_termination() in the triggerer is still polling when get_batch_state() returned
-    NOT_STARTED.
-    :return:
+    Test if the poll_for_termination() in the trigger is still polling when get_batch_state() returned NOT_STARTED.
     """
     mock_get_batch_state.return_value = {"batch_state": BatchState.NOT_STARTED}
     mock_dump_batch_logs.return_value = ["mock_log"]

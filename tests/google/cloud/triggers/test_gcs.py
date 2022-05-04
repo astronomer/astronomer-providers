@@ -67,9 +67,9 @@ async def test_gcs_blob_trigger_success(mock_object_exists):
         TEST_HOOK_PARAMS,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success", "message": "success"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "message": "success"}) == actual
 
 
 @pytest.mark.asyncio
@@ -184,11 +184,11 @@ async def test_gcs_prefix_blob_trigger_success(mock_list_blobs_with_prefixs):
         TEST_HOOK_PARAMS,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     assert (
         TriggerEvent({"status": "success", "message": "Successfully completed", "matches": ["success"]})
-        in task
+        == actual
     )
 
 
@@ -349,9 +349,9 @@ async def test_gcs_upload_session_trigger_success(
         TEST_ALLOW_DELETE,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent(is_bucket_return_value) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent(is_bucket_return_value) == actual
 
 
 @pytest.mark.asyncio
@@ -372,9 +372,9 @@ async def test_gcs_upload_session_trigger_exception(mock_list_blobs):
         TEST_PREVIOUS_OBJECTS,
         TEST_ALLOW_DELETE,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) == actual
 
 
 @pytest.mark.asyncio
@@ -512,9 +512,9 @@ async def test_gcs_blob_update_trigger_success(mock_blob_updated):
         TEST_HOOK_PARAMS,
     )
 
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "success", "message": "success"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "success", "message": "success"}) == actual
 
 
 @pytest.mark.asyncio
