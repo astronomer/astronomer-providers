@@ -87,10 +87,7 @@ def test_emr_container_sensors_trigger_serialization():
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
 async def test_emr_container_sensors_trigger_run(mock_query_status, mock_status):
-    """
-    Test if the task is run is in trigger successfully.
-    :return:
-    """
+    """Test if the task is run is in trigger successfully."""
     mock_query_status.return_value = mock_status
     trigger = EmrContainerSensorTrigger(
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
@@ -116,7 +113,6 @@ async def test_emr_container_sensors_trigger_run(mock_query_status, mock_status)
 async def test_emr_container_sensors_trigger_completed(mock_query_status, mock_status):
     """
     Test if the task is run is in trigger failure status.
-    :return:
     """
     mock_query_status.return_value = mock_status
     trigger = EmrContainerSensorTrigger(
@@ -126,10 +122,10 @@ async def test_emr_container_sensors_trigger_completed(mock_query_status, mock_s
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    response = await generator.asend(None)
     msg = "EMR Containers sensors completed"
-    assert TriggerEvent({"status": "success", "message": msg}) in task
+    assert TriggerEvent({"status": "success", "message": msg}) == response
 
 
 @pytest.mark.asyncio
@@ -141,7 +137,6 @@ async def test_emr_container_sensors_trigger_completed(mock_query_status, mock_s
 async def test_emr_container_sensors_trigger_failure_status(mock_query_status, mock_status):
     """
     Test if the task is run is in trigger failure status.
-    :return:
     """
     mock_query_status.return_value = mock_status
     trigger = EmrContainerSensorTrigger(
@@ -151,10 +146,10 @@ async def test_emr_container_sensors_trigger_failure_status(mock_query_status, m
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    response = await generator.asend(None)
     msg = f"EMR Containers sensor failed {mock_status}"
-    assert TriggerEvent({"status": "error", "message": msg}) in task
+    assert TriggerEvent({"status": "error", "message": msg}) == response
 
 
 @pytest.mark.asyncio
@@ -217,10 +212,10 @@ async def test_emr_step_sensor_trigger_run_success(emr_describe_step):
     trigger = EmrStepSensorTrigger(
         job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent({"status": "success", "message": "Job flow currently COMPLETED"})
-    assert len(task) == 1
-    assert response in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent({"status": "success", "message": "Job flow currently COMPLETED"})
+    assert expected == actual
 
 
 @pytest.mark.asyncio
@@ -268,12 +263,12 @@ async def test_emr_step_sensor_trigger_run_fail(emr_describe_step, mock_response
         poke_interval=5,
         failed_states=["CANCELLED", "FAILED", "INTERRUPTED"],
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent(
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
         {"status": "error", "message": "for reason Unknown Error with message  and log file "}
     )
-    assert len(task) == 1
-    assert response in task
+    assert actual == expected
 
 
 @pytest.mark.asyncio
@@ -284,9 +279,9 @@ async def test_emr_step_sensor_trigger_run_failure(emr_describe_step):
     trigger = EmrStepSensorTrigger(
         job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) == actual
 
 
 def test_emr_job_flow_sensors_trigger_serialization():
@@ -324,10 +319,7 @@ def test_emr_job_flow_sensors_trigger_serialization():
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
 async def test_emr_job_flow_sensors_trigger_run(mock_cluster_detail, mock_status):
-    """
-    Test if the task is run is in trigger successfully.
-    :return:
-    """
+    """Test if the task is run is in trigger successfully."""
     MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
     mock_cluster_detail.return_value = MOCK_RESPONSE
     trigger = EmrJobFlowSensorTrigger(
@@ -352,10 +344,7 @@ async def test_emr_job_flow_sensors_trigger_run(mock_cluster_detail, mock_status
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
 async def test_emr_job_flow_sensors_trigger_completed(mock_cluster_detail, mock_status):
-    """
-    Test if the task is run is in trigger failure status.
-    :return:
-    """
+    """Test if the task is run is in trigger failure status."""
     MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
     mock_cluster_detail.return_value = MOCK_RESPONSE
     trigger = EmrJobFlowSensorTrigger(
@@ -365,19 +354,16 @@ async def test_emr_job_flow_sensors_trigger_completed(mock_cluster_detail, mock_
         failed_states=FAILED_STATE,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     msg = f"Job flow currently {mock_status}"
-    assert TriggerEvent({"status": "success", "message": msg}) in task
+    assert TriggerEvent({"status": "success", "message": msg}) == actual
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
 async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
-    """
-    Test if the task is run is in trigger failure status.
-    :return:
-    """
+    """Test if the task is run is in trigger failure status."""
     MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
     mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
     trigger = EmrJobFlowSensorTrigger(
@@ -387,22 +373,20 @@ async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
         failed_states=FAILED_STATE,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     final_message = "EMR job failed"
     error_code = "1111"
     msg = f"for code: {error_code} with message Failed"
     final_message += " " + msg
-    assert TriggerEvent({"status": "error", "message": final_message}) in task
+    assert TriggerEvent({"status": "error", "message": final_message}) == actual
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
-async def test_emr_job_flow_sensors_trigger_exception(mock_cluster_detaile):
-    """
-    Test emr job flow sensors trigger with exception
-    """
-    mock_cluster_detaile.side_effect = Exception("Test exception")
+async def test_emr_job_flow_sensors_trigger_exception(mock_cluster_detail):
+    """Test emr job flow sensors trigger with exception"""
+    mock_cluster_detail.side_effect = Exception("Test exception")
     trigger = EmrJobFlowSensorTrigger(
         job_flow_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
@@ -480,10 +464,10 @@ async def test_emr_container_operator_trigger_completed(mock_query_status):
         poll_interval=POLL_INTERVAL,
         max_tries=MAX_RETRIES,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     msg = "EMR Containers Operator success COMPLETED"
-    assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) in task
+    assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) == actual
 
 
 @pytest.mark.asyncio
@@ -507,13 +491,13 @@ async def test_emr_container_operator_trigger_failure_status(
         poll_interval=POLL_INTERVAL,
         max_tries=MAX_RETRIES,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     message = (
         f"EMR Containers job failed. Final state is {mock_status}. "
         f"query_execution_id is {JOB_ID}. Error: {None}"
     )
-    assert TriggerEvent({"status": "error", "message": message, "job_id": JOB_ID}) in task
+    assert TriggerEvent({"status": "error", "message": message, "job_id": JOB_ID}) == actual
 
 
 @pytest.mark.asyncio
@@ -547,10 +531,9 @@ async def test_emr_container_operator_trigger_timeout(mock_query_status):
         poll_interval=1,
         max_tries=2,
     )
-
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert (
-        TriggerEvent({"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID})
-        in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
+        {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
     )
+    assert actual == expected

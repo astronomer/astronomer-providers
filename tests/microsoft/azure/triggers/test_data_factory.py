@@ -89,10 +89,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_run(mock_data_factory, mo
     "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_adf_pipeline_run_status"
 )
 async def test_adf_pipeline_run_status_sensors_trigger_completed(mock_data_factory, mock_status):
-    """
-    Test if the task pipeline status is in succeeded status.
-    :return:
-    """
+    """Test if the task pipeline status is in succeeded status."""
     mock_data_factory.return_value = mock_status
     trigger = ADFPipelineRunStatusSensorTrigger(
         run_id=RUN_ID,
@@ -101,10 +98,10 @@ async def test_adf_pipeline_run_status_sensors_trigger_completed(mock_data_facto
         factory_name=DATAFACTORY_NAME,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
+    generator = trigger.run()
+    actual = await generator.asend(None)
     msg = f"Pipeline run {RUN_ID} has been Succeeded."
-    assert TriggerEvent({"status": "success", "message": msg}) in task
+    assert TriggerEvent({"status": "success", "message": msg}) == actual
 
 
 @pytest.mark.asyncio
@@ -121,10 +118,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_completed(mock_data_facto
 async def test_adf_pipeline_run_status_sensors_trigger_failure_status(
     mock_data_factory, mock_status, mock_message
 ):
-    """
-    Test if the task is run is in trigger failure status.
-    :return:
-    """
+    """Test if the task is run is in trigger failure status."""
     mock_data_factory.return_value = mock_status
     trigger = ADFPipelineRunStatusSensorTrigger(
         run_id=RUN_ID,
@@ -133,9 +127,9 @@ async def test_adf_pipeline_run_status_sensors_trigger_failure_status(
         factory_name=DATAFACTORY_NAME,
         poll_interval=POLL_INTERVAL,
     )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": mock_message}) in task
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": mock_message}) == actual
 
 
 @pytest.mark.asyncio
@@ -143,9 +137,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_failure_status(
     "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_adf_pipeline_run_status"
 )
 async def test_adf_pipeline_run_status_sensors_trigger_exception(mock_data_factory):
-    """
-    Test EMR container sensors with raise exception
-    """
+    """Test EMR container sensors with raise exception"""
     mock_data_factory.side_effect = Exception("Test exception")
     trigger = ADFPipelineRunStatusSensorTrigger(
         run_id=RUN_ID,
@@ -197,16 +189,16 @@ async def test_azure_data_factory_trigger_run_without_wait(mock_pipeline_run_sta
         wait_for_termination=False,
         end_time=AZ_PIPELINE_END_TIME,
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent(
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
         {
             "status": "success",
             "message": f"The pipeline run {AZ_PIPELINE_RUN_ID} has {AzureDataFactoryTrigger.SUCCEEDED} status.",
             "run_id": AZ_PIPELINE_RUN_ID,
         }
     )
-    assert len(task) == 1
-    assert response in task
+    assert actual == expected
 
 
 @pytest.mark.asyncio
@@ -253,16 +245,16 @@ async def test_azure_data_factory_trigger_run_success(mock_pipeline_run_status):
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
         end_time=AZ_PIPELINE_END_TIME,
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent(
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
         {
             "status": "success",
             "message": f"The pipeline run {AZ_PIPELINE_RUN_ID} has {AzureDataFactoryTrigger.SUCCEEDED}.",
             "run_id": AZ_PIPELINE_RUN_ID,
         }
     )
-    assert len(task) == 1
-    assert response in task
+    assert expected == actual
 
 
 @pytest.mark.asyncio
@@ -286,16 +278,16 @@ async def test_azure_data_factory_trigger_run_fail(mock_pipeline_run_status, sta
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
         end_time=AZ_PIPELINE_END_TIME,
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent(
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
         {
             "status": "error",
             "message": f"The pipeline run {AZ_PIPELINE_RUN_ID} has {status}.",
             "run_id": AZ_PIPELINE_RUN_ID,
         }
     )
-    assert len(task) == 1
-    assert response in task
+    assert expected == actual
 
 
 @pytest.mark.asyncio
@@ -338,13 +330,13 @@ async def test_azure_data_factory_trigger_run_timeout(mock_pipeline_run_status):
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
         end_time=time.monotonic(),
     )
-    task = [i async for i in trigger.run()]
-    response = TriggerEvent(
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
         {
             "status": "error",
             "message": f"Timeout: The pipeline run {AZ_PIPELINE_RUN_ID} has {AzureDataFactoryTrigger.QUEUED}.",
             "run_id": AZ_PIPELINE_RUN_ID,
         }
     )
-    assert len(task) == 1
-    assert response in task
+    assert expected == actual

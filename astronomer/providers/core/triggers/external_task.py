@@ -49,7 +49,6 @@ class TaskStateTrigger(BaseTrigger):  # noqa: D101
             num_tasks = await self.count_tasks()
             if num_tasks == len(self.execution_dates):
                 yield TriggerEvent(True)
-                return
             await asyncio.sleep(self.poll_interval)
 
     @sync_to_async
@@ -104,7 +103,6 @@ class DagStateTrigger(BaseTrigger):  # noqa: D101
             num_dags = await self.count_dags()
             if num_dags == len(self.execution_dates):
                 yield TriggerEvent(True)
-                return
             await asyncio.sleep(self.poll_interval)
 
     @sync_to_async

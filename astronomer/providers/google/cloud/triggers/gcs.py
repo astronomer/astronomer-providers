@@ -61,7 +61,6 @@ class GCSBlobTrigger(BaseTrigger):
                 )
                 if res == "success":
                     yield TriggerEvent({"status": "success", "message": res})
-                    return
                 await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
@@ -142,7 +141,6 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
                     yield TriggerEvent(
                         {"status": "success", "message": "Successfully completed", "matches": res}
                     )
-                    return
                 await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
@@ -245,10 +243,8 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
                 res = self._is_bucket_updated(set(list_blobs))
                 if res["status"] == "success":
                     yield TriggerEvent(res)
-                    return
                 elif res["status"] == "error":
                     yield TriggerEvent(res)
-                    return
                 await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
@@ -377,11 +373,9 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
                 )
                 if status:
                     yield TriggerEvent(res)
-                    return
                 await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
-            return
 
     def _get_async_hook(self) -> GCSHookAsync:
         return GCSHookAsync(gcp_conn_id=self.google_cloud_conn_id, **self.hook_params)
