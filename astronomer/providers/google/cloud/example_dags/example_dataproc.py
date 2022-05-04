@@ -22,11 +22,11 @@ from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperatorAsync,
 )
 
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
-CLUSTER_NAME = os.environ.get("GCP_DATAPROC_CLUSTER_NAME", "example-cluster-astronomer-providers")
-REGION = os.environ.get("GCP_LOCATION", "us-central1")
-ZONE = os.environ.get("GCP_REGION", "us-central1-a")
-BUCKET = os.environ.get("GCP_DATAPROC_BUCKET", "dataproc-system-tests-astronomer-providers")
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
+CLUSTER_NAME = os.getenv("GCP_DATAPROC_CLUSTER_NAME", "example-cluster-astronomer-providers")
+REGION = os.getenv("GCP_LOCATION", "us-central1")
+ZONE = os.getenv("GCP_REGION", "us-central1-a")
+BUCKET = os.getenv("GCP_DATAPROC_BUCKET", "dataproc-system-tests-astronomer-providers")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 OUTPUT_FOLDER = "wordcount"
 OUTPUT_PATH = f"gs://{BUCKET}/{OUTPUT_FOLDER}/"
