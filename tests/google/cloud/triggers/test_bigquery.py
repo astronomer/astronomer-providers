@@ -86,7 +86,7 @@ async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
 
     generator = trigger.run()
     actual = await generator.asend(None)
-    assert TriggerEvent({"status": "success", "message": "Job completed"}) == actual
+    assert TriggerEvent({"status": "success", "message": "Job completed", "job_id": TEST_JOB_ID}) == actual
 
 
 @pytest.mark.parametrize(

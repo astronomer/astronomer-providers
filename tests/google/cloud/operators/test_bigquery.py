@@ -4,7 +4,10 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models import DAG
+from airflow.models.dagrun import DagRun
+from airflow.models.taskinstance import TaskInstance
 from airflow.utils.timezone import datetime
+from airflow.utils.types import DagRunType
 from google.cloud.exceptions import Conflict
 
 from astronomer.providers.google.cloud.operators.bigquery import (
@@ -93,6 +96,27 @@ def test_bigquery_insert_job_operator_execute_failure(context):
         operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
 
 
+def create_context(task):
+    dag = DAG(dag_id="dag")
+    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    dag_run = DagRun(
+        dag_id=dag.dag_id,
+        execution_date=execution_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
+    )
+    task_instance = TaskInstance(task=task)
+    task_instance.dag_run = dag_run
+    task_instance.dag_id = dag.dag_id
+    task_instance.xcom_push = mock.Mock()
+    return {
+        "dag": dag,
+        "run_id": dag_run.run_id,
+        "task": task,
+        "ti": task_instance,
+        "task_instance": task_instance,
+    }
+
+
 def test_bigquery_insert_job_operator_execute_complete():
     """Asserts that logging occurs as expected"""
     configuration = {
@@ -111,7 +135,10 @@ def test_bigquery_insert_job_operator_execute_complete():
         project_id=TEST_GCP_PROJECT_ID,
     )
     with mock.patch.object(operator.log, "info") as mock_log_info:
-        operator.execute_complete(context=None, event={"status": "success", "message": "Job completed"})
+        operator.execute_complete(
+            context=create_context(operator),
+            event={"status": "success", "message": "Job completed", "job_id": job_id},
+        )
     mock_log_info.assert_called_with("%s completed with response %s ", "insert_query_job", "Job completed")
 
 
