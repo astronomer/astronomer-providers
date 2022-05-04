@@ -11,6 +11,9 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.9"
+  apt_packages:
+    - build-essential
+    - libsasl2-dev
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
