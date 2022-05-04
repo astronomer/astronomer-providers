@@ -167,5 +167,5 @@ def test_unavailable_xcom_raises_exception(mock_hook):
     with mock.patch.object(bq_extractor.log, "exception") as mock_log_exception:
         task_meta = bq_extractor.extract_on_complete(task_instance)
 
-    mock_log_exception.assert_called_with("Could not pull relevant BigQuery job ID from XCOM")
+    mock_log_exception.assert_called_with("%s", "Could not pull relevant BigQuery job ID from XCOM")
     assert task_meta.name == f"adhoc_airflow.{task_id}"
