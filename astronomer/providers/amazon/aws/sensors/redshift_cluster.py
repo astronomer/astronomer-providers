@@ -1,15 +1,13 @@
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
 )
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 log = logging.getLogger(__name__)
 
