@@ -22,18 +22,18 @@ from requests import get
 
 from astronomer.providers.apache.livy.operators.livy import LivyOperatorAsync
 
-LIVY_JAVA_FILE = os.environ.get("LIVY_JAVA_FILE", "/spark-examples.jar")
-LIVY_PYTHON_FILE = os.environ.get("LIVY_PYTHON_FILE", "/user/hadoop/pi.py")
-JOB_FLOW_ROLE = os.environ.get("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
-SERVICE_ROLE = os.environ.get("EMR_SERVICE_ROLE", "EMR_DefaultRole")
-PEM_FILENAME = os.environ.get("PEM_FILENAME", "providers_team_keypair")
+LIVY_JAVA_FILE = os.getenv("LIVY_JAVA_FILE", "/spark-examples.jar")
+LIVY_PYTHON_FILE = os.getenv("LIVY_PYTHON_FILE", "/user/hadoop/pi.py")
+JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
+SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
+PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "sample_aws_access_key_id"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "sample_aws_secret_access_key"),
-    "region_name": os.environ.get("AWS_DEFAULT_REGION", "us-east-2"),
+    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "sample_aws_access_key_id"),
+    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "sample_aws_secret_access_key"),
+    "region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-2"),
 }
 
 COMMAND_TO_CREATE_PI_FILE: List[str] = [

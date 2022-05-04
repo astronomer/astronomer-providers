@@ -8,8 +8,8 @@ from airflow.utils.timezone import datetime
 
 from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
-SNOWFLAKE_CONN_ID = os.environ.get("ASTRO_SNOWFLAKE_CONN_ID", "snowflake_default")
-SNOWFLAKE_SAMPLE_TABLE = os.environ.get("SNOWFLAKE_SAMPLE_TABLE", "sample_table")
+SNOWFLAKE_CONN_ID = os.getenv("ASTRO_SNOWFLAKE_CONN_ID", "snowflake_default")
+SNOWFLAKE_SAMPLE_TABLE = os.getenv("SNOWFLAKE_SAMPLE_TABLE", "sample_table")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 # SQL commands

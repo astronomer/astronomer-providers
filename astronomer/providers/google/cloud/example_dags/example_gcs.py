@@ -19,9 +19,9 @@ from astronomer.providers.google.cloud.sensors.gcs import (
     GCSUploadSessionCompleteSensorAsync,
 )
 
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "astronomer-airflow-providers")
-BUCKET_1 = os.environ.get("GCP_TEST_BUCKET", "test-gcs-bucket-astronomer-providers")
-GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
+BUCKET_1 = os.getenv("GCP_TEST_BUCKET", "test-gcs-bucket-astronomer-providers")
+GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 PATH_TO_UPLOAD_FILE = "dags/example_gcs.py"
 PATH_TO_UPLOAD_FILE_PREFIX = "example_"
