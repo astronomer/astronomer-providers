@@ -6,7 +6,7 @@ set -e
 
 # Create EKS cluster.
 eksctl create cluster \
-    --name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
+    --name $EKS_CLUSTER_NAME \
     --region $AWS_DEFAULT_REGION \
     --with-oidc \
     --ssh-access \
@@ -15,16 +15,16 @@ eksctl create cluster \
     --managed
 
 # Create kubectl cluster namespace.
-kubectl create namespace $KUBECTL_CLUSTER_NAME
+kubectl create namespace $EKS_NAMESPACE
 
 eksctl create iamidentitymapping \
-    --cluster $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
-    --namespace $KUBECTL_CLUSTER_NAME \
+    --cluster $EKS_CLUSTER_NAME \
+    --namespace $EKS_NAMESPACE \
     --service-name "emr-containers"
 
-aws eks describe-cluster --name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME --query "cluster.identity.oidc.issuer"
+aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer"
 
-eksctl utils associate-iam-oidc-provider --cluster $EKS_CONTAINER_PROVIDER_CLUSTER_NAME --approve
+eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve
 
 aws iam create-role --role-name $JOB_EXECUTION_ROLE --assume-role-policy-document '{"Version": "2012-10-17","Statement":
 [{"Effect": "Allow","Principal": {"AWS": "arn:aws:iam::'$AWS_ACCOUNT_ID':root"},"Action":
@@ -38,8 +38,8 @@ aws iam attach-role-policy --role-name $JOB_EXECUTION_ROLE --policy-arn arn:aws:
 
 
 aws emr-containers update-role-trust-policy \
-       --cluster-name $EKS_CONTAINER_PROVIDER_CLUSTER_NAME \
-       --namespace $KUBECTL_CLUSTER_NAME \
+       --cluster-name $EKS_CLUSTER_NAME \
+       --namespace $EKS_NAMESPACE \
        --role-name $JOB_EXECUTION_ROLE
 
 export JOB_ROLE_ARN="arn:aws:iam::"$AWS_ACCOUNT_ID":role/"$JOB_EXECUTION_ROLE

@@ -17,4 +17,4 @@ aws iam delete-role --role-name $JOB_EXECUTION_ROLE
 aws emr-containers delete-virtual-cluster --id $VIRTUAL_CLUSTER_ID
 
 # Command to delete the EKS cluster and node group attached with it.
-eksctl delete cluster $EKS_CONTAINER_PROVIDER_CLUSTER_NAME
+eksctl delete cluster $EKS_CLUSTER_NAME
