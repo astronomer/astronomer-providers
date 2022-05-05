@@ -27,6 +27,9 @@ clean: ## Remove all the containers along with volumes
 build: ## Build the Docker image (ignoring cache)
 	docker build -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
 
+build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS containers example DAG (ignoring cache)
+	docker build -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest --no-cache
+
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
 
@@ -62,4 +65,4 @@ run-local-lineage-server: ## Run flask based local Lineage server
 	FLASK_APP=dev/local_flask_lineage_server.py flask run --host 0.0.0.0 --port 5050
 
 help: ## Prints this message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'

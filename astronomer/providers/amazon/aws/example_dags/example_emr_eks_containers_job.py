@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 import boto3
 from airflow import DAG
@@ -12,29 +13,25 @@ from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAs
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
 
 # [START howto_operator_emr_eks_env_variables]
-VIRTUAL_CLUSTER_ID = os.getenv("VIRTUAL_CLUSTER_ID", "xxxxxxxx")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
+AWS_ACCOUNT_ID = os.getenv("AWS_ACCOUNT_ID", "xxxxxxxxxxxx")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
-JOB_ROLE_ARN = os.getenv("JOB_ROLE_ARN", "arn:aws:iam::121212121212:role/test_iam_job_execution_role")
-# [END howto_operator_emr_eks_env_variables]
-
-# Job role name and policy name attached to the role
-JOB_EXECUTION_ROLE = os.getenv("JOB_EXECUTION_ROLE", "test_iam_job_execution_role")
-DEBUGGING_MONITORING_POLICY = os.getenv("DEBUGGING_MONITORING_POLICY", "test_debugging_monitoring_policy")
+AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 CONTAINER_SUBMIT_JOB_POLICY = os.getenv(
     "CONTAINER_SUBMIT_JOB_POLICY", "test_emr_container_submit_jobs_policy"
 )
-JOB_EXECUTION_POLICY = os.getenv("JOB_EXECUTION_POLICY", "test_job_execution_policy")
-MANAGE_VIRTUAL_CLUSTERS = os.getenv("MANAGE_VIRTUAL_CLUSTERS", "test_manage_virtual_clusters")
-
-EKS_CONTAINER_PROVIDER_CLUSTER_NAME = os.getenv(
-    "EKS_CONTAINER_PROVIDER_CLUSTER_NAME", "providers-team-eks-cluster"
-)
-KUBECTL_CLUSTER_NAME = os.getenv("KUBECTL_CLUSTER_NAME", "providers-team-eks-namespace")
-VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "providers-team-virtual-eks-cluster")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
-AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+DEBUGGING_MONITORING_POLICY = os.getenv("DEBUGGING_MONITORING_POLICY", "test_debugging_monitoring_policy")
+EKS_CLUSTER_NAME = os.getenv("EKS_CLUSTER_NAME", "providers-team-eks-cluster")
+EKS_NAMESPACE = os.getenv("EKS_NAMESPACE", "providers-team-eks-namespace")
 INSTANCE_TYPE = os.getenv("INSTANCE_TYPE", "m4.large")
+JOB_EXECUTION_POLICY = os.getenv("JOB_EXECUTION_POLICY", "test_job_execution_policy")
+JOB_EXECUTION_ROLE = os.getenv("JOB_EXECUTION_ROLE", "test_iam_job_execution_role")
+JOB_ROLE_ARN = f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/{JOB_EXECUTION_ROLE}"
+MANAGE_VIRTUAL_CLUSTERS = os.getenv("MANAGE_VIRTUAL_CLUSTERS", "test_manage_virtual_clusters")
+VIRTUAL_CLUSTER_NAME = os.getenv("EMR_VIRTUAL_CLUSTER_NAME", "providers-team-virtual-eks-cluster")
+# [END howto_operator_emr_eks_env_variables]
+
 AIRFLOW_HOME = os.getenv("AIRFLOW_HOME", "/usr/local/airflow")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
@@ -43,22 +40,22 @@ default_args = {
 }
 
 
-def create_emr_virtual_cluster_func() -> None:
+def create_emr_virtual_cluster_func(task_instance: Any) -> None:
     """Create EMR virtual cluster in container"""
     client = boto3.client("emr-containers")
     try:
         response = client.create_virtual_cluster(
             name=VIRTUAL_CLUSTER_NAME,
             containerProvider={
-                "id": EKS_CONTAINER_PROVIDER_CLUSTER_NAME,
+                "id": EKS_CLUSTER_NAME,
                 "type": "EKS",
-                "info": {"eksInfo": {"namespace": KUBECTL_CLUSTER_NAME}},
+                "info": {"eksInfo": {"namespace": EKS_NAMESPACE}},
             },
         )
-        os.environ["VIRTUAL_CLUSTER_ID"] = response["id"]
-    except ClientError:
+        task_instance.xcom_push(key="virtual_cluster_id", value=response["id"])
+    except ClientError as error:
         logging.exception("Error while creating EMR virtual cluster")
-        return None
+        raise error
 
 
 # [START howto_operator_emr_eks_config]
@@ -103,18 +100,34 @@ with DAG(
         f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
     )
 
-    # Task to create EMR clusters on EKS
-    create_EKS_cluster_kube_namespace_with_role = BashOperator(
-        task_id="create_EKS_cluster_kube_namespace_with_role",
-        bash_command="sh $AIRFLOW_HOME/dags/example_create_EKS_kube_namespace_with_role.sh ",
+    # Task to create EMR on EKS cluster
+    create_cluster_environment_variables = (
+        f"AWS_ACCOUNT_ID={AWS_ACCOUNT_ID} "
+        f"AWS_DEFAULT_REGION={AWS_DEFAULT_REGION} "
+        f"CONTAINER_SUBMIT_JOB_POLICY={CONTAINER_SUBMIT_JOB_POLICY} "
+        f"DEBUGGING_MONITORING_POLICY={DEBUGGING_MONITORING_POLICY} "
+        f"EKS_CLUSTER_NAME={EKS_CLUSTER_NAME} "
+        f"EKS_NAMESPACE={EKS_NAMESPACE} "
+        f"INSTANCE_TYPE={INSTANCE_TYPE} "
+        f"JOB_EXECUTION_POLICY={JOB_EXECUTION_POLICY} "
+        f"JOB_EXECUTION_ROLE={JOB_EXECUTION_ROLE} "
+        f"MANAGE_VIRTUAL_CLUSTERS={MANAGE_VIRTUAL_CLUSTERS}"
+    )
+    create_eks_cluster_kube_namespace_with_role = BashOperator(
+        task_id="create_eks_cluster_kube_namespace_with_role",
+        bash_command=f"{create_cluster_environment_variables} "
+        f"sh $AIRFLOW_HOME/dags/example_create_eks_kube_namespace_with_role.sh ",
     )
 
     # Task to create EMR virtual cluster
-    create_EMR_virtual_cluster = PythonOperator(
-        task_id="create_EMR_virtual_cluster",
+    create_emr_virtual_cluster = PythonOperator(
+        task_id="create_emr_virtual_cluster",
         python_callable=create_emr_virtual_cluster_func,
     )
 
+    VIRTUAL_CLUSTER_ID = (
+        "{{ task_instance.xcom_pull(task_ids='create_emr_virtual_cluster', " "key='virtual_cluster_id') }}"
+    )
     # [START howto_operator_run_emr_container_job]
     run_emr_container_job = EmrContainerOperatorAsync(
         task_id="run_emr_container_job",
@@ -137,18 +150,29 @@ with DAG(
     )
     # [END howto_sensor_emr_job_container_sensor]
 
-    # Delete clusters, container providers, role, policy
-    remove_clusters_container_role_policy = BashOperator(
-        task_id="remove_clusters_container_role_policy",
-        bash_command="sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
+    # Delete EKS cluster, EMR containers, IAM role and detach role policies.r
+    removal_environment_variables = (
+        f"AWS_ACCOUNT_ID={AWS_ACCOUNT_ID} "
+        f"CONTAINER_SUBMIT_JOB_POLICY={CONTAINER_SUBMIT_JOB_POLICY} "
+        f"DEBUGGING_MONITORING_POLICY={DEBUGGING_MONITORING_POLICY} "
+        f"EKS_CLUSTER_NAME={EKS_CLUSTER_NAME} "
+        f"JOB_EXECUTION_POLICY={JOB_EXECUTION_POLICY} "
+        f"JOB_EXECUTION_ROLE={JOB_EXECUTION_ROLE} "
+        f"MANAGE_VIRTUAL_CLUSTERS={MANAGE_VIRTUAL_CLUSTERS} "
+        f"VIRTUAL_CLUSTER_ID={VIRTUAL_CLUSTER_ID}"
+    )
+    remove_cluster_container_role_policy = BashOperator(
+        task_id="remove_cluster_container_role_policy",
+        bash_command=f"{removal_environment_variables} "
+        f"sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
         trigger_rule="all_done",
     )
 
     (
         setup_aws_config
-        >> create_EKS_cluster_kube_namespace_with_role
-        >> create_EMR_virtual_cluster
+        >> create_eks_cluster_kube_namespace_with_role
+        >> create_emr_virtual_cluster
         >> run_emr_container_job
         >> emr_job_container_sensor
-        >> remove_clusters_container_role_policy
+        >> remove_cluster_container_role_policy
     )
