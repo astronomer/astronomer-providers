@@ -55,7 +55,7 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "8 * * * *"
+          cron: "13 * * * *"
           filters:
             branches:
               only:
@@ -260,5 +260,5 @@ jobs:
           name: Deploy to Astro Cloud (Gen 2)
           command: >
             cd .circleci/integration-tests &&
-            bash script.sh $DEPLOYMENT_INSTANCE $DOCKER_REGISTRY $ORGANIZATION_ID
-                           $DEPLOYMENT_ID $ASTRONOMER_KEY_ID $ASTRONOMER_KEY_SECRET
+            bash script.sh $DEPLOYMENT_INSTANCE $DOCKER_REGISTRY $ORGANIZATION_ID $DEPLOYMENT_ID
+            $ASTRONOMER_KEY_ID $ASTRONOMER_KEY_SECRET
