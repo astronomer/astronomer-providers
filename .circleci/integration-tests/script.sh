@@ -102,11 +102,6 @@ if [[ ${DEPLOYMENT_INSTANCE} == "staging" ]]; then
   docker push "${IMAGE_NAME}"
 elif [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
   IMAGE_NAME=${DOCKER_REGISTRY}/${ORGANIZATION_ID}/${DEPLOYMENT_ID}:ci-${BUILD_NUMBER}
-  echo "values:"
-  echo $DOCKER_REGISTRY
-  echo $ORGANIZATION_ID
-  echo $DEPLOYMENT_ID
-  echo $IMAGE_NAME
   docker build --target "${DEPLOYMENT_INSTANCE}" -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile "${SCRIPT_PATH}"
   docker login "${DOCKER_REGISTRY}" -u "${ASTRONOMER_KEY_ID}" -p "${ASTRONOMER_KEY_SECRET}"
   docker push "${IMAGE_NAME}"

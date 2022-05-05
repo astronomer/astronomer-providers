@@ -55,11 +55,11 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "31 * * * *"
+          cron: "0 19 * * *"
           filters:
             branches:
               only:
-                - 274-deploy-image-to-AC
+                - main
     jobs:
       - deploy
 
