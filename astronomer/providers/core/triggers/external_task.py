@@ -11,7 +11,20 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 
-class TaskStateTrigger(BaseTrigger):  # noqa: D101
+class TaskStateTrigger(BaseTrigger):
+    """
+    Waits asynchronously for a task in a different DAG to complete for a
+    specific logical date.
+
+    :param dag_id: The dag_id that contains the task you want to wait for
+    :param task_id: The task_id that contains the task you want to
+        wait for. If ``None`` (default value) the sensor waits for the DAG
+    :param states: allowed states, default is ``['success']``
+    :param execution_dates:
+    :param poll_interval: The time interval in seconds to check the state.
+        The default value is 5 sec.
+    """
+
     def __init__(
         self,
         dag_id: str,
@@ -68,7 +81,20 @@ class TaskStateTrigger(BaseTrigger):  # noqa: D101
         return typing.cast(int, count)
 
 
-class DagStateTrigger(BaseTrigger):  # noqa: D101
+class DagStateTrigger(BaseTrigger):
+    """
+    Waits asynchronously for a task in a different DAG to complete for a
+    specific logical date.
+
+    :param dag_id: The dag_id that contains the task you want to wait for
+    :param task_id: The task_id that contains the task you want to
+        wait for. If ``None`` (default value) the sensor waits for the DAG
+    :param states: allowed states, default is ``['success']``
+    :param execution_dates: The logical date at which DAG run.
+    :param poll_interval: The time interval in seconds to check the state.
+        The default value is 5.0 sec.
+    """
+
     def __init__(
         self,
         dag_id: str,

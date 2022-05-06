@@ -6,7 +6,24 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
 
 
-class DatabricksTrigger(BaseTrigger):  # noqa: D101
+class DatabricksTrigger(BaseTrigger):
+    """
+    Wait asynchronously for databricks job to reach the terminal state.
+
+    :param conn_id: The databricks connection id.
+        The default value is ``databricks_default``.
+    :param task_id: The task id.
+    :param run_id: The databricks job run id.
+    :param retry_limit: Amount of times retry if the Databricks backend is
+        unreachable. Its value must be greater than or equal to 1.
+    :param retry_delay: Number of seconds to wait between retries (it
+            might be a floating point number).
+    :param polling_period_seconds: Controls the rate which we poll for the result of
+        this run. By default, the operator will poll every 30 seconds.
+    :param job_id: The databricks job id.
+    :param run_page_url: The databricks run page url.
+    """
+
     def __init__(
         self,
         conn_id: str,
