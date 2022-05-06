@@ -171,6 +171,26 @@ async def test_emr_container_sensors_trigger_exception(mock_query_status):
     assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+async def test_emr_container_sensor_trigger_timeout(mock_query_status):
+    """Asserts that the  EmrContainerSensorTrigger triggers correct event in case of timeout"""
+    mock_query_status.return_value = "PENDING"
+    trigger = EmrContainerSensorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=1,
+        max_retries=2,
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    expected = TriggerEvent(
+        {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
+    )
+    assert actual == expected
+
+
 def test_emr_step_sensor_serialization():
     """Asserts that the EmrStepSensorTrigger correctly serializes its arguments and classpath."""
     trigger = EmrStepSensorTrigger(
