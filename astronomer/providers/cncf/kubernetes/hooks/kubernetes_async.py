@@ -4,7 +4,22 @@ from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
 
 
-class KubernetesHookAsync(KubernetesHook):  # noqa: D101
+class KubernetesHookAsync(KubernetesHook):
+    """
+    Creates Kubernetes API connection.
+
+    - use in cluster configuration by using ``extra__kubernetes__in_cluster`` in connection
+    - use custom config by providing path to the file using ``extra__kubernetes__kube_config_path``
+    - use custom configuration by providing content of kubeconfig file via
+        ``extra__kubernetes__kube_config`` in connection
+    - use default config by providing no extras
+
+    This hook check for configuration option in the above order. Once an option is present it will
+    use this configuration.
+
+    :param conn_id: The kubernetes cluster connection id. The default value is ``kubernetes_default``.
+    """
+
     async def _load_config(self) -> client.ApiClient:
         """
         cluster_context: Optional[str] = None,

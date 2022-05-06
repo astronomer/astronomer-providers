@@ -408,7 +408,29 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         )
 
 
-class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
+class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
+    """
+    Performs a simple asynchronous value check using sql code.
+
+    :param sql: the sql to be executed
+    :param use_legacy_sql: Whether to use legacy SQL (true)
+        or standard SQL (false).
+    :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
+    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
+        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
+    :param location: The geographic location of the job. See details at:
+        https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account (templated).
+    :param labels: a dictionary containing labels for the table, passed to BigQuery
+    """
+
     def _submit_job(
         self,
         hook: _BigQueryHook,

@@ -15,7 +15,37 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
 
 
-class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
+class ExternalTaskSensorAsync(ExternalTaskSensor):
+    """
+    Waits asynchronously for a different DAG or a task in a different DAG to complete for a
+    specific logical date.
+
+    :param external_dag_id: The dag_id that contains the task you want to
+        wait for
+    :param external_task_id: The task_id that contains the task you want to
+        wait for. If ``None`` (default value) the sensor waits for the DAG
+    :param external_task_ids: The list of task_ids that you want to wait for.
+        If ``None`` (default value) the sensor waits for the DAG. Either
+        external_task_id or external_task_ids can be passed to
+        ExternalTaskSensor, but not both.
+    :param allowed_states: Iterable of allowed states, default is ``['success']``
+    :param failed_states: Iterable of failed or dis-allowed states, default is ``None``
+    :param execution_delta: time difference with the previous execution to
+        look at, the default is the same logical date as the current task or DAG.
+        For yesterday, use [positive!] datetime.timedelta(days=1). Either
+        execution_delta or execution_date_fn can be passed to
+        ExternalTaskSensor, but not both.
+    :param execution_date_fn: function that receives the current execution's logical date as the first
+        positional argument and optionally any number of keyword arguments available in the
+        context dictionary, and returns the desired logical dates to query.
+        Either execution_delta or execution_date_fn can be passed to ExternalTaskSensor,
+        but not both.
+    :param check_existence: Set to `True` to check if the external task exists (when
+        external_task_id is not None) or check if the DAG to wait for exists (when
+        external_task_id is None), and immediately cease waiting if the external task
+        or DAG does not exist (default value: False).
+    """
+
     def execute(self, context: Context) -> None:
         """Correctly identify which trigger to execute, and defer execution as expected."""
         execution_dates = self.get_execution_dates(context)
