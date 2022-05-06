@@ -79,6 +79,7 @@ USER astro
 FROM quay.io/astronomer/astro-runtime:5.0.0-base as astro-cloud
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+ENV AWS_NUKE_VERSION=v2.17.0
 
 USER root
 
