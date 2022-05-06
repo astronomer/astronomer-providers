@@ -26,9 +26,9 @@ class EmrContainerSensorTrigger(BaseTrigger):
         self,
         virtual_cluster_id: str,
         job_id: str,
-        max_retries: Optional[int],
-        aws_conn_id: str,
-        poll_interval: int,
+        max_retries: Optional[int] = None,
+        aws_conn_id: str = "aws_default",
+        poll_interval: int = 10,
     ):
         super().__init__()
         self.virtual_cluster_id = virtual_cluster_id
