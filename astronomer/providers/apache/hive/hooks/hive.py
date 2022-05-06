@@ -1,5 +1,6 @@
 """This module contains the Apache HiveCli hook async."""
 import asyncio
+from typing import Tuple
 
 from airflow.hooks.base import BaseHook
 from impala.dbapi import connect
@@ -48,3 +49,37 @@ class HiveCliHookAsync(BaseHook):
         if len(results) == 0:
             return "failure"
         return "success"
+
+    @staticmethod
+    def parse_partition_name(partition: str) -> Tuple[str, str, str]:
+        """Parse partition string into schema, table, and partition."""
+        first_split = partition.split(".", 1)
+        if len(first_split) == 1:
+            schema = "default"
+            table_partition = max(first_split)  # poor man first
+        else:
+            schema, table_partition = first_split
+        second_split = table_partition.split("/", 1)
+        if len(second_split) == 1:
+            raise ValueError(f"Could not parse {partition} into table, partition")
+        else:
+            table, partition = second_split
+        return schema, table, partition
+
+    def check_partition_exists(self, schema: str, table: str, partition: str) -> bool:
+        """
+        Check whether given partition exist or not.
+
+        :param schema: Name of the Hive schema.
+        :param table: Name of the table.
+        :param partition: Name of the partition
+        """
+        self.log.info("Checking for partition %s.%s/%s", schema, table, partition)
+        client = self.get_hive_client()
+        cursor = client.cursor()
+        query = f"show partitions {schema}.{table} partition({partition})"
+        cursor.execute_async(query)
+        results = cursor.fetchall()
+        if not results:
+            return False
+        return True
