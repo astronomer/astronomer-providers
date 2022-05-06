@@ -27,9 +27,6 @@ workflows:
             parameters:
               python_version: ["3.8", "3.9"]
           <<: *all_branches_and_version_tag
-          requires:
-            - static-checks
-
 
   nightly:
     triggers:
