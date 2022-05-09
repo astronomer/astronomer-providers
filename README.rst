@@ -80,6 +80,9 @@ Extras
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
+   * - ``microsoft.azure``
+     - ``pip install 'astronomer-providers[microsoft.azure]'``
+     - Microsoft Azure
 
 
 Example Usage
