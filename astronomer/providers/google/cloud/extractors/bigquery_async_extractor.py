@@ -22,7 +22,6 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
 
     def __init__(self, operator: BigQueryInsertJobOperatorAsync):
         super().__init__(operator)
-        self._big_query_client = self._get_big_query_client()
 
     def _get_big_query_client(self) -> Client:
         """
@@ -68,6 +67,13 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
             exception_message = str(ae)
             self.log.exception("%s", exception_message)
             return TaskMetadata(name=get_job_name(task=self.operator))
+
+        # We want to use the operator hook's client to fetch metadata details from remote Google cloud services.
+        # The hook is attached to the operator during its initialization for execution. Hence, to reuse the hook's
+        # client we want to delay referencing of the client up until here and not do it in the constructor itself
+        # which would be called while the operator is still executing and the hook might not have been attached yet.
+        self._big_query_client = self._get_big_query_client()
+
         stats = BigQueryDatasetsProvider(client=self._big_query_client).get_facets(bigquery_job_id)
         inputs = stats.inputs
         output = stats.output
