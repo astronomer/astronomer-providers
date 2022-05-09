@@ -258,7 +258,8 @@ jobs:
       - setup_remote_docker:
           version: 20.10.12
       - run:
-          name: Deploy
-          command: |
-            cd .circleci/integration-tests
-            bash script.sh $DEPLOYMENT_INSTANCE $ASTRO_BASE_DOMAIN $ASTRO_RELEASE_NAME $ASTRO_API_KEY
+          name: Deploy to Astro Cloud (Gen 2)
+          command: >
+            cd .circleci/integration-tests &&
+            bash script.sh $DEPLOYMENT_INSTANCE $DOCKER_REGISTRY $ORGANIZATION_ID $DEPLOYMENT_ID
+            $ASTRONOMER_KEY_ID $ASTRONOMER_KEY_SECRET
