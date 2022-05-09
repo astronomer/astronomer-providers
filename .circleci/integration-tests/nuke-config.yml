@@ -27,4 +27,4 @@ resource-types:
     - S3MultipartUpload
     - RedshiftCluster
 accounts:
-  '475538383708':  # aws-oss-main
+  '396807896376':  # aws-airflow-providers-main

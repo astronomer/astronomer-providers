@@ -47,12 +47,22 @@ async def test_s3_key_trigger_run(mock_client):
 
 
 @pytest.mark.asyncio
-async def test_s3_key_trigger_run_exception():
-    """Test if the task is run is in trigger successfully."""
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_key_trigger_run_exception(mock_client):
+    """Test if the task is run is in case of exception."""
+    mock_client.side_effect = Exception("Unable to locate credentials")
     trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
     generator = trigger.run()
     actual = await generator.asend(None)
-    assert TriggerEvent({"status": "error", "message": "Unable to locate credentials"}) == actual
+    assert (
+        TriggerEvent(
+            {
+                "message": "Unable to locate credentials",
+                "status": "error",
+            }
+        )
+        == actual
+    )
 
 
 def test_s3_key_size_trigger_serialization():
@@ -232,11 +242,12 @@ def test_s3_prefix_sensor_trigger_serialization():
 
 
 @pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync._check_for_prefix")
-async def test_s3_prefix_sensor_trigger_success(mock_check_for_prefix):
+async def test_s3_prefix_sensor_trigger_success(mock_check_for_prefix, mock_client):
     """Test if the S3 prefix trigger fires correct event in case of success."""
     mock_check_for_prefix.return_value = True
-
+    mock_client.return_value.check_key.return_value = True
     trigger = S3PrefixTrigger(bucket_name="test-bucket", prefix="test")
     generator = trigger.run()
     actual = await generator.asend(None)

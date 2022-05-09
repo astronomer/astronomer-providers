@@ -1,6 +1,59 @@
 Changelog
 =========
 
+1.3.0b1 (TBD)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 5 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``AzureDataFactoryRunPipelineOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.microsoft.azure.operators.data_factory import AzureDataFactoryRunPipelineOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/microsoft/azure/example_dags/example_adf_run_pipeline.py>`__
+
+   * - ``AzureDataFactoryPipelineRunStatusSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.microsoft.azure.operators.data_factory import AzureDataFactoryPipelineRunStatusSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/microsoft/azure/example_dags/example_adf_run_pipeline.py>`__
+
+   * - ``EmrContainerOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_emr_eks_containers_job.py>`__
+
+   * - ``HivePartitionSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.apache.hive.sensors.hive_partition import HivePartitionSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/apache/hive/example_dags/example_hive.py>`__
+
+   * - ``NamedHivePartitionSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.apache.hive.sensors.named_hive_partition import NamedHivePartitionSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/apache/hive/example_dags/example_hive.py>`__
+
+
+Improvements
+""""""""""""
+
+* Improved example DAGs so that minimal resources are created during integration tests
+* Fixes a bug on the  **DatabricksRunNowOperatorAsync**  to check event status correctly
+  (`#251 <https://github.com/astronomer/astronomer-providers/pull/251>`_)
+
 1.2.0 (2022-04-12)
 ------------------
 

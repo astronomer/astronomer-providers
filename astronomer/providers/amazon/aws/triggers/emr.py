@@ -26,9 +26,9 @@ class EmrContainerSensorTrigger(BaseTrigger):
         self,
         virtual_cluster_id: str,
         job_id: str,
-        max_retries: Optional[int],
-        aws_conn_id: str,
-        poll_interval: int,
+        max_retries: Optional[int] = None,
+        aws_conn_id: str = "aws_default",
+        poll_interval: int = 10,
     ):
         super().__init__()
         self.virtual_cluster_id = virtual_cluster_id
@@ -54,6 +54,7 @@ class EmrContainerSensorTrigger(BaseTrigger):
         """Make async connection to EMR container, polls for the job state"""
         hook = EmrContainerHookAsync(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
         try:
+            try_number: int = 1
             while True:
                 query_status = await hook.check_job_status(job_id=self.job_id)
                 if query_status is None or query_status in ("PENDING", "SUBMITTED", "RUNNING"):
@@ -64,6 +65,17 @@ class EmrContainerSensorTrigger(BaseTrigger):
                 else:
                     msg = "EMR Containers sensors completed"
                     yield TriggerEvent({"status": "success", "message": msg})
+
+                if self.max_retries and try_number >= self.max_retries:
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "message": "Timeout: Maximum retry limit exceed",
+                            "job_id": self.job_id,
+                        }
+                    )
+
+                try_number += 1
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
