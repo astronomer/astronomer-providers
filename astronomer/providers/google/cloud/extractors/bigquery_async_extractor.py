@@ -29,10 +29,8 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
         The method checks whether a connection hook is available with the Airflow configuration for the operator, and
         if yes, returns the same connection. Otherwise, returns the Client instance of``google.cloud.bigquery``.
         """
-        if hasattr(self.operator, "hook") and self.operator.hook:
-            hook = self.operator.hook
-            return hook.get_client(project_id=hook.project_id, location=hook.location)
-        return Client()
+        hook = self.operator.hook
+        return hook.get_client(project_id=hook.project_id, location=hook.location)
 
     def _get_xcom_bigquery_job_id(self, task_instance: TaskInstance) -> Any:
         """
