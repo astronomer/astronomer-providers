@@ -125,9 +125,9 @@ def delete_redshift_cluster_snapshot() -> None:
             if get_cluster_status() == "available":
                 time.sleep(30)
                 continue
-    except ClientError:
+    except ClientError as exception:
         logging.exception("Error when deleting the cluster")
-        return None
+        raise exception
 
 
 def delete_redshift_cluster() -> None:
@@ -144,9 +144,9 @@ def delete_redshift_cluster() -> None:
             if get_cluster_status() == "deleting":
                 time.sleep(30)
                 continue
-    except ClientError:
+    except ClientError as exception:
         logging.exception("Error when deleting the cluster")
-        return None
+        raise exception
 
 
 with DAG(
