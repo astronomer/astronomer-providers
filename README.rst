@@ -50,37 +50,52 @@ to install Kubernetes provider dependencies, run:
 Extras
 ^^^^^^
 
+.. EXTRA_DOC_START
+
 .. list-table::
    :header-rows: 1
 
    * - Extra Name
      - Installation Command
      - Dependencies
+
    * - ``all``
      - ``pip install 'astronomer-providers[all]'``
-     - All providers
+     - All
+
    * - ``amazon``
      - ``pip install 'astronomer-providers[amazon]'``
      - Amazon
+
+   * - ``apache.hive``
+     - ``pip install 'astronomer-providers[apache.hive]'``
+     - Apache Hive
+
    * - ``apache.livy``
      - ``pip install 'astronomer-providers[apache.livy]'``
      - Apache Livy
+
    * - ``cncf.kubernetes``
      - ``pip install 'astronomer-providers[cncf.kubernetes]'``
-     - Kubernetes
+     - Cncf Kubernetes
+
    * - ``databricks``
      - ``pip install 'astronomer-providers[databricks]'``
      - Databricks
+
    * - ``google``
      - ``pip install 'astronomer-providers[google]'``
-     - Google Cloud
-   * - ``http``
-     - ``pip install 'astronomer-providers[http]'``
-     - HTTP
+     - Google
+
+   * - ``microsoft.azure``
+     - ``pip install 'astronomer-providers[microsoft.azure]'``
+     - Microsoft Azure
+
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
 
+.. EXTRA_DOC_END
 
 Example Usage
 -------------
