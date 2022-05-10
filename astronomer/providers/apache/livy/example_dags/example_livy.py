@@ -42,7 +42,7 @@ COMMAND_TO_CREATE_PI_FILE: List[str] = [
 ]
 
 JOB_FLOW_OVERRIDES = {
-    "Name": "team-provider-example-dag-livy-test",
+    "Name": "example_livy_operator_cluster",
     "ReleaseLabel": "emr-5.35.0",
     "Applications": [
         {"Name": "Spark"},

@@ -124,3 +124,9 @@ repos:
         entry: .circleci/scripts/pre_commit_changelog_upto_date.py
         additional_dependencies:
           - packaging
+      - id: list-extras-readme
+        name: List all the extras in README.rst
+        language: python
+        files: ^setup.cfg$|^README.rst$
+        pass_filenames: false
+        entry: .circleci/scripts/pre_commit_readme_extra.py
