@@ -229,18 +229,15 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     cluster_response_master_public_dns = task_instance.xcom_pull(
         key="cluster_response_master_public_dns", task_ids=["describe_created_cluster"]
     )[0]
-    try:
-        client.connect(hostname=cluster_response_master_public_dns, username=kwargs["username"], pkey=key)
+    client.connect(hostname=cluster_response_master_public_dns, username=kwargs["username"], pkey=key)
 
-        # Execute a command(cmd) after connecting/ssh to an instance
-        for command in kwargs["command"]:
-            stdin, stdout, stderr = client.exec_command(command)
-            stdout.read()
+    # Execute a command(cmd) after connecting/ssh to an instance
+    for command in kwargs["command"]:
+        stdin, stdout, stderr = client.exec_command(command)
+        stdout.read()
 
-        # close the client connection once the job is done
-        client.close()
-    except Exception as exc:
-        raise Exception("Got an exception as %s.", str(exc))
+    # close the client connection once the job is done
+    client.close()
 
 
 def get_cluster_details(task_instance: Any) -> None:
