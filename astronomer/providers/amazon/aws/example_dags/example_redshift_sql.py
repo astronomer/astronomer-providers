@@ -58,9 +58,9 @@ def delete_redshift_cluster() -> None:
             if get_cluster_status() == "deleting":
                 time.sleep(30)
                 continue
-    except ClientError:
+    except ClientError as exception:
         logging.exception("Error deleting redshift cluster")
-        return None
+        raise exception
 
 
 def create_redshift_cluster() -> None:
