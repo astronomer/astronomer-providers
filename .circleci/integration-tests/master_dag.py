@@ -48,9 +48,8 @@ def get_report(dag_run_ids: List[str]) -> None:
                 channel=SLACK_CHANNEL,
                 username=SLACK_USERNAME,
             ).execute(context=None)
-        except Exception as exception:
+        except Exception:
             logging.exception("Error occur while sending slack alert.")
-            raise exception
 
 
 def prepare_dag_dependency(task_info, execution_time):
@@ -95,7 +94,6 @@ with DAG(
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
-        {"aws_nuke_dag": "example_aws_nuke"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)

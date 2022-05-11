@@ -22,6 +22,7 @@ with DAG(
     catchup=False,
     default_args=default_args,
     tags=["example", "aws-nuke"],
+    is_paused_upon_creation=False,
 ) as dag:
     start = DummyOperator(task_id="start")
 
