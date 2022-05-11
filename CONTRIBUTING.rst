@@ -259,10 +259,18 @@ Naming Conventions
 Guideline to write an example DAG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - The example DAG should be self-sufficient as it is tested as part of the CI. For example, while implementing example DAG for ``S3KeySensorAsync``, the DAG should first create bucket, then upload s3 key, the check for key using ``S3KeySensorAsync`` and then finally delete the bucket once sensor found the key.
+- Read resource names for clusters, databases, files, etc. from environment variables and avoid hard-coding it.
+- Read Airflow connection-id from environment variable and pass the value in respective task. We recommend to not depend on default connection-id.
+- Since we trigger the DAGs externally, set the DAG ``schedule_interval`` parameter to ``None`` to avoid unnecessary runs.
+- Set the DAG ``catchup`` parameter to ``False`` to avoid any backfill.
+- Add appropriate tags for the DAG. This will help to group and search DAGs effectively.
+- Do not mention AWS keys or credentials in the example DAG.
 - Add proper doc-strings as part of example DAG.
 - Include a long running query always in the example DAG.
 - Include a clean up step at the start of the example DAG so that there won't be failures if the resources are already present.
+- Set ``trigger_rule`` parameter to ``all_done`` for the cleanup task so that clean up happens irrespective of upstream task failures.
 - Run all the steps in example DAG even if a particular task fails.
+- Make sure to register the DAG in `master dag <https://github.com/astronomer/astronomer-providers/blob/main/.circleci/integration-tests/master_dag.py>`__ so that it won't be skipped in CI.
 
 Considerations while writing Async or Deferrable Operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
