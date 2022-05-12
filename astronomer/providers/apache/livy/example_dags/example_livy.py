@@ -135,7 +135,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
         )
     except ClientError as error:
         if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
-            logging.info("Ingress for port %s already authorized", LIVY_OPERATOR_INGRESS_PORT)
+            logging.error("Ingress for port %s already authorized", LIVY_OPERATOR_INGRESS_PORT)
         else:
             raise error
 
@@ -156,7 +156,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
         )
     except ClientError as error:
         if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
-            logging.info("Ingress for port 22 already authorized")
+            logging.error("Ingress for port 22 already authorized")
         else:
             raise error
 
