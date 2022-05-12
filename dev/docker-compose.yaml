@@ -6,8 +6,6 @@ x-airflow-common:
   build:
     context: ..
     dockerfile: dev/Dockerfile
-    args:
-      IMAGE_NAME: ${IMAGE_NAME:-quay.io/astronomer/astro-runtime:4.1.0-base}
   environment:
     &airflow-common-env
     DB_BACKEND: postgres
