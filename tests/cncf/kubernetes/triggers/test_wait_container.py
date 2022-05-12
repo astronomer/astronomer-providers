@@ -152,7 +152,8 @@ async def test_pending_running(load_kube_config, wait_completion):
     If we get Running phase within the timeout period we should move on to wait
     for pod completion.
     """
-    wait_completion.return_value = None
+    expected_event = TriggerEvent({"status": "done"})
+    wait_completion.return_value = expected_event
     trigger = WaitContainerTrigger(
         pod_name=mock.ANY,
         pod_namespace=mock.ANY,
@@ -162,7 +163,7 @@ async def test_pending_running(load_kube_config, wait_completion):
         logging_interval=None,
     )
 
-    assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
+    assert await trigger.run().__anext__() == expected_event
     wait_completion.assert_awaited()
 
 
