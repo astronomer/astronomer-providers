@@ -172,7 +172,11 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
         )
     except ClientError as error:
         if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
-            logging.error("Ingress for port %s already authorized", HIVE_OPERATOR_INGRESS_PORT)
+            logging.error(
+                "Ingress for port %s already authorized. Error Message is: %s",
+                HIVE_OPERATOR_INGRESS_PORT,
+                error.response["Error"]["Message"],
+            )
         else:
             raise error
 
@@ -193,7 +197,10 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
         )
     except ClientError as error:
         if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
-            logging.error("Ingress for port 22 already authorized")
+            logging.error(
+                "Ingress for port 22 already authorized. Error message is: %s",
+                error.response["Error"]["Message"],
+            )
         else:
             raise error
 
