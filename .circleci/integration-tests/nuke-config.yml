@@ -21,6 +21,7 @@ account-blocklist:
   - '999999999999'
 resource-types:
   targets:
+    - CloudFormationStack
     - EMRCluster
     - EC2Instance
     - EKSCluster
@@ -28,3 +29,6 @@ resource-types:
     - RedshiftCluster
 accounts:
   '396807896376':  # aws-airflow-providers-main
+    filters:       # won't delete the filtered resources
+      CloudFormationStack:
+        - 'databricks-workspace-stack'
