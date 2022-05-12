@@ -15,6 +15,7 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrTerminateJobFlowOperator,
 )
 from airflow.providers.apache.hive.operators.hive import HiveOperator
+from botocore.exceptions import ClientError
 from requests import get
 
 from astronomer.providers.apache.hive.sensors.hive_partition import (
@@ -29,9 +30,10 @@ AWS_S3_CREDS = {
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "aws_secret_key"),
     "region_name": os.getenv("AWS_DEFAULT_REGION", "us-east-2"),
 }
-
+BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
 PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
+HIVE_OPERATOR_INGRESS_PORT = int(os.getenv("HIVE_OPERATOR_INGRESS_PORT", 10000))
 HIVE_SCHEMA = os.getenv("HIVE_SCHEMA", "default")
 HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")
 HIVE_PARTITION = os.getenv("HIVE_PARTITION", "state='FL'")
@@ -94,7 +96,7 @@ def create_airflow_connection_for_hive_metastore_(task_instance: Any) -> None:
         )[0],
         login="hive",
         password="password",
-        port=10000,
+        port=HIVE_OPERATOR_INGRESS_PORT,
         schema="default",
     )  # create a connection object
 
@@ -125,7 +127,7 @@ def create_airflow_connection_for_hive_cli(task_instance: Any) -> None:
         )[0],
         login="hive",
         password="password",
-        port=10000,
+        port=HIVE_OPERATOR_INGRESS_PORT,
         schema="default",
         extra={"use_beeline": True, "auth": "none"},
     )  # create a connection object
@@ -153,23 +155,8 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
     logging.info("Current ip address is: %s", str(current_docker_ip))
     client = boto3.client("ec2", **AWS_S3_CREDS)
 
-    response = client.describe_security_groups(
-        GroupIds=[
-            task_instance.xcom_pull(
-                key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
-            )[0]
-        ]
-    )
-    current_ip_permissions = response["SecurityGroups"][0]["IpPermissions"]
-    ip_exists = False
-    for current_ip in current_ip_permissions:
-        ip_ranges = current_ip["IpRanges"]
-        for ip in ip_ranges:
-            if ip["CidrIp"] == str(current_docker_ip) + "/32":
-                ip_exists = True
-
-    if not ip_exists:
-        # Port 10000 need to be open for Impyla connectivity to Hive
+    # Port HIVE_OPERATOR_INGRESS_PORT needs to be open for Impyla connectivity to Hive.
+    try:
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -177,14 +164,24 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
-                    "FromPort": 10000,
-                    "ToPort": 10000,
+                    "FromPort": HIVE_OPERATOR_INGRESS_PORT,
+                    "ToPort": HIVE_OPERATOR_INGRESS_PORT,
                     "IpRanges": [{"CidrIp": str(current_docker_ip) + "/32"}],
                 }
             ],
         )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
+            logging.error(
+                "Ingress for port %s already authorized. Error Message is: %s",
+                HIVE_OPERATOR_INGRESS_PORT,
+                error.response["Error"]["Message"],
+            )
+        else:
+            raise error
 
-        # Allow SSH traffic on port 22 and copy file to HDFS
+    # Allow SSH traffic on port 22 and copy file to HDFS.
+    try:
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -198,6 +195,14 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
+            logging.error(
+                "Ingress for port 22 already authorized. Error message is: %s",
+                error.response["Error"]["Message"],
+            )
+        else:
+            raise error
 
 
 def create_key_pair() -> None:

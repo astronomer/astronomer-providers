@@ -18,11 +18,14 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrCreateJobFlowOperator,
     EmrTerminateJobFlowOperator,
 )
+from botocore.exceptions import ClientError
 from requests import get
 
 from astronomer.providers.apache.livy.operators.livy import LivyOperatorAsync
 
+BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
 LIVY_JAVA_FILE = os.getenv("LIVY_JAVA_FILE", "/spark-examples.jar")
+LIVY_OPERATOR_INGRESS_PORT = int(os.getenv("LIVY_OPERATOR_INGRESS_PORT", 8998))
 LIVY_PYTHON_FILE = os.getenv("LIVY_PYTHON_FILE", "/user/hadoop/pi.py")
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
@@ -89,7 +92,7 @@ def create_airflow_connection(task_instance: Any) -> None:
         )[0],
         login="",
         password="",
-        port=8998,
+        port=LIVY_OPERATOR_INGRESS_PORT,
     )  # create a connection object
 
     session = settings.Session()
@@ -115,23 +118,8 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
     logging.info("Current ip address is: %s", str(current_docker_ip))
     client = boto3.client("ec2", **AWS_S3_CREDS)
 
-    response = client.describe_security_groups(
-        GroupIds=[
-            task_instance.xcom_pull(
-                key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
-            )[0]
-        ]
-    )
-    current_ip_permissions = response["SecurityGroups"][0]["IpPermissions"]
-    ip_exists = False
-    for current_ip in current_ip_permissions:
-        ip_ranges = current_ip["IpRanges"]
-        for ip in ip_ranges:
-            if ip["CidrIp"] == str(current_docker_ip) + "/32":
-                ip_exists = True
-
-    if not ip_exists:
-        # open port for port 8998
+    # Open port 'LIVY_OPERATOR_INGRESS_PORT'.
+    try:
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -139,14 +127,24 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
-                    "FromPort": 8998,
-                    "ToPort": 8998,
+                    "FromPort": LIVY_OPERATOR_INGRESS_PORT,
+                    "ToPort": LIVY_OPERATOR_INGRESS_PORT,
                     "IpRanges": [{"CidrIp": str(current_docker_ip) + "/32"}],
                 }
             ],
         )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
+            logging.error(
+                "Ingress for port %s already authorized. Error Message is: %s",
+                LIVY_OPERATOR_INGRESS_PORT,
+                error.response["Error"]["Message"],
+            )
+        else:
+            raise error
 
-        # open port for port 22 for ssh and copy file for hdfs
+    # Open port 22 for downstream task 'ssh_and_copy_pifile_to_hdfs'.
+    try:
         client.authorize_security_group_ingress(
             GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
@@ -160,6 +158,14 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
                 }
             ],
         )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code", "") == BOTO_DUPLICATE_PERMISSION_ERROR:
+            logging.error(
+                "Ingress for port 22 already authorized. Error message is: %s",
+                error.response["Error"]["Message"],
+            )
+        else:
+            raise error
 
 
 def create_key_pair() -> None:
