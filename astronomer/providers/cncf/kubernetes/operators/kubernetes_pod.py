@@ -6,6 +6,7 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
 from airflow.utils.context import Context
+from pendulum import DateTime
 
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
@@ -48,7 +49,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def defer(self, last_log_time=None, **kwargs):
+    def defer(self, last_log_time: Optional[DateTime] = None, **kwargs) -> None:
         """Defers to ``WaitContainerTrigger`` optionally with last log time."""
         if kwargs:
             raise ValueError(
