@@ -46,7 +46,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                 raise AirflowException(description)
 
     def defer(self, last_log_time=None, **kwargs):
-        """Defers to WaitContainerTrigger optionally with last log time."""
+        """Defers to ``WaitContainerTrigger`` optionally with last log time."""
         if kwargs:
             raise ValueError(
                 f"Received keyword arguments {list(kwargs.keys())} but "
