@@ -51,7 +51,6 @@ with DAG(
                 'echo \'{"message": "good afternoon!"}\' > /airflow/xcom/return.json'
             ),
         ],
-        logging_interval=10,
     )
 
     create_k8s_pod
