@@ -23,7 +23,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
 
     .. warning::
         By default, logs will not be available in the Airflow Webserver until the task completes. However,
-        you can configure KubernetesPodOperatorAsync to periodically resume and fetch logs.  This behavior
+        you can configure ``KubernetesPodOperatorAsync`` to periodically resume and fetch logs.  This behavior
         is controlled by param ``logging_interval``.
 
     :param poll_interval: interval in seconds to sleep between checking pod status
