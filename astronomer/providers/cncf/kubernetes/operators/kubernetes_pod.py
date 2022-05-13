@@ -122,6 +122,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
                     since_time=last_log_time,
                 )
                 if pod_log_status.running:
+                    self.log.info("Container still running; deferring again.")
                     self.defer(pod_log_status.last_log_time)
 
             if self.do_xcom_push:
