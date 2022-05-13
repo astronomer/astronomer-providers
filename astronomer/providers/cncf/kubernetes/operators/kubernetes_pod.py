@@ -22,11 +22,14 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     Async (deferring) version of KubernetesPodOperator
 
     .. warning::
-        The logs would not be available in the Airflow Webserver until the task completes. This is
-        the main difference between this operator and the
-        :class:`~airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator`.
+        By default, logs will not be available in the Airflow Webserver until the task completes. However,
+        you can configure KubernetesPodOperatorAsync to periodically resume and fetch logs.  This behavior
+        is controlled by param ``logging_interval``.
 
     :param poll_interval: interval in seconds to sleep between checking pod status
+    :param logging_interval: max time in seconds that task should be in deferred state before
+        resuming to fetch latest logs. If None, then the task will remain in deferred state until pod
+        is done, and no logs will be visible until that time.
     """
 
     def __init__(self, *, poll_interval: int = 5, logging_interval: Optional[int] = None, **kwargs: Any):
