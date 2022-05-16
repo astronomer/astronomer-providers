@@ -37,8 +37,20 @@ with DAG(
         config_file=config_file,
         name="astro_k8s_test_pod",
         image="ubuntu",
-        cmds=["/bin/sh"],
-        arguments=["-c", "sleep 30"],
+        cmds=[
+            "bash",
+            "-cx",
+            (
+                "i=0; "
+                "while [ $i -ne 30 ]; "
+                "do i=$(($i+1)); "
+                "echo $i; "
+                "sleep 1; "
+                "done; "
+                "mkdir -p /airflow/xcom/; "
+                'echo \'{"message": "good afternoon!"}\' > /airflow/xcom/return.json'
+            ),
+        ],
     )
 
     create_k8s_pod
