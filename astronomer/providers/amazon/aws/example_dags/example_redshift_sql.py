@@ -3,12 +3,10 @@ import os
 import time
 from datetime import datetime, timedelta
 
-import boto3
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
-from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.operators.redshift_sql import (
     RedshiftSQLOperatorAsync,
@@ -33,6 +31,8 @@ default_args = {
 
 def get_cluster_status() -> str:
     """Get the status of aws redshift cluster"""
+    import boto3
+
     client = boto3.client("redshift")
 
     response = client.describe_clusters(
@@ -44,8 +44,11 @@ def get_cluster_status() -> str:
     return cluster_status
 
 
-def delete_redshift_cluster() -> None:
+def delete_redshift_cluster_callable() -> None:
     """Delete a redshift cluster and wait until it completely removed"""
+    import boto3
+    from botocore.exceptions import ClientError
+
     client = boto3.client("redshift")
 
     try:
@@ -54,17 +57,25 @@ def delete_redshift_cluster() -> None:
             SkipFinalClusterSnapshot=True,
         )
 
-        while True:
-            if get_cluster_status() == "deleting":
-                time.sleep(30)
-                continue
+        while get_cluster_status() == "deleting":
+            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
+            time.sleep(30)
+
     except ClientError as exception:
-        logging.exception("Error deleting redshift cluster")
-        raise exception
+        if exception.response.get("Error", {}).get("Code", "") == "ClusterNotFound":
+            logging.error(
+                "Cluster might have already been deleted. Error message is: %s",
+                exception.response["Error"]["Message"],
+            )
+        else:
+            logging.exception("Error deleting redshift cluster")
+            raise
 
 
-def create_redshift_cluster() -> None:
+def create_redshift_cluster_callable() -> None:
     """Create aws redshift cluster and wait until it available"""
+    import boto3
+
     client = boto3.client("redshift")
 
     client.create_cluster(
@@ -79,9 +90,8 @@ def create_redshift_cluster() -> None:
         ],
     )
 
-    while True:
-        if get_cluster_status() == "available":
-            break
+    while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
@@ -101,9 +111,9 @@ with DAG(
         f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
     )
 
-    create_cluster_op = PythonOperator(
+    create_redshift_cluster = PythonOperator(
         task_id="create_redshift_cluster",
-        python_callable=create_redshift_cluster,
+        python_callable=create_redshift_cluster_callable,
     )
 
     # Let use plpgsql procedure loop to defer RedshiftSQLOperatorAsync
@@ -163,7 +173,7 @@ with DAG(
     )
 
     task_get_data_with_filter = RedshiftSQLOperatorAsync(
-        task_id="task_get_with_filter",
+        task_id="task_get_data_with_filter",
         sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
         params={"color": "Red"},
         redshift_conn_id=REDSHIFT_CONN_ID,
@@ -175,9 +185,9 @@ with DAG(
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
-    delete_cluster_op = PythonOperator(
+    delete_redshift_cluster = PythonOperator(
         task_id="delete_redshift_cluster",
-        python_callable=delete_redshift_cluster,
+        python_callable=delete_redshift_cluster_callable,
         trigger_rule="all_done",
     )
 
@@ -185,7 +195,7 @@ with DAG(
 
     (
         config
-        >> create_cluster_op
+        >> create_redshift_cluster
         >> task_create_func
         >> task_long_running_query
         >> task_create_table
@@ -193,7 +203,7 @@ with DAG(
         >> task_get_all_data
         >> task_get_data_with_filter
         >> task_delete_table
-        >> delete_cluster_op
+        >> delete_redshift_cluster
     )
 
-    [task_delete_table, delete_cluster_op] >> end
+    [task_delete_table, delete_redshift_cluster] >> end

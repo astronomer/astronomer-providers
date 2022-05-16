@@ -3,12 +3,10 @@ import os
 import time
 from datetime import datetime, timedelta
 
-import boto3
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
-from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftPauseClusterOperatorAsync,
@@ -37,6 +35,8 @@ default_args = {
 
 def get_cluster_status() -> str:
     """Get the status of aws redshift cluster"""
+    import boto3
+
     client = boto3.client("redshift")
 
     response = client.describe_clusters(
@@ -50,6 +50,8 @@ def get_cluster_status() -> str:
 
 def get_snapshot_status() -> str:
     """Get the status of aws redshift cluster snapshot"""
+    import boto3
+
     client = boto3.client("redshift")
 
     response = client.describe_cluster_snapshots(
@@ -61,8 +63,10 @@ def get_snapshot_status() -> str:
     return snapshot_status
 
 
-def create_redshift_cluster() -> None:
+def create_redshift_cluster_callable() -> None:
     """Create aws redshift cluster and wait until it available"""
+    import boto3
+
     client = boto3.client("redshift")
 
     client.create_cluster(
@@ -77,14 +81,15 @@ def create_redshift_cluster() -> None:
         ],
     )
 
-    while True:
-        if get_cluster_status() == "available":
-            break
+    while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
-def create_redshift_cluster_snapshot() -> None:
+def create_redshift_cluster_snapshot_callable() -> None:
     """Create aws redshift cluster snapshot and wait until it available"""
+    import boto3
+
     client = boto3.client("redshift")
     client.create_cluster_snapshot(
         SnapshotIdentifier=f"{REDSHIFT_CLUSTER_IDENTIFIER}-snapshot",
@@ -94,20 +99,22 @@ def create_redshift_cluster_snapshot() -> None:
         ],
     )
 
-    while True:
-        if get_snapshot_status() == "available":
-            break
+    while get_snapshot_status() != "available":
+        logging.info("Waiting for cluster snapshot to be available. Sleeping for 30 seconds.")
         time.sleep(30)
-    # Sometime cluster take few seconds to goes to modifying state again
-    time.sleep(60)
-    while True:
-        if get_cluster_status() == "available":
-            break
+
+    # Introduce sleep to wait for the cluster to be available back from 'modifying' state before proceeding on to the
+    # downstream task.
+    while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
-def delete_redshift_cluster_snapshot() -> None:
+def delete_redshift_cluster_snapshot_callable() -> None:
     """Delete a aws redshift cluster and wait until cluster is available"""
+    import boto3
+    from botocore.exceptions import ClientError
+
     client = boto3.client("redshift")
 
     try:
@@ -116,22 +123,32 @@ def delete_redshift_cluster_snapshot() -> None:
             SnapshotClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
         )
 
-        while True:
-            if get_snapshot_status() == "deleting":
-                time.sleep(30)
-                continue
+        while get_snapshot_status() == "deleting":
+            logging.info("Waiting for cluster snapshot to be deleted. Sleeping for 30 seconds.")
+            time.sleep(30)
 
-        while True:
-            if get_cluster_status() == "available":
-                time.sleep(30)
-                continue
     except ClientError as exception:
-        logging.exception("Error when deleting the cluster")
-        raise exception
+        if exception.response.get("Error", {}).get("Code", "") == "ClusterSnapshotNotFound":
+            logging.error(
+                "Snapshot might have already been deleted. Error message is: %s",
+                exception.response["Error"]["Message"],
+            )
+        else:
+            logging.exception("Error when deleting the cluster")
+            raise
+
+    # Introduce sleep to wait for the cluster to be available back after snapshot activity before proceeding on to the
+    # downstream task.
+    while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
+        time.sleep(30)
 
 
-def delete_redshift_cluster() -> None:
+def delete_redshift_cluster_callable() -> None:
     """Delete a redshift cluster and wait until it completely removed"""
+    import boto3
+    from botocore.exceptions import ClientError
+
     client = boto3.client("redshift")
 
     try:
@@ -140,13 +157,19 @@ def delete_redshift_cluster() -> None:
             SkipFinalClusterSnapshot=True,
         )
 
-        while True:
-            if get_cluster_status() == "deleting":
-                time.sleep(30)
-                continue
+        while get_cluster_status() == "deleting":
+            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
+            time.sleep(30)
+
     except ClientError as exception:
-        logging.exception("Error when deleting the cluster")
-        raise exception
+        if exception.response.get("Error", {}).get("Code", "") == "ClusterNotFound":
+            logging.error(
+                "Cluster might have already been deleted. Error message is: %s",
+                exception.response["Error"]["Message"],
+            )
+        else:
+            logging.exception("Error deleting redshift cluster")
+            raise
 
 
 with DAG(
@@ -166,18 +189,18 @@ with DAG(
         f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
     )
 
-    create_cluster_op = PythonOperator(
+    create_redshift_cluster = PythonOperator(
         task_id="create_redshift_cluster",
-        python_callable=create_redshift_cluster,
+        python_callable=create_redshift_cluster_callable,
     )
 
-    create_cluster_snapshot_op = PythonOperator(
+    create_cluster_snapshot = PythonOperator(
         task_id="create_cluster_snapshot",
-        python_callable=create_redshift_cluster_snapshot,
+        python_callable=create_redshift_cluster_snapshot_callable,
     )
 
     # [START howto_operator_redshift_pause_cluster_async]
-    pause_cluster_task = RedshiftPauseClusterOperatorAsync(
+    pause_redshift_cluster = RedshiftPauseClusterOperatorAsync(
         task_id="pause_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
@@ -185,7 +208,7 @@ with DAG(
     # [END howto_operator_redshift_pause_cluster_async]
 
     # [START howto_operator_redshift_resume_cluster_async]
-    resume_cluster_task = RedshiftResumeClusterOperatorAsync(
+    resume_redshift_cluster = RedshiftResumeClusterOperatorAsync(
         task_id="resume_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
@@ -193,7 +216,7 @@ with DAG(
     # [END howto_operator_redshift_resume_cluster_async]
 
     # [START howto_operator_redshift_cluster_sensor_async]
-    async_redshift_sensor_task = RedshiftClusterSensorAsync(
+    redshift_sensor = RedshiftClusterSensorAsync(
         task_id="redshift_sensor",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         target_status="available",
@@ -201,15 +224,15 @@ with DAG(
     )
     # [END howto_operator_redshift_cluster_sensor_async]
 
-    delete_cluster_snapshot_op = PythonOperator(
+    delete_redshift_cluster_snapshot = PythonOperator(
         task_id="delete_redshift_cluster_snapshot",
-        python_callable=delete_redshift_cluster_snapshot,
+        python_callable=delete_redshift_cluster_snapshot_callable,
         trigger_rule="all_done",
     )
 
-    delete_cluster_op = PythonOperator(
+    delete_redshift_cluster = PythonOperator(
         task_id="delete_redshift_cluster",
-        python_callable=delete_redshift_cluster,
+        python_callable=delete_redshift_cluster_callable,
         trigger_rule="all_done",
     )
 
@@ -218,13 +241,13 @@ with DAG(
     (
         start
         >> config
-        >> create_cluster_op
-        >> create_cluster_snapshot_op
-        >> pause_cluster_task
-        >> [resume_cluster_task, async_redshift_sensor_task]
-        >> delete_cluster_snapshot_op
-        >> delete_cluster_op
+        >> create_redshift_cluster
+        >> create_cluster_snapshot
+        >> pause_redshift_cluster
+        >> [resume_redshift_cluster, redshift_sensor]
+        >> delete_redshift_cluster_snapshot
+        >> delete_redshift_cluster
     )
 
-    [resume_cluster_task, async_redshift_sensor_task] >> end
-    [delete_cluster_snapshot_op, delete_cluster_op] >> end
+    [resume_redshift_cluster, redshift_sensor] >> end
+    [delete_redshift_cluster_snapshot, delete_redshift_cluster] >> end
