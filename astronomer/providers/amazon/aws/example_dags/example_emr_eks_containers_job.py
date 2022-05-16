@@ -3,11 +3,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Any
 
-import boto3
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
@@ -42,6 +40,9 @@ default_args = {
 
 def create_emr_virtual_cluster_func(task_instance: Any) -> None:
     """Create EMR virtual cluster in container"""
+    import boto3
+    from botocore.exceptions import ClientError
+
     client = boto3.client("emr-containers")
     try:
         response = client.create_virtual_cluster(

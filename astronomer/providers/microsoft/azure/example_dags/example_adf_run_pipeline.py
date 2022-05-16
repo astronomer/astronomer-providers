@@ -5,24 +5,6 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from azure.core.exceptions import HttpResponseError
-from azure.identity import ClientSecretCredential
-from azure.mgmt.datafactory import DataFactoryManagementClient
-from azure.mgmt.datafactory.models import (
-    AzureBlobDataset,
-    AzureStorageLinkedService,
-    BlobSink,
-    BlobSource,
-    CopyActivity,
-    DatasetReference,
-    DatasetResource,
-    Factory,
-    LinkedServiceReference,
-    LinkedServiceResource,
-    PipelineResource,
-    SecureString,
-)
-from azure.mgmt.resource import ResourceManagementClient
 
 from astronomer.providers.microsoft.azure.operators.data_factory import (
     AzureDataFactoryRunPipelineOperatorAsync,
@@ -65,6 +47,25 @@ def create_adf_storage_pipeline() -> None:
     Creates Azure resource if not present, Azure Data factory, Azure Storage linked service,
     Azure blob dataset both input and output and Data factory pipeline
     """
+    from azure.core.exceptions import HttpResponseError
+    from azure.identity import ClientSecretCredential
+    from azure.mgmt.datafactory import DataFactoryManagementClient
+    from azure.mgmt.datafactory.models import (
+        AzureBlobDataset,
+        AzureStorageLinkedService,
+        BlobSink,
+        BlobSource,
+        CopyActivity,
+        DatasetReference,
+        DatasetResource,
+        Factory,
+        LinkedServiceReference,
+        LinkedServiceResource,
+        PipelineResource,
+        SecureString,
+    )
+    from azure.mgmt.resource import ResourceManagementClient
+
     credentials = ClientSecretCredential(
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET, tenant_id=TENANT_ID
     )
@@ -132,6 +133,10 @@ def create_adf_storage_pipeline() -> None:
 
 def delete_azure_data_factory_storage_pipeline() -> None:
     """Delete data factory, storage linked service pipeline, dataset"""
+    from azure.identity import ClientSecretCredential
+    from azure.mgmt.datafactory import DataFactoryManagementClient
+    from azure.mgmt.resource import ResourceManagementClient
+
     credentials = ClientSecretCredential(
         client_id=CLIENT_ID, client_secret=CLIENT_SECRET, tenant_id=TENANT_ID
     )
