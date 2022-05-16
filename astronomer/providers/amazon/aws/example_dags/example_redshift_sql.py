@@ -58,6 +58,7 @@ def delete_redshift_cluster_callable() -> None:
         )
 
         while get_cluster_status() == "deleting":
+            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
             time.sleep(30)
 
     except ClientError as exception:
@@ -90,6 +91,7 @@ def create_redshift_cluster_callable() -> None:
     )
 
     while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 

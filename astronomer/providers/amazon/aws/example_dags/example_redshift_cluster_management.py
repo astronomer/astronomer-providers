@@ -82,6 +82,7 @@ def create_redshift_cluster_callable() -> None:
     )
 
     while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
@@ -99,11 +100,13 @@ def create_redshift_cluster_snapshot_callable() -> None:
     )
 
     while get_snapshot_status() != "available":
+        logging.info("Waiting for cluster snapshot to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
     # Introduce sleep to wait for the cluster to be available back from 'modifying' state before proceeding on to the
     # downstream task.
     while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
@@ -121,6 +124,7 @@ def delete_redshift_cluster_snapshot_callable() -> None:
         )
 
         while get_snapshot_status() == "deleting":
+            logging.info("Waiting for cluster snapshot to be deleted. Sleeping for 30 seconds.")
             time.sleep(30)
 
     except ClientError as exception:
@@ -136,6 +140,7 @@ def delete_redshift_cluster_snapshot_callable() -> None:
     # Introduce sleep to wait for the cluster to be available back after snapshot activity before proceeding on to the
     # downstream task.
     while get_cluster_status() != "available":
+        logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
 
 
@@ -153,6 +158,7 @@ def delete_redshift_cluster_callable() -> None:
         )
 
         while get_cluster_status() == "deleting":
+            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
             time.sleep(30)
 
     except ClientError as exception:
