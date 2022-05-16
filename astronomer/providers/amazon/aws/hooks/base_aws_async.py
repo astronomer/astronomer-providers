@@ -1,11 +1,7 @@
-import logging
-
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import get_session
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook, _parse_s3_config
 from asgiref.sync import sync_to_async
-
-log = logging.getLogger(__name__)
 
 
 class AwsBaseHookAsync(AwsBaseHook):

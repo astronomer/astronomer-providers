@@ -1,12 +1,9 @@
 import asyncio
-import logging
 from typing import Any, Dict
 
 import botocore.exceptions
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
-
-log = logging.getLogger(__name__)
 
 
 class RedshiftHookAsync(AwsBaseHookAsync):

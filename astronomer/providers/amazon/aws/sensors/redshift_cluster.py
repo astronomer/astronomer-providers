@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -8,8 +7,6 @@ from airflow.utils.context import Context
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
 )
-
-log = logging.getLogger(__name__)
 
 
 class RedshiftClusterSensorAsync(RedshiftClusterSensor):

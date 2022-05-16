@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union, cast
 from urllib.parse import urlparse
@@ -14,8 +13,6 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeyTrigger,
     S3PrefixTrigger,
 )
-
-log = logging.getLogger(__name__)
 
 
 class S3KeySensorAsync(BaseOperator):

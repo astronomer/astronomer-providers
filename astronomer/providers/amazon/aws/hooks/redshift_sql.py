@@ -1,13 +1,10 @@
 import asyncio
-import logging
 from typing import Dict, List, Union
 
 import botocore.exceptions
 from asgiref.sync import sync_to_async
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
-
-log = logging.getLogger(__name__)
 
 
 class RedshiftSQLHookAsync(RedshiftDataHook):

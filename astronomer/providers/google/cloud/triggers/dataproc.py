@@ -1,13 +1,10 @@
 import asyncio
-import logging
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from google.cloud.dataproc_v1.types import JobStatus
 
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
-
-log = logging.getLogger(__name__)
 
 
 class DataProcSubmitTrigger(BaseTrigger):

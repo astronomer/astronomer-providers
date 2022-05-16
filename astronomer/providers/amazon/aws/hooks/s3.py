@@ -1,5 +1,4 @@
 import fnmatch
-import logging
 import os
 import re
 from datetime import datetime
@@ -9,8 +8,6 @@ from aiobotocore.client import AioBaseClient
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
-
-log = logging.getLogger(__name__)
 
 
 class S3HookAsync(AwsBaseHookAsync):

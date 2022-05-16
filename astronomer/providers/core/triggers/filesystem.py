@@ -1,14 +1,11 @@
 import asyncio
 import datetime
-import logging
 import os
 import typing
 from glob import glob
 from typing import Any, Dict, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-
-log = logging.getLogger(__name__)
 
 
 class FileTrigger(BaseTrigger):
@@ -52,7 +49,7 @@ class FileTrigger(BaseTrigger):
                 if os.path.isfile(path):
                     mod_time_f = os.path.getmtime(path)
                     mod_time = datetime.datetime.fromtimestamp(mod_time_f).strftime("%Y%m%d%H%M%S")
-                    log.info("Found File %s last modified: %s", str(path), str(mod_time))
+                    self.log.info("Found File %s last modified: %s", str(path), str(mod_time))
                     yield TriggerEvent(True)
                 for _, _, files in os.walk(self.filepath):
                     if len(files) > 0:
