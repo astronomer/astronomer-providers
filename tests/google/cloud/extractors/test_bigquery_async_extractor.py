@@ -72,10 +72,11 @@ def context():
     yield context
 
 
+@mock.patch("astronomer.providers.google.cloud.extractors.bigquery_async_extractor._BigQueryHook")
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 @mock.patch("airflow.models.TaskInstance.xcom_pull")
 @mock.patch("openlineage.common.provider.bigquery.BigQueryDatasetsProvider.get_facets")
-def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook):
+def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook, mock_extractor_hook):
     """
     Tests that  the custom extractor's implementation for the BigQueryInsertJobOperatorAsync is able to process the
     operator's metadata that needs to be extracted as per OpenLineage.
@@ -88,6 +89,7 @@ def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook
     }
     job_id = "123456"
     mock_hook.return_value.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
+    mock_extractor_hook.return_value.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
     mock_bg_dataset_provider.return_value = BigQueryFacets(
         run_facets=RUN_FACETS, inputs=INPUT_STATS, output=OUTPUT_STATS
     )

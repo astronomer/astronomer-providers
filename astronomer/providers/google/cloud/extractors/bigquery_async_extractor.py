@@ -10,6 +10,7 @@ from openlineage.common.provider.bigquery import BigQueryDatasetsProvider
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
+    _BigQueryHook,
 )
 
 
@@ -29,7 +30,7 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
         The method checks whether a connection hook is available with the Airflow configuration for the operator, and
         if yes, returns the same connection. Otherwise, returns the Client instance of``google.cloud.bigquery``.
         """
-        hook = self.operator.hook
+        hook = _BigQueryHook(gcp_conn_id=self.operator.gcp_conn_id)
         return hook.get_client(project_id=hook.project_id, location=hook.location)
 
     def _get_xcom_bigquery_job_id(self, task_instance: TaskInstance) -> Any:
