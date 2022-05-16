@@ -5,8 +5,6 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, List
 
-import boto3
-import paramiko
 from airflow import DAG, settings
 from airflow.models import Connection, Variable
 from airflow.operators.python import PythonOperator
@@ -15,7 +13,6 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrTerminateJobFlowOperator,
 )
 from airflow.providers.apache.hive.operators.hive import HiveOperator
-from botocore.exceptions import ClientError
 from requests import get
 
 from astronomer.providers.apache.hive.sensors.hive_partition import (
@@ -151,6 +148,9 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
     Sets the inbound rule for the aws security group, based on
     current ip address of the system.
     """
+    import boto3
+    from botocore.exceptions import ClientError
+
     current_docker_ip = get("https://api.ipify.org").text
     logging.info("Current ip address is: %s", str(current_docker_ip))
     client = boto3.client("ec2", **AWS_S3_CREDS)
@@ -227,6 +227,8 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     SSH into the machine and execute the bash script from the list
     of commands.
     """
+    import paramiko
+
     key = paramiko.RSAKey.from_private_key_file(kwargs["path_to_pem_file"])
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -250,6 +252,8 @@ def get_cluster_details(task_instance: Any) -> None:
     Fetches the cluster details and stores EmrManagedMasterSecurityGroup and
     MasterPublicDnsName in the XCOM.
     """
+    import boto3
+
     client = boto3.client("emr", **AWS_S3_CREDS)
     response = client.describe_cluster(
         ClusterId=str(task_instance.xcom_pull(key="return_value", task_ids=["cluster_creator"])[0])
