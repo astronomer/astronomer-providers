@@ -1,7 +1,8 @@
 """This module contains the Apache HiveCli hook async."""
 import asyncio
-from typing import Tuple
+from typing import Any, Tuple
 
+from airflow.configuration import conf
 from airflow.hooks.base import BaseHook
 from impala.dbapi import connect
 from impala.hiveserver2 import HiveServer2Connection
@@ -15,19 +16,34 @@ class HiveCliHookAsync(BaseHook):
     :param auth_mechanism: auth mechanism to use for authentication
     """
 
+    def get_conn(self) -> Any:
+        """No comments"""
+        pass
+
     def __init__(self, metastore_conn_id: str) -> None:
         """Get the connection parameters separated from connection string"""
-        self.metastore_conn_id = self.get_connection(conn_id=metastore_conn_id)
-        self.auth_mechanism = self.metastore_conn_id.extra_dejson.get("authMechanism", "PLAIN")
+        super().__init__()
+        self.conn = self.get_connection(conn_id=metastore_conn_id)
+        self.auth_mechanism = self.conn.extra_dejson.get("authMechanism", "PLAIN")
 
     def get_hive_client(self) -> HiveServer2Connection:
         """Makes a connection to the hive client using impyla library"""
+        if conf.get("core", "security") == "kerberos":
+            auth_mechanism = self.conn.extra_dejson.get("authMechanism", "GSSAPI")
+            kerberos_service_name = self.conn.extra_dejson.get("kerberos_service_name", "hive")
+            return connect(
+                host=self.conn.host,
+                port=self.conn.port,
+                auth_mechanism=auth_mechanism,
+                kerberos_service_name=kerberos_service_name,
+            )
+
         return connect(
-            host=self.metastore_conn_id.host,
-            port=self.metastore_conn_id.port,
+            host=self.conn.host,
+            port=self.conn.port,
             auth_mechanism=self.auth_mechanism,
-            user=self.metastore_conn_id.login,
-            password=self.metastore_conn_id.password,
+            user=self.conn.login,
+            password=self.conn.password,
         )
 
     async def partition_exists(self, table: str, schema: str, partition: str, polling_interval: float) -> str:
