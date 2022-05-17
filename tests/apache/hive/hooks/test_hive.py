@@ -15,21 +15,37 @@ TEST_METASTORE_CONN_ID = "test_conn_id"
 
 
 @mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
-@mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_hive_client")
-def test_get_hive_client(mock_connect, mock_get_connection):
+@mock.patch("airflow.configuration.AirflowConfigParser.get")
+@mock.patch("impala.hiveserver2.connect")
+def test_get_hive_client_with_conf(mock_get_connect, mock_get_conf, mock_get_connection):
     """Checks the connection to hive client"""
-    mock_connect.return_value = HiveServer2Connection
+    mock_get_connect.return_value = mock.AsyncMock(HiveServer2Connection)
+    mock_get_conf.return_value = "kerberos"
     mock_get_connection.return_value = models.Connection(
         conn_id="metastore_default",
         conn_type="metastore",
         port=10000,
         host="localhost",
-        extra='{"auth": ""}',
-        schema="default",
     )
     hook = HiveCliHookAsync(TEST_METASTORE_CONN_ID)
     result = hook.get_hive_client()
-    assert isinstance(result, type(HiveServer2Connection))
+    assert isinstance(result, HiveServer2Connection)
+
+
+@mock.patch("astronomer.providers.apache.hive.hooks.hive.HiveCliHookAsync.get_connection")
+@mock.patch("impala.hiveserver2.connect")
+def test_get_hive_client(mock_get_connect, mock_get_connection):
+    """Checks the connection to hive client"""
+    mock_get_connect.return_value = mock.AsyncMock(HiveServer2Connection)
+    mock_get_connection.return_value = models.Connection(
+        conn_id="metastore_default",
+        conn_type="metastore",
+        port=10000,
+        host="localhost",
+    )
+    hook = HiveCliHookAsync(TEST_METASTORE_CONN_ID)
+    result = hook.get_hive_client()
+    assert isinstance(result, HiveServer2Connection)
 
 
 @pytest.mark.asyncio
