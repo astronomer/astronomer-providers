@@ -15,6 +15,21 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
     """
     Waits asynchronously for a set of partitions to show up in Hive.
 
+    .. note::
+       NamedHivePartitionSensorAsync uses implya library instead of pyhive.
+       The sync version of this sensor uses `pyhive <https://github.com/dropbox/PyHive>`_,
+       but `pyhive <https://github.com/dropbox/PyHive>`_ is currently unsupported.
+
+       Since we use `implya <https://github.com/cloudera/impyla>`_ library,
+       please set the connection to use the port ``10000`` instead of ``9083``.
+       For ``auth_mechansim='GSSAPi'`` the ticket renewal happens through command
+       ``airflow kerberos`` in
+       `worker/trigger <https://airflow.apache.org/docs/apache-airflow/stable/security/kerberos.html>`_.
+       Host map entry in worker/trigger for Public address to Private dns address of the hive cluster.
+
+       The library version of hive and hadoop in ``Dockerfile`` should match the remote
+       cluster where they are running.
+
     :param partition_names: List of fully qualified names of the
         partitions to wait for. A fully qualified name is of the
         form ``schema.table/pk1=pv1/pk2=pv2``, for example,
