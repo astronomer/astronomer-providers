@@ -20,7 +20,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
 
        Since we use `implya <https://github.com/cloudera/impyla>`_ library,
        please set the connection to use the port ``10000`` instead of ``9083``.
-       For ``auth_mechansim='GSSAPi'`` the ticket renewal happens through command
+       For ``auth_mechansim='GSSAPI'`` the ticket renewal happens through command
        ``airflow kerberos`` in
        `worker/trigger <https://airflow.apache.org/docs/apache-airflow/stable/security/kerberos.html>`_.
        Host map entry in worker/trigger for Public address to Private dns address of the hive cluster.
