@@ -1,6 +1,6 @@
 """This module contains the Apache HiveCli hook async."""
 import asyncio
-from typing import Any, Tuple
+from typing import Tuple
 
 from airflow.configuration import conf
 from airflow.hooks.base import BaseHook
@@ -15,10 +15,6 @@ class HiveCliHookAsync(BaseHook):
     :param metastore_conn_id: connection string for the hive
     :param auth_mechanism: auth mechanism to use for authentication
     """
-
-    def get_conn(self) -> Any:
-        """No comments"""
-        pass
 
     def __init__(self, metastore_conn_id: str) -> None:
         """Get the connection parameters separated from connection string"""
