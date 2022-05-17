@@ -137,8 +137,8 @@ def delete_redshift_cluster_snapshot_callable() -> None:
             logging.exception("Error when deleting the cluster")
             raise
 
-    # Introduce sleep to wait for the cluster to be available back after snapshot activity before proceeding on to the
-    # downstream task.
+    # Introduce sleep to wait for the cluster to be available back after snapshot activity before proceeding on to
+    # the downstream task.
     while get_cluster_status() != "available":
         logging.info("Waiting for cluster to be available. Sleeping for 30 seconds.")
         time.sleep(30)
