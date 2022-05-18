@@ -65,7 +65,7 @@ def test_task_dag_trigger_serialization():
         TEST_POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.core.triggers.external_dag.DagStateTrigger"
+    assert classpath == "astronomer.providers.core.triggers.external_task.DagStateTrigger"
     assert kwargs == {
         "dag_id": TEST_DAG_ID,
         "states": TEST_STATES,
