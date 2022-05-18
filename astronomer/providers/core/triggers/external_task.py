@@ -111,7 +111,7 @@ class DagStateTrigger(BaseTrigger):
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes DagStateTrigger arguments and classpath."""
         return (
-            "astronomer.providers.core.triggers.external_dag.DagStateTrigger",
+            "astronomer.providers.core.triggers.external_task.DagStateTrigger",
             {
                 "dag_id": self.dag_id,
                 "states": self.states,
