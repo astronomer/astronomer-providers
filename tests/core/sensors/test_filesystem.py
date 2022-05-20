@@ -8,7 +8,7 @@ from astronomer.providers.core.triggers.filesystem import FileTrigger
 class TestFileSensorAsync:
     FILE_PATH = "/tmp/sample.py"
 
-    def test_task_defer(self, dag, context):
+    def test_task_defer(self, context):
         """
         Asserts that a task is deferred and an FileTrigger will be fired
         when FileSensorAsync is provided with all required arguments
@@ -16,7 +16,6 @@ class TestFileSensorAsync:
         task = FileSensorAsync(
             task_id="wait_for_file",
             filepath=self.FILE_PATH,
-            dag=dag,
         )
 
         with pytest.raises(TaskDeferred) as exc:

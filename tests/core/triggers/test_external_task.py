@@ -1,24 +1,22 @@
 import asyncio
 
 import pytest
-from airflow.models import DagRun, TaskInstance
 from airflow.operators.dummy import DummyOperator
-from airflow.utils import timezone
 from airflow.utils.state import DagRunState, TaskInstanceState
 
 from astronomer.providers.core.triggers.external_task import (
     DagStateTrigger,
     TaskStateTrigger,
 )
+from tests.utils.airflow_util import get_dag_run, get_task_instance
+from tests.utils.config import Config
 
 
 class TestTaskStateTrigger:
-    DEFAULT_DATE = timezone.datetime(2015, 1, 1)
-    DAG_ID = "unit_test_dag"
-    TASK_ID = "external_task_sensor_check"
-    RUN_ID = "unit_test_dag_run_id"
+    DAG_ID = "external_task"
+    TASK_ID = "external_task_op"
+    RUN_ID = "external_task_run_id"
     STATES = ["success", "fail"]
-    POLL_INTERVAL = 3.0
 
     @pytest.mark.asyncio
     async def test_task_state_trigger(self, session, dag):
@@ -26,13 +24,12 @@ class TestTaskStateTrigger:
         Asserts that the TaskStateTrigger only goes off on or after a TaskInstance
         reaches an allowed state (i.e. SUCCESS).
         """
-        dag_run = DagRun(dag.dag_id, run_type="manual", execution_date=self.DEFAULT_DATE, run_id=self.RUN_ID)
-
+        dag_run = get_dag_run(dag.dag_id, self.RUN_ID)
         session.add(dag_run)
         session.commit()
 
         external_task = DummyOperator(task_id=self.TASK_ID, dag=dag)
-        instance = TaskInstance(external_task, self.DEFAULT_DATE)
+        instance = get_task_instance(external_task)
         session.add(instance)
         session.commit()
 
@@ -40,7 +37,7 @@ class TestTaskStateTrigger:
             dag_id=dag.dag_id,
             task_id=instance.task_id,
             states=self.STATES,
-            execution_dates=[self.DEFAULT_DATE],
+            execution_dates=[Config.EXECUTION_DATE],
             poll_interval=0.2,
         )
 
@@ -68,8 +65,8 @@ class TestTaskStateTrigger:
             dag_id=self.DAG_ID,
             task_id=self.TASK_ID,
             states=self.STATES,
-            execution_dates=[self.DEFAULT_DATE],
-            poll_interval=self.POLL_INTERVAL,
+            execution_dates=[Config.EXECUTION_DATE],
+            poll_interval=Config.POLL_INTERVAL,
         )
         classpath, kwargs = trigger.serialize()
         assert classpath == "astronomer.providers.core.triggers.external_task.TaskStateTrigger"
@@ -77,17 +74,15 @@ class TestTaskStateTrigger:
             "dag_id": self.DAG_ID,
             "task_id": self.TASK_ID,
             "states": self.STATES,
-            "execution_dates": [self.DEFAULT_DATE],
-            "poll_interval": self.POLL_INTERVAL,
+            "execution_dates": [Config.EXECUTION_DATE],
+            "poll_interval": Config.POLL_INTERVAL,
         }
 
 
 class TestDagStateTrigger:
-    DAG_ID = "test_dag"
-    DAG_RUN_ID = "test_dag_run_id"
+    DAG_ID = "external_task"
+    RUN_ID = "external_task_run_id"
     STATES = ["success", "fail"]
-    POLL_INTERVAL = 3.0
-    DEFAULT_DATE = timezone.datetime(2015, 1, 1)
 
     @pytest.mark.asyncio
     async def test_dag_state_trigger(self, session, dag):
@@ -95,9 +90,7 @@ class TestDagStateTrigger:
         Assert that the DagStateTrigger only goes off on or after a DagRun
         reaches an allowed state (i.e. SUCCESS).
         """
-        dag_run = DagRun(
-            dag.dag_id, run_type="manual", execution_date=self.DEFAULT_DATE, run_id=self.DAG_RUN_ID
-        )
+        dag_run = get_dag_run(dag.dag_id, self.RUN_ID)
 
         session.add(dag_run)
         session.commit()
@@ -105,7 +98,7 @@ class TestDagStateTrigger:
         trigger = DagStateTrigger(
             dag_id=dag.dag_id,
             states=self.STATES,
-            execution_dates=[self.DEFAULT_DATE],
+            execution_dates=[Config.EXECUTION_DATE],
             poll_interval=0.2,
         )
 
@@ -129,14 +122,14 @@ class TestDagStateTrigger:
         trigger = DagStateTrigger(
             dag_id=self.DAG_ID,
             states=self.STATES,
-            execution_dates=[self.DEFAULT_DATE],
-            poll_interval=self.POLL_INTERVAL,
+            execution_dates=[Config.EXECUTION_DATE],
+            poll_interval=Config.POLL_INTERVAL,
         )
         classpath, kwargs = trigger.serialize()
         assert classpath == "astronomer.providers.core.triggers.external_task.DagStateTrigger"
         assert kwargs == {
             "dag_id": self.DAG_ID,
             "states": self.STATES,
-            "execution_dates": [self.DEFAULT_DATE],
-            "poll_interval": self.POLL_INTERVAL,
+            "execution_dates": [Config.EXECUTION_DATE],
+            "poll_interval": Config.POLL_INTERVAL,
         }

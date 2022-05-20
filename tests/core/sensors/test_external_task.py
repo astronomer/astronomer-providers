@@ -17,7 +17,7 @@ class TestExternalTaskSensorAsync:
     EXTERNAL_DAG_ID = "wait_for_me_dag"  # DAG the external task sensor is waiting on
     EXTERNAL_TASK_ID = "wait_for_me_task"  # Task the external task sensor is waiting on
 
-    def test_defer_and_fire_task_state_trigger(self, dag, context):
+    def test_defer_and_fire_task_state_trigger(self, context):
         """
         Asserts that a task is deferred and an TaskStateTrigger will be fired
         when the ExternalTaskSensor is provided with all required arguments
@@ -27,7 +27,6 @@ class TestExternalTaskSensorAsync:
             task_id=self.TASK_ID,
             external_task_id=self.EXTERNAL_TASK_ID,
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
 
         with pytest.raises(TaskDeferred) as exc:
@@ -35,7 +34,7 @@ class TestExternalTaskSensorAsync:
 
         assert isinstance(exc.value.trigger, TaskStateTrigger), "Trigger is not a TaskStateTrigger"
 
-    def test_defer_and_fire_dag_state_trigger(self, dag, context):
+    def test_defer_and_fire_dag_state_trigger(self, context):
         """
         Asserts that a DAG is deferred and a DagStateTrigger will be fired
         when the ExternalTaskSensor is provided with all required arguments
@@ -44,14 +43,13 @@ class TestExternalTaskSensorAsync:
         sensor = ExternalTaskSensorAsync(
             task_id=self.TASK_ID,
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
         with pytest.raises(TaskDeferred) as exc:
             sensor.execute(context)
 
         assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
-    def test_task_defer_when_external_task_id_empty(self, dag, context):
+    def test_task_defer_when_external_task_id_empty(self, context):
         """
         Asserts that the DagStateTrigger will be fired when the sensor
         is provided with a falsy value for external_task_id rather than None.
@@ -60,7 +58,6 @@ class TestExternalTaskSensorAsync:
             task_id=self.TASK_ID,
             external_task_id="",  # This is a falsy empty string
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
 
         with pytest.raises(TaskDeferred) as exc:
@@ -69,7 +66,7 @@ class TestExternalTaskSensorAsync:
         assert isinstance(exc.value.trigger, DagStateTrigger), "Trigger is not a DagStateTrigger"
 
     @mock.patch("astronomer.providers.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
-    def test_execute_complete_when_external_task_fail(self, mocked_count, session, dag, context):
+    def test_execute_complete_when_external_task_fail(self, mocked_count, session, context):
         """
         Asserts that the correct exception is raised when not every task monitored by
         the sensor is executed successfully.
@@ -79,7 +76,6 @@ class TestExternalTaskSensorAsync:
             task_id=self.TASK_ID,
             external_task_id=self.EXTERNAL_TASK_ID,
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
 
         with pytest.raises(AirflowException) as exc:
@@ -88,7 +84,7 @@ class TestExternalTaskSensorAsync:
         assert str(exc.value) == "The external task wait_for_me_task in DAG wait_for_me_dag failed."
 
     @mock.patch("astronomer.providers.core.sensors.external_task.ExternalTaskSensorAsync.get_count")
-    def test_execute_complete_when_external_dag_fail(self, mocked_count, session, dag, context):
+    def test_execute_complete_when_external_dag_fail(self, mocked_count, session, context):
         """
         Asserts that the correct exception is raised when not every DAG monitored by
         the sensor is executed successfully.
@@ -97,7 +93,6 @@ class TestExternalTaskSensorAsync:
         sensor = ExternalTaskSensorAsync(
             task_id=self.TASK_ID,
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
 
         with pytest.raises(AirflowException) as exc:
@@ -105,7 +100,7 @@ class TestExternalTaskSensorAsync:
 
         assert str(exc.value) == "The external DAG wait_for_me_dag failed."
 
-    def test_get_execution_dates(self, dag, context):
+    def test_get_execution_dates(self, context):
         """
         Asserts that this helper function returns execution_dates as expected
         depending on whether execution_delta, execution_date_fn, or neither
@@ -114,7 +109,6 @@ class TestExternalTaskSensorAsync:
         sensor = ExternalTaskSensorAsync(
             task_id=self.TASK_ID,
             external_dag_id=self.EXTERNAL_DAG_ID,
-            dag=dag,
         )
 
         # Case #1 sensor.execution_delta only
