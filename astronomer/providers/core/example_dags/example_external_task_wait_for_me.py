@@ -11,7 +11,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="test_external_task_async_waits_for_me",
+    dag_id="example_external_task_async_waits_for_me",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
