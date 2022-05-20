@@ -1,4 +1,4 @@
-from airflow.models.base import Operator
+from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
@@ -11,5 +11,5 @@ def get_dag_run(dag_id: str, run_id: str) -> DagRun:
     return dag_run
 
 
-def get_task_instance(task: Operator) -> TaskInstance:
+def get_task_instance(task: BaseOperator) -> TaskInstance:
     return TaskInstance(task, timezone.datetime(2022, 1, 1))
