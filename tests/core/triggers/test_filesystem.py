@@ -3,20 +3,20 @@ import asyncio
 import pytest
 
 from astronomer.providers.core.triggers.filesystem import FileTrigger
+from tests.utils.config import Config
 
 
 class TestFileTrigger:
     FILE_PATH = "/files/dags/example_async_file.py"
-    POLL_INTERVAL = 3.0
 
     def test_serialization(self):
         """Asserts that the TaskStateTrigger correctly serializes its arguments and classpath."""
-        trigger = FileTrigger(filepath=self.FILE_PATH, poll_interval=self.POLL_INTERVAL)
+        trigger = FileTrigger(filepath=self.FILE_PATH, poll_interval=Config.POLL_INTERVAL)
         classpath, kwargs = trigger.serialize()
         assert classpath == "astronomer.providers.core.triggers.filesystem.FileTrigger"
         assert kwargs == {
             "filepath": self.FILE_PATH,
-            "poll_interval": self.POLL_INTERVAL,
+            "poll_interval": Config.POLL_INTERVAL,
             "recursive": False,
         }
 
