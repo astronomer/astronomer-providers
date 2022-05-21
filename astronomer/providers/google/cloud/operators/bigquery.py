@@ -115,7 +115,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 )
 
         self.job_id = job.job_id
-
+        context["ti"].xcom_push(key="job_id", value=self.job_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryInsertJobTrigger(
@@ -139,8 +139,6 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             self.task_id,
             event["message"],
         )
-
-        context["ti"].xcom_push(key="job_id", value=event["job_id"])
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
