@@ -41,6 +41,8 @@ class S3KeySensorAsync(BaseOperator):
                  CA cert bundle than the one used by botocore.
     """
 
+    template_fields: Sequence[str] = ("bucket_key", "bucket_name")
+
     def __init__(
         self,
         *,
