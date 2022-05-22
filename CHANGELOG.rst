@@ -1,6 +1,30 @@
 Changelog
 =========
 
+1.3.1 (2022-05-22)
+------------------
+
+Bug Fixes
+"""""""""
+
+- Correct module name for ``DagStateTrigger`` which prevented use of
+  ``ExternalTaskSensorAsync`` when ``external_task_id`` was not passed
+  (`#361 <https://github.com/astronomer/astronomer-providers/pull/361>`_)
+- Add ``template_fields`` to ``S3KeySensorAsync`` (`#373 <https://github.com/astronomer/astronomer-providers/pull/373>`_)
+
+Docs
+""""
+
+- Add missing Extras in ``README.rst`` and automate it (`#329 <https://github.com/astronomer/astronomer-providers/pull/329>`_)
+
+Misc
+""""
+
+- Improvements in Example DAGs (Hive, Livy)
+  (`#342 <https://github.com/astronomer/astronomer-providers/pull/342>`_,
+  `#348 <https://github.com/astronomer/astronomer-providers/pull/348>`_,
+  `#349 <https://github.com/astronomer/astronomer-providers/pull/349>`_)
+
 1.3.0 (2022-05-09)
 ------------------
 
