@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 from datetime import datetime
 from typing import Any, AsyncIterator, Dict, List, Optional, Set, Tuple
@@ -9,8 +8,6 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils import timezone
 
 from astronomer.providers.google.cloud.hooks.gcs import GCSHookAsync
-
-log = logging.getLogger(__name__)
 
 
 class GCSBlobTrigger(BaseTrigger):

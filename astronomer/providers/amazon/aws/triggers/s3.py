@@ -1,13 +1,10 @@
 import asyncio
-import logging
 from datetime import datetime
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set, Tuple, Union
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
-
-log = logging.getLogger(__name__)
 
 
 class S3KeyTrigger(BaseTrigger):

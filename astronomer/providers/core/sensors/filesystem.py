@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -7,8 +6,6 @@ from airflow.sensors.filesystem import FileSensor
 from airflow.utils.context import Context
 
 from astronomer.providers.core.triggers.filesystem import FileTrigger
-
-log = logging.getLogger(__name__)
 
 
 class FileSensorAsync(FileSensor):
