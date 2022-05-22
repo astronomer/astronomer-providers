@@ -115,8 +115,7 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 if response_from_hook == "success":
                     query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
 
-                    # Extract records after casting a BigQuery row to the appropriate data types.
-                    records = hook.get_records(query_results, nocast=False)
+                    records = hook.get_records(query_results)
 
                     # If empty list, then no records are available
                     if not records:
@@ -291,11 +290,9 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
                         job_id=self.second_job_id, project_id=self.project_id
                     )
 
-                    # Extract records after casting a BigQuery row to the appropriate data types.
-                    first_records = hook.get_records(first_query_results, nocast=False)
+                    first_records = hook.get_records(first_query_results)
 
-                    # Extract records after casting a BigQuery row to the appropriate data types.
-                    second_records = hook.get_records(second_query_results, nocast=False)
+                    second_records = hook.get_records(second_query_results)
 
                     # If empty list, then no records are available
                     if not first_records:
@@ -409,8 +406,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
                 response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
                 if response_from_hook == "success":
                     query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-                    # Extract records after casting a BigQuery row to the appropriate data types.
-                    records = hook.get_records(query_results, nocast=False)
+                    records = hook.get_records(query_results)
                     records = records.pop(0) if records else None
                     hook.value_check(self.sql, self.pass_value, records, self.tolerance)
                     yield TriggerEvent({"status": "success", "message": "Job completed", "records": records})

@@ -240,7 +240,7 @@ async def test_bigquery_check_op_trigger_success_with_data(mock_job_output, mock
     generator = trigger.run()
     actual = await generator.asend(None)
 
-    assert TriggerEvent({"status": "success", "records": [22]}) == actual
+    assert TriggerEvent({"status": "success", "records": ["22"]}) == actual
 
 
 @pytest.mark.asyncio

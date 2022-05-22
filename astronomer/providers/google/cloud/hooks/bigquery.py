@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from gcloud.aio.bigquery import Job, Table
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
@@ -123,23 +123,17 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             job_query_response = await job_client.get_query_results(cast(Session, session))
             return job_query_response
 
-    def get_records(self, query_results: Dict[str, Any], nocast: bool = True) -> List[Any]:
+    def get_records(self, query_results: Dict[str, Any]) -> List[Any]:
         """
         Given the output query response from gcloud aio bigquery, convert the response to records.
 
         :param query_results: the results from a SQL query
-        :param nocast: indicates whether casting to bq data type is required or not
         """
         buffer = []
         if "rows" in query_results and query_results["rows"]:
-            fields = query_results["schema"]["fields"]
-            col_types = [field["type"] for field in fields]
             rows = query_results["rows"]
             for dict_row in rows:
-                if nocast:
-                    typed_row = [vs["v"] for vs in dict_row["f"]]
-                else:
-                    typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
+                typed_row = [vs["v"] for vs in dict_row["f"]]
                 buffer.append(typed_row)
         return buffer
 
