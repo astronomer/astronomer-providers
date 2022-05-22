@@ -29,7 +29,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
 
     :param poll_interval: interval in seconds to sleep between checking pod status
     :param logging_interval: max time in seconds that task should be in deferred state before
-        resuming to fetch latest logs. If None, then the task will remain in deferred state until pod
+        resuming to fetch latest logs. If ``None``, then the task will remain in deferred state until pod
         is done, and no logs will be visible until that time.
     """
 
