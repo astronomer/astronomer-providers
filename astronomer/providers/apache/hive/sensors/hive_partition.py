@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
 from airflow.utils.context import Context
 
@@ -14,13 +14,19 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     Waits for a given partition to show up in Hive table asynchronously.
 
     .. note::
-       HivePartitionSensorAsync uses implya library instead of pyhive.
-       The sync version of this sensor uses `pyhive <https://github.com/dropbox/PyHive>`_,
-       but `pyhive <https://github.com/dropbox/PyHive>`_ is currently unsupported.
+       HivePartitionSensorAsync uses impyla library instead of PyHive.
+       The sync version of this sensor uses `PyHive <https://github.com/dropbox/PyHive>`.
 
-       Since we use `implya <https://github.com/cloudera/impyla>`_ library,
+       Since we use `impyla <https://github.com/cloudera/impyla>`_ library,
        please set the connection to use the port ``10000`` instead of ``9083``.
-       This sensor currently supports ``auth_mechansim='PLAIN'`` only.
+       For ``auth_mechanism='GSSAPI'`` the ticket renewal happens through command
+       ``airflow kerberos`` in
+       `worker/trigger <https://airflow.apache.org/docs/apache-airflow/stable/security/kerberos.html>`_.
+
+       You may also need to allow traffic from Airflow worker/Triggerer to the Hive instance, depending on where
+       they are running. For example, you might consider adding an entry in the ``etc/hosts`` file present in the
+       Airflow worker/Triggerer, which maps the EMR Master node Public IP Address to its Private DNS Name to
+       allow the network traffic.
 
        The library version of hive and hadoop in ``Dockerfile`` should match the remote
        cluster where they are running.
@@ -28,7 +34,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     :param table: the table where the partition is present.
     :param partition: The partition clause to wait for. This is passed as
         notation as in "ds='2015-01-01'"
-    :param schema: database which needs to be connected in hive. By default it is 'default'
+    :param schema: database which needs to be connected in hive. By default, it is 'default'
     :param metastore_conn_id: connection string to connect to hive.
     :param polling_interval: The interval in seconds to wait between checks for partition.
     """
