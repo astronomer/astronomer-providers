@@ -16,16 +16,17 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
     Waits asynchronously for a set of partitions to show up in Hive.
 
     .. note::
-       NamedHivePartitionSensorAsync uses implya library instead of pyhive.
-       The sync version of this sensor uses `pyhive <https://github.com/dropbox/PyHive>`_,
-       but `pyhive <https://github.com/dropbox/PyHive>`_ is currently unsupported.
+       HivePartitionSensorAsync uses impyla library instead of PyHive.
+       The sync version of this sensor uses `PyHive <https://github.com/dropbox/PyHive>`.
 
-       Since we use `implya <https://github.com/cloudera/impyla>`_ library,
+       Since we use `impyla <https://github.com/cloudera/impyla>`_ library,
        please set the connection to use the port ``10000`` instead of ``9083``.
-       For ``auth_mechansim='GSSAPI'`` the ticket renewal happens through command
+       For ``auth_mechanism='GSSAPI'`` the ticket renewal happens through command
        ``airflow kerberos`` in
        `worker/trigger <https://airflow.apache.org/docs/apache-airflow/stable/security/kerberos.html>`_.
-       Host map entry in worker/trigger for Public address to Private dns address of the hive cluster.
+
+       You may also need to add a DNS entry in your Airflow worker/trigger ``etc/hosts`` file
+       from Hive EMR cluster Public IP Address to Private DNS Name to resolve the DNS.
 
        The library version of hive and hadoop in ``Dockerfile`` should match the remote
        cluster where they are running.
