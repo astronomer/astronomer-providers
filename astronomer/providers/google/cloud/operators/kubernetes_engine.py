@@ -14,7 +14,7 @@ from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
 
 class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
     """
-    Executes a task in a Kubernetes pod in the specified Google Kubernetes
+    Executes a task asynchronously in a Kubernetes pod in the specified Google Kubernetes
     Engine cluster
 
     This Operator assumes that the system has gcloud installed and has configured a
