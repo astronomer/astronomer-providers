@@ -23,9 +23,9 @@ class HivePartitionSensorAsync(HivePartitionSensor):
        ``airflow kerberos`` in
        `worker/trigger <https://airflow.apache.org/docs/apache-airflow/stable/security/kerberos.html>`_.
 
-       You may also need to allow traffic from Airflow worker/Triggerer to the Hive instance, depending on where 
-       they are running. For example, you might consider adding an entry in the ``etc/hosts`` file present in the 
-       Airflow worker/Triggerer, which maps the EMR Master node Public IP Address to its Private DNS Name to 
+       You may also need to allow traffic from Airflow worker/Triggerer to the Hive instance, depending on where
+       they are running. For example, you might consider adding an entry in the ``etc/hosts`` file present in the
+       Airflow worker/Triggerer, which maps the EMR Master node Public IP Address to its Private DNS Name to
        allow the network traffic.
 
        The library version of hive and hadoop in ``Dockerfile`` should match the remote
