@@ -122,7 +122,6 @@ with DAG(
 
     # Core DAG
     core_task_info = [
-        {"external_task_wait_dag": "test_external_task_async_waits_for_me"},
         {"external_task_dag": "test_external_task_async"},
         {"file_sensor_dag": "example_async_file_sensor"},
     ]
