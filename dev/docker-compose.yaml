@@ -24,6 +24,10 @@ x-airflow-common:
     OPENLINEAGE_NAMESPACE: dev
     # yamllint disable-line rule:line-length
     OPENLINEAGE_EXTRACTORS: astronomer.providers.google.cloud.extractors.bigquery_async_extractor.BigQueryAsyncExtractor
+    KRB5CCNAME: "/tmp/airflow_krb5_ccache"
+    HADOOP_CLIENT_OPTS: |
+        -Dsun.security.krb5.debug=true -Djavax.security.auth.useSubjectCredsOnly=false
+        -Dsun.security.jgss.debug=true -Dsun.security.spnego.debug=true
   volumes:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
