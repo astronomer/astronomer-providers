@@ -6,6 +6,7 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
 from airflow.utils.context import Context
+from kubernetes.client import models as k8s
 from pendulum import DateTime
 
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
@@ -49,7 +50,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def defer(self, last_log_time: Optional[DateTime] = None, **kwargs) -> None:
+    def defer(self, last_log_time: Optional[DateTime] = None, **kwargs: Any) -> None:
         """Defers to ``WaitContainerTrigger`` optionally with last log time."""
         if kwargs:
             raise ValueError(
@@ -77,7 +78,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
 
     def execute(self, context: Context) -> None:  # noqa: D102
         self.pod_request_obj = self.build_pod_request_obj(context)
-        self.pod = self.get_or_create_pod(self.pod_request_obj, context)
+        self.pod: k8s.V1Pod = self.get_or_create_pod(self.pod_request_obj, context)
         self.defer()
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:

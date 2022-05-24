@@ -11,6 +11,7 @@ from airflow.providers.cncf.kubernetes.utils.pod_manager import (
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils import timezone
 from kubernetes_asyncio.client import CoreV1Api
+from pendulum import DateTime
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
     KubernetesHookAsync,
@@ -49,7 +50,7 @@ class WaitContainerTrigger(BaseTrigger):
         pending_phase_timeout: float = 120,
         poll_interval: float = 5,
         logging_interval: Optional[int] = None,
-        last_log_time: Optional[int] = None,
+        last_log_time: Optional[DateTime] = None,
     ):
         super().__init__()
         self.kubernetes_conn_id = kubernetes_conn_id
