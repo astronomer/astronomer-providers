@@ -148,3 +148,33 @@ def test_trigger_error(
                 "description": "any message",
             },
         )
+
+
+def test_defer_with_kwargs():
+    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+    with pytest.raises(ValueError):
+        op.defer(kwargs={"timeout": 10})
+
+
+@mock.patch(
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.build_pod_request_obj"
+)
+@mock.patch(
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.get_or_create_pod"
+)
+@mock.patch("astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.defer")
+def test_execute(mock_defer, mock_get_or_create_pod, mock_build_pod_request_obj):
+    mock_get_or_create_pod.return_value = {}
+    mock_build_pod_request_obj.return_value = {}
+    mock_defer.return_value = {}
+    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+    assert op.execute(context=create_context(op)) is None
+
+
+@mock.patch(
+    "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.trigger_reentry"
+)
+def test_execute_complete(mock_trigger_reentry):
+    mock_trigger_reentry.return_value = {}
+    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+    assert op.execute_complete(context=create_context(op), event={}) is None
