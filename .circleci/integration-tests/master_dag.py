@@ -122,7 +122,7 @@ with DAG(
 
     # Core DAG
     core_task_info = [
-        {"external_task_dag": "test_external_task_async"},
+        {"external_task_dag": "example_external_task"},
         {"file_sensor_dag": "example_async_file_sensor"},
     ]
     core_trigger_tasks, ids = prepare_dag_dependency(core_task_info, "{{ ds }}")
