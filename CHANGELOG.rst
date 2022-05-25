@@ -1,6 +1,28 @@
 Changelog
 =========
 
+1.4.0 (2022-05-25)
+------------------
+
+Enhancements
+""""""""""""
+
+- Enable Kerberos Authentication in ``HivePartitionSensorAsync`` and
+  ``NamedHivePartitionSensorAsync``
+  (`#357 <https://github.com/astronomer/astronomer-providers/pull/357>`_)
+
+
+Bug Fixes
+"""""""""
+
+- Fix example Redshift DAGs to catch appropriate exception during cluster deletion
+  (`#348 <https://github.com/astronomer/astronomer-providers/pull/348>`_)
+- Move ``xcom_push`` call to ``execute`` method for all async operators
+  (`#371 <https://github.com/astronomer/astronomer-providers/pull/371>`_)
+
+
+
+
 1.3.1 (2022-05-22)
 ------------------
 
