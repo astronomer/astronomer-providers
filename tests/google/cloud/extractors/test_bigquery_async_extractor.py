@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from airflow import DAG
 from airflow.exceptions import TaskDeferred
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
@@ -72,6 +73,27 @@ def context():
     yield context
 
 
+def create_context(task):
+    dag = DAG(dag_id="dag")
+    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    dag_run = DagRun(
+        dag_id=dag.dag_id,
+        execution_date=execution_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
+    )
+    task_instance = TaskInstance(task=task)
+    task_instance.dag_run = dag_run
+    task_instance.dag_id = dag.dag_id
+    task_instance.xcom_push = mock.Mock()
+    return {
+        "dag": dag,
+        "run_id": dag_run.run_id,
+        "task": task,
+        "ti": task_instance,
+        "task_instance": task_instance,
+    }
+
+
 @mock.patch("astronomer.providers.google.cloud.extractors.bigquery_async_extractor._BigQueryHook")
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 @mock.patch("airflow.models.TaskInstance.xcom_pull")
@@ -105,7 +127,7 @@ def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook
 
     task_instance = TaskInstance(task=operator)
     with pytest.raises(TaskDeferred):
-        operator.execute(context)
+        operator.execute(create_context(operator))
 
     bq_extractor = BigQueryAsyncExtractor(operator)
     task_meta_extract = bq_extractor.extract()
@@ -164,7 +186,7 @@ def test_unavailable_xcom_raises_exception(mock_hook):
     task_instance.run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
 
     with pytest.raises(TaskDeferred):
-        operator.execute(context)
+        operator.execute(create_context(operator))
     bq_extractor = BigQueryAsyncExtractor(operator)
     with mock.patch.object(bq_extractor.log, "exception") as mock_log_exception:
         task_meta = bq_extractor.extract_on_complete(task_instance)

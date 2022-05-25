@@ -82,9 +82,6 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
         successful.
         """
         if event:
-            # Airflow has a bug. currently, it clears xcom when resume from deferred state
-            # so again storing `run_id` here
-            context["ti"].xcom_push(key="run_id", value=event["run_id"])
             if event["status"] == "error":
                 raise AirflowException(event["message"])
             self.log.info(event["message"])

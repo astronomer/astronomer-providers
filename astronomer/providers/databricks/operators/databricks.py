@@ -64,10 +64,6 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         if event.get("job_id"):
             context["ti"].xcom_push(key="job_id", value=event["job_id"])
 
-        if self.do_xcom_push:
-            context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=event.get("run_id"))
-            context["ti"].xcom_push(key=XCOM_RUN_PAGE_URL_KEY, value=event.get("run_page_url"))
-
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
     def execute(self, context: "Context") -> None:
@@ -117,7 +113,4 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
             raise AirflowException(event["message"])
 
         self.log.info("%s completed successfully.", self.task_id)
-        if self.do_xcom_push:
-            context["ti"].xcom_push(key=XCOM_RUN_ID_KEY, value=event.get("run_id"))
-            context["ti"].xcom_push(key=XCOM_RUN_PAGE_URL_KEY, value=event.get("run_page_url"))
         return None

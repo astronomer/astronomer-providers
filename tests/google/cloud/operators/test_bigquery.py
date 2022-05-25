@@ -67,7 +67,7 @@ def test_bigquery_insert_job_operator_async(mock_hook):
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     assert isinstance(
         exc.value.trigger, BigQueryInsertJobTrigger
@@ -200,7 +200,7 @@ def test_execute_reattach(mock_hook, mock_md5):
     )
 
     with pytest.raises(TaskDeferred):
-        op.execute(context)
+        op.execute(create_context(op))
 
     mock_hook.return_value.get_job.assert_called_once_with(
         location=TEST_DATASET_LOCATION,
