@@ -50,6 +50,7 @@ with DAG(
         namespace=GKE_NAMESPACE,
         image="ubuntu",
         in_cluster=False,
+        gcp_conn_id=GCP_CONN_ID,
     )
     # [END how_to_gke_start_pod_operator_async]
 
