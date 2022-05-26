@@ -5,7 +5,15 @@ from asgiref.sync import sync_to_async
 
 
 class AwsBaseHookAsync(AwsBaseHook):
-    """Interacts with AWS using aiobotocore asynchronously."""
+    """
+    Interacts with AWS using aiobotocore asynchronously.
+
+    .. note::
+        AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence, AwsBaseHookAsync
+        only supports the authentication mechanism that aiobotocore supports. The ability to assume
+        roles provided in the Airflow connection extra args via aiobotocore is not supported by the
+        library yet.
+    """
 
     async def get_client_async(self) -> AioBaseClient:
         """Create an Async Client object to communicate with AWS services."""
