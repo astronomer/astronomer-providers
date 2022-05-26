@@ -9,10 +9,10 @@ class AwsBaseHookAsync(AwsBaseHook):
     Interacts with AWS using aiobotocore asynchronously.
 
     .. note::
-       AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence, AwsBaseHookAsync
-       supports all the authentication mechanism which aiobotocore supports. The ability to assume
-       roles provided in the Airflow connection extra args via aiobotocore is not supported by the
-       library yet.
+        AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence, AwsBaseHookAsync
+        supports all the authentication mechanism which aiobotocore supports. The ability to assume
+        roles provided in the Airflow connection extra args via aiobotocore is not supported by the
+        library yet.
     """
 
     async def get_client_async(self) -> AioBaseClient:
