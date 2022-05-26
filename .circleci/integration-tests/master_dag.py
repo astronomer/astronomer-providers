@@ -103,7 +103,9 @@ with DAG(
     # AWS EMR DAG
     emr_task_info = [
         {"emr_sensor_dag": "example_emr_sensor"},
-        {"emr_eks_pi_job_dag": "example_emr_eks_pi_job"},
+        # Comment out `example_emr_eks_pi_job` to skip running from master_dag trigger until the DAG run issue is
+        # resolved.
+        # {"emr_eks_pi_job_dag": "example_emr_eks_pi_job"},
     ]
     emr_trigger_tasks, ids = prepare_dag_dependency(emr_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
