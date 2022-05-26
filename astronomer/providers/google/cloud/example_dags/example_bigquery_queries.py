@@ -61,7 +61,7 @@ with DAG(
         task_id="create_dataset",
         dataset_id=DATASET,
         location=LOCATION,
-        bigquery_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_CONN_ID,
     )
 
     create_table_1 = BigQueryCreateEmptyTableOperator(
