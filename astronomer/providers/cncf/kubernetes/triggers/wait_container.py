@@ -11,6 +11,7 @@ from airflow.providers.cncf.kubernetes.utils.pod_manager import (
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils import timezone
 from kubernetes_asyncio.client import CoreV1Api
+from pendulum import DateTime
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
     KubernetesHookAsync,
@@ -33,7 +34,9 @@ class WaitContainerTrigger(BaseTrigger):
     :param pod_namespace: pod namespace
     :param pending_phase_timeout: max time in seconds to wait for pod to leave pending phase
     :param poll_interval: number of seconds between reading pod state
-
+    :param logging_interval: number of seconds to wait before kicking it back to
+        the operator to print latest logs. If ``None`` will wait until container done.
+    :param last_log_time: where to resume logs from
     """
 
     def __init__(
@@ -46,6 +49,8 @@ class WaitContainerTrigger(BaseTrigger):
         hook_params: Optional[Dict[str, Any]] = None,
         pending_phase_timeout: float = 120,
         poll_interval: float = 5,
+        logging_interval: Optional[int] = None,
+        last_log_time: Optional[DateTime] = None,
     ):
         super().__init__()
         self.kubernetes_conn_id = kubernetes_conn_id
@@ -55,6 +60,8 @@ class WaitContainerTrigger(BaseTrigger):
         self.pod_namespace = pod_namespace
         self.pending_phase_timeout = pending_phase_timeout
         self.poll_interval = poll_interval
+        self.logging_interval = logging_interval
+        self.last_log_time = last_log_time
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:  # noqa: D102
         return (
@@ -67,6 +74,8 @@ class WaitContainerTrigger(BaseTrigger):
                 "pod_namespace": self.pod_namespace,
                 "pending_phase_timeout": self.pending_phase_timeout,
                 "poll_interval": self.poll_interval,
+                "logging_interval": self.logging_interval,
+                "last_log_time": self.last_log_time,
             },
         )
 
@@ -87,12 +96,22 @@ class WaitContainerTrigger(BaseTrigger):
             await asyncio.sleep(self.poll_interval)
         raise PodLaunchTimeoutException("Pod did not leave 'Pending' phase within specified timeout")
 
-    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> None:
-        """Waits until container ``self.container_name`` is no longer in running state."""
+    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> "TriggerEvent":
+        """
+        Waits until container ``self.container_name`` is no longer in running state.
+        If trigger is configured with a logging period, then will emit an event to
+        resume the task for the purpose of fetching more logs.
+        """
+        time_begin = timezone.utcnow()
+        time_get_more_logs = None
+        if self.logging_interval is not None:
+            time_get_more_logs = time_begin + timedelta(seconds=self.logging_interval)
         while True:
             pod = await v1_api.read_namespaced_pod(self.pod_name, self.pod_namespace)
             if not container_is_running(pod=pod, container_name=self.container_name):
-                break
+                return TriggerEvent({"status": "done"})
+            if time_get_more_logs and timezone.utcnow() > time_get_more_logs:
+                return TriggerEvent({"status": "running", "last_log_time": self.last_log_time})
             await asyncio.sleep(self.poll_interval)
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]  # noqa: D102
@@ -102,9 +121,11 @@ class WaitContainerTrigger(BaseTrigger):
             async with await hook.get_api_client_async() as api_client:
                 v1_api = CoreV1Api(api_client)
                 state = await self.wait_for_pod_start(v1_api)
-                if state not in PodPhase.terminal_states:
-                    await self.wait_for_container_completion(v1_api)
-            yield TriggerEvent({"status": "done"})
+                if state in PodPhase.terminal_states:
+                    event = TriggerEvent({"status": "done"})
+                else:
+                    event = await self.wait_for_container_completion(v1_api)
+            yield event
         except Exception as e:
             description = self._format_exception_description(e)
             yield TriggerEvent(
