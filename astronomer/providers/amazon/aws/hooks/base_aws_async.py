@@ -9,7 +9,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     Interacts with AWS using aiobotocore asynchronously.
 
     Limitations: AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence,
-    AwsBaseHookAsync supports all the authentication mechanism which aiobotocore supports.
+    AwsBaseHookAsync only supports the authentication mechanisms that aiobotocore supports.
     The ability to assume roles provided in the Airflow connection extra args via aiobotocore
     is not supported by the library yet.
     """
