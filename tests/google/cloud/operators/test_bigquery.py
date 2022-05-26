@@ -341,33 +341,6 @@ def test_bigquery_check_operator_execute_complete():
     mock_log_info.assert_called_with("Success.")
 
 
-@pytest.mark.parametrize(
-    "operator_class, kwargs",
-    [
-        (BigQueryCheckOperatorAsync, {"sql": "Select * from test_table"}),
-        (
-            BigQueryIntervalCheckOperatorAsync,
-            {"table": "test_table", "metrics_thresholds": {"COUNT(*)": 1.5}},
-        ),
-        (BigQueryValueCheckOperatorAsync, {"sql": "Select * from test_tabl", "pass_value": "Any"}),
-    ],
-)
-def test_bigquery_conn_id_deprecation_warning(operator_class, kwargs):
-    """When bigquery_conn_id is passed to the Operator, raises a warning and asserts that gcp_conn_id is used"""
-    bigquery_conn_id = "google_cloud_default"
-    with pytest.warns(
-        DeprecationWarning,
-        match=(
-            "The bigquery_conn_id parameter has been deprecated. "
-            "You should pass the gcp_conn_id parameter."
-        ),
-    ):
-        operator = operator_class(
-            task_id="test-bq-generic-operator", bigquery_conn_id=bigquery_conn_id, **kwargs
-        )
-        assert bigquery_conn_id == operator.gcp_conn_id
-
-
 def test_bigquery_interval_check_operator_execute_complete():
     """Asserts that logging occurs as expected"""
 

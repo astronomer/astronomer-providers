@@ -25,10 +25,6 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
 
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 
-_DEPRECATION_MSG = (
-    "The bigquery_conn_id parameter has been deprecated. You should pass the gcp_conn_id parameter."
-)
-
 
 class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
@@ -230,8 +226,6 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     :param selected_fields: List of fields to return (comma-separated). If
         unspecified, all fields are returned.
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
-        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
     :param delegate_to: The account to impersonate using domain-wide delegation of authority,
         if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
@@ -331,8 +325,6 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     :param use_legacy_sql: Whether to use legacy SQL (true)
         or standard SQL (false).
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
-        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
     :param location: The geographic location of the job. See details at:
         https://cloud.google.com/bigquery/docs/locations#specifying_your_location
     :param impersonation_chain: Optional service account to impersonate using short-term
