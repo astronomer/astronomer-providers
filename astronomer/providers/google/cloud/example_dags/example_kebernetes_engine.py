@@ -36,7 +36,7 @@ with DAG(
         project_id=PROJECT_ID,
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
-        cluster_def={"name": GKE_CLUSTER_NAME, "initial_node_count": 1},
+        body={"name": GKE_CLUSTER_NAME, "initial_node_count": 1},
     )
 
     # [START how_to_gke_start_pod_operator_async]
