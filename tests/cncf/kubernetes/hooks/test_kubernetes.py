@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from kubernetes_asyncio import client
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
     KubernetesHookAsync,
@@ -15,7 +16,7 @@ from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
         (False, "/path/to/file", "my-context"),
     ],
 )
-@mock.patch("astronomer.providers.cncf.hooks.kubernetes_async.config")
+@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes_async.config")
 @pytest.mark.xfail
 async def test_kubernetes__load_config(
     mock_config,
@@ -45,3 +46,18 @@ async def test_kubernetes__load_config(
             client_configuration=None,
             context=cluster_context,
         )
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes_async.KubernetesHookAsync._load_config")
+async def test_get_api_client_async(mock__load_config):
+    mock__load_config.return_value = client.ApiClient()
+
+    hook = KubernetesHookAsync(
+        in_cluster=True,
+        config_file="path/kube/config",
+        cluster_context=None,
+        conn_id=None,
+    )
+    kube_client = await hook.get_api_client_async()
+    assert isinstance(kube_client, client.ApiClient)
