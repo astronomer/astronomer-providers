@@ -69,5 +69,7 @@ class KubernetesHookAsync(KubernetesHook):  # noqa: D101
 
     async def get_api_client_async(self) -> client.ApiClient:
         """Create an API Client object to interact with Kubernetes"""
-        await self._load_config()
+        kube_client = await self._load_config()
+        if kube_client is not None:
+            return kube_client
         return client.ApiClient()
