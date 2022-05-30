@@ -114,7 +114,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
     def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
         """Point of re-entry from trigger."""
         with tempfile.NamedTemporaryFile(mode="w+t") as conf_file:
-            conf_file.write(self.gke_yaml_config)
+            conf_file.write(event.get("gke_yaml_config"))
             conf_file.seek(0)
             self.config_file = conf_file.name
             return super().trigger_reentry(context, event)
