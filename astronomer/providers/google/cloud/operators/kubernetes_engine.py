@@ -2,15 +2,19 @@
 import tempfile
 from typing import Any, Dict, Optional, Sequence, Union
 
-import yaml
 from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
 from airflow.providers.google.cloud.operators.kubernetes_engine import (
     GKEStartPodOperator,
 )
 from airflow.utils.context import Context
+from pendulum import DateTime
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperatorAsync,
+)
+from astronomer.providers.google.cloud.triggers.wait_container import (
+    GKEWaitContainerTrigger,
 )
 
 
@@ -49,6 +53,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
     :param regional: The location param is region name.
+    :param gke_yaml_config: The GKE yaml config.
     """
 
     template_fields: Sequence[str] = tuple(
@@ -65,6 +70,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         gcp_conn_id: str = "google_cloud_default",
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         regional: bool = False,
+        gke_yaml_config: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -83,7 +89,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
                 "config_file is not an allowed parameter for the GKEStartPodOperatorAsync."
             )
 
-        self.config_file_cache = None
+        self.gke_yaml_config = gke_yaml_config
 
     def execute(self, context: "Context") -> None:
         """
@@ -100,15 +106,43 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
             use_internal_ip=self.use_internal_ip,
         ) as config_file:
             with open(config_file) as tmp_file:
-                self.config_file_cache = yaml.load(tmp_file, Loader=yaml.SafeLoader)
+                self.gke_yaml_config = tmp_file.read()
 
             self.config_file = config_file
             return super().execute(context)
 
     def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
         """Point of re-entry from trigger."""
-        with tempfile.NamedTemporaryFile() as conf_file:
-            yaml.dump(self.config_file_cache, conf_file)
+        with tempfile.NamedTemporaryFile(mode="w+t") as conf_file:
+            conf_file.write(self.gke_yaml_config)
             conf_file.seek(0)
             self.config_file = conf_file.name
             return super().trigger_reentry(context, event)
+
+    def defer(self, last_log_time: Optional[DateTime] = None, **kwargs: Any) -> None:
+        """Defers to ``GKEWaitContainerTrigger`` optionally with last log time."""
+        if kwargs:
+            raise ValueError(
+                f"Received keyword arguments {list(kwargs.keys())} but "
+                f"they are not used in this implementation of `defer`."
+            )
+        BaseOperator.defer(
+            self,
+            trigger=GKEWaitContainerTrigger(
+                kubernetes_conn_id=None,
+                hook_params={
+                    "cluster_context": self.cluster_context,
+                    "config_file": self.config_file,
+                    "in_cluster": self.in_cluster,
+                },
+                pod_name=self.pod.metadata.name,
+                container_name=self.BASE_CONTAINER_NAME,
+                pod_namespace=self.pod.metadata.namespace,
+                pending_phase_timeout=self.startup_timeout_seconds,
+                poll_interval=self.poll_interval,
+                logging_interval=self.logging_interval,
+                last_log_time=last_log_time,
+                gke_yaml_config=self.gke_yaml_config,
+            ),
+            method_name=self.trigger_reentry.__name__,
+        )
