@@ -1,6 +1,8 @@
 """This module contains Google GKE operators."""
-from typing import Any, Optional, Sequence, Union
+import tempfile
+from typing import Any, Dict, Optional, Sequence, Union
 
+import yaml
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.operators.kubernetes_engine import (
     GKEStartPodOperator,
@@ -65,7 +67,6 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         regional: bool = False,
         **kwargs: Any,
     ) -> None:
-
         super().__init__(**kwargs)
         self.project_id = project_id
         self.location = location
@@ -82,6 +83,8 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
                 "config_file is not an allowed parameter for the GKEStartPodOperatorAsync."
             )
 
+        self.config_file_cache = None
+
     def execute(self, context: "Context") -> None:
         """
         Airflow runs this method on the worker and defers using the trigger.
@@ -96,5 +99,19 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
             location=self.location,
             use_internal_ip=self.use_internal_ip,
         ) as config_file:
+            with open(config_file) as tmp_file:
+                self.config_file_cache = yaml.load(tmp_file, Loader=yaml.FullLoader)
+
             self.config_file = config_file
             return super().execute(context)
+
+    def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
+        """
+        Point of re-entry from trigger.
+
+        """
+        with tempfile.NamedTemporaryFile() as conf_file:
+            yaml.dump(self.config_file_cache, conf_file)
+            conf_file.seek(0)
+            self.config_file = conf_file.name
+            return super().trigger_reentry(context, event)
