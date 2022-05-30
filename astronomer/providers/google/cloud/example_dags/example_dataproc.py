@@ -39,30 +39,6 @@ CLUSTER_CONFIG = {
 
 # [END how_to_cloud_dataproc_create_cluster]
 
-# Cluster definition: Generating Cluster Config for DataprocCreateClusterOperator
-# [START how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-path = "gs://goog-dataproc-initialization-actions-us-central1/python/pip-install.sh"
-
-# CLUSTER_GENERATOR_CONFIG = ClusterGenerator(
-#     project_id="test",
-#     zone="us-central1-a",
-#     master_machine_type="n1-standard-4",
-#     worker_machine_type="n1-standard-4",
-#     num_workers=2,
-#     storage_bucket="test",
-#     init_actions_uris=[path],
-#     metadata={"PIP_PACKAGES": "pyyaml requests pandas openpyxl"},
-# ).make()
-#
-# create_cluster_operator = DataprocCreateClusterOperator(
-#     task_id="create_dataproc_cluster",
-#     cluster_name="test",
-#     project_id="test",
-#     region="us-central1",
-#     cluster_config=CLUSTER_GENERATOR_CONFIG,
-# )
-# [END how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-
 TIMEOUT = {"seconds": 1 * 24 * 60 * 60}
 
 # Jobs definitions
