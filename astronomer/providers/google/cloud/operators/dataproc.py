@@ -73,7 +73,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -82,5 +82,6 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         if event:
             if event["status"] == "success":
                 self.log.debug("Job %s completed successfully.", self.job_id)
+                return self.job_id
             raise AirflowException(event["message"])
         raise AirflowException("No event received in trigger callback")
