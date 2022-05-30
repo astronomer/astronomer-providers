@@ -243,7 +243,11 @@ with models.DAG(
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START how_to_cloud_dataproc_delete_cluster_operator]
     delete_cluster = DataprocDeleteClusterOperator(
-        task_id="delete_cluster", project_id=PROJECT_ID, cluster_name=CLUSTER_NAME, region=REGION
+        task_id="delete_cluster",
+        project_id=PROJECT_ID,
+        cluster_name=CLUSTER_NAME,
+        region=REGION,
+        trigger_rule="all_done",
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
     # [START howto_delete_buckettask]
