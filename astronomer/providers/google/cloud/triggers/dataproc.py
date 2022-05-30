@@ -28,9 +28,8 @@ class DataProcSubmitTrigger(BaseTrigger):
         project_id: Optional[str] = None,
         gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
-        **kwargs: Any,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__()
         self.project_id = project_id
         self.gcp_conn_id = gcp_conn_id
         self.dataproc_job_id = dataproc_job_id
