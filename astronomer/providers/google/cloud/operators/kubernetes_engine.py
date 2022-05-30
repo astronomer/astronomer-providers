@@ -100,16 +100,13 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
             use_internal_ip=self.use_internal_ip,
         ) as config_file:
             with open(config_file) as tmp_file:
-                self.config_file_cache = yaml.load(tmp_file, Loader=yaml.FullLoader)
+                self.config_file_cache = yaml.load(tmp_file, Loader=yaml.SafeLoader)
 
             self.config_file = config_file
             return super().execute(context)
 
     def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
-        """
-        Point of re-entry from trigger.
-
-        """
+        """Point of re-entry from trigger."""
         with tempfile.NamedTemporaryFile() as conf_file:
             yaml.dump(self.config_file_cache, conf_file)
             conf_file.seek(0)
