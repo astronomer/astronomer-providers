@@ -250,6 +250,7 @@ with models.DAG(
     delete_bucket = GCSDeleteBucketOperator(
         task_id="delete_bucket",
         bucket_name=BUCKET,
+        trigger_rule="all_done",
     )
     # [END howto_delete_buckettask]
 
