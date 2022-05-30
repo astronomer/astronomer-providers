@@ -35,7 +35,12 @@ SCHEMA = [
     {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
 ]
 
-default_args = {"execution_timeout": timedelta(hours=EXECUTION_TIMEOUT), "gcp_conn_id": GCP_CONN_ID}
+default_args = {
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    "gcp_conn_id": GCP_CONN_ID,
+    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
+    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
+}
 
 with DAG(
     dag_id="example_bigquery_sensors",

@@ -20,6 +20,8 @@ default_args = {
     "azure_data_factory_conn_id": "azure_data_factory_default",
     "factory_name": "ADFProvidersTeamDataFactoryTest",  # This can also be specified in the ADF connection.
     "resource_group_name": "team_provider_resource_group_test_1",  # This can also be specified in the ADF connection.
+    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
+    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
 
 CLIENT_ID = os.getenv("CLIENT_ID", "")
