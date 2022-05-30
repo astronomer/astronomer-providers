@@ -69,15 +69,19 @@ class DataProcSubmitTrigger(BaseTrigger):
         job = await hook.get_job(job_id=self.dataproc_job_id, region=self.region, project_id=self.project_id)
         state = job.status.state
         if state == JobStatus.State.ERROR:
-            return {"status": "error", "message": "Job Failed"}
+            return {"status": "error", "message": "Job Failed", "job_id": self.dataproc_job_id}
         elif state in {
             JobStatus.State.CANCELLED,
             JobStatus.State.CANCEL_PENDING,
             JobStatus.State.CANCEL_STARTED,
         }:
-            return {"status": "error", "message": "Job got cancelled"}
+            return {"status": "error", "message": "Job got cancelled", "job_id": self.dataproc_job_id}
         elif JobStatus.State.DONE == state:
-            return {"status": "success", "message": "Job completed successfully"}
+            return {
+                "status": "success",
+                "message": "Job completed successfully",
+                "job_id": self.dataproc_job_id,
+            }
         elif JobStatus.State.ATTEMPT_FAILURE == state:
-            return {"status": "pending", "message": "Job is in pending state"}
-        return {"status": "pending", "message": "Job is in pending state"}
+            return {"status": "pending", "message": "Job is in pending state", "job_id": self.dataproc_job_id}
+        return {"status": "pending", "message": "Job is in pending state", "job_id": self.dataproc_job_id}
