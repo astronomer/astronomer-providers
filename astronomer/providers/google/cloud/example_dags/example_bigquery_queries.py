@@ -46,6 +46,8 @@ INSERT_ROWS_QUERY = (
 
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
+    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
 
 with DAG(
