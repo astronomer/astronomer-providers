@@ -56,6 +56,17 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         By deferring the SnowflakeTrigger class pass along with query ids.
         """
         self.log.info("Executing: %s", self.sql)
+
+        default_query_tag = f"airflow_openlineage_{self.task_id}_{self.dag.dag_id}_{context['ti'].try_number}"
+        query_tag = (
+            self.parameters.get("query_tag", default_query_tag) if self.parameters else default_query_tag
+        )
+        session_query_tag = f"ALTER SESSION SET query_tag = '{query_tag}';"
+        if isinstance(self.sql, str):
+            self.sql = "\n".join([session_query_tag, self.sql])
+        else:
+            [session_query_tag].extend(self.sql)
+
         hook = self.get_db_hook()
         hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)
         self.query_ids = hook.query_ids
