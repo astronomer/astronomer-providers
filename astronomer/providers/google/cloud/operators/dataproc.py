@@ -81,7 +81,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         """
         if event:
             if event["status"] == "success":
-                self.log.debug("Job %s completed successfully.", self.job_id)
-                return event["message"]
+                self.log.info("Job %s completed successfully.", event["job_id"])
+                return event["job_id"]
             raise AirflowException(event["message"])
         raise AirflowException("No event received in trigger callback")

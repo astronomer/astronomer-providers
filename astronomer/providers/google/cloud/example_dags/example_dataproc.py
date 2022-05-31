@@ -5,13 +5,8 @@ from datetime import datetime, timedelta
 
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import (
-    ClusterGenerator,
     DataprocCreateClusterOperator,
-    DataprocCreateWorkflowTemplateOperator,
     DataprocDeleteClusterOperator,
-    DataprocInstantiateInlineWorkflowTemplateOperator,
-    DataprocInstantiateWorkflowTemplateOperator,
-    DataprocUpdateClusterOperator,
 )
 from airflow.providers.google.cloud.operators.gcs import (
     GCSCreateBucketOperator,
@@ -40,48 +35,9 @@ CLUSTER_CONFIG = {
         "machine_type_uri": "n1-standard-4",
         "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
     },
-    "worker_config": {
-        "num_instances": 2,
-        "machine_type_uri": "n1-standard-4",
-        "disk_config": {"boot_disk_type": "pd-standard", "boot_disk_size_gb": 1024},
-    },
 }
 
 # [END how_to_cloud_dataproc_create_cluster]
-
-# Cluster definition: Generating Cluster Config for DataprocCreateClusterOperator
-# [START how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-path = "gs://goog-dataproc-initialization-actions-us-central1/python/pip-install.sh"
-
-CLUSTER_GENERATOR_CONFIG = ClusterGenerator(
-    project_id="test",
-    zone="us-central1-a",
-    master_machine_type="n1-standard-4",
-    worker_machine_type="n1-standard-4",
-    num_workers=2,
-    storage_bucket="test",
-    init_actions_uris=[path],
-    metadata={"PIP_PACKAGES": "pyyaml requests pandas openpyxl"},
-).make()
-
-create_cluster_operator = DataprocCreateClusterOperator(
-    task_id="create_dataproc_cluster",
-    cluster_name="test",
-    project_id="test",
-    region="us-central1",
-    cluster_config=CLUSTER_GENERATOR_CONFIG,
-)
-# [END how_to_cloud_dataproc_create_cluster_generate_cluster_config]
-
-# Update options
-# [START how_to_cloud_dataproc_updatemask_cluster_operator]
-CLUSTER_UPDATE = {
-    "config": {"worker_config": {"num_instances": 3}, "secondary_worker_config": {"num_instances": 3}}
-}
-UPDATE_MASK = {
-    "paths": ["config.worker_config.num_instances", "config.secondary_worker_config.num_instances"]
-}
-# [END how_to_cloud_dataproc_updatemask_cluster_operator]
 
 TIMEOUT = {"seconds": 1 * 24 * 60 * 60}
 
@@ -183,39 +139,6 @@ with models.DAG(
     )
     # [END howto_create_bucket_task]
 
-    # [START how_to_cloud_dataproc_update_cluster_operator]
-    scale_cluster = DataprocUpdateClusterOperator(
-        task_id="scale_cluster",
-        cluster_name=CLUSTER_NAME,
-        cluster=CLUSTER_UPDATE,
-        update_mask=UPDATE_MASK,
-        graceful_decommission_timeout=TIMEOUT,
-        project_id=PROJECT_ID,
-        region=REGION,
-    )
-    # [END how_to_cloud_dataproc_update_cluster_operator]
-
-    # [START how_to_cloud_dataproc_create_workflow_template]
-    create_workflow_template = DataprocCreateWorkflowTemplateOperator(
-        task_id="create_workflow_template",
-        template=WORKFLOW_TEMPLATE,
-        project_id=PROJECT_ID,
-        region=REGION,
-    )
-    # [END how_to_cloud_dataproc_create_workflow_template]
-
-    # [START how_to_cloud_dataproc_trigger_workflow_template]
-    trigger_workflow = DataprocInstantiateWorkflowTemplateOperator(
-        task_id="trigger_workflow", region=REGION, project_id=PROJECT_ID, template_id=WORKFLOW_NAME
-    )
-    # [END how_to_cloud_dataproc_trigger_workflow_template]
-
-    # [START how_to_cloud_dataproc_instantiate_inline_workflow_template]
-    instantiate_inline_workflow_template = DataprocInstantiateInlineWorkflowTemplateOperator(
-        task_id="instantiate_inline_workflow_template", template=WORKFLOW_TEMPLATE, region=REGION
-    )
-    # [END how_to_cloud_dataproc_instantiate_inline_workflow_template]
-
     # [START howto_DataprocSubmitJobOperatorAsync]
     pig_task = DataprocSubmitJobOperatorAsync(
         task_id="pig_task", job=PIG_JOB, region=REGION, project_id=PROJECT_ID
@@ -243,20 +166,21 @@ with models.DAG(
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START how_to_cloud_dataproc_delete_cluster_operator]
     delete_cluster = DataprocDeleteClusterOperator(
-        task_id="delete_cluster", project_id=PROJECT_ID, cluster_name=CLUSTER_NAME, region=REGION
+        task_id="delete_cluster",
+        project_id=PROJECT_ID,
+        cluster_name=CLUSTER_NAME,
+        region=REGION,
+        trigger_rule="all_done",
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
     # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(
         task_id="delete_bucket",
         bucket_name=BUCKET,
+        trigger_rule="all_done",
     )
     # [END howto_delete_buckettask]
 
-    create_cluster >> scale_cluster >> create_bucket
-    scale_cluster >> create_workflow_template >> trigger_workflow >> delete_cluster
-    scale_cluster >> hive_task >> delete_cluster >> delete_bucket
-    scale_cluster >> pig_task >> delete_cluster >> delete_bucket
-    scale_cluster >> spark_sql_task >> delete_cluster >> delete_bucket
-    scale_cluster >> spark_task >> delete_cluster >> delete_bucket
-    scale_cluster >> hadoop_task >> delete_cluster >> delete_bucket
+    create_cluster >> create_bucket
+    create_cluster >> pig_task >> hive_task >> delete_cluster >> delete_bucket
+    create_cluster >> spark_task >> spark_sql_task >> hadoop_task >> delete_cluster >> delete_bucket

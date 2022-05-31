@@ -106,11 +106,23 @@ async def test_dataproc_submit_return_exception(mock_get_job_status):
 @pytest.mark.parametrize(
     "state, response",
     [
-        (JobStatus.State.DONE, {"status": "success", "message": "Job completed successfully"}),
-        (JobStatus.State.ERROR, {"status": "error", "message": "Job Failed"}),
-        (JobStatus.State.CANCELLED, {"status": "error", "message": "Job got cancelled"}),
-        (JobStatus.State.ATTEMPT_FAILURE, {"status": "pending", "message": "Job is in pending state"}),
-        (JobStatus.State.SETUP_DONE, {"status": "pending", "message": "Job is in pending state"}),
+        (
+            JobStatus.State.DONE,
+            {"status": "success", "message": "Job completed successfully", "job_id": TEST_JOB_ID},
+        ),
+        (JobStatus.State.ERROR, {"status": "error", "message": "Job Failed", "job_id": TEST_JOB_ID}),
+        (
+            JobStatus.State.CANCELLED,
+            {"status": "error", "message": "Job got cancelled", "job_id": TEST_JOB_ID},
+        ),
+        (
+            JobStatus.State.ATTEMPT_FAILURE,
+            {"status": "pending", "message": "Job is in pending state", "job_id": TEST_JOB_ID},
+        ),
+        (
+            JobStatus.State.SETUP_DONE,
+            {"status": "pending", "message": "Job is in pending state", "job_id": TEST_JOB_ID},
+        ),
     ],
 )
 async def test_dataproc_get_job_status(state, response):

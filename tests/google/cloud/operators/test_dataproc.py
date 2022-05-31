@@ -52,7 +52,7 @@ def test_dataproc_operator_execute_async(mock_submit_job):
     "event",
     [
         ({"status": "error", "message": "test failure message"}),
-        (None),
+        None,
     ],
 )
 @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
@@ -73,4 +73,6 @@ def test_dataproc_operator_execute_success_async(mock_submit_job):
     task = DataprocSubmitJobOperatorAsync(
         task_id="task-id", job=SPARK_JOB, region=TEST_REGION, project_id=TEST_PROJECT_ID
     )
-    assert task.execute_complete(context=None, event={"status": "success", "message": "success"})
+    assert task.execute_complete(
+        context=None, event={"status": "success", "message": "success", "job_id": TEST_JOB_ID}
+    )
