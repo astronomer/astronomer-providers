@@ -185,17 +185,17 @@ with DAG(
     # [END howto_create_resource_group]
 
     # [START howto_operator_adf_run_pipeline]
-    run_pipeline_no_wait = AzureDataFactoryRunPipelineOperatorAsync(
-        task_id="run_pipeline_no_wait",
+    run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
+        task_id="run_pipeline_wait",
         pipeline_name=PIPELINE_NAME,
-        wait_for_termination=False,
     )
     # [END howto_operator_adf_run_pipeline]
 
     # [START howto_operator_adf_run_pipeline]
-    run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
-        task_id="run_pipeline_wait",
+    run_pipeline_no_wait = AzureDataFactoryRunPipelineOperatorAsync(
+        task_id="run_pipeline_no_wait",
         pipeline_name=PIPELINE_NAME,
+        wait_for_termination=False,
     )
     # [END howto_operator_adf_run_pipeline]
 
@@ -214,8 +214,8 @@ with DAG(
 
     (
         create_azure_data_factory_storage_pipeline
-        >> run_pipeline_no_wait
         >> run_pipeline_wait
+        >> run_pipeline_no_wait
         >> pipeline_run_sensor_async
         >> remove_azure_data_factory_storage_pipeline
     )
