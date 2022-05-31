@@ -1,13 +1,11 @@
-from typing import TYPE_CHECKING, Any, Dict, cast
+from typing import Any, Dict, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
+from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
