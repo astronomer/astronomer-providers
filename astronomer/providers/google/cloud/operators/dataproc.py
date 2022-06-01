@@ -15,7 +15,6 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
 
     :param project_id: Optional. The ID of the Google Cloud project that the job belongs to.
     :param region: Required. The Cloud Dataproc region in which to handle the request.
-    :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
     :param job: Required. The job resource.
         If a dict is provided, it must be of the same form as the protobuf message
         class:`~google.cloud.dataproc_v1.types.Job`
@@ -46,7 +45,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
         """
-        self.log.info("Submitting job")
+        self.log.info("Submitting job \n %s", self.job)
         self.hook = DataprocHookAsync(
             gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain
         )
