@@ -75,6 +75,12 @@ class EmrStepSensorHookAsync(AwsBaseHookAsync):
 
     For more details see here.
         - airflow.providers.amazon.aws.hooks.base_aws.AwsBaseHook
+
+    :param job_flow_id: id of the JobFlow to add steps to
+    :param step_id: step to check the state of
+    :param client_type: boto3.client client_type. Eg 's3', 'emr' etc
+    :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
+    :param config: Configuration for botocore client.
     """
 
     def __init__(self, job_flow_id: str, step_id: str, *args: Any, **kwargs: Any) -> None:

@@ -19,6 +19,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
     :param run_id: The pipeline run identifier.
     :param resource_group_name: The resource group name.
     :param factory_name: The data factory name.
+    :param poll_interval: polling period in seconds to check for the status
     """
 
     def __init__(
