@@ -89,4 +89,3 @@ class BatchOperatorAsync(BatchOperator):
         if "status" in event and event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
-        return None
