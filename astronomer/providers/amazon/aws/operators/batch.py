@@ -47,11 +47,10 @@ class BatchOperatorAsync(BatchOperator):
 
     .. note::
         Any custom waiters must return a waiter for these calls:
-        .. code-block:: python
 
-            waiter = waiters.get_waiter("JobExists")
-            waiter = waiters.get_waiter("JobRunning")
-            waiter = waiters.get_waiter("JobComplete")
+            | ``waiter = waiters.get_waiter("JobExists")``
+            | ``waiter = waiters.get_waiter("JobRunning")``
+            | ``waiter = waiters.get_waiter("JobComplete")``
     """
 
     def execute(self, context: "Context") -> None:

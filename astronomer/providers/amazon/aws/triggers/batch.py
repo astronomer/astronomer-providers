@@ -86,8 +86,8 @@ class BatchOperatorTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Make async connection using aiobotocore library to AWS Batch
-        Periodically poll for the job status on the Triggerer
+        Make async connection using aiobotocore library to AWS Batch,
+        periodically poll for the job status on the Triggerer
 
         The status that indicates job completion are: 'SUCCEEDED'|'FAILED'.
 

@@ -8,6 +8,7 @@ from os import environ
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
@@ -262,6 +263,8 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    end = DummyOperator(task_id="end")
+
     (
         setup_aws_config
         >> create_batch_compute_environment
@@ -272,3 +275,5 @@ with DAG(
         >> delete_job_queue
         >> delete_compute_environment
     )
+
+    [update_compute_environment, update_job_queue, delete_job_queue, delete_compute_environment] >> end

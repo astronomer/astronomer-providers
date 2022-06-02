@@ -15,7 +15,6 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
 
     :param max_retries: exponential back-off retries, 4200 = 48 hours;
         polling is only used when waiters is None
-
     :param status_retries: number of HTTP retries to get job status, 10;
         polling is only used when waiters is None
 
@@ -27,7 +26,6 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
 
         To modify the global defaults for the range of jitter allowed when a
         random delay is used to check Batch job status, modify these defaults, e.g.:
-        .. code-block::
 
             BatchClient.DEFAULT_DELAY_MIN = 0
             BatchClient.DEFAULT_DELAY_MAX = 5
@@ -102,7 +100,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
 
         .. note::
             This method uses a default random delay, i.e.
-            ``random.uniform(DEFAULT_DELAY_MIN, DEFAULT_DELAY_MAX)``;
+            ``random.sample()``;
             using a random interval helps to avoid AWS API throttle limits
             when many concurrent tasks request job-descriptions.
         """
@@ -178,8 +176,6 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         Get job description (using status_retries).
 
         :param job_id: a Batch job ID
-        :return: an API response for describe jobs
-
         :raises: AirflowException
         """
         retries = 0
@@ -216,11 +212,11 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
     async def poll_job_status(self, job_id: str, match_status: List[str]) -> bool:  # type: ignore[override]
         """
         Poll for job status using an exponential back-off strategy (with max_retries).
+        The Batch job status polled are:
+        'SUBMITTED'|'PENDING'|'RUNNABLE'|'STARTING'|'RUNNING'|'SUCCEEDED'|'FAILED'
 
         :param job_id: a Batch job ID
-        :param match_status: a list of job status to match; the Batch job status are:
-            'SUBMITTED'|'PENDING'|'RUNNABLE'|'STARTING'|'RUNNING'|'SUCCEEDED'|'FAILED'
-
+        :param match_status: a list of job status to match
         :raises: AirflowException
         """
         retries = 0
