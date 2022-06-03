@@ -3,7 +3,7 @@
 import logging
 from typing import List
 
-from openlineage.airflow.extractors.postgres_extractor import PostgresExtractor
+from astronomer.providers.snowflake.extractors.postgres_extractor import PostgresExtractor
 from openlineage.airflow.utils import get_connection, get_connection_uri  # noqa
 
 log = logging.getLogger(__file__)

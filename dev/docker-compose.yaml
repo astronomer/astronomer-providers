@@ -19,7 +19,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "5"
     ASTRONOMER_ENVIRONMENT: local
     AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
-    OPENLINEAGE_URL: http://host.docker.internal:9000/
+    OPENLINEAGE_URL: http://host.docker.internal:5050/
     OPENLINEAGE_NAMESPACE: dev
     OPENLINEAGE_EXTRACTORS: astronomer.providers.snowflake.extractors.snowflake_async_extractor.SnowflakeAsyncExtractor
   volumes:

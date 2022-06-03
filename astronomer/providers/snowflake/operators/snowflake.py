@@ -67,6 +67,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         else:
             [session_query_tag].extend(self.sql)
 
+        self.log.info("SQL after adding query tag: %s", self.sql)
+
         hook = self.get_db_hook()
         hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)
         self.query_ids = hook.query_ids
@@ -93,6 +95,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        self.log.info("SQL in execute_complete: %s", self.sql)
         if event:
             if "status" in event and event["status"] == "error":
                 msg = "{0}: {1}".format(event["type"], event["message"])
