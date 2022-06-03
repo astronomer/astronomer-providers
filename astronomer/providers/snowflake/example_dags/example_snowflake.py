@@ -11,6 +11,7 @@ from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperator
 SNOWFLAKE_CONN_ID = os.getenv("ASTRO_SNOWFLAKE_CONN_ID", "snowflake_default")
 SNOWFLAKE_SAMPLE_TABLE = os.getenv("SNOWFLAKE_SAMPLE_TABLE", "sample_table")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+OPENLINEAGE_NAMESPACE = os.getenv()
 
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
