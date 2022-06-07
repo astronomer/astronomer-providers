@@ -56,6 +56,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         with closing(self.get_conn()) as conn:
             self.set_autocommit(conn, autocommit)
 
+            self.log.info("SQL statement to be executed: %s ", sql)
             if isinstance(sql, str):
                 split_statements_tuple = split_statements(StringIO(sql))
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]

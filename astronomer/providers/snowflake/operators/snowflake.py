@@ -65,7 +65,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         if isinstance(self.sql, str):
             self.sql = "\n".join([session_query_tag, self.sql])
         else:
-            [session_query_tag].extend(self.sql)
+            session_query_list = [session_query_tag]
+            session_query_list.extend(self.sql)
+            self.sql = session_query_list
 
         self.log.info("SQL after adding query tag: %s", self.sql)
 
