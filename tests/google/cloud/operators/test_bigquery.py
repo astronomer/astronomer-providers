@@ -281,7 +281,7 @@ def test_bigquery_check_operator_async(mock_hook):
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     assert isinstance(exc.value.trigger, BigQueryCheckTrigger), "Trigger is not a BigQueryCheckTrigger"
 
@@ -392,7 +392,7 @@ def test_bigquery_interval_check_operator_async(mock_hook):
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     assert isinstance(
         exc.value.trigger, BigQueryIntervalCheckTrigger
@@ -420,7 +420,7 @@ def test_bigquery_get_data_operator_async_with_selected_fields(mock_hook):
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     assert isinstance(exc.value.trigger, BigQueryGetDataTrigger), "Trigger is not a BigQueryGetDataTrigger"
 
@@ -445,7 +445,7 @@ def test_bigquery_get_data_operator_async_without_selected_fields(mock_hook):
     )
 
     with pytest.raises(TaskDeferred) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     assert isinstance(exc.value.trigger, BigQueryGetDataTrigger), "Trigger is not a BigQueryGetDataTrigger"
 
@@ -504,7 +504,7 @@ def test_bigquery_value_check_async(mock_hook):
     real_job_id = f"{job_id}_{hash_}"
     mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
     with pytest.raises(TaskDeferred) as exc:
-        operator.execute(context)
+        operator.execute(create_context(operator))
 
     assert isinstance(
         exc.value.trigger, BigQueryValueCheckTrigger
