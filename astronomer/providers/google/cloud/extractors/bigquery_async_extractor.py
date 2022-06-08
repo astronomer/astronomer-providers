@@ -114,10 +114,9 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
         output = stats.output
         run_facets = stats.run_facets
         job_facets = {}
-        if self.operator.__class__.__name__ in (
-            "BigQueryCheckOperatorAsync",
-            "BigQueryInsertJobOperatorAsync",
-            "BigQueryValueCheckOperatorAsync",
+        if isinstance(
+            self.operator,
+            (BigQueryCheckOperatorAsync, BigQueryInsertJobOperatorAsync, BigQueryValueCheckOperatorAsync),
         ):
             context = self.parse_sql_context()
             job_facets["sql"] = SqlJobFacet(context.sql)
@@ -132,7 +131,7 @@ class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
 
     def parse_sql_context(self) -> SqlContext:
         """Gets SQL from operator and transforms it to `SqlContext` object."""
-        if self.operator.__class__.__name__ in "BigQueryInsertJobOperatorAsync":
+        if isinstance(self.operator, BigQueryInsertJobOperatorAsync):
             self.operator.sql = self.operator.configuration["query"]["query"]
         sql_meta = parse(self.operator.sql, dialect="bigquery")
         return SqlContext(
