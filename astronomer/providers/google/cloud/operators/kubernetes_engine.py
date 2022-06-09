@@ -76,8 +76,8 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.use_internal_ip = use_internal_ip
         self.impersonation_chain = impersonation_chain
         self.regional = regional
-        self.pod_name = None
-        self.pod_namespace = None
+        self.pod_name: str = ""
+        self.pod_namespace: str = ""
         self.poll_interval = poll_interval
 
     def _get_or_create_pod(self, context: "Context") -> None:
