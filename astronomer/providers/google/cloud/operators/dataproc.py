@@ -1,12 +1,68 @@
 """This module contains Google Dataproc operators."""
+import time
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
+from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
+from airflow.providers.google.cloud.operators.dataproc import (
+    DataprocCreateClusterOperator,
+    DataprocSubmitJobOperator,
+)
 from airflow.utils.context import Context
 
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
-from astronomer.providers.google.cloud.triggers.dataproc import DataProcSubmitTrigger
+from astronomer.providers.google.cloud.triggers.dataproc import (
+    DataprocCreateClusterTrigger,
+    DataProcSubmitTrigger,
+)
+
+
+class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
+    def __init__(
+        self,
+        *,
+        polling_interval: float = 5.0,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.polling_interval = polling_interval
+
+    def execute(self, context: "Context") -> None:
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook.create_cluster(
+            region=self.region,
+            project_id=self.project_id,
+            cluster_name=self.cluster_name,
+            cluster_config=self.cluster_config,
+            labels=self.labels,
+            request_id=self.request_id,
+            retry=self.retry,
+            timeout=self.timeout,
+            metadata=self.metadata,
+        )
+        self.defer(
+            trigger=DataprocCreateClusterTrigger(
+                project_id=self.project_id,
+                region=self.region,
+                cluster_name=self.cluster_name,
+                end_time=time.monotonic() + self.timeout,
+                metadata=self.metadata,
+                gcp_conn_id=self.gcp_conn_id,
+                polling_interval=self.polling_interval,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        if event and event["status"] == "success":
+            self.log.info("Job completed")
+        else:
+            raise AirflowException(event["message"])
 
 
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
