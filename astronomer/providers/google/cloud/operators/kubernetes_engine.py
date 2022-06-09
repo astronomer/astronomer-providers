@@ -81,7 +81,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.poll_interval = poll_interval
 
     def _get_or_create_pod(self, context: "Context") -> None:
-        """A wrapper over `GKEStartPodOperator.get_gke_config_file` to fetch GKE config"""
+        """A wrapper to fetch GKE config and get or create a pod"""
         with GKEStartPodOperator.get_gke_config_file(
             gcp_conn_id=self.gcp_conn_id,
             project_id=self.project_id,
@@ -103,7 +103,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.log.info("Created pod=%s in namespace=%s", self.pod_name, self.pod_namespace)
         self.defer(
             trigger=GKEStartPodTrigger(
-                namespace=self.pod.metadata.namespace,
+                namespace=self.pod_namespace,
                 name=self.pod_name,
                 in_cluster=self.in_cluster,
                 cluster_context=self.cluster_context,
@@ -125,4 +125,4 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         if event and event["status"] == "done":
             self.log.info("Job completed successfully")
         else:
-            raise AirflowException(event["message"])
+            raise AirflowException(event["description"])

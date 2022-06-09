@@ -47,12 +47,13 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         gcp_conn_id: str = "google_cloud_default",
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         regional: bool = False,
-        namespace: Optional[str] = None,
-        name: Optional[str] = None,
+        namespace: str = None,
+        name: str = None,
         cluster_context: Optional[str] = None,
         in_cluster: Optional[bool] = None,
         poll_interval: float = 5.0,
         pending_phase_timeout: float = 120.0,
+        logging_interval: Optional[float] = None,
     ):
         super().__init__(container_name=self.BASE_CONTAINER_NAME, pod_name=name, pod_namespace=namespace)
         self.location = location
@@ -68,6 +69,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         self.name = name
         self.poll_interval = poll_interval
         self.pending_phase_timeout = pending_phase_timeout
+        self.logging_interval = logging_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serialize GKEStartPodTrigger object"""
@@ -87,32 +89,36 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 "name": self.name,
                 "poll_interval": self.poll_interval,
                 "pending_phase_timeout": self.pending_phase_timeout,
+                "logging_interval": self.logging_interval,
             },
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Wait for pod to reach terminal state"""
-        with GKEStartPodOperator.get_gke_config_file(
-            gcp_conn_id=self.gcp_conn_id,
-            project_id=self.project_id,
-            cluster_name=self.cluster_name,
-            impersonation_chain=self.impersonation_chain,
-            regional=self.regional,
-            location=self.location,
-            use_internal_ip=self.use_internal_ip,
-        ) as config_file:
-            hook_params = {
-                "cluster_context": self.cluster_context,
-                "config_file": config_file,
-                "in_cluster": self.in_cluster,
-            }
-            hook = KubernetesHookAsync(conn_id=None, **hook_params)
+        try:
+            with GKEStartPodOperator.get_gke_config_file(
+                gcp_conn_id=self.gcp_conn_id,
+                project_id=self.project_id,
+                cluster_name=self.cluster_name,
+                impersonation_chain=self.impersonation_chain,
+                regional=self.regional,
+                location=self.location,
+                use_internal_ip=self.use_internal_ip,
+            ) as config_file:
+                hook_params = {
+                    "cluster_context": self.cluster_context,
+                    "config_file": config_file,
+                    "in_cluster": self.in_cluster,
+                }
+                hook = KubernetesHookAsync(conn_id=None, **hook_params)
 
-            async with await hook.get_api_client_async() as api_client:
-                v1_api = CoreV1Api(api_client)
-                state = await self.wait_for_pod_start(v1_api)
-                if state in PodPhase.terminal_states:
-                    event = TriggerEvent({"status": "done"})
-                else:
-                    event = await self.wait_for_container_completion(v1_api)
-            yield event
+                async with await hook.get_api_client_async() as api_client:
+                    v1_api = CoreV1Api(api_client)
+                    state = await self.wait_for_pod_start(v1_api)
+                    if state in PodPhase.terminal_states:
+                        event = TriggerEvent({"status": "done"})
+                    else:
+                        event = await self.wait_for_container_completion(v1_api)
+                yield event
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
