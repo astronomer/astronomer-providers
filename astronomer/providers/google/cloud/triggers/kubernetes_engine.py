@@ -41,21 +41,26 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         self,
         *,
         location: str,
+        namespace: str,
+        name: str,
         cluster_name: str = "default",
         use_internal_ip: bool = False,
         project_id: Optional[str] = None,
         gcp_conn_id: str = "google_cloud_default",
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         regional: bool = False,
-        namespace: str = None,
-        name: str = None,
         cluster_context: Optional[str] = None,
         in_cluster: Optional[bool] = None,
         poll_interval: float = 5.0,
         pending_phase_timeout: float = 120.0,
-        logging_interval: Optional[float] = None,
+        logging_interval: Optional[int] = None,
     ):
-        super().__init__(container_name=self.BASE_CONTAINER_NAME, pod_name=name, pod_namespace=namespace)
+        super().__init__(
+            container_name=self.BASE_CONTAINER_NAME,
+            pod_name=name,
+            pod_namespace=namespace,
+            logging_interval=logging_interval,
+        )
         self.location = location
         self.cluster_name = cluster_name
         self.regional = regional
@@ -105,7 +110,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 location=self.location,
                 use_internal_ip=self.use_internal_ip,
             ) as config_file:
-                hook_params = {
+                hook_params: Dict[str, Any] = {
                     "cluster_context": self.cluster_context,
                     "config_file": config_file,
                     "in_cluster": self.in_cluster,
