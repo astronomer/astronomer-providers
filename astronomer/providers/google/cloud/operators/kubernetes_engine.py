@@ -1,6 +1,7 @@
 """This module contains Google GKE operators."""
 from typing import Any, Dict, Optional, Sequence, Union
 
+from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
@@ -79,7 +80,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.pod_namespace = None
         self.poll_interval = poll_interval
 
-    def get_gke_config_file(self, context: "Context") -> None:
+    def _get_or_create_pod(self, context: "Context") -> None:
         """A wrapper over `GKEStartPodOperator.get_gke_config_file` to fetch GKE config"""
         with GKEStartPodOperator.get_gke_config_file(
             gcp_conn_id=self.gcp_conn_id,
@@ -98,7 +99,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
 
     def execute(self, context: "Context") -> None:
         """Look for a pod, if not found then create one and defer"""
-        self.get_gke_config_file(context)
+        self._get_or_create_pod(context)
         self.log.info("Created pod=%s in namespace=%s", self.pod_name, self.pod_namespace)
         self.defer(
             trigger=GKEStartPodTrigger(
@@ -106,7 +107,6 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
                 name=self.pod_name,
                 in_cluster=self.in_cluster,
                 cluster_context=self.cluster_context,
-                is_delete_operator_pod=self.is_delete_operator_pod,
                 location=self.location,
                 cluster_name=self.cluster_name,
                 use_internal_ip=self.use_internal_ip,
@@ -122,5 +122,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         """Callback for trigger once task reach terminal state"""
-        self.log.info("event = %s", event)
-        self.log.info("context = %s", context)
+        if event and event["status"] == "done":
+            self.log.info("Job completed successfully")
+        else:
+            raise AirflowException(event["message"])
