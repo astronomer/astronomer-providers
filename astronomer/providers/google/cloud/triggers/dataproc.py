@@ -33,7 +33,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         region: Optional[str] = None,
         cluster_name: str,
         end_time: float,
-        metadata: Sequence[Tuple[str, str]],
+        metadata: Sequence[Tuple[str, str]] = (),
         gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
         **kwargs: Any,
@@ -58,6 +58,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                 "end_time": self.end_time,
                 "metadata": self.metadata,
                 "gcp_conn_id": self.gcp_conn_id,
+                "polling_interval": self.polling_interval,
             },
         )
 
@@ -73,7 +74,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                     metadata=self.metadata,
                 )
                 if cluster.status.state == cluster.status.State.RUNNING:
-                    yield TriggerEvent({"status": "success", "message": "Cluster created successfully"})
+                    yield TriggerEvent({"status": "success", "data": cluster, "message": ""})
                 self.log.info(
                     "Cluster status is %s. Sleeping for %s seconds.",
                     cluster.status.state,
@@ -83,7 +84,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
-        TriggerEvent({"status": "error", "message": "Timeout"})
+        yield TriggerEvent({"status": "error", "message": "Timeout"})
 
 
 class DataProcSubmitTrigger(BaseTrigger):

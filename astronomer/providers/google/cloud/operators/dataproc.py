@@ -63,16 +63,18 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> None:
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]] = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
         if event and event["status"] == "success":
-            self.log.info("Job completed")
-        # else:
-        #     raise AirflowException(event["message"])
+            self.log.info("Cluster created successfully \n %s", event["data"])
+            return event["data"]
+        elif event and event["status"] == "error":
+            raise AirflowException(event["message"])
+        raise AirflowException("No event received in trigger callback")
 
 
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
