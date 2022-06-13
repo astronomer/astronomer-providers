@@ -1,11 +1,14 @@
 import warnings
 from abc import ABC
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence, Tuple, Union
 
 from airflow.providers.google.common.consts import CLIENT_INFO
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from google.api_core import gapic_v1
+from google.api_core.client_options import ClientOptions
 from google.api_core.retry import Retry
 from google.cloud.dataproc_v1 import ClusterControllerAsyncClient
+from google.cloud.dataproc_v1.types import clusters
 
 
 class DataprocHookAsync(GoogleBaseHook, ABC):
@@ -28,9 +31,9 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
                 stacklevel=2,
             )
             region = location
-        client_options = None
+        client_options = ClientOptions()
         if region and region != "global":
-            client_options = {"api_endpoint": f"{region}-dataproc.googleapis.com:443"}
+            client_options = ClientOptions(api_endpoint=f"{region}-dataproc.googleapis.com:443")
 
         return ClusterControllerAsyncClient(
             credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
@@ -41,10 +44,9 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
         region: str,
         cluster_name: str,
         project_id: str,
-        retry: Optional[Retry] = None,
-        timeout: Optional[float] = None,
+        retry: Union[Retry, gapic_v1.method._MethodDefault] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
-    ):
+    ) -> clusters.Cluster:
         """
         Get a cluster details
 
@@ -53,8 +55,6 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
         :param project_id:  The ID of the Google Cloud project the cluster belongs to
         :param retry: A retry object used to retry requests. If ``None`` is specified, requests will not be
             retried
-        :param timeout: The amount of time, in seconds, to wait for the request to complete. Note that if
-            ``retry`` is specified, the timeout applies to each individual attempt
         :param metadata: Additional metadata that is provided to the method
         """
         client = self.get_cluster_client(region=region)
@@ -63,6 +63,5 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
             cluster_name=cluster_name,
             project_id=project_id,
             retry=retry,
-            timeout=timeout,
             metadata=metadata,
         )

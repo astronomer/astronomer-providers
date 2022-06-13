@@ -29,14 +29,14 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
     def __init__(
         self,
         *,
-        project_id: str,
-        region: str,
+        project_id: Optional[str] = None,
+        region: Optional[str] = None,
         cluster_name: str,
         end_time: float,
         metadata: Sequence[Tuple[str, str]],
-        gcp_conn_id: str,
-        polling_interval: float = 5,
-        **kwargs,
+        gcp_conn_id: str = "google_cloud_default",
+        polling_interval: float = 5.0,
+        **kwargs: Any,
     ):
         super().__init__(**kwargs)
         self.project_id = project_id
@@ -67,13 +67,13 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         while self.end_time > time.monotonic():
             try:
                 cluster = await hook.get_cluster(
-                    region=self.region,
+                    region=self.region,  # type: ignore[arg-type]
                     cluster_name=self.cluster_name,
-                    project_id=self.project_id,
+                    project_id=self.project_id,  # type: ignore[arg-type]
                     metadata=self.metadata,
                 )
                 if cluster.status.state == cluster.status.State.RUNNING:
-                    yield TriggerEvent({"status": "success"})
+                    yield TriggerEvent({"status": "success", "message": "Cluster created successfully"})
                 self.log.info(
                     "Cluster status is %s. Sleeping for %s seconds.",
                     cluster.status.state,

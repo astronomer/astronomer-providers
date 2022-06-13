@@ -18,16 +18,23 @@ from astronomer.providers.google.cloud.triggers.dataproc import (
 
 
 class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
+    """
+    Create a new cluster on Google Cloud Dataproc Asynchronously.
+
+    :param polling_interval: Time in seconds to sleep between checks of cluster status
+    """
+
     def __init__(
         self,
         *,
         polling_interval: float = 5.0,
-        **kwargs,
+        **kwargs: Any,
     ):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:  # type: ignore[override]
+        """Call create cluster API and defer to DataprocCreateClusterTrigger to check the status"""
         hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
         hook.create_cluster(
             region=self.region,
@@ -40,12 +47,15 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
             timeout=self.timeout,
             metadata=self.metadata,
         )
+
+        end_time: float = time.monotonic() + self.timeout
+
         self.defer(
             trigger=DataprocCreateClusterTrigger(
                 project_id=self.project_id,
                 region=self.region,
                 cluster_name=self.cluster_name,
-                end_time=time.monotonic() + self.timeout,
+                end_time=end_time,
                 metadata=self.metadata,
                 gcp_conn_id=self.gcp_conn_id,
                 polling_interval=self.polling_interval,
@@ -53,7 +63,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -61,8 +71,8 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
         """
         if event and event["status"] == "success":
             self.log.info("Job completed")
-        else:
-            raise AirflowException(event["message"])
+        # else:
+        #     raise AirflowException(event["message"])
 
 
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):

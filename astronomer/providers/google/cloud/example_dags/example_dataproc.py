@@ -13,8 +13,8 @@ from airflow.providers.google.cloud.operators.gcs import (
 )
 
 from astronomer.providers.google.cloud.operators.dataproc import (
-    DataprocSubmitJobOperatorAsync,
     DataprocCreateClusterOperatorAsync,
+    DataprocSubmitJobOperatorAsync,
 )
 
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
