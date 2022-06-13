@@ -17,7 +17,7 @@ POD_NAME = "astro-k8s-gke-test-pod-25131a0d9cda46419099ac4aa8a4ef8f"
 
 
 def test_serialization():
-    """Asserts that the GKEStartPodTrigger correctly serializes its argument and classpath."""
+    """asserts that the GKEStartPodTrigger correctly serializes its argument and classpath."""
     trigger = GKEStartPodTrigger(
         namespace=NAMESPACE,
         name=POD_NAME,
@@ -66,6 +66,7 @@ def test_serialization():
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
 async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start):
+    """assert that when wait_for_pod_start succeeded run method yield correct event"""
     my_tmp = mock_tmp.__enter__()
     my_tmp.return_value = "/tmp/tmps90l"
     get_api_client_async.return_value = client.ApiClient()
@@ -103,6 +104,7 @@ async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start):
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
 async def test_run_pending(mock_tmp, get_api_client_async, wait_for_pod_start, wait_for_container_completion):
+    """assert that when wait_for_pod_start Pending run method yield wait_for_container_completion response"""
     my_tmp = mock_tmp.__enter__()
     my_tmp.return_value = "/tmp/tmps90l"
     get_api_client_async.return_value = client.ApiClient()
@@ -132,6 +134,7 @@ async def test_run_pending(mock_tmp, get_api_client_async, wait_for_pod_start, w
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
 async def test_run_exception(mock_tmp):
+    """assert that run raise exception when fail to fetch GKE kube config file"""
     my_tmp = mock_tmp.__enter__()
     my_tmp.return_value = None
     trigger = GKEStartPodTrigger(

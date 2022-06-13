@@ -29,6 +29,7 @@ def context():
     yield context
 
 
+# TODO: Improve test
 @mock.patch(
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
@@ -39,6 +40,7 @@ def context():
     "airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.get_or_create_pod"
 )
 def test__get_or_create_pod(mock_get_or_create_pod, moc_build_pod_request_obj, mock_tmp):
+    """assert that _get_or_create_pod does not return any value"""
     my_tmp = mock_tmp.__enter__()
     my_tmp.return_value = "/tmp/tmps90l"
     moc_build_pod_request_obj.return_value = {}
@@ -60,6 +62,10 @@ def test__get_or_create_pod(mock_get_or_create_pod, moc_build_pod_request_obj, m
     "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync._get_or_create_pod"
 )
 def test_execute(mock__get_or_create_pod):
+    """
+    asserts that a task is deferred and a GKEStartPodTrigger will be fired
+    when the GKEStartPodOperatorAsync is executed.
+    """
     mock__get_or_create_pod.return_value = None
     operator = GKEStartPodOperatorAsync(
         task_id="start_pod",
@@ -77,6 +83,7 @@ def test_execute(mock__get_or_create_pod):
 
 
 def test_execute_complete_success():
+    """assert that execute_complete_success log correct message when a task succeed"""
     operator = GKEStartPodOperatorAsync(
         task_id="start_pod",
         project_id=PROJECT_ID,
@@ -104,4 +111,5 @@ def test_execute_complete_fail():
         gcp_conn_id=GCP_CONN_ID,
     )
     with pytest.raises(AirflowException):
+        """assert that execute_complete_success raise exception when a task fail"""
         operator.execute_complete(context=context, event={"status": "error", "description": "Pod not found"})

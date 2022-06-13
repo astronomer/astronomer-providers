@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.kubernetes_engine import (
     GKECreateClusterOperator,
     GKEDeleteClusterOperator,
@@ -63,7 +63,7 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    end = DummyOperator(
+    end = EmptyOperator(
         task_id="end",
         trigger_rule="all_success",
     )

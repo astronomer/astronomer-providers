@@ -36,9 +36,9 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         cluster resides, e.g. 'us-central1-a'
     :param cluster_name: The name of the Google Kubernetes Engine cluster the pod
         should be spawned in
-    :param use_internal_ip: Use the internal IP address as the endpoint.
-    :param project_id: The Google Developers Console project id
-    :param gcp_conn_id: The google cloud connection id to use. This allows for
+    :param use_internal_ip: Use the internal IP address as the endpoint
+    :param project_id: The Google Developers Console project ID
+    :param gcp_conn_id: The google cloud connection ID to use. This allows for
         users to specify a service account.
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or list of accounts required to get the access_token
@@ -48,7 +48,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         If set as a sequence, the identities from the list must grant
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
-    :param regional: The location param is region name.
+    :param regional: The location param is whether a region or a zone
     :param is_delete_operator_pod: What to do when the pod reaches its final
         state, or the execution is interrupted. If True, delete the
         pod; if False, leave the pod.  Current default is False, but this will be
