@@ -1,20 +1,24 @@
 """This module contains Google GKE operators."""
-from typing import Any, Optional, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from airflow.providers.google.cloud.operators.kubernetes_engine import (
     GKEStartPodOperator,
 )
 from airflow.utils.context import Context
+from kubernetes.client import models as k8s
 
-from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperatorAsync,
+from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
+    GKEStartPodTrigger,
 )
 
 
-class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
+class GKEStartPodOperatorAsync(KubernetesPodOperator):
     """
-    Executes a task asynchronously in a Kubernetes pod in the specified Google Kubernetes
+    Executes a task in a Kubernetes pod in the specified Google Kubernetes
     Engine cluster
 
     This Operator assumes that the system has gcloud installed and has configured a
@@ -23,20 +27,18 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
     The **minimum** required to define a cluster to create are the variables
     ``task_id``, ``project_id``, ``location``, ``cluster_name``, ``name``,
     ``namespace``, and ``image``
+    .. seealso::
 
         For more detail about Kubernetes Engine authentication have a look at the reference:
         https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#internal_ip
-
-        For more information on how to use this operator, take a look at the guide:
-        :ref:`howto/operator:GKEStartPodOperator`
 
     :param location: The name of the Google Kubernetes Engine zone or region in which the
         cluster resides, e.g. 'us-central1-a'
     :param cluster_name: The name of the Google Kubernetes Engine cluster the pod
         should be spawned in
-    :param use_internal_ip: Use the internal IP address as the endpoint.
-    :param project_id: The Google Developers Console project id
-    :param gcp_conn_id: The google cloud connection id to use. This allows for
+    :param use_internal_ip: Use the internal IP address as the endpoint
+    :param project_id: The Google Developers Console project ID
+    :param gcp_conn_id: The google cloud connection ID to use. This allows for
         users to specify a service account.
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or list of accounts required to get the access_token
@@ -46,12 +48,12 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         If set as a sequence, the identities from the list must grant
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
-    :param regional: The location param is region name.
+    :param regional: The location param is whether a region or a zone
+    :param is_delete_operator_pod: What to do when the pod reaches its final
+        state, or the execution is interrupted. If True, delete the
+        pod; if False, leave the pod.  Current default is False, but this will be
+        changed in the next major release of this provider.
     """
-
-    template_fields: Sequence[str] = tuple(
-        {"project_id", "location", "cluster_name"} | set(KubernetesPodOperatorAsync.template_fields)
-    )
 
     def __init__(
         self,
@@ -63,9 +65,9 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         gcp_conn_id: str = "google_cloud_default",
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         regional: bool = False,
+        poll_interval: float = 5,
         **kwargs: Any,
     ) -> None:
-
         super().__init__(**kwargs)
         self.project_id = project_id
         self.location = location
@@ -74,19 +76,12 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
         self.use_internal_ip = use_internal_ip
         self.impersonation_chain = impersonation_chain
         self.regional = regional
+        self.pod_name: str = ""
+        self.pod_namespace: str = ""
+        self.poll_interval = poll_interval
 
-        # There is no need to manage the kube_config file, as it will be generated automatically.
-        # All Kubernetes parameters (except config_file) are also valid for the GKEStartPodOperatorAsync.
-        if self.config_file:
-            raise AirflowException(
-                "config_file is not an allowed parameter for the GKEStartPodOperatorAsync."
-            )
-
-    def execute(self, context: "Context") -> None:
-        """
-        Airflow runs this method on the worker and defers using the trigger.
-        Submit the job and get the job_id using which we defer and poll in trigger
-        """
+    def _get_or_create_pod(self, context: "Context") -> None:
+        """A wrapper to fetch GKE config and get or create a pod"""
         with GKEStartPodOperator.get_gke_config_file(
             gcp_conn_id=self.gcp_conn_id,
             project_id=self.project_id,
@@ -97,4 +92,37 @@ class GKEStartPodOperatorAsync(KubernetesPodOperatorAsync):
             use_internal_ip=self.use_internal_ip,
         ) as config_file:
             self.config_file = config_file
-            return super().execute(context)
+            self.pod_request_obj = self.build_pod_request_obj(context)
+            self.pod: k8s.V1Pod = self.get_or_create_pod(self.pod_request_obj, context)
+            self.pod_name = self.pod.metadata.name
+            self.pod_namespace = self.pod.metadata.namespace
+
+    def execute(self, context: "Context") -> None:
+        """Look for a pod, if not found then create one and defer"""
+        self._get_or_create_pod(context)
+        self.log.info("Created pod=%s in namespace=%s", self.pod_name, self.pod_namespace)
+        self.defer(
+            trigger=GKEStartPodTrigger(
+                namespace=self.pod_namespace,
+                name=self.pod_name,
+                in_cluster=self.in_cluster,
+                cluster_context=self.cluster_context,
+                location=self.location,
+                cluster_name=self.cluster_name,
+                use_internal_ip=self.use_internal_ip,
+                project_id=self.project_id,
+                gcp_conn_id=self.gcp_conn_id,
+                impersonation_chain=self.impersonation_chain,
+                regional=self.regional,
+                poll_interval=self.poll_interval,
+                pending_phase_timeout=self.startup_timeout_seconds,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+        """Callback for trigger once task reach terminal state"""
+        if event and event["status"] == "done":
+            self.log.info("Job completed successfully")
+        else:
+            raise AirflowException(event["description"])
