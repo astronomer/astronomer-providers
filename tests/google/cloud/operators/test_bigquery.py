@@ -152,7 +152,7 @@ def test_job_id_validity(mock_md5, test_dag_id, expected_job_id):
     """Asserts that job id is correctly generated"""
     hash_ = "hash"
     mock_md5.return_value.hexdigest.return_value = hash_
-    context = {"execution_date": datetime(2020, 1, 23)}
+    context = {"logical_date": datetime(2020, 1, 23)}
     configuration = {
         "query": {
             "query": "SELECT * FROM any",
