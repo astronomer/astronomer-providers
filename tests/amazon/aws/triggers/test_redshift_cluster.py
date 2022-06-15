@@ -33,6 +33,8 @@ def test_redshift_cluster_resume_trigger_serialization():
         "aws_conn_id": "test_redshift_conn_id",
         "cluster_identifier": "mock_cluster_identifier",
         "operation_type": "resume_cluster",
+        "final_cluster_snapshot_identifier": None,
+        "skip_final_cluster_snapshot": True,
     }
 
 
@@ -108,6 +110,8 @@ def test_redshift_pause_resume_trigger_serialization():
         "aws_conn_id": "test_redshift_conn_id",
         "cluster_identifier": "mock_cluster_identifier",
         "operation_type": "pause_cluster",
+        "final_cluster_snapshot_identifier": None,
+        "skip_final_cluster_snapshot": True,
     }
 
 
