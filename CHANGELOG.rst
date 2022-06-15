@@ -1,6 +1,40 @@
 Changelog
 =========
 
+1.5.0 (2022-06-15)
+------------------
+
+This release adds the following 2 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``BatchOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_batch.py>`__
+
+   * - ``GKEStartPodOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.operators.kubernetes_engine import GKEStartPodOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_kubernetes_engine.py>`__
+
+Improvements
+""""""""""""
+
+* Enhance **KubernetesPodOperatorAsync** to periodically resume the sync portion of the task to fetch and
+  emit the latest logs before deferring again.
+  (`#139 <https://github.com/astronomer/astronomer-providers/pull/139>`_)
+* Fix a bug on the  **KubernetesPodOperatorAsync**  to not fail with ``ERROR - Unclosed client session``
+  (`#394 <https://github.com/astronomer/astronomer-providers/pull/394>`_)
+
+
 1.4.0 (2022-05-25)
 ------------------
 
