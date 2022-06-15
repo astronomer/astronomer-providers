@@ -9,6 +9,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
+    RedshiftDeleteClusterOperatorAsync,
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
@@ -232,10 +233,13 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    delete_redshift_cluster = PythonOperator(
+    delete_redshift_cluster = RedshiftDeleteClusterOperatorAsync(
         task_id="delete_redshift_cluster",
-        python_callable=delete_redshift_cluster_callable,
         trigger_rule="all_done",
+        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
+        aws_conn_id=AWS_CONN_ID,
+        skip_final_cluster_snapshot=True,
+        final_cluster_snapshot_identifier=None,
     )
 
     end = DummyOperator(task_id="end")
