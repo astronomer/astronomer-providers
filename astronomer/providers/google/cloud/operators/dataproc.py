@@ -22,6 +22,7 @@ from astronomer.providers.google.cloud.triggers.dataproc import (
 class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
     """
     Create a new cluster on Google Cloud Dataproc Asynchronously.
+
     :param project_id: The ID of the google cloud project in which
         to create the cluster. (templated)
     :param cluster_name: Name of the cluster to create
@@ -113,6 +114,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
 class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
     """
     Delete a cluster on Google Cloud Dataproc Asynchronously.
+
     :param region: Required. The Cloud Dataproc region in which to handle the request (templated).
     :param cluster_name: Required. The cluster name (templated).
     :param project_id: Optional. The ID of the Google Cloud project that the cluster belongs to (templated).
@@ -194,6 +196,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
     """
     Submits a job to a cluster and wait until is completely finished or any error occurs.
+
     :param project_id: Optional. The ID of the Google Cloud project that the job belongs to.
     :param region: Required. The Cloud Dataproc region in which to handle the request.
     :param job: Required. The job resource.
