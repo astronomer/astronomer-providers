@@ -53,9 +53,6 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
         :param region: The Cloud Dataproc region in which to handle the request
         :param cluster_name: The name of the cluster
         :param project_id:  The ID of the Google Cloud project the cluster belongs to
-        :param region: The Cloud Dataproc region in which to handle the request
-        :param cluster_name: The name of the cluster
-        :param project_id: The ID of the Google Cloud project the cluster belongs to
         :param retry: A retry object used to retry requests. If ``None`` is specified, requests will not be
             retried
         :param metadata: Additional metadata that is provided to the method
