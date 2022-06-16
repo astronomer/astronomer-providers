@@ -1,7 +1,11 @@
 from unittest import mock
 
+import pendulum
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.models import DAG, DagRun, TaskInstance
+from airflow.utils import timezone
+from google.api_core.exceptions import AlreadyExists
 from google.cloud import dataproc
 from google.cloud.dataproc_v1 import Cluster
 
@@ -42,6 +46,24 @@ def context():
     yield context
 
 
+def create_context(task):
+    dag = DAG(dag_id="dag")
+    tzinfo = pendulum.timezone("Europe/Amsterdam")
+    execution_date = timezone.datetime(2016, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    dag_run = DagRun(dag_id=dag.dag_id, execution_date=execution_date)
+    task_instance = TaskInstance(task=task)
+    task_instance.dag_run = dag_run
+    task_instance.xcom_push = mock.Mock()
+    return {
+        "dag": dag,
+        "ts": execution_date.isoformat(),
+        "task": task,
+        "ti": task_instance,
+        "task_instance": task_instance,
+        "run_id": dag_run.run_id,
+    }
+
+
 @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
 def test_dataproc_operator_create_cluster_execute_async(mock_create_cluster):
     """
@@ -57,7 +79,44 @@ def test_dataproc_operator_create_cluster_execute_async(mock_create_cluster):
         task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
     )
     with pytest.raises(TaskDeferred) as exc:
-        task.execute(context)
+        task.execute(create_context(task))
+    assert isinstance(
+        exc.value.trigger, DataprocCreateClusterTrigger
+    ), "Trigger is not a DataprocCreateClusterTrigger"
+
+
+@mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
+def test_dataproc_operator_create_cluster_execute_async_cluster_exist_exception(mock_create_cluster):
+    """
+    Asserts that a task will raise exception when dataproc cluster already exist
+    and use_if_exists param is False
+    """
+    mock_create_cluster.side_effect = AlreadyExists("Cluster already exist")
+
+    task = DataprocCreateClusterOperatorAsync(
+        task_id="task-id",
+        cluster_name="test_cluster",
+        region=TEST_REGION,
+        project_id=TEST_PROJECT_ID,
+        use_if_exists=False,
+    )
+    with pytest.raises(AlreadyExists):
+        task.execute(create_context(task))
+
+
+@mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
+def test_dataproc_operator_create_cluster_execute_async_cluster_exist(mock_create_cluster):
+    """
+    Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
+    when the DataprocCreateClusterOperatorAsync is executed when dataproc cluster already exist.
+    """
+    mock_create_cluster.return_value = AlreadyExists("Cluster already exist")
+
+    task = DataprocCreateClusterOperatorAsync(
+        task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+    )
+    with pytest.raises(TaskDeferred) as exc:
+        task.execute(create_context(task))
     assert isinstance(
         exc.value.trigger, DataprocCreateClusterTrigger
     ), "Trigger is not a DataprocCreateClusterTrigger"
