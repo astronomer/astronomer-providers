@@ -48,7 +48,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         self.polling_interval = polling_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes DataProcSubmitTrigger arguments and classpath."""
+        """Serializes DataprocCreateClusterTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.dataproc.DataprocCreateClusterTrigger",
             {
