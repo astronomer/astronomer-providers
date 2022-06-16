@@ -146,7 +146,6 @@ async def test_dataproc_get_job_status(state, response):
     assert res == response
 
 
-##########################
 def test_dataproc_create_cluster_trigger_serialization():
     """
     asserts that the DataprocCreateClusterTrigger correctly serializes its arguments
