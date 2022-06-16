@@ -233,6 +233,7 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    # [START howto_operator_redshift_delete_cluster_async]
     delete_redshift_cluster = RedshiftDeleteClusterOperatorAsync(
         task_id="delete_redshift_cluster",
         trigger_rule="all_done",
@@ -241,6 +242,7 @@ with DAG(
         skip_final_cluster_snapshot=True,
         final_cluster_snapshot_identifier=None,
     )
+    # [END howto_operator_redshift_delete_cluster_async]
 
     end = DummyOperator(task_id="end")
 
