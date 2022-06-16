@@ -91,6 +91,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
 class DataprocDeleteClusterTrigger(BaseTrigger, ABC):
     """
     Asynchronously check the status of a cluster
+
     :param cluster_name: The name of the cluster
     :param end_time: Time in second left to check the cluster status
     :param project_id: The ID of the Google Cloud project the cluster belongs to
