@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 from airflow import models
 from airflow.providers.google.cloud.operators.dataproc import (
-    DataprocCreateClusterOperator,
     DataprocDeleteClusterOperator,
 )
 from airflow.providers.google.cloud.operators.gcs import (
@@ -14,6 +13,7 @@ from airflow.providers.google.cloud.operators.gcs import (
 )
 
 from astronomer.providers.google.cloud.operators.dataproc import (
+    DataprocCreateClusterOperatorAsync,
     DataprocSubmitJobOperatorAsync,
 )
 
@@ -115,7 +115,7 @@ with models.DAG(
     tags=["example", "async", "dataproc"],
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
-    create_cluster = DataprocCreateClusterOperator(
+    create_cluster = DataprocCreateClusterOperatorAsync(
         task_id="create_cluster",
         project_id=PROJECT_ID,
         cluster_config=CLUSTER_CONFIG,

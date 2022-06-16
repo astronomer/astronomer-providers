@@ -13,7 +13,6 @@ JobType = Union[Job, Any]
 class DataprocHookAsync(DataprocHook):
     """
     Async Hook for Google Cloud Dataproc APIs.
-
     All the methods in the hook where project_id is used must be called with
     keyword arguments rather than positional.
     """

@@ -1,10 +1,90 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+import time
+from abc import ABC
+from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from google.cloud.dataproc_v1.types import JobStatus
 
+# TODO: Fix the import once it fully migrated to use async lib
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
+from astronomer.providers.google.cloud.hooks.dataproc_async import (
+    DataprocHookAsync as DataprocAsyncHook,
+)
+
+
+class DataprocCreateClusterTrigger(BaseTrigger, ABC):
+    """
+    Asynchronously check the status of a cluster
+
+    :param project_id: The ID of the Google Cloud project the cluster belongs to
+    :param region: The Cloud Dataproc region in which to handle the request
+    :param cluster_name: The name of the cluster
+    :param end_time: Time in second left to check the cluster status
+    :param metadata: Additional metadata that is provided to the method
+    :param gcp_conn_id: The connection ID to use when fetching connection info.
+    :param polling_interval: Time in seconds to sleep between checks of cluster status
+    """
+
+    def __init__(
+        self,
+        *,
+        project_id: Optional[str] = None,
+        region: Optional[str] = None,
+        cluster_name: str,
+        end_time: float,
+        metadata: Sequence[Tuple[str, str]] = (),
+        gcp_conn_id: str = "google_cloud_default",
+        polling_interval: float = 5.0,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self.project_id = project_id
+        self.region = region
+        self.cluster_name = cluster_name
+        self.end_time = end_time
+        self.metadata = metadata
+        self.gcp_conn_id = gcp_conn_id
+        self.polling_interval = polling_interval
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes DataprocCreateClusterTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.google.cloud.triggers.dataproc.DataprocCreateClusterTrigger",
+            {
+                "project_id": self.project_id,
+                "region": self.region,
+                "cluster_name": self.cluster_name,
+                "end_time": self.end_time,
+                "metadata": self.metadata,
+                "gcp_conn_id": self.gcp_conn_id,
+                "polling_interval": self.polling_interval,
+            },
+        )
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """Check the status of cluster until reach the terminal state"""
+        hook = DataprocAsyncHook(gcp_conn_id=self.gcp_conn_id)
+        while self.end_time > time.monotonic():
+            try:
+                cluster = await hook.get_cluster(
+                    region=self.region,  # type: ignore[arg-type]
+                    cluster_name=self.cluster_name,
+                    project_id=self.project_id,  # type: ignore[arg-type]
+                    metadata=self.metadata,
+                )
+                if cluster.status.state == cluster.status.State.RUNNING:
+                    yield TriggerEvent({"status": "success", "data": cluster, "message": ""})
+                self.log.info(
+                    "Cluster status is %s. Sleeping for %s seconds.",
+                    cluster.status.state,
+                    self.polling_interval,
+                )
+                await asyncio.sleep(self.polling_interval)
+            except Exception as e:
+                yield TriggerEvent({"status": "error", "message": str(e)})
+
+        yield TriggerEvent({"status": "error", "message": "Timeout"})
 
 
 class DataProcSubmitTrigger(BaseTrigger):
