@@ -4,6 +4,7 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
+    RedshiftDeleteClusterOperatorAsync,
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
@@ -19,6 +20,99 @@ def context():
     """
     context = {}
     yield context
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.delete_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+def test_delete_cluster(mock_async_client, mock_async_delete_cluster, mock_sync_cluster_status):
+    """Test Delete cluster operator with available cluster state and check the trigger instance"""
+    mock_sync_cluster_status.return_value = "available"
+    mock_async_client.return_value.delete_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "deleting"}
+    }
+    mock_async_delete_cluster.return_value = {"status": "success", "cluster_state": "cluster_not_found"}
+
+    redshift_operator = RedshiftDeleteClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+
+    with pytest.raises(TaskDeferred) as exc:
+        redshift_operator.execute(context)
+
+    assert isinstance(exc.value.trigger, RedshiftClusterTrigger), "Trigger is not a RedshiftClusterTrigger"
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.delete_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+def test_delete_cluster_failure(mock_async_client, mock_async_delete_cluster, mock_sync_cluster_status):
+    """Test Delete cluster operator with available cluster state in failure test case"""
+    mock_sync_cluster_status.return_value = "available"
+    mock_async_client.return_value.delete_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "deleting"}
+    }
+    mock_async_delete_cluster.return_value = {"status": "success", "cluster_state": "cluster_not_found"}
+
+    redshift_operator = RedshiftDeleteClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+
+    with pytest.raises(AirflowException):
+        redshift_operator.execute_complete(
+            context=None, event={"status": "error", "message": "test failure message"}
+        )
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.delete_cluster")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+def test_delete_cluster_execute_complete(
+    mock_async_client, mock_async_delete_cluster, mock_sync_cluster_status
+):
+    """
+    Test Delete cluster operator execute_complete with available cluster state and return state as cluster_not_found.
+    """
+    mock_sync_cluster_status.return_value = "available"
+    mock_async_client.return_value.delete_cluster.return_value = {
+        "Cluster": {"ClusterIdentifier": "test_cluster", "ClusterStatus": "deleting"}
+    }
+    mock_async_delete_cluster.return_value = {"status": "success", "cluster_state": "cluster_not_found"}
+
+    redshift_operator = RedshiftDeleteClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+
+    with mock.patch.object(redshift_operator.log, "info") as mock_log_info:
+        redshift_operator.execute_complete(
+            context=None, event={"status": "success", "cluster_state": "cluster_not_found"}
+        )
+    mock_log_info.assert_called_with("Deleted cluster successfully")
+
+
+def test_delete_cluster_execute_complete_none():
+    """Asserts that logging occurs as expected"""
+    task = RedshiftDeleteClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+    with mock.patch.object(task.log, "info") as mock_log_info:
+        task.execute_complete(context=None, event=None)
+    mock_log_info.assert_called_with("%s completed successfully.", "task_test")
+
+
+@mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
+def test_delete_cluster_execute_warning(mock_sync_cluster_status):
+    """Test Pause cluster operator execute method with warnings message"""
+    mock_sync_cluster_status.return_value = "cluster_not_found"
+    redshift_operator = RedshiftDeleteClusterOperatorAsync(
+        task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
+    )
+
+    with mock.patch.object(redshift_operator.log, "warning") as mock_log_warning:
+        redshift_operator.execute(context=None)
+    mock_log_warning.assert_called_with(
+        "Unable to delete cluster since cluster is currently in status: %s", "cluster_not_found"
+    )
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
