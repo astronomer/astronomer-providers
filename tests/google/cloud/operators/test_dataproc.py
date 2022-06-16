@@ -7,13 +7,13 @@ from google.cloud.dataproc_v1 import Cluster
 
 from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
-    DataprocSubmitJobOperatorAsync,
     DataprocDeleteClusterOperatorAsync,
+    DataprocSubmitJobOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
-    DataProcSubmitTrigger,
     DataprocDeleteClusterTrigger,
+    DataProcSubmitTrigger,
 )
 
 TEST_PROJECT_ID = "test_project_id"

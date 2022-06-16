@@ -4,16 +4,16 @@ from unittest import mock
 
 import pytest
 from airflow.triggers.base import TriggerEvent
-from google.cloud import dataproc
 from google.api_core.exceptions import NotFound
+from google.cloud import dataproc
 from google.cloud.dataproc_v1 import Cluster, Job
 from google.cloud.dataproc_v1.types import JobStatus
 
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
-    DataProcSubmitTrigger,
     DataprocDeleteClusterTrigger,
+    DataProcSubmitTrigger,
 )
 
 TEST_PROJECT_ID = "test_project_id"

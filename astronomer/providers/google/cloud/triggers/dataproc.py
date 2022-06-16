@@ -2,8 +2,9 @@ import asyncio
 import time
 from abc import ABC
 from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple
-from google.api_core.exceptions import NotFound
+
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+from google.api_core.exceptions import NotFound
 from google.cloud.dataproc_v1.types import JobStatus
 
 # TODO: Fix the import once it fully migrated to use async lib
