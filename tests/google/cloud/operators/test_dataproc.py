@@ -111,6 +111,7 @@ def test_dataproc_delete_operator_execute_async(mock_delete_cluster):
 
 
 def test_dataproc_delete_operator_execute_complete_success():
+    """assert that execute_complete execute without error when receive success signal from trigger"""
     task = DataprocDeleteClusterOperatorAsync(
         task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
     )
@@ -125,6 +126,7 @@ def test_dataproc_delete_operator_execute_complete_success():
     ],
 )
 def test_dataproc_delete_operator_execute_complete_exception(event):
+    """assert that execute_complete raise exception when receive error from trigger"""
     task = DataprocDeleteClusterOperatorAsync(
         task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
     )
