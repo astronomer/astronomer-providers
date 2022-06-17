@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -14,16 +14,21 @@ class RedshiftClusterTrigger(BaseTrigger):
     :param polling_period_seconds:  polling period in seconds to check for the status
     :param aws_conn_id: Reference to AWS connection id for redshift
     :param cluster_identifier: unique identifier of a cluster
-    :param operation_type: Reference to the type of operation need to be performed eg: pause_cluster, resume_cluster
+    :param operation_type: Reference to the type of operation need to be performed
+        eg: pause_cluster, resume_cluster, delete_cluster
+    :param skip_final_cluster_snapshot: determines cluster snapshot creation
+    :param final_cluster_snapshot_identifier: name of final cluster snapshot
     """
 
     def __init__(
         self,
         task_id: str,
-        polling_period_seconds: float,
         aws_conn_id: str,
         cluster_identifier: str,
         operation_type: str,
+        polling_period_seconds: float = 5.0,
+        skip_final_cluster_snapshot: bool = True,
+        final_cluster_snapshot_identifier: Optional[str] = None,
     ):
         super().__init__()
         self.task_id = task_id
@@ -31,6 +36,8 @@ class RedshiftClusterTrigger(BaseTrigger):
         self.aws_conn_id = aws_conn_id
         self.cluster_identifier = cluster_identifier
         self.operation_type = operation_type
+        self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
+        self.final_cluster_snapshot_identifier = final_cluster_snapshot_identifier
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes RedshiftClusterTrigger arguments and classpath."""
@@ -42,6 +49,8 @@ class RedshiftClusterTrigger(BaseTrigger):
                 "aws_conn_id": self.aws_conn_id,
                 "cluster_identifier": self.cluster_identifier,
                 "operation_type": self.operation_type,
+                "skip_final_cluster_snapshot": self.skip_final_cluster_snapshot,
+                "final_cluster_snapshot_identifier": self.final_cluster_snapshot_identifier,
             },
         )
 
@@ -54,15 +63,33 @@ class RedshiftClusterTrigger(BaseTrigger):
         """
         hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
         try:
-            if self.operation_type == "resume_cluster":
-                response = await hook.resume_cluster(cluster_identifier=self.cluster_identifier)
+            if self.operation_type == "delete_cluster":
+                response = await hook.delete_cluster(
+                    cluster_identifier=self.cluster_identifier,
+                    skip_final_cluster_snapshot=self.skip_final_cluster_snapshot,
+                    final_cluster_snapshot_identifier=self.final_cluster_snapshot_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
+                )
                 if response:
                     yield TriggerEvent(response)
                 else:
                     error_message = f"{self.task_id} failed"
                     yield TriggerEvent({"status": "error", "message": error_message})
-            else:
-                response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
+            elif self.operation_type == "resume_cluster":
+                response = await hook.resume_cluster(
+                    cluster_identifier=self.cluster_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
+                )
+                if response:
+                    yield TriggerEvent(response)
+                else:
+                    error_message = f"{self.task_id} failed"
+                    yield TriggerEvent({"status": "error", "message": error_message})
+            elif self.operation_type == "pause_cluster":
+                response = await hook.pause_cluster(
+                    cluster_identifier=self.cluster_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
+                )
                 if response:
                     yield TriggerEvent(response)
                 else:

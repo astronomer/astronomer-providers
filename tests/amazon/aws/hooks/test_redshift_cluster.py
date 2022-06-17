@@ -1,6 +1,7 @@
 import asyncio
 from unittest import mock
 
+import botocore
 import pytest
 from botocore.exceptions import ClientError
 
@@ -48,6 +49,31 @@ async def test_redshift_cluster_status(mock_client, mock_cluster_identifier, clu
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+async def test_redshift_cluster_not_found_status(mock_client):
+    """
+    Test cluster status async hook function to get the cluster status by calling Aiobotocore lib when cluster does not
+    exist.
+    """
+    # mocking async context function with return_value of __aenter__
+    mock_client.return_value.__aenter__.return_value.describe_clusters.side_effect = (
+        botocore.exceptions.ClientError(
+            error_response={
+                "Error": {
+                    "Code": "ClusterNotFound",
+                }
+            },
+            operation_name="get job description",
+        )
+    )
+    hook = RedshiftHookAsync(
+        aws_conn_id="test_aws_connection_id", client_type="redshift", resource_type="redshift"
+    )
+    result = await hook.cluster_status(cluster_identifier="mock_cluster_identifier", delete_operation=True)
+    assert result == {"status": "success", "cluster_state": "cluster_not_found"}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
 async def test_redshift_cluster_status_exception(mock_client):
     """Test cluster status async hook function by mocking exception"""
     mock_client.return_value.__aenter__.return_value.describe_clusters.side_effect = ClientError(
@@ -70,6 +96,61 @@ async def test_redshift_cluster_status_exception(mock_client):
         aws_conn_id="test_aws_connection_id", client_type="redshift", resource_type="redshift"
     )
     result = await hook.cluster_status(cluster_identifier="astro-redshift-cluster-1")
+    assert result == {
+        "status": "error",
+        "message": "An error occurred (SomeServiceException) when calling the "
+        "redshift operation: Details/context around the exception or error",
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_cluster_identifier, cluster_state, expected_result",
+    [
+        (
+            "astro-redshift-cluster-1",
+            {"status": "success", "cluster_state": "cluster_not_found"},
+            {"Cluster": {"ClusterIdentifier": "astro-redshift-cluster-1", "ClusterStatus": "deleting"}},
+        )
+    ],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.cluster_status")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+async def test_delete_cluster(
+    mock_client, mock_cluster_status, mock_cluster_identifier, cluster_state, expected_result
+):
+    """Test delete cluster async hook function by mocking return value of delete_cluster"""
+    mock_client.return_value.__aenter__.return_value.delete_cluster.return_value = expected_result
+    mock_cluster_status.return_value = cluster_state
+
+    hook = RedshiftHookAsync(aws_conn_id="test_aws_connection_id")
+    task = await hook.delete_cluster(cluster_identifier=mock_cluster_identifier)
+
+    assert task == cluster_state
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+async def test_delete_cluster_exception(mock_client):
+    """Test delete cluster async hook function with exception by mocking return value of delete_cluster"""
+    mock_client.return_value.__aenter__.return_value.delete_cluster.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "SomeServiceException",
+                "Message": "Details/context around the exception or error",
+            },
+            "ResponseMetadata": {
+                "RequestId": "1234567890ABCDEF",
+                "HostId": "host ID data will appear here as a hash",
+                "HTTPStatusCode": 500,
+                "HTTPHeaders": {"header metadata key/values will appear here"},
+                "RetryAttempts": 0,
+            },
+        },
+        operation_name="redshift",
+    )
+    hook = RedshiftHookAsync(aws_conn_id="test_aws_connection_id")
+    result = await hook.delete_cluster(cluster_identifier="test")
     assert result == {
         "status": "error",
         "message": "An error occurred (SomeServiceException) when calling the "
