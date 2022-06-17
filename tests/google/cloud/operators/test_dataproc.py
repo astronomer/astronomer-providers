@@ -9,6 +9,7 @@ from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
     DataprocDeleteClusterOperatorAsync,
     DataprocSubmitJobOperatorAsync,
+    DataprocUpdateClusterOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -177,3 +178,63 @@ def test_dataproc_operator_execute_success_async(mock_submit_job):
     assert task.execute_complete(
         context=None, event={"status": "success", "message": "success", "job_id": TEST_JOB_ID}
     )
+
+
+@mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
+@mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.update_cluster")
+def test_dataproc_operator_update_cluster_execute_async(mock_update_cluster, mock_persist):
+    """
+    Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
+    when the DataprocCreateClusterOperatorAsync is executed.
+    """
+    mock_persist.return_value = {}
+    mock_update_cluster.return_value = Cluster(
+        cluster_name="test_cluster",
+        status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
+    )
+
+    task = DataprocUpdateClusterOperatorAsync(
+        task_id="task-id",
+        cluster_name="test_cluster",
+        region=TEST_REGION,
+        project_id=TEST_PROJECT_ID,
+        cluster={},
+        graceful_decommission_timeout=30,
+        update_mask={},
+    )
+    with pytest.raises(TaskDeferred) as exc:
+        task.execute(context)
+    assert isinstance(
+        exc.value.trigger, DataprocCreateClusterTrigger
+    ), "Trigger is not a DataprocCreateClusterTrigger"
+
+
+def test_dataproc_operator_update_cluster_execute_complete_success():
+    """assert that execute_complete return cluster detail when task succeed"""
+    cluster = Cluster(
+        cluster_name="test_cluster",
+        status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
+    )
+    task = DataprocCreateClusterOperatorAsync(
+        task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+    )
+    cluster_details = task.execute_complete(
+        context=context, event={"status": "success", "data": cluster, "message": ""}
+    )
+    assert cluster_details is not None
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        "error",
+        None,
+    ],
+)
+def test_dataproc_operator_update_cluster_execute_complete_fail(status):
+    """assert that execute_complete raise exception when task fail"""
+    task = DataprocCreateClusterOperatorAsync(
+        task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+    )
+    with pytest.raises(AirflowException):
+        task.execute_complete(context=context, event={"status": status, "message": "fail to update cluster"})
