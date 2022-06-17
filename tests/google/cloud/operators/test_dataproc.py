@@ -215,26 +215,38 @@ def test_dataproc_operator_update_cluster_execute_complete_success():
         cluster_name="test_cluster",
         status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
     )
-    task = DataprocCreateClusterOperatorAsync(
-        task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+    task = DataprocUpdateClusterOperatorAsync(
+        task_id="task-id",
+        cluster_name="test_cluster",
+        region=TEST_REGION,
+        project_id=TEST_PROJECT_ID,
+        cluster={},
+        graceful_decommission_timeout=30,
+        update_mask={},
     )
-    cluster_details = task.execute_complete(
-        context=context, event={"status": "success", "data": cluster, "message": ""}
+    assert (
+        task.execute_complete(context=context, event={"status": "success", "data": cluster, "message": ""})
+        is None
     )
-    assert cluster_details is not None
 
 
 @pytest.mark.parametrize(
-    "status",
+    "event",
     [
-        "error",
+        {"status": "error", "message": ""},
         None,
     ],
 )
-def test_dataproc_operator_update_cluster_execute_complete_fail(status):
+def test_dataproc_operator_update_cluster_execute_complete_fail(event):
     """assert that execute_complete raise exception when task fail"""
-    task = DataprocCreateClusterOperatorAsync(
-        task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+    task = DataprocUpdateClusterOperatorAsync(
+        task_id="task-id",
+        cluster_name="test_cluster",
+        region=TEST_REGION,
+        project_id=TEST_PROJECT_ID,
+        cluster={},
+        graceful_decommission_timeout=30,
+        update_mask={},
     )
     with pytest.raises(AirflowException):
-        task.execute_complete(context=context, event={"status": status, "message": "fail to update cluster"})
+        task.execute_complete(context=context, event=event)

@@ -366,8 +366,9 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event and event["status"] == "success":
+            self.log.info("Updated %s cluster.", event["data"].cluster_name)
+            return
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
-        elif event is None:
-            raise AirflowException("No event received in trigger callback")
-        self.log.info("Updated %s cluster.", event["data"]["cluster_name"])
+        raise AirflowException("No event received in trigger callback")
