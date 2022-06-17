@@ -39,7 +39,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         cluster_identifier: str,
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
-        cluster_status_fetch_interval_seconds: int = 10,
+        polling_period_seconds: float = 5.0,
     ) -> Dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
@@ -48,7 +48,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         :param cluster_identifier: unique identifier of a cluster
         :param skip_final_cluster_snapshot: determines cluster snapshot creation
         :param final_cluster_snapshot_identifier: name of final cluster snapshot
-        :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
+        :param polling_period_seconds: polling period in seconds to check for the status
         """
         try:
             final_cluster_snapshot_identifier = final_cluster_snapshot_identifier or ""
@@ -66,7 +66,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                         expected_response = await asyncio.create_task(
                             self.get_cluster_status(cluster_identifier, "cluster_not_found", flag, True)
                         )
-                        await asyncio.sleep(cluster_status_fetch_interval_seconds)
+                        await asyncio.sleep(polling_period_seconds)
                         if flag.is_set():
                             return expected_response
                 return {"status": "error", "cluster_state": status}
@@ -74,14 +74,14 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             return {"status": "error", "message": str(error)}
 
     async def pause_cluster(
-        self, cluster_identifier: str, cluster_status_fetch_interval_seconds: int = 10
+        self, cluster_identifier: str, polling_period_seconds: float = 5.0
     ) -> Dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
         pause the cluster based on the cluster_identifier passed
 
         :param cluster_identifier: unique identifier of a cluster
-        :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
+        :param polling_period_seconds: polling period in seconds to check for the status
         """
         try:
             async with await self.get_client_async() as client:
@@ -93,7 +93,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                         expected_response = await asyncio.create_task(
                             self.get_cluster_status(cluster_identifier, "paused", flag)
                         )
-                        await asyncio.sleep(cluster_status_fetch_interval_seconds)
+                        await asyncio.sleep(polling_period_seconds)
                         if flag.is_set():
                             return expected_response
                 return {"status": "error", "cluster_state": status}
@@ -101,14 +101,16 @@ class RedshiftHookAsync(AwsBaseHookAsync):
             return {"status": "error", "message": str(error)}
 
     async def resume_cluster(
-        self, cluster_identifier: str, cluster_status_fetch_interval_seconds: int = 10
+        self,
+        cluster_identifier: str,
+        polling_period_seconds: float = 5.0,
     ) -> Dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
         resume the cluster for the cluster_identifier passed
 
         :param cluster_identifier: unique identifier of a cluster
-        :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
+        :param polling_period_seconds: polling period in seconds to check for the status
         """
         async with await self.get_client_async() as client:
             try:
@@ -120,7 +122,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                         expected_response = await asyncio.create_task(
                             self.get_cluster_status(cluster_identifier, "available", flag)
                         )
-                        await asyncio.sleep(cluster_status_fetch_interval_seconds)
+                        await asyncio.sleep(polling_period_seconds)
                         if flag.is_set():
                             return expected_response
                 return {"status": "error", "cluster_state": status}

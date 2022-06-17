@@ -24,7 +24,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
     :param aws_conn_id: aws connection to use
     :param skip_final_cluster_snapshot: determines cluster snapshot creation
     :param final_cluster_snapshot_identifier: name of final cluster snapshot
-    :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
+    :param polling_interval: polling period in seconds to check for the status
     """
 
     def __init__(
@@ -62,12 +62,15 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
                     operation_type="delete_cluster",
                     skip_final_cluster_snapshot=self.skip_final_cluster_snapshot,
                     final_cluster_snapshot_identifier=self.final_cluster_snapshot_identifier,
-                    cluster_status_fetch_interval_seconds=self.cluster_status_fetch_interval_seconds,
                 ),
                 method_name="execute_complete",
             )
-        else:
+        elif cluster_state == "cluster_not_found":
             self.log.warning(
+                "Unable to delete cluster since cluster is not found. It may have already been deleted"
+            )
+        else:
+            raise AirflowException(
                 "Unable to delete cluster since cluster is currently in status: %s", cluster_state
             )
 
@@ -84,10 +87,8 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
                 self.log.info("Deleted cluster successfully")
-                return None
         else:
-            self.log.info("%s completed successfully.", self.task_id)
-            return None
+            raise AirflowException("Did not receive valid event from the trigerrer")
 
 
 class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):

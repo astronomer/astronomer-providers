@@ -27,9 +27,6 @@ REDSHIFT_CLUSTER_IDENTIFIER = os.getenv("REDSHIFT_CLUSTER_IDENTIFIER", "astro-pr
 REDSHIFT_CLUSTER_MASTER_USER = os.getenv("REDSHIFT_CLUSTER_MASTER_USER", "awsuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.getenv("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
 REDSHIFT_CLUSTER_NODE_TYPE = os.getenv("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
-REDSHIFT_CLUSTER_STATUS_FETCH_INTERVAL_SECONDS = int(
-    os.getenv("REDSHIFT_CLUSTER_STATUS_FETCH_INTERVAL_SECONDS", 10)
-)
 REDSHIFT_CLUSTER_TYPE = os.getenv("REDSHIFT_CLUSTER_TYPE", "single-node")
 
 
@@ -217,7 +214,6 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
         skip_final_cluster_snapshot=True,
         final_cluster_snapshot_identifier=None,
-        cluster_status_fetch_interval_seconds=REDSHIFT_CLUSTER_STATUS_FETCH_INTERVAL_SECONDS,
     )
     # [END howto_operator_redshift_delete_cluster_async]
 

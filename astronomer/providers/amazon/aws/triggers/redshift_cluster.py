@@ -18,19 +18,17 @@ class RedshiftClusterTrigger(BaseTrigger):
         eg: pause_cluster, resume_cluster, delete_cluster
     :param skip_final_cluster_snapshot: determines cluster snapshot creation
     :param final_cluster_snapshot_identifier: name of final cluster snapshot
-    :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
     """
 
     def __init__(
         self,
         task_id: str,
-        polling_period_seconds: float,
         aws_conn_id: str,
         cluster_identifier: str,
         operation_type: str,
+        polling_period_seconds: float = 5.0,
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
-        cluster_status_fetch_interval_seconds: int = 10,
     ):
         super().__init__()
         self.task_id = task_id
@@ -40,7 +38,6 @@ class RedshiftClusterTrigger(BaseTrigger):
         self.operation_type = operation_type
         self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
         self.final_cluster_snapshot_identifier = final_cluster_snapshot_identifier
-        self.cluster_status_fetch_interval_seconds = cluster_status_fetch_interval_seconds
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes RedshiftClusterTrigger arguments and classpath."""
@@ -54,7 +51,6 @@ class RedshiftClusterTrigger(BaseTrigger):
                 "operation_type": self.operation_type,
                 "skip_final_cluster_snapshot": self.skip_final_cluster_snapshot,
                 "final_cluster_snapshot_identifier": self.final_cluster_snapshot_identifier,
-                "cluster_status_fetch_interval_seconds": self.cluster_status_fetch_interval_seconds,
             },
         )
 
@@ -72,6 +68,7 @@ class RedshiftClusterTrigger(BaseTrigger):
                     cluster_identifier=self.cluster_identifier,
                     skip_final_cluster_snapshot=self.skip_final_cluster_snapshot,
                     final_cluster_snapshot_identifier=self.final_cluster_snapshot_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
                 )
                 if response:
                     yield TriggerEvent(response)
@@ -79,14 +76,20 @@ class RedshiftClusterTrigger(BaseTrigger):
                     error_message = f"{self.task_id} failed"
                     yield TriggerEvent({"status": "error", "message": error_message})
             elif self.operation_type == "resume_cluster":
-                response = await hook.resume_cluster(cluster_identifier=self.cluster_identifier)
+                response = await hook.resume_cluster(
+                    cluster_identifier=self.cluster_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
+                )
                 if response:
                     yield TriggerEvent(response)
                 else:
                     error_message = f"{self.task_id} failed"
                     yield TriggerEvent({"status": "error", "message": error_message})
             elif self.operation_type == "pause_cluster":
-                response = await hook.pause_cluster(cluster_identifier=self.cluster_identifier)
+                response = await hook.pause_cluster(
+                    cluster_identifier=self.cluster_identifier,
+                    polling_period_seconds=self.polling_period_seconds,
+                )
                 if response:
                     yield TriggerEvent(response)
                 else:

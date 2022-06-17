@@ -90,14 +90,15 @@ def test_delete_cluster_execute_complete(
     mock_log_info.assert_called_with("Deleted cluster successfully")
 
 
-def test_delete_cluster_execute_complete_none():
-    """Asserts that logging occurs as expected"""
+def test_delete_cluster_execute_complete_invalid_trigger_event():
+    """Asserts that exception is raised when invalid event is received from triggerer"""
     task = RedshiftDeleteClusterOperatorAsync(
         task_id="task_test", cluster_identifier="test_cluster", aws_conn_id="aws_conn_test"
     )
-    with mock.patch.object(task.log, "info") as mock_log_info:
+    with pytest.raises(AirflowException) as exception_info:
         task.execute_complete(context=None, event=None)
-    mock_log_info.assert_called_with("%s completed successfully.", "task_test")
+
+    assert exception_info.value.args[0] == "Did not receive valid event from the trigerrer"
 
 
 @mock.patch("airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook.cluster_status")
@@ -111,7 +112,7 @@ def test_delete_cluster_execute_warning(mock_sync_cluster_status):
     with mock.patch.object(redshift_operator.log, "warning") as mock_log_warning:
         redshift_operator.execute(context=None)
     mock_log_warning.assert_called_with(
-        "Unable to delete cluster since cluster is currently in status: %s", "cluster_not_found"
+        "Unable to delete cluster since cluster is not found. It may have already been deleted"
     )
 
 
