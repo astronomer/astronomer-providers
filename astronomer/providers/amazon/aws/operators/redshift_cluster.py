@@ -24,6 +24,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
     :param aws_conn_id: aws connection to use
     :param skip_final_cluster_snapshot: determines cluster snapshot creation
     :param final_cluster_snapshot_identifier: name of final cluster snapshot
+    :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
     """
 
     def __init__(
@@ -31,12 +32,14 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
         *,
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
+        cluster_status_fetch_interval_seconds: int = 10,
         aws_conn_id: str = "aws_default",
         poll_interval: float = 5.0,
         **kwargs: Any,
     ):
         self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
         self.final_cluster_snapshot_identifier = final_cluster_snapshot_identifier
+        self.cluster_status_fetch_interval_seconds = cluster_status_fetch_interval_seconds
         self.aws_conn_id = aws_conn_id
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
@@ -57,6 +60,9 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
                     aws_conn_id=self.aws_conn_id,
                     cluster_identifier=self.cluster_identifier,
                     operation_type="delete_cluster",
+                    skip_final_cluster_snapshot=self.skip_final_cluster_snapshot,
+                    final_cluster_snapshot_identifier=self.final_cluster_snapshot_identifier,
+                    cluster_status_fetch_interval_seconds=self.cluster_status_fetch_interval_seconds,
                 ),
                 method_name="execute_complete",
             )

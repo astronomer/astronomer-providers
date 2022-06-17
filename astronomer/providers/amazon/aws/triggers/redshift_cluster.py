@@ -18,6 +18,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         eg: pause_cluster, resume_cluster, delete_cluster
     :param skip_final_cluster_snapshot: determines cluster snapshot creation
     :param final_cluster_snapshot_identifier: name of final cluster snapshot
+    :param cluster_status_fetch_interval_seconds: interval seconds to wait for fetching cluster status
     """
 
     def __init__(
@@ -29,6 +30,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         operation_type: str,
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
+        cluster_status_fetch_interval_seconds: int = 10,
     ):
         super().__init__()
         self.task_id = task_id
@@ -38,6 +40,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         self.operation_type = operation_type
         self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
         self.final_cluster_snapshot_identifier = final_cluster_snapshot_identifier
+        self.cluster_status_fetch_interval_seconds = cluster_status_fetch_interval_seconds
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes RedshiftClusterTrigger arguments and classpath."""
@@ -51,6 +54,7 @@ class RedshiftClusterTrigger(BaseTrigger):
                 "operation_type": self.operation_type,
                 "skip_final_cluster_snapshot": self.skip_final_cluster_snapshot,
                 "final_cluster_snapshot_identifier": self.final_cluster_snapshot_identifier,
+                "cluster_status_fetch_interval_seconds": self.cluster_status_fetch_interval_seconds,
             },
         )
 

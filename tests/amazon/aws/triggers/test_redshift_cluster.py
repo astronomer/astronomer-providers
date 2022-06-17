@@ -35,6 +35,7 @@ def test_redshift_cluster_delete_trigger_serialization():
         "operation_type": "delete_cluster",
         "final_cluster_snapshot_identifier": None,
         "skip_final_cluster_snapshot": True,
+        "cluster_status_fetch_interval_seconds": 10,
     }
 
 
@@ -112,6 +113,7 @@ def test_redshift_cluster_resume_trigger_serialization():
         "operation_type": "resume_cluster",
         "final_cluster_snapshot_identifier": None,
         "skip_final_cluster_snapshot": True,
+        "cluster_status_fetch_interval_seconds": 10,
     }
 
 
@@ -189,6 +191,7 @@ def test_redshift_pause_resume_trigger_serialization():
         "operation_type": "pause_cluster",
         "final_cluster_snapshot_identifier": None,
         "skip_final_cluster_snapshot": True,
+        "cluster_status_fetch_interval_seconds": 10,
     }
 
 
