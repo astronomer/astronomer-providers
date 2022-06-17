@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 from airflow.triggers.base import TriggerEvent
+from google.api_core.exceptions import NotFound
 from google.cloud import dataproc
 from google.cloud.dataproc_v1 import Cluster, Job
 from google.cloud.dataproc_v1.types import JobStatus
@@ -11,6 +12,7 @@ from google.cloud.dataproc_v1.types import JobStatus
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
+    DataprocDeleteClusterTrigger,
     DataProcSubmitTrigger,
 )
 
@@ -253,6 +255,116 @@ async def test_run_timeout():
         metadata=(),
     )
 
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert actual == TriggerEvent({"status": "error", "message": "Timeout"})
+
+
+def test_dataproc_delete_cluster_trigger_serialization():
+    """
+    asserts that the DataprocDeleteClusterTrigger correctly serializes its arguments
+    and classpath.
+    """
+    trigger = DataprocDeleteClusterTrigger(
+        project_id=TEST_PROJECT_ID,
+        region=TEST_REGION,
+        cluster_name="test_cluster",
+        gcp_conn_id=TEST_GCP_CONN_ID,
+        polling_interval=TEST_POLLING_INTERVAL,
+        end_time=100,
+        metadata=(),
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.google.cloud.triggers.dataproc.DataprocDeleteClusterTrigger"
+    assert kwargs == {
+        "project_id": TEST_PROJECT_ID,
+        "region": TEST_REGION,
+        "cluster_name": "test_cluster",
+        "gcp_conn_id": TEST_GCP_CONN_ID,
+        "polling_interval": TEST_POLLING_INTERVAL,
+        "end_time": 100,
+        "metadata": (),
+    }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+async def test_delete_cluster_run_pending(mock_get_cluster):
+    """assert that run method wait when cluster being is deleting"""
+    mock_get_cluster.return_value = Cluster(
+        cluster_name="test_cluster",
+        status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.DELETING),
+    )
+
+    trigger = DataprocDeleteClusterTrigger(
+        project_id=TEST_PROJECT_ID,
+        region=TEST_REGION,
+        cluster_name="test_cluster",
+        polling_interval=TEST_POLLING_INTERVAL,
+        end_time=time.monotonic() + 100,
+        metadata=(),
+    )
+
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+async def test_delete_run_success(mock_get_cluster):
+    """assert that run method yield correctly when cluster is deleted"""
+    mock_get_cluster.side_effect = NotFound("Cluster deleted")
+
+    trigger = DataprocDeleteClusterTrigger(
+        project_id=TEST_PROJECT_ID,
+        region=TEST_REGION,
+        cluster_name="test_cluster",
+        polling_interval=TEST_POLLING_INTERVAL,
+        end_time=time.monotonic() + 100,
+        metadata=(),
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert actual == TriggerEvent({"status": "success", "message": ""})
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+async def test_delete_run_exception(mock_get_cluster):
+    """assert that run method raise exception when get_cluster call fail"""
+    mock_get_cluster.side_effect = Exception("Cluster deletion fail")
+
+    trigger = DataprocDeleteClusterTrigger(
+        project_id=TEST_PROJECT_ID,
+        region=TEST_REGION,
+        cluster_name="test_cluster",
+        polling_interval=TEST_POLLING_INTERVAL,
+        end_time=time.monotonic() + 100,
+        metadata=(),
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert actual == TriggerEvent({"status": "error", "message": "Cluster deletion fail"})
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+async def test_delete_run_timeout(mock_get_cluster):
+    """assert that run method timeout when end_time > start time"""
+    mock_get_cluster.side_effect = Exception("Cluster deletion fail")
+
+    trigger = DataprocDeleteClusterTrigger(
+        project_id=TEST_PROJECT_ID,
+        region=TEST_REGION,
+        cluster_name="test_cluster",
+        polling_interval=TEST_POLLING_INTERVAL,
+        end_time=time.monotonic() - 100,
+        metadata=(),
+    )
     generator = trigger.run()
     actual = await generator.asend(None)
     assert actual == TriggerEvent({"status": "error", "message": "Timeout"})

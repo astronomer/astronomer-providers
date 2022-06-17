@@ -4,9 +4,6 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import models
-from airflow.providers.google.cloud.operators.dataproc import (
-    DataprocDeleteClusterOperator,
-)
 from airflow.providers.google.cloud.operators.gcs import (
     GCSCreateBucketOperator,
     GCSDeleteBucketOperator,
@@ -14,6 +11,7 @@ from airflow.providers.google.cloud.operators.gcs import (
 
 from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
+    DataprocDeleteClusterOperatorAsync,
     DataprocSubmitJobOperatorAsync,
 )
 
@@ -165,7 +163,7 @@ with models.DAG(
     )
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START how_to_cloud_dataproc_delete_cluster_operator]
-    delete_cluster = DataprocDeleteClusterOperator(
+    delete_cluster = DataprocDeleteClusterOperatorAsync(
         task_id="delete_cluster",
         project_id=PROJECT_ID,
         cluster_name=CLUSTER_NAME,
