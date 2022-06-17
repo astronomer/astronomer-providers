@@ -9,6 +9,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
+    RedshiftDeleteClusterOperatorAsync,
     RedshiftPauseClusterOperatorAsync,
     RedshiftResumeClusterOperatorAsync,
 )
@@ -16,17 +17,18 @@ from astronomer.providers.amazon.aws.sensors.redshift_cluster import (
     RedshiftClusterSensorAsync,
 )
 
+AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
+AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "**********")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "***********")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+REDSHIFT_CLUSTER_DB_NAME = os.getenv("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
 REDSHIFT_CLUSTER_IDENTIFIER = os.getenv("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
 REDSHIFT_CLUSTER_MASTER_USER = os.getenv("REDSHIFT_CLUSTER_MASTER_USER", "awsuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.getenv("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
-REDSHIFT_CLUSTER_DB_NAME = os.getenv("REDSHIFT_CLUSTER_DB_NAME", "astro_dev")
-REDSHIFT_CLUSTER_TYPE = os.getenv("REDSHIFT_CLUSTER_TYPE", "single-node")
 REDSHIFT_CLUSTER_NODE_TYPE = os.getenv("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "**********")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "***********")
-AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
-AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
-EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+REDSHIFT_CLUSTER_TYPE = os.getenv("REDSHIFT_CLUSTER_TYPE", "single-node")
+
 
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
@@ -146,34 +148,6 @@ def delete_redshift_cluster_snapshot_callable() -> None:
         time.sleep(30)
 
 
-def delete_redshift_cluster_callable() -> None:
-    """Delete a redshift cluster and wait until it completely removed"""
-    import boto3
-    from botocore.exceptions import ClientError
-
-    client = boto3.client("redshift")
-
-    try:
-        client.delete_cluster(
-            ClusterIdentifier=REDSHIFT_CLUSTER_IDENTIFIER,
-            SkipFinalClusterSnapshot=True,
-        )
-
-        while get_cluster_status() == "deleting":
-            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
-            time.sleep(30)
-
-    except ClientError as exception:
-        if exception.response.get("Error", {}).get("Code", "") == "ClusterNotFound":
-            logging.error(
-                "Cluster might have already been deleted. Error message is: %s",
-                exception.response["Error"]["Message"],
-            )
-        else:
-            logging.exception("Error deleting redshift cluster")
-            raise
-
-
 with DAG(
     dag_id="example_async_redshift_cluster_management",
     start_date=datetime(2022, 1, 1),
@@ -232,11 +206,16 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    delete_redshift_cluster = PythonOperator(
+    # [START howto_operator_redshift_delete_cluster_async]
+    delete_redshift_cluster = RedshiftDeleteClusterOperatorAsync(
         task_id="delete_redshift_cluster",
-        python_callable=delete_redshift_cluster_callable,
         trigger_rule="all_done",
+        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
+        aws_conn_id=AWS_CONN_ID,
+        skip_final_cluster_snapshot=True,
+        final_cluster_snapshot_identifier=None,
     )
+    # [END howto_operator_redshift_delete_cluster_async]
 
     end = DummyOperator(task_id="end")
 
