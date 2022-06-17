@@ -13,6 +13,83 @@ TASK_ID = "redshift_trigger_check"
 POLLING_PERIOD_SECONDS = 1.0
 
 
+def test_redshift_cluster_delete_trigger_serialization():
+    """
+    Asserts that the RedshiftClusterTrigger correctly serializes its arguments
+    and classpath for delete cluster operation.
+    """
+    trigger = RedshiftClusterTrigger(
+        task_id=TASK_ID,
+        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        aws_conn_id="test_redshift_conn_id",
+        cluster_identifier="mock_cluster_identifier",
+        operation_type="delete_cluster",
+    )
+    classpath, kwargs = trigger.serialize()
+    assert classpath == "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger"
+    assert kwargs == {
+        "task_id": TASK_ID,
+        "polling_period_seconds": POLLING_PERIOD_SECONDS,
+        "aws_conn_id": "test_redshift_conn_id",
+        "cluster_identifier": "mock_cluster_identifier",
+        "operation_type": "delete_cluster",
+        "final_cluster_snapshot_identifier": None,
+        "skip_final_cluster_snapshot": True,
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "operation_type,return_value,response",
+    [
+        (
+            "delete_cluster",
+            {"status": "error", "message": "test error"},
+            TriggerEvent({"status": "error", "message": "test error"}),
+        ),
+        (
+            "delete_cluster",
+            {"status": "success", "cluster_state": "cluster_not_found"},
+            TriggerEvent({"status": "success", "cluster_state": "cluster_not_found"}),
+        ),
+        ("delete_cluster", None, TriggerEvent({"status": "error", "message": f"{TASK_ID} failed"})),
+    ],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.delete_cluster")
+async def test_redshift_cluster_delete_trigger_run(
+    mock_delete_cluster, operation_type, return_value, response
+):
+    """Test RedshiftClusterTrigger delete cluster with success"""
+    mock_delete_cluster.return_value = return_value
+    trigger = RedshiftClusterTrigger(
+        task_id=TASK_ID,
+        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        aws_conn_id="test_redshift_conn_id",
+        cluster_identifier="mock_cluster_identifier",
+        operation_type=operation_type,
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert response == actual
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.delete_cluster")
+async def test_redshift_cluster_delete_trigger_failure(mock_delete_cluster):
+    """Test RedshiftClusterTrigger delete cluster with failure status"""
+    mock_delete_cluster.side_effect = Exception("Test exception")
+    trigger = RedshiftClusterTrigger(
+        task_id=TASK_ID,
+        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        aws_conn_id="test_redshift_conn_id",
+        cluster_identifier="mock_cluster_identifier",
+        operation_type="delete_cluster",
+    )
+    task = [i async for i in trigger.run()]
+    assert len(task) == 1
+    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+
 def test_redshift_cluster_resume_trigger_serialization():
     """
     Asserts that the RedshiftClusterTrigger correctly serializes its arguments
@@ -33,6 +110,8 @@ def test_redshift_cluster_resume_trigger_serialization():
         "aws_conn_id": "test_redshift_conn_id",
         "cluster_identifier": "mock_cluster_identifier",
         "operation_type": "resume_cluster",
+        "final_cluster_snapshot_identifier": None,
+        "skip_final_cluster_snapshot": True,
     }
 
 
@@ -108,6 +187,8 @@ def test_redshift_pause_resume_trigger_serialization():
         "aws_conn_id": "test_redshift_conn_id",
         "cluster_identifier": "mock_cluster_identifier",
         "operation_type": "pause_cluster",
+        "final_cluster_snapshot_identifier": None,
+        "skip_final_cluster_snapshot": True,
     }
 
 

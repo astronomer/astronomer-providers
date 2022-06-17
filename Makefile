@@ -27,8 +27,11 @@ clean: ## Remove all the containers along with volumes
 build: ## Build the Docker image (ignoring cache)
 	docker build -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
 
-build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS containers example DAG (ignoring cache)
-	docker build -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest --no-cache
+build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS containers example DAG
+	docker build -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest
+
+build-aws: ## Build the Docker image with aws-cli installed
+	docker build -f dev/Dockerfile.aws . -t astronomer-providers-dev:latest
 
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d

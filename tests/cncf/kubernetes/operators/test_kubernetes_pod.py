@@ -53,6 +53,7 @@ def test_raise_for_trigger_status_done():
 KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
 
 
+@mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
@@ -66,11 +67,13 @@ def test_get_logs_running(
     raise_for_trigger_status,
     get_kube_client,
     cleanup,
+    mock_client,
 ):
     """When logs fetch exits with status running, raise task deferred"""
     pod = MagicMock()
     find_pod.return_value = pod
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+    mock_client.return_value = {}
     context = create_context(op)
     await_pod_completion.return_value = None
     fetch_container_logs.return_value = PodLoggingStatus(True, None)
@@ -79,6 +82,7 @@ def test_get_logs_running(
     fetch_container_logs.is_called_with(pod, "base")
 
 
+@mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
 @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
@@ -92,9 +96,11 @@ def test_get_logs_not_running(
     raise_for_trigger_status,
     get_kube_client,
     cleanup,
+    mock_client,
 ):
     pod = MagicMock()
     find_pod.return_value = pod
+    mock_client.return_value = {}
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     context = create_context(op)
     await_pod_completion.return_value = None
