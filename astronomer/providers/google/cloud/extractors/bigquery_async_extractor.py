@@ -1,11 +1,9 @@
 import json
-import logging
 from typing import Any, List, Optional, Union
 
 import attr
 from airflow.exceptions import AirflowException
 from airflow.models.taskinstance import TaskInstance
-from airflow.utils.log.logging_mixin import LoggingMixin
 from google.cloud.bigquery import Client
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
 from openlineage.airflow.utils import get_job_name
@@ -22,8 +20,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperatorAsync,
 )
 
-log = logging.getLogger(__name__)
-
 
 @attr.s
 class SqlContext:
@@ -35,7 +31,7 @@ class SqlContext:
     parser_error: Optional[str] = attr.ib(default=None)
 
 
-class BigQueryAsyncExtractor(BaseExtractor, LoggingMixin):
+class BigQueryAsyncExtractor(BaseExtractor):
     """
     This extractor provides visibility on the metadata of a BigQuery Insert Job
     including ``billedBytes``, ``rowCount``, ``size``, etc. submitted from a
