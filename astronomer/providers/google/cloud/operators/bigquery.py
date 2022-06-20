@@ -164,6 +164,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             gcp_conn_id=self.gcp_conn_id,
         )
         job = self._submit_job(hook, job_id="")
+        context["ti"].xcom_push(key="job_id", value=job.job_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryCheckTrigger(
@@ -282,6 +283,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         self.hook = hook
         job = self._submit_job(hook, job_id="", configuration=configuration)
         self.job_id = job.job_id
+        context["ti"].xcom_push(key="job_id", value=self.job_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryGetDataTrigger(
@@ -361,10 +363,10 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
         self.log.info("Executing SQL check: %s", self.sql1)
         job_1 = self._submit_job(hook, sql=self.sql1, job_id="")
+        context["ti"].xcom_push(key="job_id", value=job_1.job_id)
 
         self.log.info("Executing SQL check: %s", self.sql2)
         job_2 = self._submit_job(hook, sql=self.sql2, job_id="")
-
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryIntervalCheckTrigger(
@@ -426,7 +428,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         job = self._submit_job(hook, job_id="")
-
+        context["ti"].xcom_push(key="job_id", value=job.job_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=BigQueryValueCheckTrigger(
