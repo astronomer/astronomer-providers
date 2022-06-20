@@ -13,6 +13,7 @@ from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
     DataprocDeleteClusterOperatorAsync,
     DataprocSubmitJobOperatorAsync,
+    DataprocUpdateClusterOperatorAsync,
 )
 
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
@@ -36,6 +37,12 @@ CLUSTER_CONFIG = {
 }
 
 # [END how_to_cloud_dataproc_create_cluster]
+
+
+CLUSTER_UPDATE = {"config": {"worker_config": {"num_instances": 2}}}
+UPDATE_MASK = {
+    "paths": ["config.worker_config.num_instances", "config.secondary_worker_config.num_instances"]
+}
 
 TIMEOUT = {"seconds": 1 * 24 * 60 * 60}
 
@@ -109,7 +116,7 @@ with models.DAG(
     schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    default_args=default_args,
+    # default_args=default_args,
     tags=["example", "async", "dataproc"],
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
@@ -121,6 +128,18 @@ with models.DAG(
         cluster_name=CLUSTER_NAME,
     )
     # [END how_to_cloud_dataproc_create_cluster_operator]
+
+    # [START how_to_cloud_dataproc_update_cluster_operator_async]
+    update_cluster = DataprocUpdateClusterOperatorAsync(
+        task_id="update_cluster",
+        cluster_name=CLUSTER_NAME,
+        cluster=CLUSTER_UPDATE,
+        update_mask=UPDATE_MASK,
+        graceful_decommission_timeout=TIMEOUT,
+        project_id=PROJECT_ID,
+        region=REGION,
+    )
+    # [END how_to_cloud_dataproc_update_cluster_operator_async]
 
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
@@ -179,6 +198,14 @@ with models.DAG(
     )
     # [END howto_delete_buckettask]
 
-    create_cluster >> create_bucket
-    create_cluster >> pig_task >> hive_task >> delete_cluster >> delete_bucket
-    create_cluster >> spark_task >> spark_sql_task >> hadoop_task >> delete_cluster >> delete_bucket
+    create_cluster >> update_cluster >> create_bucket
+    create_cluster >> update_cluster >> pig_task >> hive_task >> delete_cluster >> delete_bucket
+    (
+        create_cluster
+        >> update_cluster
+        >> spark_task
+        >> spark_sql_task
+        >> hadoop_task
+        >> delete_cluster
+        >> delete_bucket
+    )

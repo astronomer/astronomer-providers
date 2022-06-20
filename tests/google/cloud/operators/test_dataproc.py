@@ -225,7 +225,9 @@ def test_dataproc_operator_update_cluster_execute_complete_success():
         update_mask={},
     )
     assert (
-        task.execute_complete(context=context, event={"status": "success", "data": cluster, "message": ""})
+        task.execute_complete(
+            context=context, event={"status": "success", "data": cluster, "cluster_name": "test_cluster"}
+        )
         is None
     )
 

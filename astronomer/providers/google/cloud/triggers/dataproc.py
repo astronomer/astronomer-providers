@@ -75,7 +75,9 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                     metadata=self.metadata,
                 )
                 if cluster.status.state == cluster.status.State.RUNNING:
-                    yield TriggerEvent({"status": "success", "data": cluster, "message": ""})
+                    yield TriggerEvent(
+                        {"status": "success", "data": cluster, "cluster_name": self.cluster_name}
+                    )
                 self.log.info(
                     "Cluster status is %s. Sleeping for %s seconds.",
                     cluster.status.state,

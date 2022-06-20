@@ -367,7 +367,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
         successful.
         """
         if event and event["status"] == "success":
-            self.log.info("Updated %s cluster.", event["data"].cluster_name)
+            self.log.info("Updated %s cluster.", event["cluster_name"])
             return
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
