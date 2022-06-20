@@ -91,6 +91,10 @@ Extras
      - ``pip install 'astronomer-providers[microsoft.azure]'``
      - Microsoft Azure
 
+   * - ``openlineage``
+     - ``pip install 'astronomer-providers[openlineage]'``
+     - Openlineage
+
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
