@@ -143,7 +143,7 @@ with models.DAG(
 
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
-        task_id="create_bucket1",
+        task_id="create_bucket",
         bucket_name=BUCKET,
         project_id=PROJECT_ID,
         resource={

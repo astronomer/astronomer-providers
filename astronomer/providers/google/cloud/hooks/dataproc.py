@@ -29,18 +29,7 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
         :param region: The Cloud Dataproc region in which to handle the request.
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
-        if location is not None:
-            warnings.warn(
-                "Parameter `location` will be deprecated. "
-                "Please provide value through `region` parameter instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            region = location
-        client_options = ClientOptions()
-        if region and region != "global":
-            client_options = ClientOptions(api_endpoint=f"{region}-dataproc.googleapis.com:443")
-
+        client_options, region = self._get_client_options_and_region(region=region, location=location)
         return ClusterControllerAsyncClient(
             credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
         )
@@ -54,18 +43,7 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
         :param region: The Cloud Dataproc region in which to handle the request.
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
-        if location is not None:
-            warnings.warn(
-                "Parameter `location` will be deprecated. "
-                "Please provide value through `region` parameter instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            region = location
-        client_options = ClientOptions()
-        if region and region != "global":
-            client_options = ClientOptions(api_endpoint=f"{region}-dataproc.googleapis.com:443")
-
+        client_options, region = self._get_client_options_and_region(region=region, location=location)
         return JobControllerAsyncClient(
             credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
         )
@@ -121,18 +99,7 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
             ``retry`` is specified, the timeout applies to each individual attempt.
         :param metadata: Additional metadata that is provided to the method.
         """
-        if region is None:
-            if location is not None:
-                warnings.warn(
-                    "Parameter `location` will be deprecated. "
-                    "Please provide value through `region` parameter instead.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                region = location
-            else:
-                raise TypeError("missing 1 required keyword argument: 'region'")
-        client = self.get_job_client(region=region)
+        client = self.get_job_client(region=region, location=location)
         job = await client.get_job(
             request={"project_id": project_id, "region": region, "job_id": job_id},
             retry=retry,
@@ -140,3 +107,25 @@ class DataprocHookAsync(GoogleBaseHook, ABC):
             metadata=metadata,
         )
         return job
+
+    def _get_client_options_and_region(
+        self, region: Optional[str] = None, location: Optional[str] = None
+    ) -> Tuple[ClientOptions, Optional[str]]:
+        """
+        Checks for location if present or not and creates a client options using the provided region/location
+
+        :param region: Required. The Cloud Dataproc region in which to handle the request.
+        :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
+        """
+        if location is not None:
+            warnings.warn(
+                "Parameter `location` will be deprecated. "
+                "Please provide value through `region` parameter instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            region = location
+        client_options = ClientOptions()
+        if region and region != "global":
+            client_options = ClientOptions(api_endpoint=f"{region}-dataproc.googleapis.com:443")
+        return client_options, region
