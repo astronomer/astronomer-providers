@@ -195,7 +195,9 @@ async def test_run_running(mock_get_cluster):
 
     generator = trigger.run()
     actual = await generator.asend(None)
-    assert actual == TriggerEvent({"status": "success", "data": cluster, "message": ""})
+    assert actual == TriggerEvent(
+        {"status": "success", "data": Cluster.to_dict(cluster), "cluster_name": "test_cluster"}
+    )
 
 
 @pytest.mark.asyncio
