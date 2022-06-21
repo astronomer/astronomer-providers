@@ -5,6 +5,7 @@ from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from google.api_core.exceptions import NotFound
+from google.cloud.dataproc_v1 import Cluster
 from google.cloud.dataproc_v1.types import JobStatus
 
 # TODO: Fix the import once it fully migrated to use async lib
@@ -76,7 +77,11 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                 )
                 if cluster.status.state == cluster.status.State.RUNNING:
                     yield TriggerEvent(
-                        {"status": "success", "data": cluster, "cluster_name": self.cluster_name}
+                        {
+                            "status": "success",
+                            "data": Cluster.to_dict(cluster),
+                            "cluster_name": self.cluster_name,
+                        }
                     )
                 self.log.info(
                     "Cluster status is %s. Sleeping for %s seconds.",

@@ -276,7 +276,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
 
 class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
     """
-    Updates a cluster in a project.
+    Updates an existing cluster in a Google cloud platform project.
 
     :param region: Required. The Cloud Dataproc region in which to handle the request.
     :param project_id: Optional. The ID of the Google Cloud project the cluster belongs to.
