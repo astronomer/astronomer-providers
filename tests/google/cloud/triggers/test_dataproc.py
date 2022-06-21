@@ -176,7 +176,7 @@ def test_dataproc_create_cluster_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_run_running(mock_get_cluster):
     """assert that run method yield correctly when cluster is running"""
     cluster = Cluster(
@@ -201,7 +201,7 @@ async def test_run_running(mock_get_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_run_pending(mock_get_cluster):
     """assert that run method wait when cluster being is creating"""
     mock_get_cluster.return_value = Cluster(
@@ -227,7 +227,7 @@ async def test_run_pending(mock_get_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_run_exception(mock_get_cluster):
     """assert that run method raise exception when get_cluster call fail"""
     mock_get_cluster.side_effect = Exception("Fail to fetch cluster")
@@ -290,7 +290,7 @@ def test_dataproc_delete_cluster_trigger_serialization():
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_delete_cluster_run_pending(mock_get_cluster):
     """assert that run method wait when cluster being is deleting"""
     mock_get_cluster.return_value = Cluster(
@@ -316,7 +316,7 @@ async def test_delete_cluster_run_pending(mock_get_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_delete_run_success(mock_get_cluster):
     """assert that run method yield correctly when cluster is deleted"""
     mock_get_cluster.side_effect = NotFound("Cluster deleted")
@@ -335,7 +335,7 @@ async def test_delete_run_success(mock_get_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_delete_run_exception(mock_get_cluster):
     """assert that run method raise exception when get_cluster call fail"""
     mock_get_cluster.side_effect = Exception("Cluster deletion fail")
@@ -354,7 +354,7 @@ async def test_delete_run_exception(mock_get_cluster):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.google.cloud.hooks.dataproc_async.DataprocHookAsync.get_cluster")
+@mock.patch("astronomer.providers.google.cloud.hooks.dataproc.DataprocHookAsync.get_cluster")
 async def test_delete_run_timeout(mock_get_cluster):
     """assert that run method timeout when end_time > start time"""
     mock_get_cluster.side_effect = Exception("Cluster deletion fail")

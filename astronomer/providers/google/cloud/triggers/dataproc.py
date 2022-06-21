@@ -8,11 +8,7 @@ from google.api_core.exceptions import NotFound
 from google.cloud.dataproc_v1 import Cluster
 from google.cloud.dataproc_v1.types import JobStatus
 
-# TODO: Fix the import once it fully migrated to use async lib
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
-from astronomer.providers.google.cloud.hooks.dataproc_async import (
-    DataprocHookAsync as DataprocAsyncHook,
-)
 
 
 class DataprocCreateClusterTrigger(BaseTrigger, ABC):
@@ -66,7 +62,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Check the status of cluster until reach the terminal state"""
-        hook = DataprocAsyncHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
         while self.end_time > time.monotonic():
             try:
                 cluster = await hook.get_cluster(
@@ -145,7 +141,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger, ABC):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Wait until cluster is deleted completely"""
-        hook = DataprocAsyncHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
         while self.end_time > time.monotonic():
             try:
                 cluster = await hook.get_cluster(

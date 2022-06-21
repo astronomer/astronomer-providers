@@ -16,7 +16,6 @@ from airflow.providers.google.cloud.operators.dataproc import (
 )
 from airflow.utils.context import Context
 
-from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
     DataprocDeleteClusterTrigger,
@@ -234,9 +233,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self.log.info("Submitting job \n %s", self.job)
-        self.hook = DataprocHookAsync(
-            gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain
-        )
+        self.hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         job_object = self.hook.submit_job(
             project_id=self.project_id,
             region=self.region,
