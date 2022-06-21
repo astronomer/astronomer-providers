@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from snowflake.connector import ProgrammingError
 from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -95,8 +96,22 @@ class TestPytestSnowflakeHookAsync:
         conn = mock_conn.return_value
         conn.is_still_running.side_effect = Exception("Test exception")
         result = await hook.get_query_status(query_ids=["uuid1"])
-        print(result)
         assert result == {"status": "error", "message": "Connection Errors", "type": "ERROR"}
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    async def test_get_query_status_programming_error(self, mock_conn):
+        """Test get_query_status async with Programming Error"""
+        hook = SnowflakeHookAsync()
+        conn = mock_conn.return_value
+        conn.is_still_running.return_value = False
+        conn.get_query_status.side_effect = ProgrammingError("Connection Errors")
+        result = await hook.get_query_status(query_ids=["uuid1"])
+        assert result == {
+            "status": "error",
+            "message": "Programming Error: Connection Errors",
+            "type": "ERROR",
+        }
 
     @pytest.mark.parametrize(
         "query_ids",

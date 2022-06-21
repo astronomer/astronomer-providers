@@ -56,6 +56,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         with closing(self.get_conn()) as conn:
             self.set_autocommit(conn, autocommit)
 
+            self.log.info("SQL statement to be executed: %s ", sql)
             if isinstance(sql, str):
                 split_statements_tuple = split_statements(StringIO(sql))
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
@@ -123,7 +124,6 @@ class SnowflakeHookAsync(SnowflakeHook):
                     return {"status": "success", "query_ids": sfqid}
             except ProgrammingError as err:
                 error_message = "Programming Error: {0}".format(err)
-                self.log.error("error_message ", error_message)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:
             self.log.exception("Unexpected error when retrieving query status:")
