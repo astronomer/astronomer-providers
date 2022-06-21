@@ -116,7 +116,7 @@ with models.DAG(
     schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    # default_args=default_args,
+    default_args=default_args,
     tags=["example", "async", "dataproc"],
 ) as dag:
     # [START how_to_cloud_dataproc_create_cluster_operator]
