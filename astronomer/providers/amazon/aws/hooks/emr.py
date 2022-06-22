@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from botocore.exceptions import ClientError
 
-from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
+from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 
 
 class EmrContainerHookAsync(AwsBaseHookAsync):

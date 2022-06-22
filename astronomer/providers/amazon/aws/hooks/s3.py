@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Set
 from aiobotocore.client import AioBaseClient
 from botocore.exceptions import ClientError
 
-from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
+from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 
 
 class S3HookAsync(AwsBaseHookAsync):

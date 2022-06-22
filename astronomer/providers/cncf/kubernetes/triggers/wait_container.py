@@ -13,9 +13,7 @@ from airflow.utils import timezone
 from kubernetes_asyncio.client import CoreV1Api
 from pendulum import DateTime
 
-from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
-    KubernetesHookAsync,
-)
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
 
 
 class PodLaunchTimeoutException(AirflowException):

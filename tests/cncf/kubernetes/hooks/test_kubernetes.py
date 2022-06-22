@@ -3,9 +3,7 @@ from unittest import mock
 import pytest
 from kubernetes_asyncio import client
 
-from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
-    KubernetesHookAsync,
-)
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
 
 
 @pytest.mark.asyncio
@@ -49,7 +47,7 @@ async def test_kubernetes__load_config(
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes_async.KubernetesHookAsync._load_config")
+@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync._load_config")
 async def test_get_api_client_async(mock__load_config):
     mock__load_config.return_value = client.ApiClient()
 

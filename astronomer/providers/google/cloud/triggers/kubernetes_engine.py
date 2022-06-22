@@ -7,9 +7,7 @@ from airflow.providers.google.cloud.operators.kubernetes_engine import (
 from airflow.triggers.base import TriggerEvent
 from kubernetes_asyncio.client import CoreV1Api
 
-from astronomer.providers.cncf.kubernetes.hooks.kubernetes_async import (
-    KubernetesHookAsync,
-)
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
