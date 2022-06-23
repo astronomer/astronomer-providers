@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from airflow.models import Connection
 from kubernetes_asyncio import client
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
@@ -59,3 +60,29 @@ async def test_get_api_client_async(mock__load_config):
     )
     kube_client = await hook.get_api_client_async()
     assert isinstance(kube_client, client.ApiClient)
+
+
+@pytest.mark.asyncio
+@mock.patch("kubernetes_asyncio.config.load_kube_config")
+@mock.patch("airflow.hooks.base.BaseHook.get_connection")
+async def test_load_config_with_conn_id(mock_get_connection, load_kube_config):
+    hook = KubernetesHookAsync(conn_id="test_conn")
+    mock_get_connection.return_value = Connection(
+        conn_id="test_conn",
+        extra={},
+    )
+    await hook._load_config()
+    load_kube_config.assert_awaited()
+
+
+@pytest.mark.asyncio
+@mock.patch("kubernetes_asyncio.config.load_incluster_config")
+@mock.patch("airflow.hooks.base.BaseHook.get_connection")
+async def test_load_config_with_in_cluster(mock_get_connection, load_incluster_config):
+    hook = KubernetesHookAsync(in_cluster=True)
+    mock_get_connection.return_value = Connection(
+        conn_id="test_conn",
+        extra={"kubernetes": {"in_cluster": True}},
+    )
+    await hook._load_config()
+    load_incluster_config.assert_called_once()
