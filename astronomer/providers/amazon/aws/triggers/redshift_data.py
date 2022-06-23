@@ -42,7 +42,9 @@ class RedshiftDataTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Make async connection and execute query using the Amazon Redshift Data API."""
-        hook = RedshiftDataHook(aws_conn_id=self.aws_conn_id)
+        hook = RedshiftDataHook(
+            aws_conn_id=self.aws_conn_id, polling_period_seconds=self.polling_period_seconds
+        )
         try:
             response = await hook.get_query_status(self.query_ids)
             if response:

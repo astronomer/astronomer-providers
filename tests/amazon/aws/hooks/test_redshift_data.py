@@ -54,6 +54,18 @@ async def test_get_query_status(
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.is_still_running")
+async def test_get_query_status_with_sleep(mock_is_still_running, mock_conn):
+    hook = RedshiftDataHook()
+    mock_is_still_running.side_effect = [True, False]
+    describe_statement_response = {"Status": "FINISHED"}
+    mock_conn.return_value.describe_statement.return_value = describe_statement_response
+    response = await hook.get_query_status(["uuid"])
+    assert response == {"status": "success", "completed_ids": ["uuid"]}
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.is_still_running")
 async def test_get_query_status_exception(mock_is_still_running, mock_conn):
     hook = RedshiftDataHook()
     mock_is_still_running.return_value = False
@@ -312,5 +324,26 @@ def test_get_conn_params_exception(mock_get_connection, connection_details, test
     mock_get_connection.return_value = mock_conn
 
     hook = RedshiftDataHook(client_type="redshift-data")
+    with pytest.raises(AirflowException):
+        hook.get_conn_params()
+
+
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_connection")
+def test_get_conn_params_aws_conn_id_unset_exception(mock_get_connection):
+    response = json.dumps(
+        {
+            "access_key_id": "",
+            "secret_access_key": "",
+            "db_user": "test_user",
+            "cluster_identifier": "",
+            "region_name": "",
+            "database": "",
+        }
+    )
+    mock_conn = Connection(extra=response)
+    mock_get_connection.return_value = mock_conn
+
+    hook = RedshiftDataHook(client_type="redshift-data")
+    hook.aws_conn_id = None
     with pytest.raises(AirflowException):
         hook.get_conn_params()

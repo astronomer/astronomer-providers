@@ -39,8 +39,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         query_ids, response = redshift_data_hook.execute_query(sql=self.sql, params=self.params)
         self.log.info("Query IDs %s", query_ids)
         if response.get("status") == "error":
-            self.execute_complete({}, response)
-            return
+            self.execute_complete(context, event=response)
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftDataTrigger(
@@ -60,7 +59,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}".format(event["message"])
+                msg = "context: {0}, error message: {1}".format(context, event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)

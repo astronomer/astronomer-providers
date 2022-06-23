@@ -27,14 +27,16 @@ class RedshiftDataHook(AwsBaseHook):
     :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
     :param config: Configuration for botocore client.
         (https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html)
+    :param polling_period_seconds: polling period in seconds to check for the status
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, polling_period_seconds: int = 0, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"
         kwargs["resource_type"] = "redshift-data"
         super().__init__(*args, **kwargs)
         self.client_type = client_type
+        self.polling_period_seconds = polling_period_seconds
 
     def get_conn_params(self) -> Dict[str, Union[str, int]]:
         """Helper method to retrieve connection args"""
@@ -134,7 +136,7 @@ class RedshiftDataHook(AwsBaseHook):
             completed_ids: List[str] = []
             for query_id in query_ids:
                 while await self.is_still_running(query_id):
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(self.polling_period_seconds)
                 res = client.describe_statement(Id=query_id)
                 if res["Status"] == "FINISHED":
                     completed_ids.append(query_id)
