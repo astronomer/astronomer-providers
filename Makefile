@@ -40,7 +40,7 @@ docs:  ## Build the docs using Sphinx
 	cd docs && make clean html && cd .. && echo "Documentation built in $(shell pwd)/docs/_build/html/index.html"
 
 restart: ## Restart Triggerer & Scheduler container
-	docker-compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler
+	docker-compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler airflow-worker
 
 restart-all: ## Restart all the containers
 	docker-compose -f dev/docker-compose.yaml restart
