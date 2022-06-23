@@ -18,7 +18,7 @@ class RedshiftDataTrigger(BaseTrigger):
     def __init__(
         self,
         task_id: str,
-        polling_period_seconds: float,
+        polling_period_seconds: int,
         aws_conn_id: str,
         query_ids: List[str],
     ):
