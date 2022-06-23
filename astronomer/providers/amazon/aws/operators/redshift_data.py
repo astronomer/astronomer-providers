@@ -64,7 +64,5 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
-                return None
         else:
             self.log.info("%s completed successfully.", self.task_id)
-            return None
