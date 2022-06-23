@@ -15,6 +15,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocUpdateClusterOperator,
 )
 from airflow.utils.context import Context
+from google.api_core.exceptions import AlreadyExists
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -74,17 +75,25 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
     def execute(self, context: Context) -> None:  # type: ignore[override]
         """Call create cluster API and defer to DataprocCreateClusterTrigger to check the status"""
         hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
-        hook.create_cluster(
-            region=self.region,
-            project_id=self.project_id,
-            cluster_name=self.cluster_name,
-            cluster_config=self.cluster_config,
-            labels=self.labels,
-            request_id=self.request_id,
-            retry=self.retry,
-            timeout=self.timeout,
-            metadata=self.metadata,
+        DataprocLink.persist(
+            context=context, task_instance=self, url=DATAPROC_CLUSTER_LINK, resource=self.cluster_name
         )
+        try:
+            hook.create_cluster(
+                region=self.region,
+                project_id=self.project_id,
+                cluster_name=self.cluster_name,
+                cluster_config=self.cluster_config,
+                labels=self.labels,
+                request_id=self.request_id,
+                retry=self.retry,
+                timeout=self.timeout,
+                metadata=self.metadata,
+            )
+        except AlreadyExists:
+            if not self.use_if_exists:
+                raise
+            self.log.info("Cluster already exists.")
 
         end_time: float = time.monotonic() + self.timeout
 
@@ -95,6 +104,9 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
                 cluster_name=self.cluster_name,
                 end_time=end_time,
                 metadata=self.metadata,
+                delete_on_error=self.delete_on_error,
+                cluster_config=self.cluster_config,
+                labels=self.labels,
                 gcp_conn_id=self.gcp_conn_id,
                 polling_interval=self.polling_interval,
             ),

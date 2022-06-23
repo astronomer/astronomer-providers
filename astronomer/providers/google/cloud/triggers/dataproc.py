@@ -1,12 +1,14 @@
 import asyncio
 import time
 from abc import ABC
-from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
 
+from airflow.exceptions import AirflowException
+from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from google.api_core.exceptions import NotFound
 from google.cloud.dataproc_v1 import Cluster
-from google.cloud.dataproc_v1.types import JobStatus
+from google.cloud.dataproc_v1.types import JobStatus, clusters
 
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 
@@ -32,6 +34,9 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         cluster_name: str,
         end_time: float,
         metadata: Sequence[Tuple[str, str]] = (),
+        delete_on_error: bool = True,
+        cluster_config: Optional[Union[Dict[str, Any], clusters.Cluster]] = None,
+        labels: Optional[Dict[str, str]] = None,
         gcp_conn_id: str = "google_cloud_default",
         polling_interval: float = 5.0,
         **kwargs: Any,
@@ -42,6 +47,9 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         self.cluster_name = cluster_name
         self.end_time = end_time
         self.metadata = metadata
+        self.delete_on_error = delete_on_error
+        self.cluster_config = cluster_config
+        self.labels = labels
         self.gcp_conn_id = gcp_conn_id
         self.polling_interval = polling_interval
 
@@ -55,6 +63,9 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                 "cluster_name": self.cluster_name,
                 "end_time": self.end_time,
                 "metadata": self.metadata,
+                "delete_on_error": self.delete_on_error,
+                "cluster_config": self.cluster_config,
+                "labels": self.labels,
                 "gcp_conn_id": self.gcp_conn_id,
                 "polling_interval": self.polling_interval,
             },
@@ -62,15 +73,9 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Check the status of cluster until reach the terminal state"""
-        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
         while self.end_time > time.monotonic():
             try:
-                cluster = await hook.get_cluster(
-                    region=self.region,  # type: ignore[arg-type]
-                    cluster_name=self.cluster_name,
-                    project_id=self.project_id,  # type: ignore[arg-type]
-                    metadata=self.metadata,
-                )
+                cluster = await self._get_cluster()
                 if cluster.status.state == cluster.status.State.RUNNING:
                     yield TriggerEvent(
                         {
@@ -79,6 +84,11 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                             "cluster_name": self.cluster_name,
                         }
                     )
+                elif cluster.status.state == cluster.status.State.DELETING:
+                    await self._wait_for_deleting()
+                    self._create_cluster()
+                    await self._handle_error(cluster)
+
                 self.log.info(
                     "Cluster status is %s. Sleeping for %s seconds.",
                     cluster.status.state,
@@ -89,6 +99,82 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
         yield TriggerEvent({"status": "error", "message": "Timeout"})
+
+    async def _handle_error(self, cluster: clusters.Cluster) -> None:
+        if cluster.status.state != cluster.status.State.ERROR:
+            return
+        self.log.info("Cluster is in ERROR state")
+        gcs_uri = self._diagnose_cluster()
+        self.log.info("Diagnostic information for cluster %s available at: %s", self.cluster_name, gcs_uri)
+        if self.delete_on_error:
+            self._delete_cluster()
+            await self._wait_for_deleting()
+            raise AirflowException(
+                "Cluster was created but was in ERROR state. \n"
+                " Diagnostic information for cluster %s available at: %s",
+                self.cluster_name,
+                gcs_uri,
+            )
+        raise AirflowException(
+            "Cluster was created but is in ERROR state. \n "
+            "Diagnostic information for cluster %s available at: %s",
+            self.cluster_name,
+            gcs_uri,
+        )
+
+    def _delete_cluster(self) -> None:
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook.delete_cluster(
+            project_id=self.project_id,
+            region=self.region,
+            cluster_name=self.cluster_name,
+            metadata=self.metadata,
+        )
+
+    async def _wait_for_deleting(self) -> None:
+        while self.end_time > time.monotonic():
+            try:
+                cluster = await self._get_cluster()
+                if cluster.status.State.DELETING:
+                    self.log.info(
+                        "Cluster status is %s. Sleeping for %s seconds.",
+                        cluster.status.state,
+                        self.polling_interval,
+                    )
+                    await asyncio.sleep(self.polling_interval)
+            except NotFound:
+                return
+            except Exception as e:
+                raise e
+
+    def _create_cluster(self) -> Any:
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        return hook.create_cluster(
+            region=self.region,
+            project_id=self.project_id,
+            cluster_name=self.cluster_name,
+            cluster_config=self.cluster_config,
+            labels=self.labels,
+            metadata=self.metadata,
+        )
+
+    async def _get_cluster(self) -> clusters.Cluster:
+        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
+        return await hook.get_cluster(
+            region=self.region,  # type: ignore[arg-type]
+            cluster_name=self.cluster_name,
+            project_id=self.project_id,  # type: ignore[arg-type]
+            metadata=self.metadata,
+        )
+
+    def _diagnose_cluster(self) -> Any:
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        return hook.diagnose_cluster(
+            project_id=self.project_id,
+            region=self.region,
+            cluster_name=self.cluster_name,
+            metadata=self.metadata,
+        )
 
 
 class DataprocDeleteClusterTrigger(BaseTrigger, ABC):
