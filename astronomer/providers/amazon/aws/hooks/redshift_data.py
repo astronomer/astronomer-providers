@@ -1,3 +1,4 @@
+import asyncio
 from io import StringIO
 from typing import Any, Dict, Iterable, List, Tuple, Union
 
@@ -5,6 +6,7 @@ import botocore.exceptions
 from airflow.exceptions import AirflowException
 from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
+from asgiref.sync import sync_to_async
 from snowflake.connector.util_text import split_statements
 
 
@@ -118,3 +120,48 @@ class RedshiftDataHook(AwsBaseHook):
             return query_ids, {"status": "success", "message": "success"}
         except botocore.exceptions.ClientError as error:
             return [], {"status": "error", "message": str(error)}
+
+    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
+        """
+        Async function to get the Query status by query Ids.
+        The function takes list of query_ids, makes async connection to redshift data to get the query status
+        by query id and returns the query status.
+
+        :param query_ids: list of query ids
+        """
+        try:
+            client = await sync_to_async(self.get_conn)()
+            completed_ids: List[str] = []
+            for query_id in query_ids:
+                while await self.is_still_running(query_id):
+                    await asyncio.sleep(1)
+                res = client.describe_statement(Id=query_id)
+                if res["Status"] == "FINISHED":
+                    completed_ids.append(query_id)
+                elif res["Status"] == "FAILED":
+                    msg = "Error: " + res["QueryString"] + " query Failed due to, " + res["Error"]
+                    return {"status": "error", "message": msg, "query_id": query_id, "type": res["Status"]}
+                elif res["Status"] == "ABORTED":
+                    return {
+                        "status": "error",
+                        "message": "The query run was stopped by the user.",
+                        "query_id": query_id,
+                        "type": res["Status"],
+                    }
+            return {"status": "success", "completed_ids": completed_ids}
+        except botocore.exceptions.ClientError as error:
+            return {"status": "error", "message": str(error), "type": "ERROR"}
+
+    async def is_still_running(self, qid: str) -> Union[bool, Dict[str, str]]:
+        """
+        Async function to check whether the query is still running to return True or in
+        "PICKED", "STARTED" or "SUBMITTED" state to return False.
+        """
+        try:
+            client = await sync_to_async(self.get_conn)()
+            desc = client.describe_statement(Id=qid)
+            if desc["Status"] in ["PICKED", "STARTED", "SUBMITTED"]:
+                return True
+            return False
+        except botocore.exceptions.ClientError as error:
+            return {"status": "error", "message": str(error), "type": "ERROR"}
