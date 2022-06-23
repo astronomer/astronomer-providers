@@ -1,4 +1,4 @@
-from typing import Any, Dict, cast
+from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_data import RedshiftDataOperator
@@ -24,7 +24,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
     def __init__(
         self,
         *,
-        poll_interval: float = 5,
+        poll_interval: int = 5,
         **kwargs: Any,
     ) -> None:
         self.poll_interval = poll_interval
@@ -36,7 +36,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         defers trigger to poll for the status for the queries executed.
         """
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.aws_conn_id)
-        query_ids, response = redshift_data_hook.execute_query(sql=cast(str, self.sql), params=self.params)
+        query_ids, response = redshift_data_hook.execute_query(sql=self.sql, params=self.params)
         self.log.info("Query IDs %s", query_ids)
         if response.get("status") == "error":
             self.execute_complete({}, response)
