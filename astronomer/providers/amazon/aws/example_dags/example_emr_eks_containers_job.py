@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import Any
 
 from airflow import DAG
@@ -56,6 +56,55 @@ def create_emr_virtual_cluster_func(task_instance: Any) -> None:
             },
         )
         task_instance.xcom_push(key="virtual_cluster_id", value=response["id"])
+    except ClientError as error:
+        logging.exception("Error while creating EMR virtual cluster")
+        raise error
+
+
+def get_cluster() -> None:
+    """Get all virtual cluster in the namespace and if it is still running delete it"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("emr-containers")
+    try:
+        response = client.list_virtual_clusters(id=VIRTUAL_CLUSTER_ID)
+        if response and "virtualClusters" in response:
+            for cluster in response["virtualClusters"]:
+                if cluster["name"] == VIRTUAL_CLUSTER_NAME and cluster["state"] == "RUNNING":
+                    delete_emr_virtual_cluster_func(cluster["id"])
+    except ClientError as error:
+        logging.exception("Error while creating EMR virtual cluster")
+        raise error
+
+
+def delete_emr_virtual_cluster_func(virtual_cluster_id) -> None:
+    """Delete EMR virtual cluster in container"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("emr-containers")
+    try:
+        client.delete_virtual_cluster(id=virtual_cluster_id)
+        while get_cluster_status(virtual_cluster_id) == "TERMINATING":
+            logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
+            time.sleep(30)
+    except ClientError as error:
+        logging.exception("Error while deleting EMR virtual cluster")
+        raise error
+
+
+def get_cluster_status(virtual_cluster_id):
+    """Describe virtual cluster status"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("emr-containers")
+    try:
+        response = client.describe_virtual_cluster(id=virtual_cluster_id)
+        if response and "virtualCluster" in response:
+            return response["virtualCluster"]["state"]
+        return response
     except ClientError as error:
         logging.exception("Error while creating EMR virtual cluster")
         raise error
@@ -171,6 +220,12 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    # Task to Delete EMR virtual cluster if in cas its still not deleted
+    delete_emr_virtual_cluster = PythonOperator(
+        task_id="delete_emr_virtual_cluster",
+        python_callable=delete_emr_virtual_cluster_func,
+    )
+
     (
         setup_aws_config
         >> create_eks_cluster_kube_namespace_with_role
@@ -178,4 +233,5 @@ with DAG(
         >> run_emr_container_job
         >> emr_job_container_sensor
         >> remove_cluster_container_role_policy
+        >> delete_emr_virtual_cluster
     )
