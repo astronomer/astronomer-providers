@@ -220,7 +220,7 @@ def test_execute_force_rerun(mock_hook):
     )
 
     with pytest.raises(AirflowException) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     expected_exception_msg = (
         f"Job with id: {real_job_id} already exists and is in {job.state} state. "
