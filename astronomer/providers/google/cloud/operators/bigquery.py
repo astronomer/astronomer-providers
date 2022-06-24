@@ -93,7 +93,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             logical_date=context["logical_date"],
             configuration=self.configuration,
             force_rerun=self.force_rerun,
-        )
+        )  # type: ignore[attr-defined]
 
         try:
             job = self._submit_job(hook, job_id)
