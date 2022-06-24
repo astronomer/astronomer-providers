@@ -144,6 +144,50 @@ def test_bigquery_insert_job_operator_execute_complete():
 
 
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+def test_bigquery_insert_job_operator_with_job_id_generate(mock_hook):
+    job_id = "123456"
+    hash_ = "hash"
+    real_job_id = f"{job_id}_{hash_}"
+
+    configuration = {
+        "query": {
+            "query": "SELECT * FROM any",
+            "useLegacySql": False,
+        }
+    }
+
+    mock_hook.return_value.insert_job.side_effect = Conflict("any")
+    job = MagicMock(
+        job_id=real_job_id,
+        error_result=False,
+        state="PENDING",
+        done=lambda: False,
+    )
+    mock_hook.return_value.get_job.return_value = job
+
+    op = BigQueryInsertJobOperatorAsync(
+        task_id="insert_query_job",
+        configuration=configuration,
+        location=TEST_DATASET_LOCATION,
+        job_id=job_id,
+        project_id=TEST_GCP_PROJECT_ID,
+        reattach_states={"PENDING"},
+    )
+
+    with pytest.raises(TaskDeferred):
+        op.execute(create_context(op))
+
+    mock_hook.return_value.generate_job_id.assert_called_once_with(
+        job_id=job_id,
+        dag_id="adhoc_airflow",
+        task_id="insert_query_job",
+        logical_date=datetime(2022, 1, 1, 0, 0),
+        configuration=configuration,
+        force_rerun=True,
+    )
+
+
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 def test_execute_reattach(mock_hook):
     job_id = "123456"
     hash_ = "hash"

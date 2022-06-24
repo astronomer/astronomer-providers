@@ -86,7 +86,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
-        job_id = self.hook.generate_job_id(  # type: ignore[attr-defined]
+        job_id = self.hook.generate_job_id(
             job_id=self.job_id,
             dag_id=self.dag_id,
             task_id=self.task_id,
