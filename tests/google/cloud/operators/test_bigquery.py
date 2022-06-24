@@ -148,7 +148,6 @@ def test_execute_reattach(mock_hook):
     job_id = "123456"
     hash_ = "hash"
     real_job_id = f"{job_id}_{hash_}"
-    # mock_md5.return_value = job_id
     mock_hook.return_value.generate_job_id.return_value = f"{job_id}_{hash_}"
 
     configuration = {
