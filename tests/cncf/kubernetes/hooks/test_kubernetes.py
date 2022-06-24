@@ -104,11 +104,25 @@ async def test_load_config_with_more_than_one_config(mock_get_connection):
 @pytest.mark.asyncio
 @mock.patch("kubernetes_asyncio.config.load_kube_config")
 @mock.patch("airflow.hooks.base.BaseHook.get_connection")
-async def test_load_config_with_kubeconfig_path(mock_get_connection, load_kube_config):
+async def test_load_config_with_kube_config_path(mock_get_connection, load_kube_config):
     hook = KubernetesHookAsync(in_cluster=False)
     mock_get_connection.return_value = Connection(
         conn_id="test_conn",
-        extra={"kubernetes": {"kubeconfig_path": "config_file"}},
+        extra={"kubernetes": {"kube_config_path": "config_file"}},
+    )
+    actual = await hook._load_config()
+    load_kube_config.assert_awaited()
+    isinstance(actual, client.ApiClient)
+
+
+@pytest.mark.asyncio
+@mock.patch("kubernetes_asyncio.config.load_kube_config")
+@mock.patch("airflow.hooks.base.BaseHook.get_connection")
+async def test_load_config_with_kube_config(mock_get_connection, load_kube_config):
+    hook = KubernetesHookAsync(in_cluster=False)
+    mock_get_connection.return_value = Connection(
+        conn_id="test_conn",
+        extra={"kubernetes": {"kube_config": "config_file"}},
     )
     actual = await hook._load_config()
     load_kube_config.assert_awaited()
