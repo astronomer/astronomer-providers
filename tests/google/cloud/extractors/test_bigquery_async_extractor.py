@@ -75,11 +75,11 @@ def context():
 
 def create_context(task):
     dag = DAG(dag_id="dag")
-    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    logical_date = datetime(2022, 1, 1, 0, 0, 0)
     dag_run = DagRun(
         dag_id=dag.dag_id,
-        execution_date=execution_date,
-        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
+        execution_date=logical_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, logical_date),
     )
     task_instance = TaskInstance(task=task)
     task_instance.dag_run = dag_run
@@ -91,6 +91,7 @@ def create_context(task):
         "task": task,
         "ti": task_instance,
         "task_instance": task_instance,
+        "logical_date": logical_date,
     }
 
 
