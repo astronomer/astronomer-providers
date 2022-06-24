@@ -25,8 +25,9 @@ class AwsBaseHookAsync(AwsBaseHook):
     :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
     :param config: Configuration for botocore client.
 
-    For more information about param
-    .. seealso:: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html
+    .. seealso::
+
+        `AWS API <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html>`_
     """
 
     async def get_client_async(self) -> AioBaseClient:
