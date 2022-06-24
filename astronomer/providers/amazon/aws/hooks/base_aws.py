@@ -20,16 +20,13 @@ class AwsBaseHookAsync(AwsBaseHook):
         empty, then default boto3 configuration would be used (and must be
         maintained on each worker node).
     :param verify: Whether or not to verify SSL certificates.
-
-    . seealso::
-
-        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html
-
     :param region_name: AWS region_name. If not specified then the default boto3 behaviour is used.
     :param client_type: boto3.client client_type. Eg 's3', 'emr' etc
     :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
     :param config: Configuration for botocore client.
-        (https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html)
+
+    For more information about the format refer to
+    .. seealso:: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html
     """
 
     async def get_client_async(self) -> AioBaseClient:
