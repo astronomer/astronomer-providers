@@ -54,14 +54,14 @@ class AwsBaseHookAsync(AwsBaseHook):
                 extra_config.get("s3_config_format"),
                 extra_config.get("profile"),
             )
-            self.log.info("Credentials retrieved from extra_config['s3_config_file']")
+            self.log.info("Credentials retrieved from extra_config['s3_config_file']")  # pragma: no cover
         else:
             self.log.info("No credentials retrieved from Connection")
 
         region_name = self.region_name
         if self.region_name is None and "region_name" in extra_config:
             self.log.info("Retrieving region_name from Connection.extra_config['region_name']")
-            region_name = extra_config["region_name"]
+            region_name = extra_config["region_name"]  # pragma: no cover
 
         async_connection = get_session()
         return async_connection.create_client(
