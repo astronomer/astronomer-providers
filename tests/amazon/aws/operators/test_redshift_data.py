@@ -13,11 +13,6 @@ TEST_PARAMETERS = {}
 TEST_TASK_ID = "123"
 TEST_SQL = "select * from any"
 
-# cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-# db_user=REDSHIFT_CLUSTER_MASTER_USER,
-# aws_conn_id=AWS_CONN_ID,
-# region=AWS_DEFAULT_REGION
-
 
 @pytest.fixture(scope="function")
 def context():
@@ -75,6 +70,11 @@ def test_redshift_data_op_async_execute_complete(event):
         sql=TEST_SQL,
         database=TEST_DATABASE,
     )
-    with mock.patch.object(task.log, "info") as mock_log_info:
-        task.execute_complete(context=None, event=event)
-    mock_log_info.assert_called_with("%s completed successfully.", TEST_TASK_ID)
+    if not event:
+        with pytest.raises(AirflowException) as exception_info:
+            task.execute_complete(context=None, event=None)
+        assert exception_info.value.args[0] == "Did not receive valid event from the trigerrer"
+    else:
+        with mock.patch.object(task.log, "info") as mock_log_info:
+            task.execute_complete(context=None, event=event)
+        mock_log_info.assert_called_with("%s completed successfully.", TEST_TASK_ID)

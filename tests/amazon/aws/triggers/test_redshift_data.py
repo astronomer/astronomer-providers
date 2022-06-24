@@ -7,7 +7,7 @@ from astronomer.providers.amazon.aws.triggers.redshift_data import RedshiftDataT
 
 TEST_CONN_ID = "aws_default"
 TEST_TASK_ID = "123"
-POLLING_PERIOD_SECONDS = 4.0
+POLL_INTERVAL = 4.0
 
 
 def test_redshift_data_trigger_serialization():
@@ -17,7 +17,7 @@ def test_redshift_data_trigger_serialization():
     """
     trigger = RedshiftDataTrigger(
         task_id=TEST_TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         aws_conn_id=TEST_CONN_ID,
         query_ids=[],
     )
@@ -25,7 +25,7 @@ def test_redshift_data_trigger_serialization():
     assert classpath == "astronomer.providers.amazon.aws.triggers.redshift_data.RedshiftDataTrigger"
     assert kwargs == {
         "task_id": TEST_TASK_ID,
-        "polling_period_seconds": POLLING_PERIOD_SECONDS,
+        "poll_interval": POLL_INTERVAL,
         "aws_conn_id": TEST_CONN_ID,
         "query_ids": [],
     }
@@ -51,7 +51,7 @@ async def test_redshift_data_trigger_run(mock_get_query_status, query_ids, retur
     mock_get_query_status.return_value = return_value
     trigger = RedshiftDataTrigger(
         task_id=TEST_TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         aws_conn_id=TEST_CONN_ID,
         query_ids=query_ids,
     )
@@ -76,7 +76,7 @@ async def test_redshift_data_trigger_exception(mock_get_query_status, query_ids)
 
     trigger = RedshiftDataTrigger(
         task_id=TEST_TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         aws_conn_id=TEST_CONN_ID,
         query_ids=query_ids,
     )

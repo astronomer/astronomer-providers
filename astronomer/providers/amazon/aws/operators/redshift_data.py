@@ -11,6 +11,8 @@ from astronomer.providers.amazon.aws.triggers.redshift_data import RedshiftDataT
 class RedshiftDataOperatorAsync(RedshiftDataOperator):
     """
     Executes SQL Statements against an Amazon Redshift cluster.
+    If there are multiple queries as part of the SQL, and one of them fails to reach a successful completion state,
+    the operator returns the relevant error for the failed query.
 
     :param sql: the SQL code to be executed as a single string, or
         a list of str (sql statements), or a reference to a template file.
@@ -44,7 +46,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             timeout=self.execution_timeout,
             trigger=RedshiftDataTrigger(
                 task_id=self.task_id,
-                polling_period_seconds=self.poll_interval,
+                poll_interval=self.poll_interval,
                 aws_conn_id=self.aws_conn_id,
                 query_ids=query_ids,
             ),
@@ -64,4 +66,4 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
         else:
-            self.log.info("%s completed successfully.", self.task_id)
+            raise AirflowException("Did not receive valid event from the trigerrer")

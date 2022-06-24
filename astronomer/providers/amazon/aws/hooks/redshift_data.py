@@ -27,16 +27,16 @@ class RedshiftDataHook(AwsBaseHook):
     :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
     :param config: Configuration for botocore client.
         (https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html)
-    :param polling_period_seconds: polling period in seconds to check for the status
+    :param poll_interval: polling period in seconds to check for the status
     """
 
-    def __init__(self, *args: Any, polling_period_seconds: int = 0, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, poll_interval: int = 0, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"
         kwargs["resource_type"] = "redshift-data"
         super().__init__(*args, **kwargs)
         self.client_type = client_type
-        self.polling_period_seconds = polling_period_seconds
+        self.poll_interval = poll_interval
 
     def get_conn_params(self) -> Dict[str, Union[str, int]]:
         """Helper method to retrieve connection args"""
@@ -127,7 +127,9 @@ class RedshiftDataHook(AwsBaseHook):
         """
         Async function to get the Query status by query Ids.
         The function takes list of query_ids, makes async connection to redshift data to get the query status
-        by query id and returns the query status.
+        by query id and returns the query status. In case of success, it returns a list of query IDs of the queries
+        that have a status `FINISHED`. In the case of partial failure meaning if any of queries fail or is aborted by
+        the user we return an error as a whole.
 
         :param query_ids: list of query ids
         """
@@ -136,7 +138,7 @@ class RedshiftDataHook(AwsBaseHook):
             completed_ids: List[str] = []
             for query_id in query_ids:
                 while await self.is_still_running(query_id):
-                    await asyncio.sleep(self.polling_period_seconds)
+                    await asyncio.sleep(self.poll_interval)
                 res = client.describe_statement(Id=query_id)
                 if res["Status"] == "FINISHED":
                     completed_ids.append(query_id)
