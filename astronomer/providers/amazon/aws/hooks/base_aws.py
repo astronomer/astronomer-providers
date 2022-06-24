@@ -47,7 +47,9 @@ class AwsBaseHookAsync(AwsBaseHook):
             aws_session_token = extra_config.get("aws_session_token")
             self.log.info("Credentials retrieved from extra_config")
         elif "s3_config_file" in extra_config:
-            aws_access_key_id, aws_secret_access_key = await sync_to_async(_parse_s3_config)(
+            aws_access_key_id, aws_secret_access_key = await sync_to_async(
+                _parse_s3_config
+            )(  # pragma: no cover
                 extra_config["s3_config_file"],
                 extra_config.get("s3_config_format"),
                 extra_config.get("profile"),
