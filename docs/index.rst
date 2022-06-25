@@ -7,6 +7,15 @@
   Home <self>
   Python API Reference <_api/index>
 
+Example
+-------
+
+.. toctree::
+  :hidden:
+  :maxdepth: 2
+
+    Async Example DAG <providers/index>
+
 Changelog
 ---------
 

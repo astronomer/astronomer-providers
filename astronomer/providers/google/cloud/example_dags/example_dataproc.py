@@ -119,7 +119,7 @@ with models.DAG(
     default_args=default_args,
     tags=["example", "async", "dataproc"],
 ) as dag:
-    # [START how_to_cloud_dataproc_create_cluster_operator]
+    # [START howto_operator_dataproc_create_cluster_async]
     create_cluster = DataprocCreateClusterOperatorAsync(
         task_id="create_cluster",
         project_id=PROJECT_ID,
@@ -127,9 +127,9 @@ with models.DAG(
         region=REGION,
         cluster_name=CLUSTER_NAME,
     )
-    # [END how_to_cloud_dataproc_create_cluster_operator]
+    # [END howto_operator_dataproc_create_cluster_async]
 
-    # [START how_to_cloud_dataproc_update_cluster_operator_async]
+    # [START howto_operator_dataproc_update_cluster_async]
     update_cluster = DataprocUpdateClusterOperatorAsync(
         task_id="update_cluster",
         cluster_name=CLUSTER_NAME,
@@ -139,7 +139,7 @@ with models.DAG(
         project_id=PROJECT_ID,
         region=REGION,
     )
-    # [END how_to_cloud_dataproc_update_cluster_operator_async]
+    # [END howto_operator_dataproc_update_cluster_async]
 
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
@@ -156,11 +156,12 @@ with models.DAG(
     )
     # [END howto_create_bucket_task]
 
-    # [START howto_DataprocSubmitJobOperatorAsync]
+    # [START howto_operator_dataproc_submit_pig_job_async]
     pig_task = DataprocSubmitJobOperatorAsync(
         task_id="pig_task", job=PIG_JOB, region=REGION, project_id=PROJECT_ID
     )
-    # [END howto_DataprocSubmitJobOperatorAsync]
+    # [END howto_operator_dataproc_submit_pig_job_async]
+
     # [START howto_DataprocSubmitJobOperatorAsync]
     spark_sql_task = DataprocSubmitJobOperatorAsync(
         task_id="spark_sql_task", job=SPARK_SQL_JOB, region=REGION, project_id=PROJECT_ID
@@ -181,7 +182,8 @@ with models.DAG(
         task_id="hadoop_task", job=HADOOP_JOB, region=REGION, project_id=PROJECT_ID
     )
     # [END howto_DataprocSubmitJobOperatorAsync]
-    # [START how_to_cloud_dataproc_delete_cluster_operator]
+
+    # [START howto_operator_dataproc_delete_cluster_async]
     delete_cluster = DataprocDeleteClusterOperatorAsync(
         task_id="delete_cluster",
         project_id=PROJECT_ID,
@@ -189,7 +191,8 @@ with models.DAG(
         region=REGION,
         trigger_rule="all_done",
     )
-    # [END how_to_cloud_dataproc_delete_cluster_operator]
+    # [END howto_operator_dataproc_delete_cluster_async]
+
     # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(
         task_id="delete_bucket",

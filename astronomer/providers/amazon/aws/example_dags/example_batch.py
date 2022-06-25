@@ -231,7 +231,7 @@ with DAG(
         python_callable=create_job_queue_func,
     )
 
-    # [START howto_operator_batch]
+    # [START howto_operator_batch_async]
     submit_batch_job = BatchOperatorAsync(
         task_id="submit_batch_job",
         job_name=JOB_NAME,
@@ -241,7 +241,7 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
         region_name=AWS_DEFAULT_REGION,
     )
-    # [END howto_operator_batch]
+    # [END howto_operator_batch_async]
 
     update_compute_environment = PythonOperator(
         task_id="update_compute_environment",

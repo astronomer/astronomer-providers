@@ -314,11 +314,11 @@ with DAG(
     )
     # [END run_pi_spark_without_polling_interval]
 
-    # [START run_py_example_with_polling_interval]
+    # [START howto_operator_livy_async_with_polling_interval]
     livy_python_task = LivyOperatorAsync(
         task_id="livy_python_task", file=LIVY_PYTHON_FILE, polling_interval=30
     )
-    # [END run_py_example_with_polling_interval]
+    # [END howto_operator_livy_async_with_polling_interval]
 
     # [START howto_operator_emr_terminate_job_flow]
     remove_cluster = EmrTerminateJobFlowOperator(

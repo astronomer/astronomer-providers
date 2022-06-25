@@ -28,13 +28,13 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
-    # [START howto_operator_external_task_sensor_async]
+    # [START howto_sensor_external_task_async]
     waiting_for_task = ExternalTaskSensorAsync(
         task_id="waiting_for_task",
         external_task_id="wait_for_me",
         external_dag_id="example_external_task",
     )
-    # [END howto_operator_external_task_sensor_async]
+    # [END howto_sensor_external_task_async]
 
     wait_for_me = PythonOperator(
         task_id="wait_for_me",
