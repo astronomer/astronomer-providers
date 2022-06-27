@@ -98,11 +98,11 @@ def test_bigquery_insert_job_operator_execute_failure(context):
 
 def create_context(task):
     dag = DAG(dag_id="dag")
-    execution_date = datetime(2022, 1, 1, 0, 0, 0)
+    logical_date = datetime(2022, 1, 1, 0, 0, 0)
     dag_run = DagRun(
         dag_id=dag.dag_id,
-        execution_date=execution_date,
-        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
+        execution_date=logical_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, logical_date),
     )
     task_instance = TaskInstance(task=task)
     task_instance.dag_run = dag_run
@@ -114,6 +114,7 @@ def create_context(task):
         "task": task,
         "ti": task_instance,
         "task_instance": task_instance,
+        "logical_date": logical_date,
     }
 
 
@@ -142,37 +143,56 @@ def test_bigquery_insert_job_operator_execute_complete():
     mock_log_info.assert_called_with("%s completed with response %s ", "insert_query_job", "Job completed")
 
 
-@mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
-@pytest.mark.parametrize(
-    "test_dag_id, expected_job_id",
-    [("test-dag-id-1.1", "airflow_test_dag_id_1_1_test_job_id_2020_01_23T00_00_00_00_00_hash")],
-    ids=["test-dag-id-1.1"],
-)
-def test_job_id_validity(mock_md5, test_dag_id, expected_job_id):
-    """Asserts that job id is correctly generated"""
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+def test_bigquery_insert_job_operator_with_job_id_generate(mock_hook):
+    job_id = "123456"
     hash_ = "hash"
-    mock_md5.return_value.hexdigest.return_value = hash_
-    context = {"logical_date": datetime(2020, 1, 23)}
+    real_job_id = f"{job_id}_{hash_}"
+
     configuration = {
         "query": {
             "query": "SELECT * FROM any",
             "useLegacySql": False,
         }
     }
-    with DAG(dag_id=test_dag_id, start_date=datetime(2020, 1, 23)):
-        op = BigQueryInsertJobOperatorAsync(
-            task_id="test_job_id", configuration=configuration, project_id=TEST_GCP_PROJECT_ID
-        )
-    assert op._job_id(context) == expected_job_id
+
+    mock_hook.return_value.insert_job.side_effect = Conflict("any")
+    job = MagicMock(
+        job_id=real_job_id,
+        error_result=False,
+        state="PENDING",
+        done=lambda: False,
+    )
+    mock_hook.return_value.get_job.return_value = job
+
+    op = BigQueryInsertJobOperatorAsync(
+        task_id="insert_query_job",
+        configuration=configuration,
+        location=TEST_DATASET_LOCATION,
+        job_id=job_id,
+        project_id=TEST_GCP_PROJECT_ID,
+        reattach_states={"PENDING"},
+    )
+
+    with pytest.raises(TaskDeferred):
+        op.execute(create_context(op))
+
+    mock_hook.return_value.generate_job_id.assert_called_once_with(
+        job_id=job_id,
+        dag_id="adhoc_airflow",
+        task_id="insert_query_job",
+        logical_date=datetime(2022, 1, 1, 0, 0),
+        configuration=configuration,
+        force_rerun=True,
+    )
 
 
-@mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
-def test_execute_reattach(mock_hook, mock_md5):
+def test_execute_reattach(mock_hook):
     job_id = "123456"
     hash_ = "hash"
     real_job_id = f"{job_id}_{hash_}"
-    mock_md5.return_value.hexdigest.return_value = hash_
+    mock_hook.return_value.generate_job_id.return_value = f"{job_id}_{hash_}"
 
     configuration = {
         "query": {
@@ -211,13 +231,12 @@ def test_execute_reattach(mock_hook, mock_md5):
     job._begin.assert_called_once_with()
 
 
-@mock.patch("airflow.providers.google.cloud.operators.bigquery.hashlib.md5")
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
-def test_execute_force_rerun(mock_hook, mock_md5):
+def test_execute_force_rerun(mock_hook):
     job_id = "123456"
     hash_ = "hash"
     real_job_id = f"{job_id}_{hash_}"
-    mock_md5.return_value.hexdigest.return_value = hash_
+    mock_hook.return_value.generate_job_id.return_value = f"{job_id}_{hash_}"
 
     configuration = {
         "query": {
@@ -245,7 +264,7 @@ def test_execute_force_rerun(mock_hook, mock_md5):
     )
 
     with pytest.raises(AirflowException) as exc:
-        op.execute(context)
+        op.execute(create_context(op))
 
     expected_exception_msg = (
         f"Job with id: {real_job_id} already exists and is in {job.state} state. "
