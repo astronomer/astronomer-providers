@@ -33,6 +33,9 @@ build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS
 build-aws: ## Build the Docker image with aws-cli installed
 	docker build -f dev/Dockerfile.aws . -t astronomer-providers-dev:latest
 
+build-google-cloud: ## Build the Docker image with google-cloud cli installed
+	docker build -f dev/Dockerfile.google_cloud . -t astronomer-providers-dev:latest
+
 build-run: ## Build the Docker Image & then run the containers
 	docker-compose -f dev/docker-compose.yaml up --build -d
 
