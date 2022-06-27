@@ -94,6 +94,7 @@ with DAG(
     amazon_task_info = [
         {"s3_sensor_dag": "example_s3_sensor"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
+        {"redshift_data_dag": "example_async_redshift_data"},
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
         {"batch_dag": "example_async_batch"},
     ]

@@ -1,3 +1,4 @@
+import asyncio
 from io import StringIO
 from typing import Any, Dict, Iterable, List, Tuple, Union
 
@@ -5,6 +6,7 @@ import botocore.exceptions
 from airflow.exceptions import AirflowException
 from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
+from asgiref.sync import sync_to_async
 from snowflake.connector.util_text import split_statements
 
 
@@ -25,14 +27,16 @@ class RedshiftDataHook(AwsBaseHook):
     :param resource_type: boto3.resource resource_type. Eg 'dynamodb' etc
     :param config: Configuration for botocore client.
         (https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html)
+    :param poll_interval: polling period in seconds to check for the status
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, poll_interval: int = 0, **kwargs: Any) -> None:
         client_type: str = "redshift-data"
         kwargs["client_type"] = "redshift-data"
         kwargs["resource_type"] = "redshift-data"
         super().__init__(*args, **kwargs)
         self.client_type = client_type
+        self.poll_interval = poll_interval
 
     def get_conn_params(self) -> Dict[str, Union[str, int]]:
         """Helper method to retrieve connection args"""
@@ -118,3 +122,50 @@ class RedshiftDataHook(AwsBaseHook):
             return query_ids, {"status": "success", "message": "success"}
         except botocore.exceptions.ClientError as error:
             return [], {"status": "error", "message": str(error)}
+
+    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
+        """
+        Async function to get the Query status by query Ids.
+        The function takes list of query_ids, makes async connection to redshift data to get the query status
+        by query id and returns the query status. In case of success, it returns a list of query IDs of the queries
+        that have a status `FINISHED`. In the case of partial failure meaning if any of queries fail or is aborted by
+        the user we return an error as a whole.
+
+        :param query_ids: list of query ids
+        """
+        try:
+            client = await sync_to_async(self.get_conn)()
+            completed_ids: List[str] = []
+            for query_id in query_ids:
+                while await self.is_still_running(query_id):
+                    await asyncio.sleep(self.poll_interval)
+                res = client.describe_statement(Id=query_id)
+                if res["Status"] == "FINISHED":
+                    completed_ids.append(query_id)
+                elif res["Status"] == "FAILED":
+                    msg = "Error: " + res["QueryString"] + " query Failed due to, " + res["Error"]
+                    return {"status": "error", "message": msg, "query_id": query_id, "type": res["Status"]}
+                elif res["Status"] == "ABORTED":
+                    return {
+                        "status": "error",
+                        "message": "The query run was stopped by the user.",
+                        "query_id": query_id,
+                        "type": res["Status"],
+                    }
+            return {"status": "success", "completed_ids": completed_ids}
+        except botocore.exceptions.ClientError as error:
+            return {"status": "error", "message": str(error), "type": "ERROR"}
+
+    async def is_still_running(self, qid: str) -> Union[bool, Dict[str, str]]:
+        """
+        Async function to check whether the query is still running to return True or in
+        "PICKED", "STARTED" or "SUBMITTED" state to return False.
+        """
+        try:
+            client = await sync_to_async(self.get_conn)()
+            desc = client.describe_statement(Id=qid)
+            if desc["Status"] in ["PICKED", "STARTED", "SUBMITTED"]:
+                return True
+            return False
+        except botocore.exceptions.ClientError as error:
+            return {"status": "error", "message": str(error), "type": "ERROR"}
