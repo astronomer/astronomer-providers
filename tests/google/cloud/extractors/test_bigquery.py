@@ -17,9 +17,7 @@ from openlineage.common.provider.bigquery import (
     BigQueryStatisticsDatasetFacet,
 )
 
-from astronomer.providers.google.cloud.extractors.bigquery_async_extractor import (
-    BigQueryAsyncExtractor,
-)
+from astronomer.providers.google.cloud.extractors.bigquery import BigQueryAsyncExtractor
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperatorAsync,
 )
@@ -95,7 +93,7 @@ def create_context(task):
     }
 
 
-@mock.patch("astronomer.providers.google.cloud.extractors.bigquery_async_extractor._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.extractors.bigquery._BigQueryHook")
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
 @mock.patch("airflow.models.TaskInstance.xcom_pull")
 @mock.patch("openlineage.common.provider.bigquery.BigQueryDatasetsProvider.get_facets")

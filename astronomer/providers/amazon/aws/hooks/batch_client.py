@@ -6,7 +6,7 @@ import botocore.exceptions
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.batch_client import BatchClientHook
 
-from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
+from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 
 
 class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):

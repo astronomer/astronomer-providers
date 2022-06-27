@@ -59,9 +59,7 @@ def test_serialization():
 @mock.patch(
     "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_pod_start"
 )
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.hooks.kubernetes_async.KubernetesHookAsync.get_api_client_async"
-)
+@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async")
 @mock.patch(
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
@@ -97,9 +95,7 @@ async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start):
 @mock.patch(
     "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_pod_start"
 )
-@mock.patch(
-    "astronomer.providers.cncf.kubernetes.hooks.kubernetes_async.KubernetesHookAsync.get_api_client_async"
-)
+@mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async")
 @mock.patch(
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )

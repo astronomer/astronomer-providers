@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 import botocore.exceptions
 
-from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
+from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 
 
 class RedshiftHookAsync(AwsBaseHookAsync):

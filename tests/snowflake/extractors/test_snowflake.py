@@ -13,9 +13,7 @@ from openlineage.common.models import DbColumn, DbTableSchema
 from openlineage.common.sql import DbTableMeta
 from pkg_resources import parse_version
 
-from astronomer.providers.snowflake.extractors.snowflake_async_extractor import (
-    SnowflakeAsyncExtractor,
-)
+from astronomer.providers.snowflake.extractors.snowflake import SnowflakeAsyncExtractor
 from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
 
 CONN_ID = "food_delivery_db"
@@ -64,8 +62,8 @@ TASK = SnowflakeOperatorAsync(
 )
 
 
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_table_schemas")  # noqa
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_connection")
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
 def test_extract(get_connection, mock_get_table_schemas):
     source = Source(scheme="snowflake", authority="test_account", connection_url=CONN_URI_URIPARSED)
 
@@ -100,8 +98,8 @@ def test_extract(get_connection, mock_get_table_schemas):
 
 
 @pytest.mark.skipif(parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test")  # noqa
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_table_schemas")  # noqa
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_connection")
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
 def test_extract_query_id(get_connection, mock_get_table_schemas):
     mock_get_table_schemas.return_value = (
         [],
@@ -125,8 +123,8 @@ def test_extract_query_id(get_connection, mock_get_table_schemas):
 
 
 @pytest.mark.skipif(parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test")  # noqa
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_table_schemas")  # noqa
-@mock.patch("astronomer.providers.snowflake.extractors.snowflake_async_extractor.get_connection")
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
+@mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
 def test_extract_query_ids(get_connection, mock_get_table_schemas):
     mock_get_table_schemas.return_value = (
         [],
