@@ -12,13 +12,6 @@ RUN apt-get install -y --no-install-recommends \
 COPY setup.cfg ${AIRFLOW_HOME}/astronomer_providers/setup.cfg
 COPY pyproject.toml ${AIRFLOW_HOME}/astronomer_providers/pyproject.toml
 
-RUN apt-get update && \
-    apt-get install -y curl gnupg && \
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && \
-    apt-get update -y && \
-    apt-get install google-cloud-sdk -y
-
 
 RUN pip install -e "${AIRFLOW_HOME}/astronomer_providers[all,tests,mypy]"
 USER astro
