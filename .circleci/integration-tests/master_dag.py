@@ -160,7 +160,10 @@ with DAG(
     chain(*http_trigger_tasks)
 
     # Snowflake DAG
-    snowflake_task_info = [{"snowflake_dag": "example_snowflake"}]
+    snowflake_task_info = [
+        {"snowflake_dag": "example_snowflake"},
+        {"snowflake_sql_api_dag": "example_snowflake_sql_api"},
+    ]
     snowflake_trigger_tasks, ids = prepare_dag_dependency(snowflake_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
