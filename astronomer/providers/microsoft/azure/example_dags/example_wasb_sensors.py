@@ -25,7 +25,7 @@ default_args = {
 }
 
 
-def create_azure_data_storage_container_callable(container_name: str):
+def create_azure_data_storage_container_callable(container_name: str) -> None:
     """
     Creates an Azure Data Storage container.
 
@@ -39,7 +39,7 @@ def create_azure_data_storage_container_callable(container_name: str):
     hook.create_container(container_name)
 
 
-def delete_azure_data_storage_container_callable(container_name: str):
+def delete_azure_data_storage_container_callable(container_name: str) -> None:
     """
     Deletes the Azure Data Storage container.
 
@@ -51,7 +51,7 @@ def delete_azure_data_storage_container_callable(container_name: str):
     hook.delete_container(container_name)
 
 
-def upload_blob_callable(file_path: str, container_name: str, blob_name: str):
+def upload_blob_callable(file_path: str, container_name: str, blob_name: str) -> None:
     """
     Uploads the given example file as a blob in the given container.
 
@@ -77,7 +77,7 @@ def upload_blob_callable(file_path: str, container_name: str, blob_name: str):
         logging.warning("Blob exists already")
 
 
-def delete_blob_callable(container_name: str, blob_name: str):
+def delete_blob_callable(container_name: str, blob_name: str) -> None:
     """
     Deletes the blob from the given container.
 

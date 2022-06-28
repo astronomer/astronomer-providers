@@ -1,8 +1,9 @@
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
+from azure.storage.blob._models import BlobProperties
 from azure.storage.blob.aio import BlobClient, BlobServiceClient, ContainerClient
 
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
@@ -84,7 +85,9 @@ class WasbHookAsync(WasbHook):
         """
         return self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
-    async def check_for_blob(self, container_name: str, blob_name: str, **kwargs) -> bool:
+    async def check_for_blob(  # type: ignore[override]
+        self, container_name: str, blob_name: str, **kwargs: Any
+    ) -> bool:
         """
         Check if a blob exists on Azure Blob Storage.
 
@@ -109,14 +112,14 @@ class WasbHookAsync(WasbHook):
         """
         return self.blob_service_client.get_container_client(container_name)
 
-    async def get_blobs_list(
+    async def get_blobs_list(  # type: ignore[override]
         self,
         container_name: str,
         prefix: Optional[str] = None,
         include: Optional[List[str]] = None,
         delimiter: Optional[str] = "/",
-        **kwargs,
-    ) -> List:
+        **kwargs: Any,
+    ) -> List[BlobProperties]:
         """
         List blobs in a given container.
 
@@ -135,7 +138,7 @@ class WasbHookAsync(WasbHook):
             blob_list.append(blob.name)
         return blob_list
 
-    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs):
+    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
         """
         Check if a prefix exists on Azure Blob storage.
 
