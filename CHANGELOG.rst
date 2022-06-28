@@ -1,6 +1,69 @@
 Changelog
 =========
 
+1.6.0 (2022-06-28)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 5 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``DataprocCreateClusterOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.operators.dataproc import DataprocCreateClusterOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_dataproc.py>`__
+
+   * - ``DataprocDeleteClusterOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.operators.dataproc import DataprocDeleteClusterOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_dataproc.py>`__
+
+   * - ``DataprocUpdateClusterOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.google.cloud.operators.dataproc import DataprocUpdateClusterOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_dataproc.py>`__
+
+   * - ``RedshiftDataOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.redshift_data import RedshiftDataOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_redshift_data.py>`__
+
+   * - ``RedshiftDeleteClusterOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.redshift_cluster import RedshiftDeleteClusterOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_redshift_cluster_management.py>`__
+
+
+Enhancements
+""""""""""""
+
+- Implement OpenLineage custom extractor for BigQuery Async Operators
+  (`#429 <https://github.com/astronomer/astronomer-providers/pull/429>`_)
+- Add session specific query tag and OpenLineage Extractor for Snowflake Async operator
+  (`#437 <https://github.com/astronomer/astronomer-providers/pull/437>`_)
+- Handle ``DataprocCreateClusterOperatorAsync`` errors gracefully and add additional
+  functionality with ``use_if_exists`` and ``delete_on_error`` parameters
+  (`#448 <https://github.com/astronomer/astronomer-providers/pull/448>`_)
+
+Bug Fixes
+"""""""""
+
+- Fix ``BigQueryInsertJobOperatorAsync`` failure after Google provider upgrade to 8.1.0
+  (`#471 <https://github.com/astronomer/astronomer-providers/pull/471>`_)
+
 1.5.0 (2022-06-15)
 ------------------
 
