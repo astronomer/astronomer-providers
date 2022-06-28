@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -102,5 +103,65 @@ class BatchOperatorTrigger(BaseTrigger):
             else:
                 error_message = f"{self.job_id} failed"
                 yield TriggerEvent({"status": "error", "message": error_message})
+        except Exception as e:
+            yield TriggerEvent({"status": "error", "message": str(e)})
+
+
+class BatchSensorTrigger(BaseTrigger):
+    """
+    Checks for the state of a submitted job_id to AWS Batch is completed or not.
+    BatchSessorTrigger is fired as deferred class with params to poll the job state in Triggerer
+
+    :param job_id: the job ID, to poll for job completion or not
+    :param aws_conn_id: connection id of AWS credentials / region name. If None,
+        credential boto3 strategy will be used.
+    :param region_name: AWS region name to use .
+        Override the region_name in connection (if provided)
+    """
+
+    def __init__(
+        self,
+        job_id: str,
+        region_name: Optional[str],
+        aws_conn_id: Optional[str] = "aws_default",
+        polling_period_seconds: float = 5,
+    ):
+        super().__init__()
+        self.job_id = job_id
+        self.aws_conn_id = aws_conn_id
+        self.region_name = region_name
+        self.polling_period_seconds = polling_period_seconds
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes BatchOperatorTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.amazon.aws.triggers.batch.BatchSensorTrigger",
+            {
+                "job_id": self.job_id,
+                "aws_conn_id": self.aws_conn_id,
+                "region_name": self.region_name,
+                "polling_period_seconds": self.polling_period_seconds,
+            },
+        )
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """
+        Make async connection using aiobotocore library to AWS Batch,
+        periodically poll for the job description on the Triggerer
+
+        The status that indicates job completion are: 'SUCCEEDED'|'FAILED'.
+        """
+        hook = BatchClientHookAsync(job_id=self.job_id, aws_conn_id=self.aws_conn_id)
+        try:
+            while True:
+                response = await hook.get_job_description(self.job_id)
+                state = response["status"]
+                if state == BatchClientHookAsync.SUCCESS_STATE:
+                    success_message = f"{self.job_id} was completed successfully"
+                    yield TriggerEvent({"status": "success", "message": success_message})
+                if state == BatchClientHookAsync.FAILURE_STATE:
+                    error_message = f"{self.job_id} failed"
+                    yield TriggerEvent({"status": "error", "message": error_message})
+                await asyncio.sleep(self.polling_period_seconds)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
