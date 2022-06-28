@@ -1,7 +1,8 @@
 import logging
 import os
-from datetime import datetime, time, timedelta
-from typing import Any
+import time
+from datetime import datetime, timedelta
+from typing import Any, Optional
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
@@ -61,20 +62,45 @@ def create_emr_virtual_cluster_func(task_instance: Any) -> None:
         raise error
 
 
-def get_cluster() -> None:
+def delete_existing_cluster() -> None:
     """Get all virtual cluster in the namespace and if it is still running delete it"""
     import boto3
     from botocore.exceptions import ClientError
 
     client = boto3.client("emr-containers")
+    print("inside get cluster")
     try:
-        response = client.list_virtual_clusters(id=VIRTUAL_CLUSTER_ID)
+        response = client.list_virtual_clusters(
+            containerProviderId=EKS_CLUSTER_NAME, containerProviderType="EKS"
+        )
+        print("response of get cluster ", response)
         if response and "virtualClusters" in response:
             for cluster in response["virtualClusters"]:
+                print("cluster ", cluster)
                 if cluster["name"] == VIRTUAL_CLUSTER_NAME and cluster["state"] == "RUNNING":
                     delete_emr_virtual_cluster_func(cluster["id"])
+            delete_eks_cluster()
     except ClientError as error:
-        logging.exception("Error while creating EMR virtual cluster")
+        logging.exception("Error while deleting EMR virtual cluster")
+        raise error
+
+
+def delete_eks_cluster() -> None:
+    """Delete EKS cluster"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("eks")
+    try:
+        eks_status = get_eks_cluster_status(EKS_CLUSTER_NAME)
+        print("eks_status ", eks_status)
+        if eks_status and eks_status == "ACTIVE":
+            client.delete_cluster(name=EKS_CLUSTER_NAME)
+            while get_eks_cluster_status(EKS_CLUSTER_NAME) == "DELETING":
+                logging.info("Waiting for cluster to be deleted. Sleeping for 30 seconds.")
+                time.sleep(30)
+    except ClientError as error:
+        logging.info("Error while deleting EKS cluster")
         raise error
 
 
@@ -94,8 +120,23 @@ def delete_emr_virtual_cluster_func(virtual_cluster_id) -> None:
         raise error
 
 
-def get_cluster_status(virtual_cluster_id):
-    """Describe virtual cluster status"""
+def get_eks_cluster_status(cluster_name) -> Optional[str]:
+    """Describe EKS virtual cluster status"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("eks")
+    try:
+        response = client.describe_cluster(name=cluster_name)
+        if response and "cluster" in response:
+            return response["cluster"]["status"]
+        return None
+    except ClientError:
+        logging.info("No EKS cluster found")
+
+
+def get_cluster_status(virtual_cluster_id) -> str:
+    """Describe EMR virtual cluster status"""
     import boto3
     from botocore.exceptions import ClientError
 
@@ -104,7 +145,6 @@ def get_cluster_status(virtual_cluster_id):
         response = client.describe_virtual_cluster(id=virtual_cluster_id)
         if response and "virtualCluster" in response:
             return response["virtualCluster"]["state"]
-        return response
     except ClientError as error:
         logging.exception("Error while creating EMR virtual cluster")
         raise error
@@ -165,6 +205,13 @@ with DAG(
         f"JOB_EXECUTION_ROLE={JOB_EXECUTION_ROLE} "
         f"MANAGE_VIRTUAL_CLUSTERS={MANAGE_VIRTUAL_CLUSTERS}"
     )
+
+    # Task to delete EMR EKS virtual cluster as a pre step
+    delete_emr_eks_virtual_cluster_pre_step = PythonOperator(
+        task_id="delete_emr_eks_virtual_cluster_pre_step",
+        python_callable=delete_existing_cluster,
+    )
+
     create_eks_cluster_kube_namespace_with_role = BashOperator(
         task_id="create_eks_cluster_kube_namespace_with_role",
         bash_command=f"{create_cluster_environment_variables} "
@@ -220,14 +267,16 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    # Task to Delete EMR virtual cluster if in cas its still not deleted
+    # Task to Delete EMR EKS virtual cluster if in case it is still not deleted
     delete_emr_virtual_cluster = PythonOperator(
         task_id="delete_emr_virtual_cluster",
         python_callable=delete_emr_virtual_cluster_func,
+        trigger_rule="all_done",
     )
 
     (
         setup_aws_config
+        >> delete_emr_eks_virtual_cluster_pre_step
         >> create_eks_cluster_kube_namespace_with_role
         >> create_emr_virtual_cluster
         >> run_emr_container_job
