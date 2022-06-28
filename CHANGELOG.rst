@@ -7,7 +7,7 @@ Changelog
 New Operators
 """""""""""""
 
-This release adds the following 4 new async sensors/operators:
+This release adds the following 5 new async sensors/operators:
 
 .. list-table::
    :header-rows: 1
@@ -34,6 +34,12 @@ This release adds the following 4 new async sensors/operators:
         from astronomer.providers.google.cloud.operators.dataproc import DataprocUpdateClusterOperatorAsync
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/google/cloud/example_dags/example_dataproc.py>`__
 
+   * - ``RedshiftDataOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.redshift_data import RedshiftDataOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_redshift_data.py>`__
+
    * - ``RedshiftDeleteClusterOperatorAsync``
      - .. code-block:: python
 
@@ -48,6 +54,9 @@ Enhancements
   (`#429 <https://github.com/astronomer/astronomer-providers/pull/429>`_)
 - Add session specific query tag and OpenLineage Extractor for Snowflake Async operator
   (`#437 <https://github.com/astronomer/astronomer-providers/pull/437>`_)
+- Handle ``DataprocCreateClusterOperatorAsync`` errors gracefully and add additional
+  functionality with ``use_if_exists`` and ``delete_on_error`` parameters
+  (`#448 <https://github.com/astronomer/astronomer-providers/pull/448>`_)
 
 Bug Fixes
 """""""""
