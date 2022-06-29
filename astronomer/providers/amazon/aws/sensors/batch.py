@@ -9,7 +9,7 @@ from astronomer.providers.amazon.aws.triggers.batch import BatchSensorTrigger
 
 class BatchSensorAsync(BatchSensor):
     """
-    Asks for the JOB ID of the Batch Job execution asynchronously until it
+    Given a JOB ID of the Batch Job, executes asynchronously until it
     reaches a failure state or success state.
     If the job fails, the task will fail.
 
@@ -21,7 +21,17 @@ class BatchSensorAsync(BatchSensor):
     :param aws_conn_id: aws connection to use, defaults to 'aws_default'
     :param region_name: region name to use in AWS Hook.
         Override the region_name in connection (if provided)
+    :param poll_interval:  polling period in seconds to check for the status of the job.
     """
+
+    def __init__(
+        self,
+        *,
+        poll_interval: float = 5,
+        **kwargs: Any,
+    ):
+        self.poll_interval = poll_interval
+        super().__init__(**kwargs)
 
     def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
@@ -31,6 +41,7 @@ class BatchSensorAsync(BatchSensor):
                 job_id=self.job_id,
                 aws_conn_id=self.aws_conn_id,
                 region_name=self.region_name,
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
         )

@@ -5,7 +5,6 @@ import time
 from datetime import datetime
 from json import loads
 from os import environ
-from typing import Any
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
@@ -139,7 +138,7 @@ def get_job_queue_status() -> str:
         return "DELETED"
 
 
-def list_jobs_func() -> Any:
+def list_jobs_func() -> str:
     """Get the list of aws batch jobs for the particular Job Name"""
     import boto3
     from botocore.exceptions import ClientError
@@ -154,7 +153,9 @@ def list_jobs_func() -> Any:
     logging.info("%s", response)
     if response.get("jobSummaryList"):
         res = response.get("jobSummaryList")[0]
-        job_id = res.get("jobId")
+        job_id: str = res.get("jobId")
+    else:
+        job_id = "failed to fetch job id"
     return job_id
 
 

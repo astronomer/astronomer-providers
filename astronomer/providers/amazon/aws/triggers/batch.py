@@ -110,7 +110,7 @@ class BatchOperatorTrigger(BaseTrigger):
 class BatchSensorTrigger(BaseTrigger):
     """
     Checks for the state of a submitted job_id to AWS Batch is completed or not.
-    BatchSessorTrigger is fired as deferred class with params to poll the job state in Triggerer
+    BatchSensorTrigger is fired as deferred class with params to poll the job state in Triggerer
 
     :param job_id: the job ID, to poll for job completion or not
     :param aws_conn_id: connection id of AWS credentials / region name. If None,
@@ -124,30 +124,30 @@ class BatchSensorTrigger(BaseTrigger):
         job_id: str,
         region_name: Optional[str],
         aws_conn_id: Optional[str] = "aws_default",
-        polling_period_seconds: float = 5,
+        poll_interval: float = 5,
     ):
         super().__init__()
         self.job_id = job_id
         self.aws_conn_id = aws_conn_id
         self.region_name = region_name
-        self.polling_period_seconds = polling_period_seconds
+        self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BatchOperatorTrigger arguments and classpath."""
+        """Serializes BatchSensorTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.batch.BatchSensorTrigger",
             {
                 "job_id": self.job_id,
                 "aws_conn_id": self.aws_conn_id,
                 "region_name": self.region_name,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poll_interval": self.poll_interval,
             },
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
         Make async connection using aiobotocore library to AWS Batch,
-        periodically poll for the job description on the Triggerer
+        periodically poll for the job Batch job status
 
         The status that indicates job completion are: 'SUCCEEDED'|'FAILED'.
         """
@@ -162,6 +162,6 @@ class BatchSensorTrigger(BaseTrigger):
                 if state == BatchClientHookAsync.FAILURE_STATE:
                     error_message = f"{self.job_id} failed"
                     yield TriggerEvent({"status": "error", "message": error_message})
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poll_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

@@ -191,7 +191,7 @@ def test_batch_sensor_trigger_serialization():
         job_id=JOB_ID,
         region_name="eu-west-1",
         aws_conn_id="airflow_test",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.amazon.aws.triggers.batch.BatchSensorTrigger"
@@ -199,20 +199,20 @@ def test_batch_sensor_trigger_serialization():
         "job_id": JOB_ID,
         "region_name": "eu-west-1",
         "aws_conn_id": "airflow_test",
-        "polling_period_seconds": POLLING_PERIOD_SECONDS,
+        "poll_interval": POLLING_PERIOD_SECONDS,
     }
 
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.batch_client.BatchClientHookAsync.get_job_description")
 async def test_batch_sensor_trigger_run(mock_response):
-    """Test if the task is run is in trigger successfully."""
+    """Trigger the BatchSensorTrigger and check if the task is in running state."""
     mock_response.return_value = {"status": "RUNNABLE"}
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
         region_name="eu-west-1",
         aws_conn_id="airflow_test",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
