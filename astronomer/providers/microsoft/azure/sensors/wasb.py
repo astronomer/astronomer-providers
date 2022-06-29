@@ -65,7 +65,8 @@ class WasbBlobSensorAsync(WasbBlobSensor):
             if event["status"] == "error":
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
-        return None
+        else:
+            raise AirflowException("Did not receive valid event from the trigerrer")
 
 
 class WasbPrefixSensorAsync(WasbPrefixSensor):
@@ -130,4 +131,5 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
             if event["status"] == "error":
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
-        return None
+        else:
+            raise AirflowException("Did not receive valid event from the trigerrer")

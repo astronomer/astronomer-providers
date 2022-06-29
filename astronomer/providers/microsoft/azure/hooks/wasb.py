@@ -94,8 +94,6 @@ class WasbHookAsync(WasbHook):
         :param container_name: name of the container
         :param blob_name: name of the blob
         :param kwargs: optional keyword arguments for ``BlobClient.get_blob_properties`` takes
-        :return: True if the blob exists, False otherwise
-        :rtype: bool
         """
         try:
             await self._get_blob_client(container_name, blob_name).get_blob_properties(**kwargs)
@@ -108,7 +106,6 @@ class WasbHookAsync(WasbHook):
         Instantiates a container client.
 
         :param container_name: the name of the container
-        :return: ContainerClient
         """
         return self.blob_service_client.get_container_client(container_name)
 
@@ -145,8 +142,6 @@ class WasbHookAsync(WasbHook):
         :param container_name: Name of the container.
         :param prefix: Prefix of the blob.
         :param kwargs: Optional keyword arguments that ``ContainerClient.walk_blobs`` takes
-        :return: True if blobs matching the prefix exist, False otherwise.
-        :rtype: bool
         """
         blobs = await self.get_blobs_list(container_name=container_name, prefix=prefix, **kwargs)
         return len(blobs) > 0
