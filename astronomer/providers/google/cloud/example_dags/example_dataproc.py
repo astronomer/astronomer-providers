@@ -4,6 +4,11 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import models
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.gcs import (
+    GCSCreateBucketOperator,
+    GCSDeleteBucketOperator,
+)
 
 from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
@@ -137,6 +142,21 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_update_cluster_operator_async]
 
+    # [START howto_create_bucket_task]
+    create_bucket = GCSCreateBucketOperator(
+        task_id="create_bucket",
+        bucket_name=BUCKET,
+        project_id=PROJECT_ID,
+        resource={
+            "iamConfiguration": {
+                "uniformBucketLevelAccess": {
+                    "enabled": False,
+                },
+            },
+        },
+    )
+    # [END howto_create_bucket_task]
+
     # [START howto_DataprocSubmitJobOperatorAsync]
     pig_task = DataprocSubmitJobOperatorAsync(
         task_id="pig_task", job=PIG_JOB, region=REGION, project_id=PROJECT_ID
@@ -171,6 +191,25 @@ with models.DAG(
         trigger_rule="all_done",
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
+    # [START howto_delete_buckettask]
+    delete_bucket = GCSDeleteBucketOperator(
+        task_id="delete_bucket",
+        bucket_name=BUCKET,
+        trigger_rule="all_done",
+    )
+    # [END howto_delete_buckettask]
 
-    create_cluster >> update_cluster >> pig_task >> hive_task >> delete_cluster
-    (create_cluster >> update_cluster >> spark_task >> spark_sql_task >> hadoop_task >> delete_cluster)
+    end = EmptyOperator(task_id="end")
+
+    create_cluster >> update_cluster >> hive_task >> spark_task >> spark_sql_task >> delete_cluster
+    (
+        create_cluster
+        >> update_cluster
+        >> pig_task
+        >> create_bucket
+        >> hadoop_task
+        >> delete_bucket
+        >> delete_cluster
+    )
+
+    [spark_sql_task, hadoop_task, delete_cluster, delete_bucket] >> end
