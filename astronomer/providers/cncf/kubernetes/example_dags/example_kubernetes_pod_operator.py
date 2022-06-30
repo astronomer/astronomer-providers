@@ -32,6 +32,7 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "k8s"],
 ) as dag:
+    # [START howto_operator_kubernetes_pod_async]
     create_k8s_pod = KubernetesPodOperatorAsync(
         task_id="create_k8s_pod",
         namespace=namespace,
@@ -54,5 +55,6 @@ with DAG(
             ),
         ],
     )
+    # [END howto_operator_kubernetes_pod_async]
 
     create_k8s_pod

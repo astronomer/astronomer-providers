@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.append(os.path.abspath("./_ext"))
 _REPO_DIR = Path(__file__).parent.parent
 
 # -- Project information -----------------------------------------------------
@@ -39,6 +40,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
+    "exampleinclude",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

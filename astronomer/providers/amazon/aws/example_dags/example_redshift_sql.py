@@ -144,6 +144,7 @@ with DAG(
         sql="CALL just_a_loop();",
     )
 
+    # [START howto_operator_redshift_sql_async]
     task_create_table = RedshiftSQLOperatorAsync(
         task_id="task_create_table",
         sql="""
@@ -155,6 +156,7 @@ with DAG(
         """,
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
+    # [END howto_operator_redshift_sql_async]
 
     task_insert_data = RedshiftSQLOperatorAsync(
         task_id="task_insert_data",

@@ -40,7 +40,7 @@ with DAG(
         body={"name": GKE_CLUSTER_NAME, "initial_node_count": 1},
     )
 
-    # [START how_to_gke_start_pod_operator_async]
+    # [START howto_operator_gke_start_pod_async]
     start_pod = GKEStartPodOperatorAsync(
         task_id="start_pod",
         project_id=PROJECT_ID,
@@ -52,7 +52,7 @@ with DAG(
         in_cluster=False,
         gcp_conn_id=GCP_CONN_ID,
     )
-    # [END how_to_gke_start_pod_operator_async]
+    # [END howto_operator_gke_start_pod_async]
 
     cluster_delete = GKEDeleteClusterOperator(
         task_id="cluster_delete",

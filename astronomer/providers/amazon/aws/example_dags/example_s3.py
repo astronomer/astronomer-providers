@@ -57,6 +57,7 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
     )
 
+    # [START howto_sensor_s3_key_async]
     waiting_for_s3_key = S3KeySensorAsync(
         task_id="waiting_for_s3_key",
         bucket_key=S3_BUCKET_KEY,
@@ -64,6 +65,7 @@ with DAG(
         bucket_name=S3_BUCKET_NAME,
         aws_conn_id=AWS_CONN_ID,
     )
+    # [END howto_sensor_s3_key_async]
 
     check_if_wildcard_exists = S3KeySensorAsync(
         task_id="check_if_wildcard_exists",
@@ -73,6 +75,7 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
     )
 
+    # [START howto_sensor_s3_key_size_async]
     check_if_key_with_size_without_wildcard = S3KeySizeSensorAsync(
         task_id="check_if_key_with_size_without_wildcard",
         bucket_key=S3_BUCKET_KEY,
@@ -80,6 +83,7 @@ with DAG(
         bucket_name=S3_BUCKET_NAME,
         aws_conn_id=AWS_CONN_ID,
     )
+    # [END howto_sensor_s3_key_size_async]
 
     check_if_key_with_size_with_wildcard = S3KeySizeSensorAsync(
         task_id="check_if_key_with_size_with_wildcard",
@@ -89,6 +93,7 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
     )
 
+    # [START howto_sensor_s3_key_unchanged_async]
     check_s3_key_unchanged_sensor = S3KeysUnchangedSensorAsync(
         task_id="check_s3_key_unchanged_sensor",
         bucket_name=S3_BUCKET_NAME,
@@ -99,13 +104,16 @@ with DAG(
         inactivity_period=INACTIVITY_PERIOD,
         aws_conn_id=AWS_CONN_ID,
     )
+    # [END howto_sensor_s3_key_unchanged_async]
 
+    # [START howto_sensor_s3_key_prefix_async]
     check_s3_prefix_sensor = S3PrefixSensorAsync(
         task_id="check_s3_prefix_sensor",
         bucket_name=S3_BUCKET_NAME,
         prefix=PREFIX,
         aws_conn_id=AWS_CONN_ID,
     )
+    # [END howto_sensor_s3_key_prefix_async]
 
     delete_bucket = S3DeleteBucketOperator(
         task_id="delete_bucket",

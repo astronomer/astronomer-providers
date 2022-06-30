@@ -65,11 +65,11 @@ with DAG(
             "field": "ds",
         },
     )
-    # [START howto_sensor_bigquery_table]
+    # [START howto_sensor_bigquery_table_existence_async]
     check_table_exists = BigQueryTableExistenceSensorAsync(
         task_id="check_table_exists", project_id=PROJECT_ID, dataset_id=DATASET_NAME, table_id=TABLE_NAME
     )
-    # [END howto_sensor_bigquery_table]
+    # [END howto_sensor_bigquery_table_existence_async]
 
     execute_insert_query = BigQueryInsertJobOperator(
         task_id="execute_insert_query",
