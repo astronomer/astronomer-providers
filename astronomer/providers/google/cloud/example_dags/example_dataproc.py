@@ -172,6 +172,5 @@ with models.DAG(
     )
     # [END how_to_cloud_dataproc_delete_cluster_operator]
 
-    create_cluster >> update_cluster
     create_cluster >> update_cluster >> pig_task >> hive_task >> delete_cluster
     (create_cluster >> update_cluster >> spark_task >> spark_sql_task >> hadoop_task >> delete_cluster)
