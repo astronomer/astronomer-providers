@@ -54,7 +54,7 @@ MOCK_FAILED_RESPONSE = {
 
 def test_emr_container_sensors_trigger_serialization():
     """
-    Asserts that the TaskStateTrigger correctly serializes its arguments
+    Asserts that the EmrContainerSensorTrigger correctly serializes its arguments
     and classpath.
     """
     trigger = EmrContainerSensorTrigger(
@@ -426,18 +426,17 @@ def test_emr_container_operator_trigger_serialization():
         name=NAME,
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
-        max_tries=MAX_RETRIES,
+        max_retries=MAX_RETRIES,
         poll_interval=POLL_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger"
     assert kwargs == {
         "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
-        "name": NAME,
         "job_id": JOB_ID,
         "aws_conn_id": AWS_CONN_ID,
         "poll_interval": POLL_INTERVAL,
-        "max_tries": MAX_RETRIES,
+        "max_retries": MAX_RETRIES,
     }
 
 
@@ -461,7 +460,7 @@ async def test_emr_container_operator_trigger_run(mock_query_status, mock_status
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+        max_retries=MAX_RETRIES,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
@@ -482,7 +481,7 @@ async def test_emr_container_operator_trigger_completed(mock_query_status):
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+        max_retries=MAX_RETRIES,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -509,7 +508,7 @@ async def test_emr_container_operator_trigger_failure_status(
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+        max_retries=MAX_RETRIES,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -531,7 +530,7 @@ async def test_emr_container_operator_trigger_exception(mock_query_status):
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+        max_retries=MAX_RETRIES,
     )
     task = [i async for i in trigger.run()]
     assert len(task) == 1
@@ -549,7 +548,7 @@ async def test_emr_container_operator_trigger_timeout(mock_query_status):
         job_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         poll_interval=1,
-        max_tries=2,
+        max_retries=2,
     )
     generator = trigger.run()
     actual = await generator.asend(None)

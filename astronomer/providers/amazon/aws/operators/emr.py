@@ -44,11 +44,10 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             timeout=self.execution_timeout,
             trigger=EmrContainerOperatorTrigger(
                 virtual_cluster_id=self.virtual_cluster_id,
-                name=self.name,
                 job_id=job_id,
                 aws_conn_id=self.aws_conn_id,
                 poll_interval=self.poll_interval,
-                max_tries=self.max_tries,
+                max_retries=self.max_tries,
             ),
             method_name="execute_complete",
         )
