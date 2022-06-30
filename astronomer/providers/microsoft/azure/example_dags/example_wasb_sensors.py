@@ -56,7 +56,7 @@ def upload_blob_callable(file_path: str, container_name: str, blob_name: str) ->
     """
     Uploads the given example file as a blob in the given container.
 
-    It raises an exception if the specified name of the blob is less that 10 characters with an interest to test
+    It raises an exception if the specified name of the blob is less than 10 characters with an interest to test
     the WASB Prefix Sensor successfully.
 
     :param file_path: local file path to be uploaded
@@ -154,4 +154,12 @@ with DAG(
     upload_blob >> [wasb_blob_sensor, wasb_prefix_sensor]
     [wasb_blob_sensor, wasb_prefix_sensor] >> delete_blob
     delete_blob >> delete_data_storage_container
-    delete_data_storage_container >> end
+
+    [
+        create_data_storage_container,
+        upload_blob,
+        wasb_blob_sensor,
+        wasb_prefix_sensor,
+        delete_blob,
+        delete_data_storage_container,
+    ] >> end
