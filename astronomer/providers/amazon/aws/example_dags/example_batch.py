@@ -140,10 +140,12 @@ def get_job_queue_status() -> str:
 
 def list_jobs_func() -> str:
     """
-    Get the list of aws batch jobs for the particular Job Name
+    Gets the list of AWS batch jobs for the given job name.
 
-    Since BatchOperatorAsync doesn't return job id back we need job id
-    to poll for in BatchSensorAsync.
+    Ideally BatchOperatorAsync should push job ID to XCOM, but both the sync & async version
+    operators don't have it in their implementation and thus we do not have the job ID that is
+    needed for the BatchSensorAsync. Hence, we get the list of jobs by the job name and
+    then extract job ID from the response.
 
     """
     import boto3
@@ -158,8 +160,8 @@ def list_jobs_func() -> str:
 
     logging.info("%s", response)
     if response.get("jobSummaryList"):
-        # JobSummaryList returns list of jobs and sorted by createdAt so
-        # picking the latest which was submitted from BatchOperatorAsync
+        # JobSummaryList returns list of jobs (it may contain duplicates as
+        # AWS Batch allows submission of jobs with the same name) and sorted by createdAt
         res = response.get("jobSummaryList")[0]
         job_id: str = res.get("jobId")
     else:

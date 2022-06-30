@@ -14,6 +14,8 @@ JOB_ID = "8ba9d676-4108-4474-9dca-8bbac1da9b19"
 MAX_RETRIES = 2
 STATUS_RETRIES = 3
 POLLING_PERIOD_SECONDS = 5
+AWS_CONN_ID = "airflow_test"
+REGION_NAME = "eu-west-1"
 
 
 def test_batch_trigger_serialization():
@@ -189,8 +191,8 @@ def test_batch_sensor_trigger_serialization():
     """
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
-        region_name="eu-west-1",
-        aws_conn_id="airflow_test",
+        region_name=REGION_NAME,
+        aws_conn_id=AWS_CONN_ID,
         poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
@@ -210,8 +212,8 @@ async def test_batch_sensor_trigger_run(mock_response):
     mock_response.return_value = {"status": "RUNNABLE"}
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
-        region_name="eu-west-1",
-        aws_conn_id="airflow_test",
+        region_name=REGION_NAME,
+        aws_conn_id=AWS_CONN_ID,
         poll_interval=POLLING_PERIOD_SECONDS,
     )
     task = asyncio.create_task(trigger.run().__anext__())
@@ -228,8 +230,8 @@ async def test_batch_sensor_trigger_completed(mock_response):
     mock_response.return_value = {"status": "SUCCEEDED"}
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
-        region_name="eu-west-1",
-        aws_conn_id="airflow_test",
+        region_name=REGION_NAME,
+        aws_conn_id=AWS_CONN_ID,
     )
     generator = trigger.run()
     actual_response = await generator.asend(None)
@@ -246,8 +248,8 @@ async def test_batch_sensor_trigger_failure(mock_response):
     mock_response.return_value = {"status": "FAILED"}
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
-        region_name="eu-west-1",
-        aws_conn_id="airflow_test",
+        region_name=REGION_NAME,
+        aws_conn_id=AWS_CONN_ID,
     )
     generator = trigger.run()
     actual_response = await generator.asend(None)
@@ -261,8 +263,8 @@ async def test_batch_sensor_trigger_exception(mock_response):
     mock_response.side_effect = Exception("Test exception")
     trigger = BatchSensorTrigger(
         job_id=JOB_ID,
-        region_name="eu-west-1",
-        aws_conn_id="airflow_test",
+        region_name=REGION_NAME,
+        aws_conn_id=AWS_CONN_ID,
     )
     task = [i async for i in trigger.run()]
     assert len(task) == 1
