@@ -9,8 +9,8 @@ from astronomer.providers.amazon.aws.triggers.batch import BatchSensorTrigger
 
 class BatchSensorAsync(BatchSensor):
     """
-    Given a JOB ID of the Batch Job, executes asynchronously until it
-    reaches a failure state or success state.
+    Given a job ID of a Batch Job, poll for the job status asynchronously until it
+    reaches a failure or a success state.
     If the job fails, the task will fail.
 
     .. see also::
@@ -34,7 +34,7 @@ class BatchSensorAsync(BatchSensor):
         super().__init__(**kwargs)
 
     def execute(self, context: "Context") -> None:
-        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        """Defers trigger class to poll for state of the job run until it reaches a failure or a success state"""
         self.defer(
             timeout=self.execution_timeout,
             trigger=BatchSensorTrigger(

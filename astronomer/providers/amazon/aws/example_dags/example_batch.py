@@ -6,7 +6,7 @@ from datetime import datetime
 from json import loads
 from os import environ
 
-from airflow import DAG
+from airflow import DAG, AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
@@ -139,7 +139,13 @@ def get_job_queue_status() -> str:
 
 
 def list_jobs_func() -> str:
-    """Get the list of aws batch jobs for the particular Job Name"""
+    """
+    Get the list of aws batch jobs for the particular Job Name
+
+    Since BatchOperatorAsync doesn't return job id back we need job id
+    to poll for in BatchSensorAsync.
+
+    """
     import boto3
     from botocore.exceptions import ClientError
 
@@ -152,10 +158,12 @@ def list_jobs_func() -> str:
 
     logging.info("%s", response)
     if response.get("jobSummaryList"):
+        # JobSummaryList returns list of jobs and sorted by createdAt so
+        # picking the latest which was submitted from BatchOperatorAsync
         res = response.get("jobSummaryList")[0]
         job_id: str = res.get("jobId")
     else:
-        job_id = "failed to fetch job id"
+        raise AirflowException("No jobs found")
     return job_id
 
 
