@@ -29,7 +29,7 @@ class EmrContainerBaseTrigger(BaseTrigger, ABC):
         aws_conn_id: str = "aws_default",
         poll_interval: int = 10,
         max_retries: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         self.virtual_cluster_id = virtual_cluster_id
         self.job_id = job_id
