@@ -19,9 +19,9 @@ class BatchSensorAsync(BatchSensor):
 
     :param job_id: Batch job_id to check the state for
     :param aws_conn_id: aws connection to use, defaults to 'aws_default'
-    :param region_name: region name to use in AWS Hook.
+    :param region_name: region name to use in AWS Hook
         Override the region_name in connection (if provided)
-    :param poll_interval:  polling period in seconds to check for the status of the job.
+    :param poll_interval: polling period in seconds to check for the status of the job
     """
 
     def __init__(

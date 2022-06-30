@@ -114,10 +114,10 @@ class BatchSensorTrigger(BaseTrigger):
 
     :param job_id: the job ID, to poll for job completion or not
     :param aws_conn_id: connection id of AWS credentials / region name. If None,
-        credential boto3 strategy will be used.
-    :param region_name: AWS region name to use .
+        credential boto3 strategy will be used
+    :param region_name: AWS region name to use
         Override the region_name in connection (if provided)
-    :param poll_interval:  polling period in seconds to check for the status of the job.
+    :param poll_interval: polling period in seconds to check for the status of the job
     """
 
     def __init__(
