@@ -120,24 +120,44 @@ class TestWasbHookAsyncConnection:
         )
 
     def test_key(self):
+        """
+        Tests that a db connection gets created successfully for a given login/password pair and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         hook = WasbHookAsync(wasb_conn_id="wasb_test_key")
         assert hook.conn_id == "wasb_test_key"
         assert isinstance(hook.blob_service_client, BlobServiceClient)
 
     def test_public_read(self):
+        """
+        Tests that a db connection gets created successfully for anonymous public access read and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         hook = WasbHookAsync(wasb_conn_id=self.public_read_conn_id, public_read=True)
         assert isinstance(hook.get_conn(), BlobServiceClient)
 
     def test_connection_string(self):
+        """
+        Tests that a db connection gets created successfully from a connection string and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         hook = WasbHookAsync(wasb_conn_id=self.connection_string_id)
         assert hook.conn_id == self.connection_string_id
         assert isinstance(hook.get_conn(), BlobServiceClient)
 
     def test_shared_key_connection(self):
+        """
+        Tests that a db connection gets created successfully with the given shared access key and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         hook = WasbHookAsync(wasb_conn_id=self.shared_key_conn_id)
         assert isinstance(hook.get_conn(), BlobServiceClient)
 
     def test_managed_identity(self):
+        """
+        Tests that a db connection gets created successfully with a managed identity and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         hook = WasbHookAsync(wasb_conn_id=self.managed_identity_conn_id)
         assert isinstance(hook.get_conn(), BlobServiceClient)
         assert isinstance(hook.get_conn().credential, DefaultAzureCredential)
@@ -152,6 +172,10 @@ class TestWasbHookAsyncConnection:
         ],
     )
     def test_sas_token_connection(self, conn_id_str, extra_key):
+        """
+        Tests that a db connection gets created successfully with the given SAS tokens and
+        that the hook is able to use this connection to generate a BlobServiceClient.
+        """
         conn_id = self.__getattribute__(conn_id_str)
         hook = WasbHookAsync(wasb_conn_id=conn_id)
         conn = hook.get_conn()
@@ -174,12 +198,21 @@ class TestWasbHookAsyncConnection:
         ],
     )
     def test_connection_extra_arguments(self, conn_id_str):
+        """
+        Tests that the db connections are created with the correct extra arguments provided.
+        Proxies are given as part of the extras while creating the connections and the same
+        are tested that they get attached properly to the connections.
+        """
         conn_id = self.__getattribute__(conn_id_str)
         hook = WasbHookAsync(wasb_conn_id=conn_id)
         conn = hook.get_conn()
         assert conn._config.proxy_policy.proxies == self.proxies
 
     def test_connection_extra_arguments_public_read(self):
+        """
+        Tests that the provided extra_arguments (in this case, proxies) are rightly
+        attached to the public_read connection.
+        """
         conn_id = self.public_read_conn_id
         hook = WasbHookAsync(wasb_conn_id=conn_id, public_read=True)
         conn = hook.get_conn()
@@ -213,7 +246,7 @@ class BlobPropertiesAsyncIterator(BlobProperties):
 )
 @mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
 async def test_check_for_blob(mock_service_client, mock_blob_properties, expected_result):
-    """Test check_for_blob function with mocked response"""
+    """Tests check_for_blob function with mocked response."""
     hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
     mock_blob_client = mock_service_client.return_value.get_blob_client
 
@@ -244,6 +277,7 @@ async def test_check_for_blob(mock_service_client, mock_blob_properties, expecte
 )
 @mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
 async def test_check_for_prefix(mock_service_client, blobs, expected_result):
+    """Test check_for_prefix function with mocked response."""
     hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
     mock_container_client = mock_service_client.return_value.get_container_client
 

@@ -15,7 +15,7 @@ from astronomer.providers.microsoft.azure.triggers.wasb import (
 
 class WasbBlobSensorAsync(WasbBlobSensor):
     """
-    Polls for the existence of a blob of in a container of WASB.
+    Polls asynchronously for the existence of a blob in a WASB container.
 
     :param container_name: name of the container in which the blob should be searched for
     :param blob_name: name of the blob to check existence for
@@ -66,12 +66,12 @@ class WasbBlobSensorAsync(WasbBlobSensor):
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
         else:
-            raise AirflowException("Did not receive valid event from the trigerrer")
+            raise AirflowException("Did not receive valid event from the triggerer")
 
 
 class WasbPrefixSensorAsync(WasbPrefixSensor):
     """
-    Polls for the existence of a blob of in a container of WASB.
+     Polls asynchronously for the existence of a blob having the given prefix in a WASB container.
 
     :param container_name: name of the container in which the blob should be searched for
     :param blob_name: name of the blob to check existence for
@@ -132,4 +132,4 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
         else:
-            raise AirflowException("Did not receive valid event from the trigerrer")
+            raise AirflowException("Did not receive valid event from the triggerer")

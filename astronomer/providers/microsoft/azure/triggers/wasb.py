@@ -73,8 +73,8 @@ class WasbBlobSensorTrigger(BaseTrigger):
 
 class WasbPrefixSensorTrigger(BaseTrigger):
     """
-    WasbPrefixSensorTrigger is fired as deferred class with params to run the task in trigger worker to check for
-    existence of a blob with the given prefix in the provided container.
+    WasbPrefixSensorTrigger is fired as a deferred class with params to run the task in trigger worker.
+    It checks for the existence of a blob with the given prefix in the provided container.
 
     :param container_name: name of the container in which the blob should be searched for
     :param prefix: prefix of the blob to check existence for

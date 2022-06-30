@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.microsoft.azure.sensors.wasb import (
@@ -147,7 +148,10 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    end = EmptyOperator(task_id="end")
+
     create_data_storage_container >> upload_blob
     upload_blob >> [wasb_blob_sensor, wasb_prefix_sensor]
     [wasb_blob_sensor, wasb_prefix_sensor] >> delete_blob
     delete_blob >> delete_data_storage_container
+    delete_data_storage_container >> end

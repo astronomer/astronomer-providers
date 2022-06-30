@@ -41,7 +41,7 @@ def test_wasb_blob_sensor_async(context):
     [None, {"status": "success", "message": "Job completed"}],
 )
 def test_wasb_blob_sensor_execute_complete_success(event):
-    """Assert execute_complete log success message when trigger fire with target status"""
+    """Assert execute_complete log success message when trigger fire with target status."""
     task = WasbBlobSensorAsync(
         task_id="wasb_blob_sensor_async",
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
@@ -51,7 +51,7 @@ def test_wasb_blob_sensor_execute_complete_success(event):
     if not event:
         with pytest.raises(AirflowException) as exception_info:
             task.execute_complete(context=None, event=None)
-        assert exception_info.value.args[0] == "Did not receive valid event from the trigerrer"
+        assert exception_info.value.args[0] == "Did not receive valid event from the triggerer"
     else:
         with mock.patch.object(task.log, "info") as mock_log_info:
             task.execute_complete(context={}, event=event)
@@ -59,7 +59,7 @@ def test_wasb_blob_sensor_execute_complete_success(event):
 
 
 def test_wasb_blob_sensor_execute_complete_failure():
-    """Assert execute_complete method fail"""
+    """Assert execute_complete method raises an exception when the triggerer fires an error event."""
     task = WasbBlobSensorAsync(
         task_id="wasb_blob_sensor_async",
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
@@ -86,7 +86,7 @@ def test_wasb_prefix_sensor_async(context):
     [None, {"status": "success", "message": "Job completed"}],
 )
 def test_wasb_prefix_sensor_execute_complete_success(event):
-    """Assert execute_complete log success message when trigger fire with target status"""
+    """Assert execute_complete log success message when trigger fire with target status."""
     task = WasbPrefixSensorAsync(
         task_id="wasb_prefix_sensor_async",
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
@@ -96,7 +96,7 @@ def test_wasb_prefix_sensor_execute_complete_success(event):
     if not event:
         with pytest.raises(AirflowException) as exception_info:
             task.execute_complete(context=None, event=None)
-        assert exception_info.value.args[0] == "Did not receive valid event from the trigerrer"
+        assert exception_info.value.args[0] == "Did not receive valid event from the triggerer"
     else:
         with mock.patch.object(task.log, "info") as mock_log_info:
             task.execute_complete(context={}, event=event)
@@ -104,7 +104,7 @@ def test_wasb_prefix_sensor_execute_complete_success(event):
 
 
 def test_wasb_prefix_sensor_execute_complete_failure():
-    """Assert execute_complete method fail"""
+    """Assert execute_complete method raises an exception when the triggerer fires an error event."""
     task = WasbPrefixSensorAsync(
         task_id="wasb_prefix_sensor_async",
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
