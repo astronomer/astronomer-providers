@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 from airflow import models
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.gcs import (
     GCSCreateBucketOperator,
     GCSDeleteBucketOperator,
@@ -201,14 +202,17 @@ with models.DAG(
     )
     # [END howto_delete_buckettask]
 
-    create_cluster >> update_cluster >> create_bucket
-    create_cluster >> update_cluster >> pig_task >> hive_task >> delete_cluster >> delete_bucket
+    end = EmptyOperator(task_id="end")
+
+    create_cluster >> update_cluster >> hive_task >> spark_task >> spark_sql_task >> delete_cluster
     (
         create_cluster
         >> update_cluster
-        >> spark_task
-        >> spark_sql_task
+        >> pig_task
+        >> create_bucket
         >> hadoop_task
-        >> delete_cluster
         >> delete_bucket
+        >> delete_cluster
     )
+
+    [spark_sql_task, hadoop_task, delete_cluster, delete_bucket] >> end
