@@ -2,6 +2,8 @@ import os
 from datetime import timedelta
 
 from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.filesystem import FileSensorAsync
@@ -24,10 +26,30 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "core"],
 ) as dag:
+    start = EmptyOperator(task_id="start")
+
+    create_file = BashOperator(
+        task_id="create_file",
+        bash_command="sleep 10 && touch /usr/local/airflow/dags/example_file_async_sensor.txt",
+    )
+
     # [START howto_sensor_filesystem_async]
     file_sensor_task = FileSensorAsync(
         task_id="file_sensor_task",
-        filepath="example_file_async_sensor.txt",
+        filepath="/usr/local/airflow/dags/example_file_async_sensor.txt",
         fs_conn_id=FS_CONN_ID,
+        poke_interval=3,
     )
     # [END howto_sensor_filesystem_async]
+
+    delete_file = BashOperator(
+        task_id="delete_file",
+        bash_command="rm /usr/local/airflow/dags/example_file_async_sensor.txt",
+        trigger_rule="all_done",
+    )
+
+    end = EmptyOperator(task_id="end")
+
+    start >> [file_sensor_task, create_file]
+    [create_file, file_sensor_task] >> delete_file
+    [file_sensor_task, create_file, delete_file] >> end
