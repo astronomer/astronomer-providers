@@ -17,7 +17,7 @@ class EmrContainerBaseTrigger(BaseTrigger, ABC):
 
     :param virtual_cluster_id: Reference Emr cluster id
     :param job_id:  job_id to check the state
-    :param max_tries: maximum retry for poll for the status
+    :param max_tries: maximum try attempts for polling the status
     :param aws_conn_id: Reference to AWS connection id
     :param poll_interval: polling period in seconds to check for the status
     """
@@ -88,6 +88,11 @@ class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
 class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
     """Poll for the status of EMR container until reaches terminal state"""
 
+    INTERMEDIATE_STATES: List[str] = ["PENDING", "SUBMITTED", "RUNNING"]
+    FAILURE_STATES: List[str] = ["FAILED", "CANCELLED", "CANCEL_PENDING"]
+    SUCCESS_STATES: List[str] = ["COMPLETED"]
+    TERMINAL_STATES: List[str] = ["COMPLETED", "FAILED", "CANCELLED", "CANCEL_PENDING"]
+
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes EmrContainerOperatorTrigger arguments and classpath."""
         return (
@@ -100,11 +105,6 @@ class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
                 "poll_interval": self.poll_interval,
             },
         )
-
-    INTERMEDIATE_STATES: List[str] = ["PENDING", "SUBMITTED", "RUNNING"]
-    FAILURE_STATES: List[str] = ["FAILED", "CANCELLED", "CANCEL_PENDING"]
-    SUCCESS_STATES: List[str] = ["COMPLETED"]
-    TERMINAL_STATES: List[str] = ["COMPLETED", "FAILED", "CANCELLED", "CANCEL_PENDING"]
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Run until EMR container reaches the desire state"""
