@@ -280,14 +280,14 @@ with DAG(
         task_id="list_jobs",
         python_callable=list_jobs_func,
     )
-    # [START howto_batch_sensor_async]
+    # [START howto_sensor_batch_async]
     batch_job_sensor = BatchSensorAsync(
         task_id="sense_job",
         job_id="{{ task_instance.xcom_pull(task_ids='list_jobs', dag_id='example_async_batch', key='return_value') }}",
         aws_conn_id=AWS_CONN_ID,
         region_name=AWS_DEFAULT_REGION,
     )
-    # [END howto_batch_sensor_async]
+    # [END howto_sensor_batch_async]
 
     update_compute_environment = PythonOperator(
         task_id="update_compute_environment",
