@@ -1,4 +1,5 @@
 import asyncio
+from abc import ABC
 from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -10,14 +11,13 @@ from astronomer.providers.amazon.aws.hooks.emr import (
 )
 
 
-class EmrContainerSensorTrigger(BaseTrigger):
+class EmrContainerBaseTrigger(BaseTrigger, ABC):
     """
-    The EmrContainerSensorTrigger is triggered when EMR container is created, it polls for the AWS EMR EKS Virtual
-    Cluster Job status. It is fired as deferred class with params to run the task in trigger worker
+    Poll for the status of EMR container until reaches terminal state
 
     :param virtual_cluster_id: Reference Emr cluster id
     :param job_id:  job_id to check the state
-    :param max_retries: maximum retry for poll for the status
+    :param max_tries: maximum try attempts for polling the status
     :param aws_conn_id: Reference to AWS connection id
     :param poll_interval: polling period in seconds to check for the status
     """
@@ -26,16 +26,21 @@ class EmrContainerSensorTrigger(BaseTrigger):
         self,
         virtual_cluster_id: str,
         job_id: str,
-        max_retries: Optional[int] = None,
         aws_conn_id: str = "aws_default",
         poll_interval: int = 10,
+        max_tries: Optional[int] = None,
+        **kwargs: Any,
     ):
-        super().__init__()
         self.virtual_cluster_id = virtual_cluster_id
         self.job_id = job_id
-        self.max_retries = max_retries
         self.aws_conn_id = aws_conn_id
         self.poll_interval = poll_interval
+        self.max_tries = max_tries
+        super().__init__(**kwargs)
+
+
+class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
+    """Poll for the status of EMR container until reaches terminal state"""
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes EmrContainerSensorTrigger arguments and classpath."""
@@ -44,9 +49,9 @@ class EmrContainerSensorTrigger(BaseTrigger):
             {
                 "virtual_cluster_id": self.virtual_cluster_id,
                 "job_id": self.job_id,
-                "max_retries": self.max_retries,
-                "poll_interval": self.poll_interval,
                 "aws_conn_id": self.aws_conn_id,
+                "max_tries": self.max_tries,
+                "poll_interval": self.poll_interval,
             },
         )
 
@@ -66,7 +71,7 @@ class EmrContainerSensorTrigger(BaseTrigger):
                     msg = "EMR Containers sensors completed"
                     yield TriggerEvent({"status": "success", "message": msg})
 
-                if self.max_retries and try_number >= self.max_retries:
+                if self.max_tries and try_number >= self.max_tries:
                     yield TriggerEvent(
                         {
                             "status": "error",
@@ -80,45 +85,13 @@ class EmrContainerSensorTrigger(BaseTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
 
 
-class EmrContainerOperatorTrigger(BaseTrigger):
-    """
-    The EmrContainerSensorTrigger is triggered when EMR container is created, it polls for the AWS EMR EKS Virtual
-    Cluster Job status. It is fired as deferred class with params to run the task in trigger worker
-
-    :param virtual_cluster_id: The EMR on EKS virtual cluster ID.
-    :param name: The name of the job run.
-    :param execution_role_arn: The IAM role ARN associated with the job run.
-    :param release_label: The Amazon EMR release version to use for the job run.
-    :param job_driver: Job configuration details, e.g. the Spark job parameters.
-    :param configuration_overrides: The configuration overrides for the job run,
-            specifically either application configuration or monitoring configuration.
-    :param client_request_token: The client idempotency token of the job run request.
-    :param aws_conn_id: Reference to AWS connection id.
-    :param poll_interval: polling period in seconds to check for the status.
-    :param max_retries: maximum retry for poll for the status.
-    """
+class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
+    """Poll for the status of EMR container until reaches terminal state"""
 
     INTERMEDIATE_STATES: List[str] = ["PENDING", "SUBMITTED", "RUNNING"]
     FAILURE_STATES: List[str] = ["FAILED", "CANCELLED", "CANCEL_PENDING"]
     SUCCESS_STATES: List[str] = ["COMPLETED"]
     TERMINAL_STATES: List[str] = ["COMPLETED", "FAILED", "CANCELLED", "CANCEL_PENDING"]
-
-    def __init__(
-        self,
-        virtual_cluster_id: str,
-        name: str,
-        job_id: str,
-        aws_conn_id: str = "aws_default",
-        poll_interval: int = 30,
-        max_tries: Optional[int] = None,
-    ):
-        super().__init__()
-        self.virtual_cluster_id = virtual_cluster_id
-        self.name = name
-        self.job_id = job_id
-        self.aws_conn_id = aws_conn_id
-        self.poll_interval = poll_interval
-        self.max_tries = max_tries
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes EmrContainerOperatorTrigger arguments and classpath."""
@@ -126,7 +99,6 @@ class EmrContainerOperatorTrigger(BaseTrigger):
             "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger",
             {
                 "virtual_cluster_id": self.virtual_cluster_id,
-                "name": self.name,
                 "job_id": self.job_id,
                 "aws_conn_id": self.aws_conn_id,
                 "max_tries": self.max_tries,
