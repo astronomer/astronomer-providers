@@ -40,7 +40,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         - https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
     """
 
-    def __init__(self, job_id: Optional[str], waiters: Any, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, job_id: Optional[str], waiters: Any = None, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.job_id = job_id
         self.waiters = waiters

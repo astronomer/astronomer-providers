@@ -6,12 +6,13 @@ from datetime import datetime
 from json import loads
 from os import environ
 
-from airflow import DAG
+from airflow import DAG, AirflowException
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
+from astronomer.providers.amazon.aws.sensors.batch import BatchSensorAsync
 
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
@@ -137,6 +138,37 @@ def get_job_queue_status() -> str:
         return "DELETED"
 
 
+def list_jobs_func() -> str:
+    """
+    Gets the list of AWS batch jobs for the given job name.
+
+    Ideally BatchOperatorAsync should push job ID to XCOM, but both the sync & async version
+    operators don't have it in their implementation and thus we do not have the job ID that is
+    needed for the BatchSensorAsync. Hence, we get the list of jobs by the job name and
+    then extract job ID from the response.
+
+    """
+    import boto3
+    from botocore.exceptions import ClientError
+
+    client = boto3.client("batch")
+
+    try:
+        response = client.list_jobs(jobQueue=JOB_QUEUE, filters=[{"name": "JOB_NAME", "values": [JOB_NAME]}])
+    except ClientError:
+        response = {}
+
+    logging.info("%s", response)
+    if response.get("jobSummaryList"):
+        # JobSummaryList returns list of jobs (it may contain duplicates as
+        # AWS Batch allows submission of jobs with the same name) and sorted by createdAt
+        res = response.get("jobSummaryList")[0]
+        job_id: str = res.get("jobId")
+    else:
+        raise AirflowException("No jobs found")
+    return job_id
+
+
 def update_compute_environment_func() -> None:
     """Disable Batch Compute Environment Job Definition"""
     import boto3
@@ -243,6 +275,20 @@ with DAG(
     )
     # [END howto_operator_batch_async]
 
+    # Task to List jobs in AWS batch
+    list_jobs = PythonOperator(
+        task_id="list_jobs",
+        python_callable=list_jobs_func,
+    )
+    # [START howto_batch_sensor_async]
+    batch_job_sensor = BatchSensorAsync(
+        task_id="sense_job",
+        job_id="{{ task_instance.xcom_pull(task_ids='list_jobs', dag_id='example_async_batch', key='return_value') }}",
+        aws_conn_id=AWS_CONN_ID,
+        region_name=AWS_DEFAULT_REGION,
+    )
+    # [END howto_batch_sensor_async]
+
     update_compute_environment = PythonOperator(
         task_id="update_compute_environment",
         python_callable=update_compute_environment_func,
@@ -270,6 +316,8 @@ with DAG(
         >> create_batch_compute_environment
         >> create_job_queue
         >> submit_batch_job
+        >> list_jobs
+        >> batch_job_sensor
         >> update_compute_environment
         >> update_job_queue
         >> delete_job_queue
