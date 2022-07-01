@@ -37,7 +37,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
             trigger=EmrContainerSensorTrigger(
                 virtual_cluster_id=self.virtual_cluster_id,
                 job_id=self.job_id,
-                max_retries=self.max_retries,
+                max_tries=self.max_retries,
                 aws_conn_id=self.aws_conn_id,
                 poll_interval=self.poll_interval,
             ),

@@ -17,7 +17,7 @@ class EmrContainerBaseTrigger(BaseTrigger, ABC):
 
     :param virtual_cluster_id: Reference Emr cluster id
     :param job_id:  job_id to check the state
-    :param max_retries: maximum retry for poll for the status
+    :param max_tries: maximum retry for poll for the status
     :param aws_conn_id: Reference to AWS connection id
     :param poll_interval: polling period in seconds to check for the status
     """
@@ -28,14 +28,14 @@ class EmrContainerBaseTrigger(BaseTrigger, ABC):
         job_id: str,
         aws_conn_id: str = "aws_default",
         poll_interval: int = 10,
-        max_retries: Optional[int] = None,
+        max_tries: Optional[int] = None,
         **kwargs: Any,
     ):
         self.virtual_cluster_id = virtual_cluster_id
         self.job_id = job_id
         self.aws_conn_id = aws_conn_id
         self.poll_interval = poll_interval
-        self.max_retries = max_retries
+        self.max_tries = max_tries
         super().__init__(**kwargs)
 
 
@@ -50,7 +50,7 @@ class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
                 "virtual_cluster_id": self.virtual_cluster_id,
                 "job_id": self.job_id,
                 "aws_conn_id": self.aws_conn_id,
-                "max_retries": self.max_retries,
+                "max_tries": self.max_tries,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -71,7 +71,7 @@ class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
                     msg = "EMR Containers sensors completed"
                     yield TriggerEvent({"status": "success", "message": msg})
 
-                if self.max_retries and try_number >= self.max_retries:
+                if self.max_tries and try_number >= self.max_tries:
                     yield TriggerEvent(
                         {
                             "status": "error",
@@ -96,7 +96,7 @@ class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
                 "virtual_cluster_id": self.virtual_cluster_id,
                 "job_id": self.job_id,
                 "aws_conn_id": self.aws_conn_id,
-                "max_retries": self.max_retries,
+                "max_tries": self.max_tries,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -148,7 +148,7 @@ class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
                         "Try %s: Query is still in non-terminal state - %s", try_number, query_state
                     )
                     await asyncio.sleep(self.poll_interval)
-                if self.max_retries and try_number >= self.max_retries:
+                if self.max_tries and try_number >= self.max_tries:
                     yield TriggerEvent(
                         {
                             "status": "error",
