@@ -5,6 +5,7 @@ AWS Example DAG
   :hidden:
   :maxdepth: 2
 
+    Batch Sensor <aws/sensors/batch>
     EMR Senor <aws/sensors/emr>
     Redshift Sensor DAG <aws/sensors/redshift_cluster>
     S3 Sensor <aws/sensors/s3>
@@ -14,6 +15,7 @@ AWS Example DAG
     Batch Operator <aws/operators/redshift_sql>
 
 
+* `Batch Sensor <aws/sensors/batch.html>`_
 * `EMR Sensor <aws/sensors/emr.html>`_
 * `Redshift Cluster Sensor <aws/sensors/redshift_cluster.html>`_
 * `S3 Sensor <aws/sensors/s3.html>`_
