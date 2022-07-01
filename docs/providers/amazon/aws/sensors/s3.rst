@@ -1,0 +1,42 @@
+S3 Sensor Async
+"""""""""""""""
+
+
+To waits for a key (a file-like instance on S3) to be present in a S3 bucket asynchronously
+:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_s3_key_async]
+    :end-before: [END howto_sensor_s3_key_async]
+
+
+To waits for a key (a file-like instance on S3) to be present and be more than some size in a S3 bucket asynchronously
+:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySizeSensorAsync`.
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_s3_key_size_async]
+    :end-before: [END howto_sensor_s3_key_size_async]
+
+
+Checks for changes in the number of objects at prefix in AWS S3bucket
+:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeysUnchangedSensorAsync`.
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_s3_key_unchanged_async]
+    :end-before: [END howto_sensor_s3_key_unchanged_async]
+
+
+To waits asynchronously for a prefix or all prefixes to exist in S3 bucket
+:class:`~astronomer.providers.amazon.aws.sensor.s3.S3PrefixSensorAsync`.
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_s3_key_prefix_async]
+    :end-before: [END howto_sensor_s3_key_prefix_async]

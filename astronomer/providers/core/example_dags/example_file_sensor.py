@@ -24,10 +24,10 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "core"],
 ) as dag:
-    # [START howto_operator_file_sensor_async]
+    # [START howto_sensor_filesystem_async]
     file_sensor_task = FileSensorAsync(
         task_id="file_sensor_task",
         filepath="example_file_async_sensor.txt",
         fs_conn_id=FS_CONN_ID,
     )
-    # [END howto_operator_file_sensor_async]
+    # [END howto_sensor_filesystem_async]

@@ -68,23 +68,26 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
     # [END howto_upload_file_task]
-    # [START howto_sensor_object_exists_task]
+
+    # [START howto_sensor_gcs_object_exists_async]
     gcs_object_exists = GCSObjectExistenceSensorAsync(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_exists_task",
         google_cloud_conn_id=GCP_CONN_ID,
     )
-    # [END howto_sensor_object_exists_task]
-    # [START howto_sensor_object_with_prefix_exists_task]
+    # [END howto_sensor_gcs_object_exists_async]
+
+    # [START howto_sensor_gcs_object_with_prefix_existence_async]
     gcs_object_with_prefix_exists = GCSObjectsWithPrefixExistenceSensorAsync(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
         task_id="gcs_object_with_prefix_exists_task",
         google_cloud_conn_id=GCP_CONN_ID,
     )
-    # [END howto_sensor_object_with_prefix_exists_task]
-    # [START howto_sensor_gcs_upload_session_complete_task]
+    # [END howto_sensor_gcs_object_with_prefix_existence_async]
+
+    # [START howto_sensor_gcs_upload_session_complete_async]
     gcs_upload_session_complete = GCSUploadSessionCompleteSensorAsync(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
@@ -95,15 +98,17 @@ with DAG(
         task_id="gcs_upload_session_complete_task",
         google_cloud_conn_id=GCP_CONN_ID,
     )
-    # [END howto_sensor_gcs_upload_session_complete_task]
-    # [START howto_sensor_object_update_exists_task]
+    # [END howto_sensor_gcs_upload_session_complete_async]
+
+    # [START howto_sensor_gcs_object_update_async]
     gcs_update_object_exists = GCSObjectUpdateSensorAsync(
         bucket=BUCKET_1,
         object=BUCKET_FILE_LOCATION,
         task_id="gcs_object_update_sensor_task_async",
         google_cloud_conn_id=GCP_CONN_ID,
     )
-    # [END howto_sensor_object_update_exists_task]
+    # [END howto_sensor_gcs_object_update_async]
+
     # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(
         task_id="delete_bucket",

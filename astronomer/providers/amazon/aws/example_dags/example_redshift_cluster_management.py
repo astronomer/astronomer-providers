@@ -191,14 +191,14 @@ with DAG(
     )
     # [END howto_operator_redshift_resume_cluster_async]
 
-    # [START howto_operator_redshift_cluster_sensor_async]
+    # [START howto_sensor_redshift_cluster_async]
     redshift_sensor = RedshiftClusterSensorAsync(
         task_id="redshift_sensor",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         target_status="available",
         aws_conn_id=AWS_CONN_ID,
     )
-    # [END howto_operator_redshift_cluster_sensor_async]
+    # [END howto_sensor_redshift_cluster_async]
 
     delete_redshift_cluster_snapshot = PythonOperator(
         task_id="delete_redshift_cluster_snapshot",

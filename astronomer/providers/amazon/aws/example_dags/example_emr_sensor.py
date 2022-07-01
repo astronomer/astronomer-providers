@@ -85,26 +85,20 @@ with DAG(
     )
     # [END howto_operator_emr_add_steps]
 
-    # [START howto_sensor_emr_job_flow_sensor_async]
+    # [START howto_sensor_emr_job_flow_async]
     job_flow_sensor = EmrJobFlowSensorAsync(
         task_id="job_flow_sensor", job_flow_id=cluster_creator.output, aws_conn_id=AWS_CONN_ID
     )
-    # [END howto_sensor_emr_job_flow_sensor_async]
+    # [END howto_sensor_emr_job_flow_async]
 
-    # [START howto_sensor_emr_step_sensor_async]
-    """
-    Defer and poll until it reaches the target state
-    The Default value of target state is COMPLETED
-    For more detail see here
-        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/emr.html#EMR.Client.describe_step
-    """
+    # [START howto_sensor_emr_step_async]
     step_checker = EmrStepSensorAsync(
         task_id="watch_step",
         job_flow_id=cluster_creator.output,
         step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[0] }}",
         aws_conn_id=AWS_CONN_ID,
     )
-    # [END howto_sensor_emr_step_sensor_async]
+    # [END howto_sensor_emr_step_async]
 
     # [START howto_operator_emr_terminate_job_flow]
     cluster_remover = EmrTerminateJobFlowOperator(

@@ -184,12 +184,12 @@ with DAG(
     )
     # [END howto_create_resource_group]
 
-    # [START howto_operator_adf_run_pipeline]
+    # [START howto_operator_adf_run_pipeline_async]
     run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_wait",
         pipeline_name=PIPELINE_NAME,
     )
-    # [END howto_operator_adf_run_pipeline]
+    # [END howto_operator_adf_run_pipeline_async]
 
     # [START howto_operator_adf_run_pipeline]
     run_pipeline_no_wait = AzureDataFactoryRunPipelineOperatorAsync(

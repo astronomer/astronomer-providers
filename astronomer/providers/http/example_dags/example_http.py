@@ -24,7 +24,7 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "http"],
 ) as dag:
-    # [START howto_operator_http_sensor_async]
+    # [START howto_sensor_http_async]
     async_http_sensor = HttpSensorAsync(
         task_id="async_http_sensor",
         http_conn_id=HTTP_CONN_ID,
@@ -34,6 +34,6 @@ with DAG(
         # response_check=lambda response: "httpbin" in response.text,
         poke_interval=5,
     )
-    # [END howto_operator_file_sensor_async]
+    # [END howto_sensor_http_async]
 
     async_http_sensor

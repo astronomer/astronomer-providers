@@ -141,9 +141,9 @@ with DAG(
         configuration_overrides=CONFIGURATION_OVERRIDES_ARG,
         name="pi.py",
     )
-    # [END howto_operator_emr_eks_jobrun]
+    # [END howto_operator_run_emr_container_job]
 
-    # [START howto_sensor_emr_job_container_sensor]
+    # [START howto_sensor_emr_job_container_async]
     emr_job_container_sensor = EmrContainerSensorAsync(
         task_id="emr_job_container_sensor",
         job_id=run_emr_container_job.output,
@@ -151,7 +151,7 @@ with DAG(
         poll_interval=5,
         aws_conn_id=AWS_CONN_ID,
     )
-    # [END howto_sensor_emr_job_container_sensor]
+    # [END howto_sensor_emr_job_container_async]
 
     # Delete EKS cluster, EMR containers, IAM role and detach role policies.r
     removal_environment_variables = (

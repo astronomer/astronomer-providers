@@ -53,6 +53,7 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "databricks"],
 ) as dag:
+    # [START howto_operator_databricks_submit_run_async]
     opr_submit_run = DatabricksSubmitRunOperatorAsync(
         task_id="submit_run",
         databricks_conn_id=DATABRICKS_CONN_ID,
@@ -60,12 +61,15 @@ with DAG(
         notebook_task=NOTEBOOK_TASK,
         do_xcom_push=True,
     )
+    # [END howto_operator_databricks_submit_run_async]
 
+    # [START howto_operator_databricks_run_now_async]
     opr_run_now = DatabricksRunNowOperatorAsync(
         task_id="run_now",
         databricks_conn_id=DATABRICKS_CONN_ID,
         job_id="{{ task_instance.xcom_pull(task_ids='submit_run', dag_id='example_async_databricks', key='job_id') }}",
         notebook_params=notebook_params,
     )
+    # [END howto_operator_databricks_run_now_async]
 
 opr_submit_run >> opr_run_now

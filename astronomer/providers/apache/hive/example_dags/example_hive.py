@@ -358,22 +358,22 @@ with DAG(
     )
     # [END load_to_hive]
 
-    # [START howto_hive_partition_check]
+    # [START howto_sensor_hive_partition]
     hive_sensor = HivePartitionSensorAsync(
         task_id="hive_partition_check",
         table=HIVE_TABLE,
         partition=HIVE_PARTITION,
         poke_interval=5,
     )
-    # [END howto_hive_partition_check]
+    # [END howto_sensor_hive_partition]
 
-    # [START howto_named_hive_partition_sensor_async]
+    # [START howto_sensor_named_hive_partition_async]
     wait_for_partition = NamedHivePartitionSensorAsync(
         task_id="wait_for_partition",
         partition_names=[f"{HIVE_SCHEMA}.{HIVE_TABLE}/{HIVE_PARTITION}"],
         poke_interval=5,
     )
-    # [END howto_named_hive_partition_sensor_async]
+    # [END howto_sensor_named_hive_partition_async]
 
     # [START howto_operator_emr_terminate_job_flow]
     remove_cluster = EmrTerminateJobFlowOperator(
