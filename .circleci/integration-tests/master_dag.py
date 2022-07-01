@@ -8,6 +8,7 @@ from airflow import DAG
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 from airflow.models import DagRun
 from airflow.models.baseoperator import chain
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
@@ -87,6 +88,10 @@ with DAG(
     start = PythonOperator(
         task_id="start",
         python_callable=lambda: time.sleep(30),
+    )
+
+    list_installed_pip_packages = BashOperator(
+        task_id="list_installed_pip_packages", bash_command="pip freeze"
     )
 
     dag_run_ids = []
@@ -194,6 +199,7 @@ with DAG(
     )
 
     start >> [
+        list_installed_pip_packages,
         amazon_trigger_tasks[0],
         emr_trigger_tasks[0],
         google_trigger_tasks[0],
@@ -208,6 +214,7 @@ with DAG(
     ]
 
     last_task = [
+        list_installed_pip_packages,
         amazon_trigger_tasks[-1],
         emr_trigger_tasks[-1],
         google_trigger_tasks[-1],
