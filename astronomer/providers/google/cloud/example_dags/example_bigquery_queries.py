@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
@@ -232,7 +233,11 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
 
+    end = EmptyOperator(task_id="end")
+
     create_table_1 >> insert_query_job >> select_query_job >> check_count
     insert_query_job >> get_data >> get_data_result
-    insert_query_job >> execute_query_save >> bigquery_execute_multi_query >> delete_dataset
-    (insert_query_job >> execute_long_running_query >> check_value >> check_interval >> delete_dataset)
+    insert_query_job >> execute_query_save >> bigquery_execute_multi_query
+    insert_query_job >> execute_long_running_query >> check_value >> check_interval
+    [check_count, check_interval, bigquery_execute_multi_query, get_data_result] >> delete_dataset
+    [check_count, check_interval, bigquery_execute_multi_query, get_data_result, delete_dataset] >> end
