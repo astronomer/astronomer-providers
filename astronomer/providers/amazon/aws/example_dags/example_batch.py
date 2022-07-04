@@ -211,7 +211,9 @@ def update_job_queue_func() -> None:
     client = boto3.client("batch")
     try:
         client.update_job_queue(jobQueue=JOB_QUEUE, state="DISABLED")
-
+        while get_job_queue_status() != "VALID":
+            logging.info("Waiting for job queue to be Disabled. Sleeping for 30 seconds.")
+            time.sleep(30)
     except ClientError as error:
         logging.exception("Error while disabling Batch Compute Environment")
         raise error
