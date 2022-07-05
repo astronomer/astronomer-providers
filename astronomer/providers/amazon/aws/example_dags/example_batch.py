@@ -141,12 +141,10 @@ def get_job_queue_status() -> str:
 def list_jobs_func() -> str:
     """
     Gets the list of AWS batch jobs for the given job name.
-
     Ideally BatchOperatorAsync should push job ID to XCOM, but both the sync & async version
     operators don't have it in their implementation and thus we do not have the job ID that is
     needed for the BatchSensorAsync. Hence, we get the list of jobs by the job name and
     then extract job ID from the response.
-
     """
     import boto3
     from botocore.exceptions import ClientError
@@ -292,13 +290,13 @@ with DAG(
     # [END howto_sensor_batch_async]
 
     disable_compute_environment = PythonOperator(
-        task_id="update_compute_environment",
+        task_id="disable_compute_environment",
         python_callable=disable_compute_environment_func,
         trigger_rule="all_done",
     )
 
     disable_job_queue = PythonOperator(
-        task_id="update_job_queue", python_callable=disable_job_queue_func, trigger_rule="all_done"
+        task_id="disable_job_queue", python_callable=disable_job_queue_func, trigger_rule="all_done"
     )
 
     delete_job_queue = PythonOperator(
