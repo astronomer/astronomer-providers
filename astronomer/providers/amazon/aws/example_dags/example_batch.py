@@ -141,12 +141,10 @@ def get_job_queue_status() -> str:
 def list_jobs_func() -> str:
     """
     Gets the list of AWS batch jobs for the given job name.
-
     Ideally BatchOperatorAsync should push job ID to XCOM, but both the sync & async version
     operators don't have it in their implementation and thus we do not have the job ID that is
     needed for the BatchSensorAsync. Hence, we get the list of jobs by the job name and
     then extract job ID from the response.
-
     """
     import boto3
     from botocore.exceptions import ClientError
@@ -169,7 +167,7 @@ def list_jobs_func() -> str:
     return job_id
 
 
-def update_compute_environment_func() -> None:
+def disable_compute_environment_func() -> None:
     """Disable Batch Compute Environment Job Definition"""
     import boto3
     from botocore.exceptions import ClientError
@@ -203,15 +201,17 @@ def delete_compute_environment_func() -> None:
         raise error
 
 
-def update_job_queue_func() -> None:
-    """Update Job Queue Function"""
+def disable_job_queue_func() -> None:
+    """Disable Job Queue Function"""
     import boto3
     from botocore.exceptions import ClientError
 
     client = boto3.client("batch")
     try:
         client.update_job_queue(jobQueue=JOB_QUEUE, state="DISABLED")
-
+        while get_job_queue_status() != "VALID":
+            logging.info("Waiting for job queue to be Disabled. Sleeping for 30 seconds.")
+            time.sleep(30)
     except ClientError as error:
         logging.exception("Error while disabling Batch Compute Environment")
         raise error
@@ -289,14 +289,14 @@ with DAG(
     )
     # [END howto_sensor_batch_async]
 
-    update_compute_environment = PythonOperator(
-        task_id="update_compute_environment",
-        python_callable=update_compute_environment_func,
+    disable_compute_environment = PythonOperator(
+        task_id="disable_compute_environment",
+        python_callable=disable_compute_environment_func,
         trigger_rule="all_done",
     )
 
-    update_job_queue = PythonOperator(
-        task_id="update_job_queue", python_callable=update_job_queue_func, trigger_rule="all_done"
+    disable_job_queue = PythonOperator(
+        task_id="disable_job_queue", python_callable=disable_job_queue_func, trigger_rule="all_done"
     )
 
     delete_job_queue = PythonOperator(
@@ -318,10 +318,10 @@ with DAG(
         >> submit_batch_job
         >> list_jobs
         >> batch_job_sensor
-        >> update_compute_environment
-        >> update_job_queue
+        >> disable_compute_environment
+        >> disable_job_queue
         >> delete_job_queue
         >> delete_compute_environment
     )
 
-    [update_compute_environment, update_job_queue, delete_job_queue, delete_compute_environment] >> end
+    [disable_compute_environment, disable_job_queue, delete_job_queue, delete_compute_environment] >> end
