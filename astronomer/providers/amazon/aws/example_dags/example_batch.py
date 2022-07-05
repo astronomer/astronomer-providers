@@ -169,7 +169,7 @@ def list_jobs_func() -> str:
     return job_id
 
 
-def update_compute_environment_func() -> None:
+def disable_compute_environment_func() -> None:
     """Disable Batch Compute Environment Job Definition"""
     import boto3
     from botocore.exceptions import ClientError
@@ -203,8 +203,8 @@ def delete_compute_environment_func() -> None:
         raise error
 
 
-def update_job_queue_func() -> None:
-    """Update Job Queue Function"""
+def disable_job_queue_func() -> None:
+    """Disable Job Queue Function"""
     import boto3
     from botocore.exceptions import ClientError
 
@@ -291,14 +291,14 @@ with DAG(
     )
     # [END howto_sensor_batch_async]
 
-    update_compute_environment = PythonOperator(
+    disable_compute_environment = PythonOperator(
         task_id="update_compute_environment",
-        python_callable=update_compute_environment_func,
+        python_callable=disable_compute_environment_func,
         trigger_rule="all_done",
     )
 
-    update_job_queue = PythonOperator(
-        task_id="update_job_queue", python_callable=update_job_queue_func, trigger_rule="all_done"
+    disable_job_queue = PythonOperator(
+        task_id="update_job_queue", python_callable=disable_job_queue_func, trigger_rule="all_done"
     )
 
     delete_job_queue = PythonOperator(
@@ -320,10 +320,10 @@ with DAG(
         >> submit_batch_job
         >> list_jobs
         >> batch_job_sensor
-        >> update_compute_environment
-        >> update_job_queue
+        >> disable_compute_environment
+        >> disable_job_queue
         >> delete_job_queue
         >> delete_compute_environment
     )
 
-    [update_compute_environment, update_job_queue, delete_job_queue, delete_compute_environment] >> end
+    [disable_compute_environment, disable_job_queue, delete_job_queue, delete_compute_environment] >> end
