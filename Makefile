@@ -75,7 +75,6 @@ test-rc-dependencies: ## Tests providers RC by building an image with given depe
 	python3 dev/scripts/replace_dependencies.py '$(RC_PROVIDER_PACKAGES)'
 	cd ".circleci/integration-tests/" && \
 	 bash script.sh 'astro-cloud' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
-	echo '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
 	python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
 	git checkout setup.cfg
 
