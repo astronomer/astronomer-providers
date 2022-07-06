@@ -1,6 +1,11 @@
 import argparse
+import logging
+import sys
 
 import requests
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 
 MASTER_DAG_ID = "example_master_dag"
 
@@ -39,9 +44,8 @@ def trigger_master_dag_run(deployment_id: str, bearer_token: str):
         "Cache-Control": "no-cache",
         "Authorization": f"Bearer {bearer_token}",
     }
-    print(master_dag_trigger_url, headers)
     response = requests.post(master_dag_trigger_url, headers=headers, json={})
-    print(response.json())
+    logging.info("Response for master DAG trigger is %s", response.json())
 
 
 if __name__ == "__main__":
