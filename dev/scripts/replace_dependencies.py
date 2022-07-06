@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "rc_provider_packages",
         help="Comma separated list of provider packages with their pinned versions to test the the RC."
-        " e.g. 'apache-airflow-providers-amazon>=3.0.0, apache-airflow-providers-google>=8.1.0'",
+        " e.g. 'apache-airflow-providers-amazon==4.0.0rc1, apache-airflow-providers-google==8.1.0rc2'",
     )
     args = parser.parse_args()
     rc_provider_packages_list = args.rc_provider_packages.split(",")
