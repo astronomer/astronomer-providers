@@ -1,5 +1,5 @@
 .PHONY: dev logs stop clean build build-emr_eks_container_example_dag-image build-aws build-google-cloud build-run docs
-.PHONY: restart restart-all run-tests run-static-checks run-mypy run-local-lineage-server test-rc-dependencies help
+.PHONY: restart restart-all run-tests run-static-checks run-mypy run-local-lineage-server test-rc-deps help
 
 # If the first argument is "run"...
 ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
@@ -71,7 +71,7 @@ run-mypy: ## Run MyPy in Container
 run-local-lineage-server: ## Run flask based local Lineage server
 	FLASK_APP=dev/local_flask_lineage_server.py flask run --host 0.0.0.0 --port 5050
 
-test-rc-dependencies: ## Tests providers RC by building an image with given dependencies and running the master DAG
+test-rc-deps: ## Test providers RC by building an image with given dependencies and running the master DAG
 	python3 dev/scripts/replace_dependencies.py '$(RC_PROVIDER_PACKAGES)'
 	cd ".circleci/integration-tests/" && \
 	 bash script.sh 'astro-cloud' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
