@@ -50,10 +50,10 @@ class KubernetesHookAsync(KubernetesHook):  # noqa: D101
             return client.ApiClient()
 
         if kubeconfig is not None:
-            async with aiofiles.tempfile.NamedTemporaryFile() as temp_config:  # type: ignore[attr-defined]
+            async with aiofiles.tempfile.NamedTemporaryFile() as temp_config:
                 self.log.debug("loading kube_config from: connection kube_config")
-                temp_config.write(kubeconfig.encode())
-                temp_config.flush()
+                await temp_config.write(kubeconfig.encode())
+                await temp_config.flush()
                 await config.load_kube_config(
                     config_file=temp_config.name,
                     client_configuration=self.client_configuration,
