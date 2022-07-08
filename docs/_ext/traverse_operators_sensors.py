@@ -103,10 +103,18 @@ class TraverseOperatorsSensors(SphinxDirective):
 
         sensors_html = "<h3>Sensors</h3>" "<table>" "<th>#</th>" "<th>Sensor name</th>" "<th>Import path</th>"
         for index, sensor in enumerate(sensors, start=1):
+            class_def_link = (
+                BASE_CLASS_DEF_URL
+                + sensor[1].replace(".", "/")
+                + "/index.html#"
+                + sensor[1]
+                + "."
+                + sensor[0]
+            )
             sensors_html += (
                 f"<tr>"
                 f"<td>{index}</td>"
-                f"<td><span>{sensor[0]}</span></td>"
+                f"<td><span><a href={class_def_link}>{sensor[0]}</a></span></td>"
                 f"<td><span>{sensor[1]}</span></td>"
                 f"</tr>"
             )
