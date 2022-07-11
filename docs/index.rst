@@ -7,6 +7,15 @@
   Home <self>
   Python API Reference <_api/index>
 
+Operators and Sensors
+---------------------
+
+.. toctree::
+  :hidden:
+  :maxdepth: 2
+
+  Operators and Sensors <providers/operators_and_sensors_list>
+
 Example
 -------
 

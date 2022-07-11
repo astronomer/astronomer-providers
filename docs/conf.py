@@ -42,6 +42,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "exampleinclude",
     "sphinx_copybutton",
+    "traverse_operators_sensors",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
