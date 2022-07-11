@@ -96,7 +96,7 @@ class TraverseOperatorsSensors(SphinxDirective):
                 f"<tr>"
                 f"<td>{index}</td>"
                 f"<td><span><a href={class_def_link}>{operator[0]}</a></span></td>"
-                f"<td><span>{operator[1]}</span></td>"
+                f"<td><span><pre><code class='python'>from {operator[1]} import {operator[0]}</code></pre></span></td>"
                 f"</tr>"
             )
         operators_html += "</table> <br/>"
@@ -115,12 +115,17 @@ class TraverseOperatorsSensors(SphinxDirective):
                 f"<tr>"
                 f"<td>{index}</td>"
                 f"<td><span><a href={class_def_link}>{sensor[0]}</a></span></td>"
-                f"<td><span>{sensor[1]}</span></td>"
+                f"<td><span><pre><code class='python'>from {sensor[1]} import {sensor[0]}</code></pre></span></td>"
                 f"</tr>"
             )
         sensors_html += "</table> <br/>"
         base_html = (
             "<head>"
+            "<link rel='stylesheet' "
+            "href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css'> "
+            "<script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js'>"
+            "</script>"
+            "<script>hljs.initHighlightingOnLoad();</script>"
             "<style>"
             "table {border: 1px solid black; border-collapse:collapse} "
             "tr, th, td {border: 1px solid black;} "
