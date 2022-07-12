@@ -1,4 +1,4 @@
-ARG IMAGE_NAME="quay.io/astronomer/astro-runtime:5.0.5-base"
+ARG IMAGE_NAME
 FROM ${IMAGE_NAME}
 
 USER root
