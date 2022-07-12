@@ -12,8 +12,10 @@ ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+ASTRO_RUNTIME_IMAGE_NAME = "quay.io/astronomer/astro-runtime:5.0.6-base"
+
 dev: ## Create a development Environment using `docker-compose` file.
-	docker-compose -f dev/docker-compose.yaml up -d
+	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker-compose -f dev/docker-compose.yaml up -d
 
 logs: ## View logs of the all the containers
 	docker-compose -f dev/docker-compose.yaml logs --follow
@@ -26,19 +28,19 @@ clean: ## Remove all the containers along with volumes
 	rm -rf dev/logs
 
 build: ## Build the Docker image (ignoring cache)
-	docker build -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
 
 build-emr_eks_container_example_dag-image: ## Build the Docker image for EMR EKS containers example DAG
-	docker build -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile.emr_eks_container . -t astronomer-providers-dev:latest
 
 build-aws: ## Build the Docker image with aws-cli installed
-	docker build -f dev/Dockerfile.aws . -t astronomer-providers-dev:latest
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile.aws . -t astronomer-providers-dev:latest
 
 build-google-cloud: ## Build the Docker image with google-cloud cli installed
-	docker build -f dev/Dockerfile.google_cloud . -t astronomer-providers-dev:latest
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile.google_cloud . -t astronomer-providers-dev:latest
 
 build-run: ## Build the Docker Image & then run the containers
-	docker-compose -f dev/docker-compose.yaml up --build -d
+	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker-compose -f dev/docker-compose.yaml up --build -d
 
 docs:  ## Build the docs using Sphinx
 	cd docs && make clean html && cd .. && echo "Documentation built in $(shell pwd)/docs/_build/html/index.html"
@@ -50,13 +52,13 @@ restart-all: ## Restart all the containers
 	docker-compose -f dev/docker-compose.yaml restart
 
 run-tests: ## Run CI tests
-	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
 		--rm -it astronomer-providers-dev -- pytest tests
 
 run-static-checks: ## Run CI static code checks
-	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
 		--rm -it astronomer-providers-dev -- pre-commit run --all-files --show-diff-on-failure
