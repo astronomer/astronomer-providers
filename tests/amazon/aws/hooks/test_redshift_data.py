@@ -149,6 +149,41 @@ def test_execute_query_exception_exception_with_none_sql():
         hook.execute_query(None, params=None)
 
 
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
+async def test_get_query_status_value_error(mock_client):
+    hook = RedshiftDataHook()
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        await hook.get_query_status(["uuid"])
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
+async def test_is_still_running_value_error(mock_client):
+    hook = RedshiftDataHook()
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        await hook.is_still_running("uuid")
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_conn")
+async def test_execute_query_value_error(mock_client):
+    hook = RedshiftDataHook()
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        hook.execute_query("select * from table", params=None)
+
+
+@pytest.mark.asyncio
+@mock.patch("airflow.providers.amazon.aws.hooks.base_aws.AwsBaseHook.__init__")
+async def test_redshift_data_hook_value_error(mock_client):
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        RedshiftDataHook()
+
+
 @pytest.mark.parametrize(
     "sql,expected_response,expected_query_ids",
     [

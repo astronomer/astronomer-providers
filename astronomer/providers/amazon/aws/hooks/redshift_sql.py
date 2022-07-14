@@ -19,7 +19,13 @@ class RedshiftSQLHookAsync(RedshiftDataHook):
         :param query_ids: list of query ids
         """
         try:
-            client = await sync_to_async(self.get_conn)()
+            try:
+                # for apache-airflow-providers-amazon>=3.0.0
+                client = await sync_to_async(self.get_conn)()
+            except ValueError:
+                # for apache-airflow-providers-amazon>=4.1.0
+                self.resource_type = None
+                client = await sync_to_async(self.get_conn)()
             completed_ids: List[str] = []
             for qid in query_ids:
                 while await self.is_still_running(qid):
@@ -48,7 +54,13 @@ class RedshiftSQLHookAsync(RedshiftDataHook):
         return False
         """
         try:
-            client = await sync_to_async(self.get_conn)()
+            try:
+                # for apache-airflow-providers-amazon>=3.0.0
+                client = await sync_to_async(self.get_conn)()
+            except ValueError:
+                # for apache-airflow-providers-amazon>=4.1.0
+                self.resource_type = None
+                client = await sync_to_async(self.get_conn)()
             desc = client.describe_statement(Id=qid)
             if desc["Status"] in ["PICKED", "STARTED", "SUBMITTED"]:
                 return True
