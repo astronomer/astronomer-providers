@@ -67,6 +67,21 @@ async def test_is_still_running(mock_client, query_id, describe_statement_respon
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "query_id, describe_statement_response, expected_result",
+    [("uuid", {"Status": "FINISHED"}, False)],
+)
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.get_conn")
+async def test_is_still_running_value_error(
+    mock_client, query_id, describe_statement_response, expected_result
+):
+    hook = RedshiftSQLHookAsync()
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        await hook.is_still_running(query_id)
+
+
+@pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.get_conn")
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.is_still_running")
 async def test_get_query_status_exception(mock_is_still_running, mock_conn):
@@ -95,6 +110,15 @@ async def test_get_query_status_exception(mock_is_still_running, mock_conn):
         "redshift-data operation: Details/context around the exception or error",
         "type": "ERROR",
     }
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_sql.RedshiftSQLHookAsync.get_conn")
+async def test_get_query_status_value_error(mock_client):
+    hook = RedshiftSQLHookAsync()
+    mock_client.side_effect = ValueError("Test value error")
+    with pytest.raises(ValueError):
+        await hook.get_query_status(["uuid"])
 
 
 @pytest.mark.asyncio

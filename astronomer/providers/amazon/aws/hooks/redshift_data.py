@@ -31,11 +31,17 @@ class RedshiftDataHook(AwsBaseHook):
     """
 
     def __init__(self, *args: Any, poll_interval: int = 0, **kwargs: Any) -> None:
-        client_type: str = "redshift-data"
-        kwargs["client_type"] = "redshift-data"
-        kwargs["resource_type"] = "redshift-data"
-        super().__init__(*args, **kwargs)
-        self.client_type = client_type
+        aws_connection_type: str = "redshift-data"
+        try:
+            # for apache-airflow-providers-amazon>=3.0.0
+            kwargs["client_type"] = aws_connection_type
+            kwargs["resource_type"] = aws_connection_type
+            super().__init__(*args, **kwargs)
+        except ValueError:
+            # for apache-airflow-providers-amazon>=4.1.0
+            kwargs["client_type"] = aws_connection_type
+            super().__init__(*args, **kwargs)
+        self.client_type = aws_connection_type
         self.poll_interval = poll_interval
 
     def get_conn_params(self) -> Dict[str, Union[str, int]]:
@@ -106,7 +112,13 @@ class RedshiftDataHook(AwsBaseHook):
                 split_statements_tuple = split_statements(StringIO(sql))
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
 
-            client = self.get_conn()
+            try:
+                # for apache-airflow-providers-amazon>=3.0.0
+                client = self.get_conn()
+            except ValueError:
+                # for apache-airflow-providers-amazon>=4.1.0
+                self.resource_type = None
+                client = self.get_conn()
             conn_params = self.get_conn_params()
             query_ids: List[str] = []
             for sql_statement in sql:
@@ -134,7 +146,13 @@ class RedshiftDataHook(AwsBaseHook):
         :param query_ids: list of query ids
         """
         try:
-            client = await sync_to_async(self.get_conn)()
+            try:
+                # for apache-airflow-providers-amazon>=3.0.0
+                client = await sync_to_async(self.get_conn)()
+            except ValueError:
+                # for apache-airflow-providers-amazon>=4.1.0
+                self.resource_type = None
+                client = await sync_to_async(self.get_conn)()
             completed_ids: List[str] = []
             for query_id in query_ids:
                 while await self.is_still_running(query_id):
@@ -162,7 +180,13 @@ class RedshiftDataHook(AwsBaseHook):
         "PICKED", "STARTED" or "SUBMITTED" state to return False.
         """
         try:
-            client = await sync_to_async(self.get_conn)()
+            try:
+                # for apache-airflow-providers-amazon>=3.0.0
+                client = await sync_to_async(self.get_conn)()
+            except ValueError:
+                # for apache-airflow-providers-amazon>=4.1.0
+                self.resource_type = None
+                client = await sync_to_async(self.get_conn)()
             desc = client.describe_statement(Id=qid)
             if desc["Status"] in ["PICKED", "STARTED", "SUBMITTED"]:
                 return True
