@@ -68,7 +68,7 @@ class JWTGenerator(object):
         self.renewal_delay = renewal_delay
         self.private_key = private_key
         self.renew_time = datetime.now(timezone.utc)
-        self.token = None
+        self.token: Optional[str] = None
 
     def prepare_account_name_for_jwt(self, raw_account: Text) -> Text:
         """
