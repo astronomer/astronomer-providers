@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import List
+from typing import Any, List
 
 from airflow import DAG
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
@@ -19,7 +19,7 @@ SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 
 
-def get_report(dag_run_ids: List[str]) -> None:
+def get_report(dag_run_ids: List[str], **context: Any) -> None:
     """Fetch dags run details and generate report"""
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
@@ -38,6 +38,10 @@ def get_report(dag_run_ids: List[str]) -> None:
                         task_code = ":large_orange_circle: "
                     task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
                     message_list.append(task_message_str)
+
+        airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
+        airflow_version_message = f"\n\nAirflow version for the run is `{airflow_version}`"
+        message_list.append(airflow_version_message)
 
         logging.info("%s", "".join(message_list))
         # Send dag run report on Slack
@@ -92,6 +96,10 @@ with DAG(
 
     list_installed_pip_packages = BashOperator(
         task_id="list_installed_pip_packages", bash_command="pip freeze"
+    )
+
+    get_airflow_version = BashOperator(
+        task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
     )
 
     dag_run_ids = []
@@ -194,6 +202,7 @@ with DAG(
         python_callable=get_report,
         op_kwargs={"dag_run_ids": dag_run_ids},
         trigger_rule="all_done",
+        provide_context=True,
     )
 
     end = DummyOperator(
@@ -203,6 +212,7 @@ with DAG(
 
     start >> [
         list_installed_pip_packages,
+        get_airflow_version,
         amazon_trigger_tasks[0],
         emr_trigger_tasks[0],
         google_trigger_tasks[0],
@@ -218,6 +228,7 @@ with DAG(
 
     last_task = [
         list_installed_pip_packages,
+        get_airflow_version,
         amazon_trigger_tasks[-1],
         emr_trigger_tasks[-1],
         google_trigger_tasks[-1],
