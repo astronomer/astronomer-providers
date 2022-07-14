@@ -87,6 +87,10 @@ Extras
      - ``pip install 'astronomer-providers[google]'``
      - Google
 
+   * - ``http``
+     - ``pip install 'astronomer-providers[http]'``
+     - Http
+
    * - ``microsoft.azure``
      - ``pip install 'astronomer-providers[microsoft.azure]'``
      - Microsoft Azure
