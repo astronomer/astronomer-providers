@@ -24,6 +24,11 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
         message_list: List[str] = []
+
+        airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
+        airflow_version_message = f"Airflow version for the run is `{airflow_version}` \n\n"
+        message_list.append(airflow_version_message)
+
         for dr in last_dags_runs:
             dr_status = f" *{dr.dag_id} : {dr.get_state()}* \n"
             message_list.append(dr_status)
@@ -38,10 +43,6 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
                         task_code = ":large_orange_circle: "
                     task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
                     message_list.append(task_message_str)
-
-        airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        airflow_version_message = f"\n\nAirflow version for the run is `{airflow_version}`"
-        message_list.append(airflow_version_message)
 
         logging.info("%s", "".join(message_list))
         # Send dag run report on Slack
