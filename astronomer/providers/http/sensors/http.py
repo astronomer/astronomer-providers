@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 
+from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.utils.context import Context
 
@@ -48,7 +49,29 @@ class HttpSensorAsync(HttpSensor):
         'requests' documentation (options to modify timeout, ssl, etc.)
     :type extra_options: A dictionary of options, where key is string and value
         depends on the option that's being modified.
+    :param tcp_keep_alive: Enable TCP Keep Alive for the connection.
+    :param tcp_keep_alive_idle: The TCP Keep Alive Idle parameter (corresponds to ``socket.TCP_KEEPIDLE``).
+    :param tcp_keep_alive_count: The TCP Keep Alive count parameter (corresponds to ``socket.TCP_KEEPCNT``)
+    :param tcp_keep_alive_interval: The TCP Keep Alive interval parameter (corresponds to
+        ``socket.TCP_KEEPINTVL``)
     """
+
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        **kwargs: Any,
+    ) -> None:
+        self.endpoint = endpoint
+        super().__init__(endpoint=endpoint, **kwargs)
+        self.hook = HttpHook(
+            method=self.method,
+            http_conn_id=self.http_conn_id,
+            tcp_keep_alive=self.tcp_keep_alive,
+            tcp_keep_alive_idle=self.tcp_keep_alive_idle,
+            tcp_keep_alive_count=self.tcp_keep_alive_count,
+            tcp_keep_alive_interval=self.tcp_keep_alive_interval,
+        )
 
     def execute(self, context: Context) -> None:
         """
