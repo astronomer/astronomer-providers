@@ -64,14 +64,20 @@ class HttpSensorAsync(HttpSensor):
     ) -> None:
         self.endpoint = endpoint
         super().__init__(endpoint=endpoint, **kwargs)
-        self.hook = HttpHook(
-            method=self.method,
-            http_conn_id=self.http_conn_id,
-            tcp_keep_alive=self.tcp_keep_alive,
-            tcp_keep_alive_idle=self.tcp_keep_alive_idle,
-            tcp_keep_alive_count=self.tcp_keep_alive_count,
-            tcp_keep_alive_interval=self.tcp_keep_alive_interval,
-        )
+        try:
+            # for apache-airflow-providers-http>=4.0.0
+            self.hook = HttpHook(
+                method=self.method,
+                http_conn_id=self.http_conn_id,
+                tcp_keep_alive=self.tcp_keep_alive,
+                tcp_keep_alive_idle=self.tcp_keep_alive_idle,
+                tcp_keep_alive_count=self.tcp_keep_alive_count,
+                tcp_keep_alive_interval=self.tcp_keep_alive_interval,
+            )
+        except AttributeError:
+            # for apache-airflow-providers-http<4.0.0
+            # Since the hook is an instance variable of the operator, we need no action.
+            pass
 
     def execute(self, context: Context) -> None:
         """
