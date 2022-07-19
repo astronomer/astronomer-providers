@@ -60,7 +60,9 @@ KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
 def test_get_logs_running(
+    mock_get_default_client,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -89,7 +91,9 @@ def test_get_logs_running(
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
 def test_get_logs_not_running(
+    mock_get_default_client,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -115,7 +119,9 @@ def test_get_logs_not_running(
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
 def test_no_pod(
+    mock_get_default_client,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -135,7 +141,9 @@ def test_no_pod(
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
 def test_trigger_error(
+    mock_get_default_client,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
