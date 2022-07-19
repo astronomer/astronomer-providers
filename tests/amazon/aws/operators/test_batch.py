@@ -1,7 +1,10 @@
 from unittest import mock
 
+import pendulum
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.models import DAG, DagRun, TaskInstance
+from airflow.utils import timezone
 
 from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
 from astronomer.providers.amazon.aws.triggers.batch import BatchOperatorTrigger
@@ -26,6 +29,24 @@ def context():
     yield context
 
 
+def create_context(task):
+    dag = DAG(dag_id="dag")
+    tzinfo = pendulum.timezone("Europe/Amsterdam")
+    execution_date = timezone.datetime(2016, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    dag_run = DagRun(dag_id=dag.dag_id, execution_date=execution_date)
+    task_instance = TaskInstance(task=task)
+    task_instance.dag_run = dag_run
+    task_instance.xcom_push = mock.Mock()
+    return {
+        "dag": dag,
+        "ts": execution_date.isoformat(),
+        "task": task,
+        "ti": task_instance,
+        "task_instance": task_instance,
+        "run_id": dag_run.run_id,
+    }
+
+
 @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
 def test_batch_op_async(get_client_type_mock):
     get_client_type_mock.return_value.submit_job.return_value = RESPONSE_WITHOUT_FAILURES
@@ -43,6 +64,7 @@ def test_batch_op_async(get_client_type_mock):
         region_name="eu-west-1",
         tags={},
     )
+    context = create_context(task)
     with pytest.raises(TaskDeferred) as exc:
         task.execute(context)
     assert isinstance(exc.value.trigger, BatchOperatorTrigger), "Trigger is not a BatchOperatorTrigger"
