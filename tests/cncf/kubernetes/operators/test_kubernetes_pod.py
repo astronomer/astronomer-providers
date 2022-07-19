@@ -102,7 +102,6 @@ def test_get_logs_not_running(
     cleanup,
     mock_client,
 ):
-
     pod = MagicMock()
     find_pod.return_value = pod
     mock_client.return_value = {}
