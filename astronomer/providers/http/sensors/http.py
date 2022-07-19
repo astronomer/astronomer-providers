@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from typing import Any, Dict, Optional
 
 from airflow.providers.http.hooks.http import HttpHook
@@ -64,20 +65,17 @@ class HttpSensorAsync(HttpSensor):
     ) -> None:
         self.endpoint = endpoint
         super().__init__(endpoint=endpoint, **kwargs)
-        try:
-            # for apache-airflow-providers-http>=4.0.0
-            self.hook = HttpHook(  # type: ignore[call-arg]
+        if version("apache-airflow-providers-http") >= "4.0.0":
+            # for apache-airflow-providers-http>=4.0.0, we need to create a hook and attach it to the instance.
+            # For previous versions, the hook is attached and preserved with the instance in base class.
+            self.hook = HttpHook(
                 method=self.method,
                 http_conn_id=self.http_conn_id,
-                tcp_keep_alive=self.tcp_keep_alive,  # type: ignore[attr-defined]
-                tcp_keep_alive_idle=self.tcp_keep_alive_idle,  # type: ignore[attr-defined]
-                tcp_keep_alive_count=self.tcp_keep_alive_count,  # type: ignore[attr-defined]
-                tcp_keep_alive_interval=self.tcp_keep_alive_interval,  # type: ignore[attr-defined]
+                tcp_keep_alive=self.tcp_keep_alive,
+                tcp_keep_alive_idle=self.tcp_keep_alive_idle,
+                tcp_keep_alive_count=self.tcp_keep_alive_count,
+                tcp_keep_alive_interval=self.tcp_keep_alive_interval,
             )
-        except AttributeError:
-            # for apache-airflow-providers-http<4.0.0
-            # Since the hook is an instance variable of the operator, we need no action.
-            pass
 
     def execute(self, context: Context) -> None:
         """
