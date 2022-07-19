@@ -60,7 +60,9 @@ KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook.is_in_cluster")
 def test_get_logs_running(
+    mock_is_in_cluster,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -72,6 +74,7 @@ def test_get_logs_running(
     """When logs fetch exits with status running, raise task deferred"""
     pod = MagicMock()
     find_pod.return_value = pod
+    mock_is_in_cluster.return_value = False
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     mock_client.return_value = {}
     context = create_context(op)
@@ -91,6 +94,7 @@ def test_get_logs_running(
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
 @mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook.is_in_cluster")
 def test_get_logs_not_running(
+    mock_is_in_cluster,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -98,13 +102,12 @@ def test_get_logs_not_running(
     get_kube_client,
     cleanup,
     mock_client,
-    mock_is_in_cluster,
 ):
     pod = MagicMock()
     find_pod.return_value = pod
     mock_client.return_value = {}
     mock_is_in_cluster.return_value = False
-    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", in_cluster=False, get_logs=False)
+    op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", in_cluster=False, get_logs=True)
     context = create_context(op)
     await_pod_completion.return_value = None
     fetch_container_logs.return_value = PodLoggingStatus(False, None)
@@ -118,7 +121,9 @@ def test_get_logs_not_running(
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook.is_in_cluster")
 def test_no_pod(
+    mock_is_in_cluster,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -127,6 +132,7 @@ def test_no_pod(
     cleanup,
 ):
     find_pod.return_value = None
+    mock_is_in_cluster.return_value = False
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     context = create_context(op)
     with pytest.raises(PodNotFoundException):
@@ -138,7 +144,9 @@ def test_no_pod(
 @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
 @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
+@mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook.is_in_cluster")
 def test_trigger_error(
+    mock_is_in_cluster,
     fetch_container_logs,
     await_pod_completion,
     find_pod,
@@ -146,6 +154,7 @@ def test_trigger_error(
     cleanup,
 ):
     find_pod.return_value = MagicMock()
+    mock_is_in_cluster.return_value = False
     op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
     with pytest.raises(PodLaunchTimeoutException):
         context = create_context(op)
