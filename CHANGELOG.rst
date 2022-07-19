@@ -1,6 +1,58 @@
 Changelog
 =========
 
+1.7.0 (2022-07-19)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 4 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``BatchSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.sensors.batch import BatchSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_batch.py>`__
+
+   * - ``SnowflakeSqlApiOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.snowflake.operators.snowflake import SnowflakeSqlApiOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/snowflake/example_dags/example_snowflake_sql_api.py>`__
+
+   * - ``WasbBlobSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.microsoft.azure.sensors.wasb import WasbBlobSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/microsoft/azure/example_dags/example_wasb_sensors.py>`__
+
+   * - ``WasbPrefixSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.microsoft.azure.sensors.wasb import WasbPrefixSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/microsoft/azure/example_dags/example_wasb_sensors.py>`__
+
+
+Enhancements
+""""""""""""
+
+- Add copy button to code blocks in docs
+  (`#505 <https://github.com/astronomer/astronomer-providers/pull/505>`_)
+- Add custom Sphinx extension to list available operators & sensors
+  (`#504 <https://github.com/astronomer/astronomer-providers/pull/504>`_)
+- Add pre-commit hook to check for dead links in markdown files
+  (`#524 <https://github.com/astronomer/astronomer-providers/pull/524>`_)
+
+
+
 1.6.0 (2022-06-28)
 ------------------
 
@@ -45,7 +97,6 @@ This release adds the following 5 new async sensors/operators:
 
         from astronomer.providers.amazon.aws.operators.redshift_cluster import RedshiftDeleteClusterOperatorAsync
      - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_redshift_cluster_management.py>`__
-
 
 Enhancements
 """"""""""""
