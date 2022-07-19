@@ -66,13 +66,13 @@ class HttpSensorAsync(HttpSensor):
         super().__init__(endpoint=endpoint, **kwargs)
         try:
             # for apache-airflow-providers-http>=4.0.0
-            self.hook = HttpHook(  # type: ignore[call-arg]
+            self.hook = HttpHook(
                 method=self.method,
                 http_conn_id=self.http_conn_id,
-                tcp_keep_alive=self.tcp_keep_alive,  # type: ignore[attr-defined]
-                tcp_keep_alive_idle=self.tcp_keep_alive_idle,  # type: ignore[attr-defined]
-                tcp_keep_alive_count=self.tcp_keep_alive_count,  # type: ignore[attr-defined]
-                tcp_keep_alive_interval=self.tcp_keep_alive_interval,  # type: ignore[attr-defined]
+                tcp_keep_alive=self.tcp_keep_alive,
+                tcp_keep_alive_idle=self.tcp_keep_alive_idle,
+                tcp_keep_alive_count=self.tcp_keep_alive_count,
+                tcp_keep_alive_interval=self.tcp_keep_alive_interval,
             )
         except AttributeError:
             # for apache-airflow-providers-http<4.0.0
