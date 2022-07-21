@@ -34,7 +34,7 @@ TABLE_2 = "table2"
 SCHEMA = [
     {"name": "value", "type": "INTEGER", "mode": "REQUIRED"},
     {"name": "name", "type": "STRING", "mode": "NULLABLE"},
-    {"name": "ds", "type": "DATE", "mode": "NULLABLE"},
+    {"name": "ds", "type": "STRING", "mode": "NULLABLE"},
 ]
 
 DATASET = DATASET_NAME
