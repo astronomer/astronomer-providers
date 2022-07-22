@@ -22,7 +22,7 @@ CONTAINER_SUBMIT_JOB_POLICY = os.getenv(
 DEBUGGING_MONITORING_POLICY = os.getenv("DEBUGGING_MONITORING_POLICY", "test_debugging_monitoring_policy")
 EKS_CLUSTER_NAME = os.getenv("EKS_CLUSTER_NAME", "providers-team-eks-cluster")
 EKS_NAMESPACE = os.getenv("EKS_NAMESPACE", "providers-team-eks-namespace")
-INSTANCE_TYPE = os.getenv("INSTANCE_TYPE", "m4.large")
+EMR_INSTANCE_TYPE = os.getenv("EMR_INSTANCE_TYPE", "m5.xlarge")
 JOB_EXECUTION_POLICY = os.getenv("JOB_EXECUTION_POLICY", "test_job_execution_policy")
 JOB_EXECUTION_ROLE = os.getenv("JOB_EXECUTION_ROLE", "test_iam_job_execution_role")
 JOB_ROLE_ARN = f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/{JOB_EXECUTION_ROLE}"
@@ -111,7 +111,7 @@ with DAG(
         f"DEBUGGING_MONITORING_POLICY={DEBUGGING_MONITORING_POLICY} "
         f"EKS_CLUSTER_NAME={EKS_CLUSTER_NAME} "
         f"EKS_NAMESPACE={EKS_NAMESPACE} "
-        f"INSTANCE_TYPE={INSTANCE_TYPE} "
+        f"EMR_INSTANCE_TYPE={EMR_INSTANCE_TYPE} "
         f"JOB_EXECUTION_POLICY={JOB_EXECUTION_POLICY} "
         f"JOB_EXECUTION_ROLE={JOB_EXECUTION_ROLE} "
         f"MANAGE_VIRTUAL_CLUSTERS={MANAGE_VIRTUAL_CLUSTERS}"

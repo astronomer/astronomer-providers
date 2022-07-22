@@ -11,7 +11,7 @@ eksctl create cluster \
     --with-oidc \
     --ssh-access \
     --ssh-public-key providers_team_keypair \
-    --instance-types=$INSTANCE_TYPE \
+    --instance-types=$EMR_INSTANCE_TYPE \
     --managed
 
 # Create kubectl cluster namespace.
