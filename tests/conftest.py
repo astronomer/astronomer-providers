@@ -82,5 +82,5 @@ def context():
     """
     Creates a context with default execution date.
     """
-    context = {"execution_date": datetime(2015, 1, 1)}
+    context = {"execution_date": datetime(2015, 1, 1), "logical_date": datetime(2015, 1, 1)}
     yield context
