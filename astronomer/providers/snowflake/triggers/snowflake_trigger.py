@@ -62,7 +62,7 @@ class SnowflakeTrigger(BaseTrigger):
         """
         hook = get_db_hook(self.snowflake_conn_id)
         try:
-            run_state = await hook.get_query_status(self.query_ids)
+            run_state = await hook.get_query_status(self.query_ids, self.polling_period_seconds)
             if run_state:
                 yield TriggerEvent(run_state)
             else:
