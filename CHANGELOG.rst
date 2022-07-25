@@ -1,6 +1,19 @@
 Changelog
 =========
 
+1.7.1 (2022-07-25)
+------------------
+
+Bug Fixes
+"""""""""
+
+- Bump up  ``MarkupSafe`` version as per Airflow 2.3.3 constraints
+  (`#542 <https://github.com/astronomer/astronomer-providers/pull/542>`_)
+- Downgrade ``Werkzeug`` version below 2.2.0 as it causes
+  ``ImportError: cannot import name 'parse_rule' from 'werkzeug.routing'``
+  (`#551 <https://github.com/astronomer/astronomer-providers/pull/551>`_)
+
+
 1.7.0 (2022-07-19)
 ------------------
 
