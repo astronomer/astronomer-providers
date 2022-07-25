@@ -92,7 +92,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                     self.log.info("Snowflake query id: %s", query_id)
 
     async def get_query_status(
-        self, query_ids: List[str], poll_intervals: float
+        self, query_ids: List[str], poll_interval: float
     ) -> Dict[str, Union[str, List[str]]]:
         """Get the Query status by query ids."""
         try:
@@ -102,7 +102,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                 with closing(async_connection) as conn:
                     for query_id in query_ids:
                         while conn.is_still_running(conn.get_query_status_throw_if_error(query_id)):
-                            await asyncio.sleep(poll_intervals)
+                            await asyncio.sleep(poll_interval)  # pragma: no cover
                         status = conn.get_query_status(query_id)
                         if status == QueryStatus.SUCCESS:
                             self.log.info("The query finished successfully")
