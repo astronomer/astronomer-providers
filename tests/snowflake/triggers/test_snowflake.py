@@ -11,7 +11,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 )
 
 TASK_ID = "snowflake_check"
-POLLING_PERIOD_SECONDS = 1.0
+POLL_INTERVAL = 1.0
 LIFETIME = timedelta(minutes=59)
 RENEWAL_DELTA = timedelta(minutes=54)
 
@@ -23,7 +23,7 @@ def test_snowflake_trigger_serialization():
     """
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=[],
         snowflake_conn_id="test_conn",
     )
@@ -31,7 +31,7 @@ def test_snowflake_trigger_serialization():
     assert classpath == "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeTrigger"
     assert kwargs == {
         "task_id": TASK_ID,
-        "polling_period_seconds": 1.0,
+        "poll_interval": 1.0,
         "query_ids": [],
         "snowflake_conn_id": "test_conn",
     }
@@ -69,7 +69,7 @@ async def test_snowflake_trigger_running(mock_get_query_status, query_ids, retur
     mock_get_query_status.return_value = return_value
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=query_ids,
         snowflake_conn_id="test_conn",
     )
@@ -93,7 +93,7 @@ async def test_snowflake_trigger_success(mock_get_first, query_ids):
 
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=query_ids,
         snowflake_conn_id="test_conn",
     )
@@ -125,7 +125,7 @@ async def test_snowflake_trigger_failed(mock_get_first, query_ids):
 
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
-        polling_period_seconds=0.5,
+        poll_interval=0.5,
         query_ids=query_ids,
         snowflake_conn_id="test_conn",
     )
@@ -158,7 +158,7 @@ async def test_snowflake_trigger_exception(mock_query_status, query_ids):
 
     trigger = SnowflakeTrigger(
         task_id=TASK_ID,
-        polling_period_seconds=0.5,
+        poll_interval=0.5,
         query_ids=query_ids,
         snowflake_conn_id="test_conn",
     )
@@ -174,7 +174,7 @@ def test_snowflake_sql_trigger_serialization():
     and classpath.
     """
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=[],
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,
@@ -183,7 +183,7 @@ def test_snowflake_sql_trigger_serialization():
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger"
     assert kwargs == {
-        "poll_interval": POLLING_PERIOD_SECONDS,
+        "poll_interval": POLL_INTERVAL,
         "query_ids": [],
         "snowflake_conn_id": "test_conn",
         "token_life_time": LIFETIME,
@@ -202,7 +202,7 @@ async def test_snowflake_sql_trigger_running(mock_get_sql_api_query_status, mock
     """Tests that the SnowflakeSqlApiTrigger in running by mocking is_still_running to true"""
     mock_is_still_running.return_value = True
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=["uuid"],
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,
@@ -237,7 +237,7 @@ async def test_snowflake_sql_trigger_completed(mock_get_sql_api_query_status, mo
         "statement_handles": statement_query_ids,
     }
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=["uuid"],
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,
@@ -265,7 +265,7 @@ async def test_snowflake_sql_trigger_failure_status(mock_get_sql_api_query_statu
     }
     mock_get_sql_api_query_status.return_value = mock_response
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=["uuid"],
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,
@@ -289,7 +289,7 @@ async def test_snowflake_sql_trigger_exception(mock_get_sql_api_query_status, mo
     mock_get_sql_api_query_status.side_effect = Exception("Test exception")
 
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=["uuid"],
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,
@@ -318,7 +318,7 @@ async def test_snowflake_sql_trigger_is_still_running(
 ):
     mock_get_sql_api_query_status.return_value = mock_response
     trigger = SnowflakeSqlApiTrigger(
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poll_interval=POLL_INTERVAL,
         query_ids=mock_query_id,
         snowflake_conn_id="test_conn",
         token_life_time=LIFETIME,

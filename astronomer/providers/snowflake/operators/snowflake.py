@@ -87,7 +87,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             timeout=self.execution_timeout,
             trigger=SnowflakeTrigger(
                 task_id=self.task_id,
-                polling_period_seconds=self.poll_interval,
+                poll_interval=self.poll_interval,
                 query_ids=self.query_ids,
                 snowflake_conn_id=self.snowflake_conn_id,
             ),
