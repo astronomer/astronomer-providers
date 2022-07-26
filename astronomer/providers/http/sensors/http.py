@@ -60,9 +60,11 @@ class HttpSensorAsync(HttpSensor):
         self,
         *,
         endpoint: str,
+        poll_interval: float = 5,
         **kwargs: Any,
     ) -> None:
         self.endpoint = endpoint
+        self.poll_interval = poll_interval
         super().__init__(endpoint=endpoint, **kwargs)
         try:
             # for apache-airflow-providers-http>=4.0.0
@@ -98,6 +100,7 @@ class HttpSensorAsync(HttpSensor):
                     data=self.request_params,
                     headers=self.headers,
                     extra_options=self.extra_options,
+                    poll_interval=self.poll_interval,
                 ),
                 method_name="execute_complete",
             )
