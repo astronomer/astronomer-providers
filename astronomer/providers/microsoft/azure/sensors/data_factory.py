@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict
 
 from airflow import AirflowException
@@ -34,7 +35,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=ADFPipelineRunStatusSensorTrigger(
                 run_id=self.run_id,
                 azure_data_factory_conn_id=self.azure_data_factory_conn_id,

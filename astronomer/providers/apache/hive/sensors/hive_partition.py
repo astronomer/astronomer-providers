@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -42,7 +43,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=HivePartitionTrigger(
                 table=self.table,
                 schema=self.schema,

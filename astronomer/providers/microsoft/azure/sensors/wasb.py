@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 from airflow import AirflowException
@@ -44,7 +45,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=WasbBlobSensorTrigger(
                 container_name=self.container_name,
                 blob_name=self.blob_name,
@@ -108,7 +109,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=WasbPrefixSensorTrigger(
                 container_name=self.container_name,
                 prefix=self.prefix,
