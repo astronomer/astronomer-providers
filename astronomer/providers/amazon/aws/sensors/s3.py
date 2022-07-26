@@ -1,10 +1,13 @@
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, Dict, Optional, Sequence, Union, cast
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensor
+from airflow.providers.amazon.aws.sensors.s3 import (
+    S3KeysUnchangedSensor,
+    S3PrefixSensor,
+)
 from airflow.sensors.base import BaseSensorOperator
 from airflow.utils.context import Context
 
@@ -237,7 +240,7 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
         return None
 
 
-class S3PrefixSensorAsync(BaseSensorOperator):
+class S3PrefixSensorAsync(S3PrefixSensor):
     """
     Async implementation of the S3 Prefix Sensor.
     Gets deferred onto the Trigggerer and pokes
@@ -268,20 +271,11 @@ class S3PrefixSensorAsync(BaseSensorOperator):
 
     def __init__(
         self,
-        *,
-        bucket_name: str,
-        prefix: Union[str, List[str]],
         delimiter: str = "/",
-        aws_conn_id: str = "aws_default",
-        verify: Optional[Union[str, bool]] = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         super().__init__(**kwargs)
-        self.bucket_name = bucket_name
-        self.prefix = [prefix] if isinstance(prefix, str) else prefix
         self.delimiter = delimiter
-        self.aws_conn_id = aws_conn_id
-        self.verify = verify
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poke for a prefix or all prefixes to exist"""
