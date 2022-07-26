@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -45,7 +46,7 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
         if not self.partition_names:
             raise ValueError("Partition array can't be empty")
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=NamedHivePartitionTrigger(
                 partition_names=self.partition_names,
                 metastore_conn_id=self.metastore_conn_id,

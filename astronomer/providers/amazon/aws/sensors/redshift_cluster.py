@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -29,7 +30,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
     def execute(self, context: Context) -> None:
         """Check for the target_status and defers using the trigger"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=RedshiftClusterSensorTrigger(
                 task_id=self.task_id,
                 aws_conn_id=self.aws_conn_id,

@@ -1,4 +1,5 @@
 """This module contains Google Big Query sensors."""
+from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
@@ -50,7 +51,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=BigQueryTableExistenceTrigger(
                 dataset_id=self.dataset_id,
                 table_id=self.table_id,
