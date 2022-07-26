@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.hooks.filesystem import FSHook
@@ -31,7 +32,7 @@ class FileSensorAsync(FileSensor):
             self.log.info("Poking for file %s", full_path)
 
             self.defer(
-                timeout=self.execution_timeout,
+                timeout=timedelta(seconds=self.timeout),
                 trigger=FileTrigger(
                     filepath=full_path,
                     recursive=self.recursive,
