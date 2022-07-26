@@ -25,7 +25,7 @@ class SnowflakeTrigger(BaseTrigger):
     fetch the status for the query ids passed
 
     :param task_id: Reference to task id of the Dag
-    :param polling_period_seconds:  polling period in seconds to check for the status
+    :param poll_interval:  polling period in seconds to check for the status
     :param query_ids: List of Query ids to run and poll for the status
     :param snowflake_conn_id: Reference to Snowflake connection id
     """
@@ -33,13 +33,13 @@ class SnowflakeTrigger(BaseTrigger):
     def __init__(
         self,
         task_id: str,
-        polling_period_seconds: float,
+        poll_interval: float,
         query_ids: List[str],
         snowflake_conn_id: str,
     ):
         super().__init__()
         self.task_id = task_id
-        self.polling_period_seconds = polling_period_seconds
+        self.poll_interval = poll_interval
         self.query_ids = query_ids
         self.snowflake_conn_id = snowflake_conn_id
 
@@ -49,7 +49,7 @@ class SnowflakeTrigger(BaseTrigger):
             "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeTrigger",
             {
                 "task_id": self.task_id,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poll_interval": self.poll_interval,
                 "query_ids": self.query_ids,
                 "snowflake_conn_id": self.snowflake_conn_id,
             },
@@ -62,7 +62,7 @@ class SnowflakeTrigger(BaseTrigger):
         """
         hook = get_db_hook(self.snowflake_conn_id)
         try:
-            run_state = await hook.get_query_status(self.query_ids)
+            run_state = await hook.get_query_status(self.query_ids, self.poll_interval)
             if run_state:
                 yield TriggerEvent(run_state)
             else:

@@ -6,6 +6,8 @@ from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 
+POLL_INTERVAL = 1
+
 
 class TestPytestSnowflakeHookAsync:
     @pytest.mark.parametrize(
@@ -82,7 +84,7 @@ class TestPytestSnowflakeHookAsync:
         conn = mock_conn.return_value
         conn.is_still_running.return_value = False
         conn.get_query_status.return_value = expected_state
-        result = await hook.get_query_status(query_ids=query_ids)
+        result = await hook.get_query_status(query_ids=query_ids, poll_interval=POLL_INTERVAL)
         assert result == expected_result
 
     @pytest.mark.asyncio
@@ -95,7 +97,7 @@ class TestPytestSnowflakeHookAsync:
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         conn.is_still_running.side_effect = Exception("Test exception")
-        result = await hook.get_query_status(query_ids=["uuid1"])
+        result = await hook.get_query_status(query_ids=["uuid1"], poll_interval=POLL_INTERVAL)
         assert result == {"status": "error", "message": "Connection Errors", "type": "ERROR"}
 
     @pytest.mark.asyncio
@@ -106,7 +108,7 @@ class TestPytestSnowflakeHookAsync:
         conn = mock_conn.return_value
         conn.is_still_running.return_value = False
         conn.get_query_status.side_effect = ProgrammingError("Connection Errors")
-        result = await hook.get_query_status(query_ids=["uuid1"])
+        result = await hook.get_query_status(query_ids=["uuid1"], poll_interval=POLL_INTERVAL)
         assert result == {
             "status": "error",
             "message": "Programming Error: Connection Errors",
