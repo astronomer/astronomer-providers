@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 from unittest import mock
 
 import pytest
@@ -163,7 +164,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
 
         mock_defer.assert_called()
         mock_defer.assert_called_once_with(
-            timeout=None, trigger=mock_trigger.return_value, method_name="execute_complete"
+            timeout=timedelta(days=7), trigger=mock_trigger.return_value, method_name="execute_complete"
         )
 
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook.check_for_key")
@@ -344,7 +345,7 @@ class TestS3KeySizeSensorAsync(unittest.TestCase):
 
         mock_defer.assert_called()
         mock_defer.assert_called_once_with(
-            timeout=None, trigger=mock_trigger.return_value, method_name="execute_complete"
+            timeout=timedelta(days=7), trigger=mock_trigger.return_value, method_name="execute_complete"
         )
 
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")

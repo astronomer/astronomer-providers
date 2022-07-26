@@ -1,10 +1,11 @@
 """This module contains Google Cloud Storage sensors."""
 
-from typing import Any, Dict, List, Optional, Sequence, Union
+from datetime import timedelta
+from typing import Any, Dict, List, Optional, Union
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
 from airflow.providers.google.cloud.sensors.gcs import (
+    GCSObjectExistenceSensor,
     GCSObjectsWithPrefixExistenceSensor,
     GCSObjectUpdateSensor,
     GCSUploadSessionCompleteSensor,
@@ -19,7 +20,7 @@ from astronomer.providers.google.cloud.triggers.gcs import (
 )
 
 
-class GCSObjectExistenceSensorAsync(BaseOperator):
+class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     """
     Checks for the existence of a file in Google Cloud Storage.
 
@@ -39,32 +40,18 @@ class GCSObjectExistenceSensorAsync(BaseOperator):
         account from the list granting this role to the originating account (templated).
     """
 
-    template_fields = ("bucket", "object", "impersonation_chain")
-    ui_color = "#f0eee4"
-
     def __init__(
         self,
-        *,
-        bucket: str,
-        object: str,  # noqa: A002
         polling_interval: float = 5.0,
-        google_cloud_conn_id: str = "google_cloud_default",
-        delegate_to: Optional[str] = None,
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.bucket = bucket
-        self.object = object
         self.polling_interval = polling_interval
-        self.google_cloud_conn_id = google_cloud_conn_id
-        self.delegate_to = delegate_to
-        self.impersonation_chain = impersonation_chain
 
     def execute(self, context: "Context") -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=GCSBlobTrigger(
                 bucket=self.bucket,
                 object_name=self.object,
@@ -126,7 +113,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
     def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=GCSPrefixBlobTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
@@ -201,7 +188,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=GCSUploadSessionTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
@@ -268,7 +255,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=GCSCheckBlobUpdateTimeTrigger(
                 bucket=self.bucket,
                 object_name=self.object,

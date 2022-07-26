@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
@@ -36,7 +37,7 @@ class BatchSensorAsync(BatchSensor):
     def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure or a success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=BatchSensorTrigger(
                 job_id=self.job_id,
                 aws_conn_id=self.aws_conn_id,
