@@ -140,7 +140,7 @@ To create a async operators we need to inherit from airflow sync operators or
 if sync version isn't available then from airflow ``BaseOperator``.
 
 To create a async sensors we need to inherit from sync sensors or
-if sync version isn't available then from airflow ``BaseSenseOperator``.
+if sync version isn't available then from airflow ``BaseSensorOperator``.
 
 Changelog
 ---------
