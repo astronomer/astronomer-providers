@@ -136,8 +136,8 @@ We will only create Async operators for the "sync-version" of operators that do 
 For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
 for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
 
-To create a async operators we need to inherit from airflow sync operators or
-if sync version isn't available then from airflow ``BaseOperator``.
+To create async operators, we need to inherit from airflow sync operators.
+If sync version isn't available, then inherit from airflow ``BaseOperator``.
 
 To create a async sensors we need to inherit from sync sensors or
 if sync version isn't available then from airflow ``BaseSensorOperator``.
