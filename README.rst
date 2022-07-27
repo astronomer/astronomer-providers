@@ -139,8 +139,8 @@ for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours 
 To create async operators, we need to inherit from airflow sync operators.
 If sync version isn't available, then inherit from airflow ``BaseOperator``.
 
-To create a async sensors we need to inherit from sync sensors or
-if sync version isn't available then from airflow ``BaseSensorOperator``.
+To create async sensors, we need to inherit from sync sensors.
+If sync version isn't available, then inherit from airflow ``BaseSensorOperator``.
 
 Changelog
 ---------
