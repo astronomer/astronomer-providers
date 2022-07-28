@@ -16,7 +16,7 @@ default_args = {
 }
 
 
-def gcloud_nuke_callable():
+def gcloud_nuke_callable() -> None:
     """Deletes stale GCP resources."""
     import json
     import logging
@@ -59,9 +59,9 @@ def gcloud_nuke_callable():
             subprocess.getoutput(f"echo 'Y' | gcloud compute instances delete {instance_name}")
 
         # Delete storage buckets.
-        buckets = subprocess.getoutput("gcloud alpha storage ls")
-        if buckets != "ERROR: (gcloud.alpha.storage.ls) One or more URLs matched no objects.":
-            buckets = buckets.split("\n")
+        buckets_ls = subprocess.getoutput("gcloud alpha storage ls")
+        if buckets_ls != "ERROR: (gcloud.alpha.storage.ls) One or more URLs matched no objects.":
+            buckets = buckets_ls.split("\n")
             for bucket in buckets:
                 logging.info("Deleting bucket %s", bucket)
                 subprocess.getoutput(f"gcloud alpha storage rm --recursive {bucket}")
