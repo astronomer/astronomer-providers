@@ -17,7 +17,7 @@ from openlineage.common.sql import DbTableMeta, SqlMeta, parse
 SCHEMA_URI = "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json"
 
 
-class RedshiftAsyncDataExtractor(BaseExtractor):
+class RedshiftAsyncExtractor(BaseExtractor):
     """This extractor provides visibility on the metadata of a RedshiftDataOperatorAsync"""
 
     default_schema = "public"
@@ -25,7 +25,7 @@ class RedshiftAsyncDataExtractor(BaseExtractor):
     @classmethod
     def get_operator_classnames(cls) -> List[str]:
         """Returns the list of operators this extractor works on."""
-        return ["RedshiftDataOperatorAsync"]
+        return ["RedshiftDataOperatorAsync", "RedshiftSQLOperatorAsync"]
 
     def extract(self) -> Optional[TaskMetadata]:
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
