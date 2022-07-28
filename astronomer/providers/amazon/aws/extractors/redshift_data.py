@@ -67,7 +67,7 @@ class RedshiftAsyncDataExtractor(BaseExtractor):
         connection_details = {detail: getattr(self.operator, detail) for detail in redshift_details}
 
         stats = RedshiftDataDatasetsProvider(client=client, connection_details=connection_details).get_facets(
-            job_id=redshift_job_id,
+            job_id=redshift_job_id[0],
             inputs=sql_meta.in_tables if sql_meta else [],
             outputs=sql_meta.out_tables if sql_meta else [],
         )
@@ -116,11 +116,11 @@ class RedshiftFacets:
 class RedshiftDataDatasetsProvider:
     """RedshiftDataDatasetsProvider"""
 
-    import botocore
+    from botocore import client
 
     def __init__(
         self,
-        client: botocore.client,
+        client: client,
         connection_details: Dict[str, Any],
         logger: Optional[logging.Logger] = None,
     ):
