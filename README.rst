@@ -175,7 +175,9 @@ Goals for the project
 Limitations
 -----------
 
-- Async sensors take param ``mode`` but it doesn't have any usage in deferrables.
+- In Airflow sensors have a param ``mode`` which has two types poke and reschdule,
+  which uses the worker slot to poke or at intervals respectively. Whereas in async sensors this param has
+  no significant usage since tasks gets deferred to Trigger and worker slot is free.
 
 License
 -------
