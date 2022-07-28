@@ -1,11 +1,11 @@
 """
 A Deferrable Airflow operator for AWS Batch services
 
-.. see also::
+.. seealso::
 
-    - http://boto3.readthedocs.io/en/latest/guide/configuration.html
-    - http://boto3.readthedocs.io/en/latest/reference/services/batch.html
-    - https://docs.aws.amazon.com/batch/latest/APIReference/Welcome.html
+    - `Configuration <http://boto3.readthedocs.io/en/latest/guide/configuration.html>`_
+    - `Batch <http://boto3.readthedocs.io/en/latest/reference/services/batch.html>`_
+    - `Welcome <https://docs.aws.amazon.com/batch/latest/APIReference/Welcome.html>`_
 """
 from typing import Any, Dict
 

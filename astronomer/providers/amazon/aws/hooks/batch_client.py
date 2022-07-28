@@ -34,10 +34,11 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         delay .  It is generally recommended that random jitter is added to API requests.
         A convenience method is provided for this, e.g. to get a random delay of
         10 sec +/- 5 sec: ``delay = BatchClient.add_jitter(10, width=5, minima=0)``
-    .. see also::
-        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/batch.html
-        - https://docs.aws.amazon.com/general/latest/gr/api-retries.html
-        - https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+
+    .. seealso::
+        - `Batch <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/batch.html>`_
+        - `Retries <https://docs.aws.amazon.com/general/latest/gr/api-retries.html>`_
+        - `Exponential Backoff And Jitter <https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/>`_
     """
 
     def __init__(self, job_id: Optional[str], waiters: Any = None, *args: Any, **kwargs: Any) -> None:
