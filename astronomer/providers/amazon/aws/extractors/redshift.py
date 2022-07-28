@@ -3,6 +3,7 @@ import traceback
 from typing import Any, Dict, List, Optional
 
 import attr
+from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
 from openlineage.airflow.utils import get_job_name
 from openlineage.client.facet import (
@@ -31,7 +32,7 @@ class RedshiftAsyncExtractor(BaseExtractor):
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
-    def extract_on_complete(self, task_instance) -> Optional[TaskMetadata]:
+    def extract_on_complete(self, task_instance: TaskInstance) -> Optional[TaskMetadata]:
         """
         Callback on task completion to fetch metadata extraction details that are to be pushed to the Lineage server.
 
@@ -80,8 +81,9 @@ class RedshiftAsyncExtractor(BaseExtractor):
             job_facets={"sql": SqlJobFacet(self.operator.sql)},
         )
 
-    def _get_xcom_redshift_job_id(self, task_instance):
-        """Get query id from XCOM"""
+    def _get_xcom_redshift_job_id(self, task_instance: TaskInstance) -> List[str]:
+        """Get query ids from XCOM"""
+        redshift_job_id: List[str]
         redshift_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="query_ids")
 
         self.log.debug("redshift job id: %s", redshift_job_id)
@@ -166,7 +168,7 @@ class RedshiftDataDatasetsProvider:
 
         return RedshiftFacets(run_facets, ds_inputs, ds_outputs)
 
-    def _get_output_statistics(self, properties) -> OutputStatisticsOutputDatasetFacet:
+    def _get_output_statistics(self, properties: Dict[str, Any]) -> OutputStatisticsOutputDatasetFacet:
         return OutputStatisticsOutputDatasetFacet(
             rowCount=properties.get("ResultRows"),
             size=properties.get("ResultSize"),
@@ -191,7 +193,7 @@ class RedshiftDataDatasetsProvider:
             f"{self.connection_details.get('region')}:5439"
         )
 
-    def _get_table_safely(self, output_table_name):
+    def _get_table_safely(self, output_table_name: str) -> Optional[str]:
         try:
             return self._get_table(output_table_name)
         except Exception:
