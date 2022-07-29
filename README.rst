@@ -176,7 +176,7 @@ Limitations
 -----------
 
 - In Airflow sensors have a param ``mode`` which can be ``poke`` and ``reschedule``,
-  Whereas in async sensors this param has no usage since tasks gets deferred to Trigger.
+  whereas in async sensors, this param has no usage since tasks gets deferred to Trigger.
 
 License
 -------
