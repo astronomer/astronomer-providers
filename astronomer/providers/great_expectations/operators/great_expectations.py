@@ -1,11 +1,12 @@
 import os
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import great_expectations as ge
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
+from airflow.utils.context import Context
 from great_expectations.checkpoint import Checkpoint
 from great_expectations.checkpoint.types.checkpoint_result import CheckpointResult
 from great_expectations.data_context import BaseDataContext
@@ -72,17 +73,17 @@ class GreatExpectationsOperator(BaseOperator):
         self,
         run_name: Optional[str] = None,
         conn_id: Optional[str] = None,
-        file_regex: Optional[Dict] = None,
+        file_regex: Optional[Dict[str, Any]] = None,
         execution_engine: Optional[str] = None,
-        batch_request_extra: Optional[Dict] = None,
+        batch_request_extra: Optional[Dict[str, Any]] = None,
         expectation_suite_name: Optional[str] = None,
         data_asset_name: Optional[str] = None,
-        data_context_root_dir: Optional[Union[str, bytes, os.PathLike]] = None,
+        data_context_root_dir: Optional[Union[str, bytes, os.PathLike[Any]]] = None,
         data_context_config: Optional[DataContextConfig] = None,
         runtime_data_source: Optional[Union[DataFrame, str]] = None,
         checkpoint_name: Optional[str] = None,
         checkpoint_config: Optional[CheckpointConfig] = None,
-        checkpoint_kwargs: Optional[Dict] = None,
+        checkpoint_kwargs: Optional[Dict[str, Any]] = None,
         validation_failure_callback: Optional[Callable[[CheckpointResult], None]] = None,
         fail_task_on_validation_failure: bool = True,
         return_json_dict: bool = False,
@@ -95,20 +96,22 @@ class GreatExpectationsOperator(BaseOperator):
         self.data_asset_name: Optional[str] = data_asset_name
         self.run_name: Optional[str] = run_name
         self.conn_id: Optional[str] = conn_id
-        self.file_regex: Optional[dict] = (
+        self.file_regex: Optional[Dict[str, Any]] = (
             file_regex if file_regex else {"group_names": ["data_asset_name"], "pattern": "(.*)"}
         )
         self.execution_engine: Optional[str] = (
             execution_engine if execution_engine else "PandasExecutionEngine"
         )
-        self.batch_request_extra: Optional[Dict] = batch_request_extra if batch_request_extra else {}  # noqa
+        self.batch_request_extra: Dict[str, Any] = batch_request_extra if batch_request_extra else {}  # noqa
         self.expectation_suite_name: Optional[str] = expectation_suite_name
-        self.data_context_root_dir: Optional[Union[str, bytes, os.PathLike]] = data_context_root_dir
+        self.data_context_root_dir: Optional[Union[str, bytes, os.PathLike[Any]]] = data_context_root_dir
         self.data_context_config: DataContextConfig = data_context_config
         self.runtime_data_source = runtime_data_source
         self.checkpoint_name: Optional[str] = checkpoint_name
-        self.checkpoint_config: Optional[CheckpointConfig] = checkpoint_config if checkpoint_config else {}
-        self.checkpoint_kwargs: Optional[Dict] = checkpoint_kwargs
+        self.checkpoint_config: Union[CheckpointConfig, Dict[Any, Any]] = (
+            checkpoint_config if checkpoint_config else {}
+        )
+        self.checkpoint_kwargs: Optional[Dict[str, Any]] = checkpoint_kwargs
         self.fail_task_on_validation_failure: Optional[bool] = fail_task_on_validation_failure
         self.validation_failure_callback: Optional[
             Callable[[CheckpointResult], None]
@@ -143,31 +146,35 @@ class GreatExpectationsOperator(BaseOperator):
                 "An expectation_suite_name must be supplied if neither checkpoint_name nor checkpoint_config are."
             )
 
-    def make_connection_string(self):
+    def make_connection_string(self) -> str:
         """Builds connection strings based off existing Airflow connections. Only supports necessary extras."""
+        uri_string = ""
+        if not self.conn:
+            raise ValueError("No conn passed to operator.")
         if self.conn_type in ("redshift", "postgres", "mysql", "mssql"):
             odbc_connector = ""
-            if self.conn in ("redshift", "postgres"):
+            if self.conn_type in ("redshift", "postgres"):
                 odbc_connector = "postgresql+psycopg2"
-            elif self.conn == "mysql":
+            elif self.conn_type == "mysql":
                 odbc_connector = "mysql"
             else:
                 odbc_connector = "mssql+pyodbc"
-            return f"{odbc_connector}://{self.conn.login}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.schema}"  # noqa
+            uri_string = f"{odbc_connector}://{self.conn.login}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.schema}"  # noqa
         elif self.conn_type == "snowflake":
-            return f"snowflake://{self.conn.login}:{self.conn.password}@{self.conn.extra_dejson['extra__snowflake__account']}.{self.conn.extra_dejson['extra__snowflake__region']}/{self.conn.extra_dejson['extra__snowflake__database']}/{self.conn.schema}?warehouse={self.conn.extra_dejson['extra__snowflake__warehouse']}&role={self.conn.extra_dejson['extra__snowflake__role']}"  # noqa
+            uri_string = f"snowflake://{self.conn.login}:{self.conn.password}@{self.conn.extra_dejson['extra__snowflake__account']}.{self.conn.extra_dejson['extra__snowflake__region']}/{self.conn.extra_dejson['extra__snowflake__database']}/{self.conn.schema}?warehouse={self.conn.extra_dejson['extra__snowflake__warehouse']}&role={self.conn.extra_dejson['extra__snowflake__role']}"  # noqa
         elif self.conn_type == "gcpbigquery":
-            return f"{self.conn.host}{self.conn.schema}"
+            uri_string = f"{self.conn.host}{self.conn.schema}"
         elif self.conn_type == "sqllite":
-            return f"sqlite:///{self.conn.host}"
+            uri_string = f"sqlite:///{self.conn.host}"
         # TODO: Add Athena and Trino support if possible
         else:
             raise ValueError(f"Conn type: {self.conn_type} is not supported.")
+        return uri_string
 
     @property
-    def build_runtime_datasources(self) -> dict:
+    def build_runtime_datasources(self) -> Dict[str, Any]:
         """Builds runtime datasources based on Airflow connections or the given data_context_directory."""
-        datasource_config = {"default_datasource": {"class_name": "Datasource"}}
+        datasource_config: Dict[str, Any] = {"default_datasource": {"class_name": "Datasource"}}
         if self.conn:
             connection_string = self.make_connection_string()
             datasource_config["default_datasource"]["execution_engine"] = {
@@ -205,9 +212,9 @@ class GreatExpectationsOperator(BaseOperator):
         return datasource_config
 
     @property
-    def build_runtime_env(self) -> dict:
+    def build_runtime_env(self) -> Dict[str, Any]:
         """Builds the runtime_environment dict that overwrites all other configs."""
-        runtime_env = {}
+        runtime_env: Dict[str, Any] = {}
         runtime_env["datasources"] = self.build_runtime_datasources()
         return runtime_env
 
@@ -234,7 +241,7 @@ class GreatExpectationsOperator(BaseOperator):
         return batch_request
 
     @property
-    def default_action_list(self) -> Dict[str, Any]:
+    def default_action_list(self) -> List[Dict[str, Any]]:
         """Builds a default action list for a default checkpoint."""
         action_list = [
             {
@@ -285,7 +292,7 @@ class GreatExpectationsOperator(BaseOperator):
     @property
     def default_checkpoint_config(self) -> CheckpointConfig:
         """Builds a default checkpoint with default values."""
-        validations = [{"batch_request": self.default_batch_request}]
+        validations = [{"batch_request": self.default_batch_request_dict}]
         self.run_name = (
             self.run_name
             if self.run_name
@@ -309,7 +316,7 @@ class GreatExpectationsOperator(BaseOperator):
             expectation_suite_ge_cloud_id=None,
         )
 
-    def execute(self, context: Dict[str, Any]) -> Union[CheckpointResult, Dict]:
+    def execute(self, context: Context) -> Union[CheckpointResult, Dict[str, Any]]:
         """
         Determines whether a checkpoint exists or need to be built, then
         runs the resulting checkpoint.
@@ -319,13 +326,13 @@ class GreatExpectationsOperator(BaseOperator):
         self.conn_type = self.conn.conn_type if self.conn else None
 
         self.log.info("Instantiating Data Context...")
-        runtime_env: dict = self.build_runtime_env() if self.data_asset_name else {}
+        runtime_env: Dict[str, Any] = self.build_runtime_env() if self.data_asset_name else {}
         if self.data_context_root_dir:
-            self.data_context: BaseDataContext = ge.data_context.DataContext(
+            self.data_context = ge.data_context.DataContext(
                 context_root_dir=self.data_context_root_dir, runtime_environment=runtime_env
             )
         else:
-            self.data_context: BaseDataContext = BaseDataContext(
+            self.data_context = BaseDataContext(
                 project_config=self.data_context_config, runtime_environment=runtime_env
             )
 
