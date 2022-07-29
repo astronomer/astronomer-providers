@@ -15,7 +15,7 @@ from astronomer.providers.google.cloud.operators.kubernetes_engine import (
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
 GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
-LOCATION = os.getenv("GCP_GKE_LOCATION", "us-west1")
+LOCATION = os.getenv("GCP_GKE_LOCATION", "us-central1")
 GKE_CLUSTER_NAME = os.getenv("GKE_CLUSTER_NAME", "provider-team-gke-cluster")
 GKE_NAMESPACE = os.getenv("GKE_NAMESPACE", "default")
 
