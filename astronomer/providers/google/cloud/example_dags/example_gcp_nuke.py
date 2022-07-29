@@ -7,6 +7,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.timezone import datetime
 
 REGION = os.getenv("GCP_LOCATION", "us-central1")
+GCP_PROJECT_NAME = os.getenv("GCP_PROJECT_NAME", "astronomer-airflow-providers")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
@@ -32,7 +33,7 @@ def gcloud_nuke_callable() -> None:
 
         # Authenticate with GCP using service account file.
         subprocess.getoutput(f"gcloud auth activate-service-account --key-file={sa_file_name}")
-        subprocess.getoutput("gcloud config set project astronomer-airflow-providers")
+        subprocess.getoutput(f"gcloud config set project {GCP_PROJECT_NAME}")
 
         # Delete GKE clusters.
         gke_clusters = json.loads(subprocess.getoutput("gcloud beta container clusters list --format=json"))
