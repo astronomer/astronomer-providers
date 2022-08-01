@@ -175,9 +175,8 @@ Goals for the project
 Limitations
 -----------
 
-- In Airflow sensors have a param ``mode`` which has two types poke and reschdule,
-  which uses the worker slot to poke or at intervals respectively. Whereas in async sensors this param has
-  no significant usage since tasks gets deferred to Trigger and worker slot is free.
+- In Airflow sensors have a param ``mode`` which can be ``poke`` and ``reschedule``,
+  whereas in async sensors, this param has no usage since tasks gets deferred to Trigger.
 
 License
 -------

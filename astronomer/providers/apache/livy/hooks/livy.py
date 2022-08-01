@@ -22,9 +22,9 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
             For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
     :param extra_headers: A dictionary of headers passed to the HTTP request to livy.
 
-    .. see also::
+    .. seealso::
         For more details refer to the Apache Livy API reference:
-        https://livy.apache.org/docs/latest/rest-api.html
+        `Apache Livy API reference <https://livy.apache.org/docs/latest/rest-api.html>`_
     """
 
     TERMINAL_STATES = {
