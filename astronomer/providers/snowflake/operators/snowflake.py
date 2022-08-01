@@ -19,7 +19,34 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
     """
-    Executes SQL code in a Snowflake database
+    - SnowflakeOperatorAsync uses the snowflake python connector ``execute_async`` method to submit a database command
+      for asynchronous execution.
+    - Submit multiple queries in parallel without waiting for each query to complete.
+    - Accepts list of queries or multiple queries with ‘;’ semicolon separated string and params. It loops through the
+      queries and execute them in sequence. Uses execute_async method to run the query
+    - Once a query is submitted, it executes the query from one connection and gets the query IDs from the
+      response and passes it to the Triggerer and closes the connection (so that the worker slots can be freed up).
+    - The trigger gets the list of query IDs as input and polls every few seconds to snowflake and checks
+      for the query status based on the query ID from different connection.
+
+    Where can this operator fit in?
+         - Execute time taking queries which can be executed in parallel
+         - For batch based operation like copy or inserting the data in parallel.
+
+    Best practices:
+         - Ensure that you know which queries are dependent upon other queries before you run any queries in parallel.
+           Some queries are interdependent and order sensitive, and therefore not suitable for parallelizing.
+           For example, obviously an INSERT statement should not start until after the corresponding to CREATE TABLE
+           statement has finished.
+         - Ensure that you do not run too many queries for the memory that you have available.
+           Running multiple queries in parallel typically consumes more memory,
+           especially if more than one set of results is stored in memory at the same time.
+         - Ensure that transaction control statements (BEGIN, COMMIT, and ROLLBACK) do not execute in parallel
+           with other statements.
+
+    .. seealso::
+        - `Snowflake Async Python connector <https://docs.snowflake.com/en/user-guide/python-connector-example.html#label-python-connector-querying-data-asynchronous.>`_
+        - `Best Practices <https://docs.snowflake.com/en/user-guide/python-connector-example.html#best-practices-for-asynchronous-queries>`_
 
     :param snowflake_conn_id: Reference to Snowflake connection id
     :param sql: the sql code to be executed. (templated)
@@ -44,7 +71,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     :param session_parameters: You can set session-level parameters at
         the time you connect to Snowflake
     :param poll_interval: the interval in seconds to poll the query
-    """
+    """  # noqa
 
     def __init__(self, *, poll_interval: int = 5, **kwargs: Any) -> None:
         self.poll_interval = poll_interval
@@ -128,12 +155,13 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
     This Operator currently uses key pair authentication, so you need tp provide private key raw content or
     private key file path in the snowflake connection along with other details
 
-    .. see also::
-        https://docs.snowflake.com/en/developer-guide/sql-api/authenticating.html#label-sql-api-authenticating-key-pair
+    .. seealso::
 
-    where can this operator fit in?
-         - To Execute Multiple SQL statement in single request
-         - To Execute the SQL statement asynchronously and to execute standard queries and most DDL and DML statements
+        `Snowflake SQL API key pair Authentication <https://docs.snowflake.com/en/developer-guide/sql-api/authenticating.html#label-sql-api-authenticating-key-pair>`_
+
+    Where can this operator fit in?
+         - To execute multiple SQL statements in a single request
+         - To execute the SQL statement asynchronously and to execute standard queries and most DDL and DML statements
          - To develop custom applications and integrations that perform queries
          - To create provision users and roles, create table, etc.
 
@@ -142,13 +170,11 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         - The GET command (in Snowflake SQL)
         - The CALL command with stored procedures that return a table(stored procedures with the RETURNS TABLE clause).
 
-    .. see also::
-        To know more about the Snowflake SQL API.
-        - https://docs.snowflake.com/en/developer-guide/sql-api/intro.html#introduction-to-the-sql-api
-        - https://docs.snowflake.com/en/developer-guide/sql-api/reference.html#snowflake-sql-api-reference
-        - https://docs.snowflake.com/en/developer-guide/sql-api/intro.html#limitations-of-the-sql-api
-        Limitation on snowflake SQL API
-        - https://docs.snowflake.com/en/developer-guide/sql-api/intro.html#limitations-of-the-sql-api
+    .. seealso::
+
+        - `Snowflake SQL API <https://docs.snowflake.com/en/developer-guide/sql-api/intro.html#introduction-to-the-sql-api>`_
+        - `API Reference <https://docs.snowflake.com/en/developer-guide/sql-api/reference.html#snowflake-sql-api-reference>`_
+        - `Limitation on snowflake SQL API <https://docs.snowflake.com/en/developer-guide/sql-api/intro.html#limitations-of-the-sql-api>`_
 
     :param snowflake_conn_id: Reference to Snowflake connection id
     :param sql: the sql code to be executed. (templated)
@@ -179,7 +205,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
     :param bindings: (Optional) Values of bind variables in the SQL statement.
             When executing the statement, Snowflake replaces placeholders (? and :name) in
             the statement with these specified values.
-    """
+    """  # noqa
 
     LIFETIME = timedelta(minutes=59)  # The tokens will have a 59 minutes lifetime
     RENEWAL_DELTA = timedelta(minutes=54)  # Tokens will be renewed after 54 minutes
