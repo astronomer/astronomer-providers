@@ -67,6 +67,7 @@ with DAG(
     tags=["example", "async", "emr"],
     catchup=False,
 ) as dag:
+    # apache-airflow-providers-amazon < 4.1.0 you will also have to pass emr_conn_id param
     # [START howto_operator_emr_create_job_flow_steps_tasks]
     cluster_creator = EmrCreateJobFlowOperator(
         task_id="create_job_flow",
