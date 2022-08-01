@@ -1,12 +1,11 @@
 import os
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 import great_expectations as ge
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
-from airflow.utils.context import Context
 from great_expectations.checkpoint import Checkpoint
 from great_expectations.checkpoint.types.checkpoint_result import CheckpointResult
 from great_expectations.data_context import BaseDataContext
@@ -16,6 +15,9 @@ from great_expectations.data_context.types.base import (
 )
 from great_expectations.data_context.util import instantiate_class_from_config
 from pandas import DataFrame
+
+if TYPE_CHECKING:
+    from airflow.utils.context import Context
 
 
 class GreatExpectationsOperator(BaseOperator):
@@ -146,6 +148,9 @@ class GreatExpectationsOperator(BaseOperator):
                 "An expectation_suite_name must be supplied if neither checkpoint_name nor checkpoint_config are."
             )
 
+        if type(self.checkpoint_config) == CheckpointConfig:
+            self.checkpoint_config = self.checkpoint_config.to_json_dict()
+
     def make_connection_string(self) -> str:
         """Builds connection strings based off existing Airflow connections. Only supports necessary extras."""
         uri_string = ""
@@ -171,7 +176,6 @@ class GreatExpectationsOperator(BaseOperator):
             raise ValueError(f"Conn type: {self.conn_type} is not supported.")
         return uri_string
 
-    @property
     def build_runtime_datasources(self) -> Dict[str, Any]:
         """Builds runtime datasources based on Airflow connections or the given data_context_directory."""
         datasource_config: Dict[str, Any] = {"default_datasource": {"class_name": "Datasource"}}
@@ -211,14 +215,12 @@ class GreatExpectationsOperator(BaseOperator):
             }
         return datasource_config
 
-    @property
     def build_runtime_env(self) -> Dict[str, Any]:
         """Builds the runtime_environment dict that overwrites all other configs."""
         runtime_env: Dict[str, Any] = {}
         runtime_env["datasources"] = self.build_runtime_datasources()
         return runtime_env
 
-    @property
     def default_batch_request_dict(self) -> Dict[str, Any]:
         """Builds a default batch request for a default checkpoint."""
         data_connector_name = (
@@ -240,8 +242,7 @@ class GreatExpectationsOperator(BaseOperator):
         batch_request.update(self.batch_request_extra)
         return batch_request
 
-    @property
-    def default_action_list(self) -> List[Dict[str, Any]]:
+    def build_default_action_list(self) -> List[Dict[str, Any]]:
         """Builds a default action list for a default checkpoint."""
         action_list = [
             {
@@ -289,8 +290,7 @@ class GreatExpectationsOperator(BaseOperator):
             )
         return action_list
 
-    @property
-    def default_checkpoint_config(self) -> CheckpointConfig:
+    def build_default_checkpoint_config(self) -> CheckpointConfig:
         """Builds a default checkpoint with default values."""
         validations = [{"batch_request": self.default_batch_request_dict}]
         self.run_name = (
@@ -307,7 +307,7 @@ class GreatExpectationsOperator(BaseOperator):
             run_name_template=self.run_name,
             expectation_suite_name=self.expectation_suite_name,
             batch_request=None,
-            action_list=self.default_action_list,
+            action_list=self.build_default_action_list(),
             evaluation_parameters={},
             runtime_configuration={},
             validations=validations,
@@ -316,7 +316,7 @@ class GreatExpectationsOperator(BaseOperator):
             expectation_suite_ge_cloud_id=None,
         )
 
-    def execute(self, context: Context) -> Union[CheckpointResult, Dict[str, Any]]:
+    def execute(self, context: "Context") -> Union[CheckpointResult, Dict[str, Any]]:
         """
         Determines whether a checkpoint exists or need to be built, then
         runs the resulting checkpoint.
@@ -342,14 +342,14 @@ class GreatExpectationsOperator(BaseOperator):
             self.checkpoint = self.data_context.get_checkpoint(name=self.checkpoint_name)
         elif self.checkpoint_config:
             self.checkpoint = instantiate_class_from_config(
-                config=self.checkpoint_config.to_json_dict(),
+                config=self.checkpoint_config,
                 runtime_environment={"data_context": self.data_context},
                 config_defaults={"module_name": "great_expectations.checkpoint"},
             )
         else:
             self.checkpoint_name = f"{self.data_asset_name}.{self.expectation_suite_name}.chk"
             self.checkpoint = instantiate_class_from_config(
-                config=self.default_checkpoint_config.to_json_dict(),
+                config=self.build_default_checkpoint_config().to_json_dict(),
                 runtime_environment={"data_context": self.data_context},
                 config_defaults={"module_name": "great_expectations.checkpoint"},
             )
