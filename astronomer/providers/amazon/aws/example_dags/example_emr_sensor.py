@@ -18,7 +18,6 @@ from astronomer.providers.amazon.aws.sensors.emr import (
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
-EMR_CONN_ID = os.getenv("ASTRO_EMR_CONN_ID", "emr_default")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 SPARK_STEPS = [
@@ -68,11 +67,12 @@ with DAG(
     tags=["example", "async", "emr"],
     catchup=False,
 ) as dag:
+    # For apache-airflow-providers-amazon < 4.1.0 you will also have to pass emr_conn_id param
     # [START howto_operator_emr_create_job_flow_steps_tasks]
     cluster_creator = EmrCreateJobFlowOperator(
         task_id="create_job_flow",
         job_flow_overrides=JOB_FLOW_OVERRIDES,
-        emr_conn_id=EMR_CONN_ID,
+        aws_conn_id=AWS_CONN_ID,
     )
     # [END howto_operator_emr_create_job_flow_steps_tasks]
 
