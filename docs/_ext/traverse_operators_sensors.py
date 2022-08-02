@@ -17,7 +17,7 @@ BASE_IMPORT_PATH = "astronomer.providers"
 CURRENT_FILE_PATH = Path(__file__)
 ASTRONOMER_PROVIDERS_PATH = CURRENT_FILE_PATH.parent.parent.parent / "astronomer" / "providers"
 
-BASE_CLASS_DEF_URL = "/astronomer-providers/docs/_build/html/_api/"
+BASE_CLASS_DEF_URL = "/en/stable/_api/"
 
 
 def collect_elements(
