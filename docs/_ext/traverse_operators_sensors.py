@@ -17,8 +17,6 @@ BASE_IMPORT_PATH = "astronomer.providers"
 CURRENT_FILE_PATH = Path(__file__)
 ASTRONOMER_PROVIDERS_PATH = CURRENT_FILE_PATH.parent.parent.parent / "astronomer" / "providers"
 
-BASE_CLASS_DEF_URL = "/en/stable/_api/"
-
 
 def collect_elements(
     directory_path: str,
@@ -84,39 +82,41 @@ class TraverseOperatorsSensors(SphinxDirective):
             "<h3>Operators</h3> " "<table>" "<th>#</th>" "<th>Operator name</th>" "<th>Import path</th>"
         )
         for index, operator in enumerate(operators, start=1):
-            class_def_link = (
-                BASE_CLASS_DEF_URL
-                + operator[1].replace(".", "/")
-                + "/index.html#"
-                + operator[1]
-                + "."
-                + operator[0]
-            )
+            class_def_link = operator[1].replace(".", "/") + "/index.html#" + operator[1] + "." + operator[0]
             operators_html += (
                 f"<tr>"
                 f"<td>{index}</td>"
-                f"<td><span><a href={class_def_link}>{operator[0]}</a></span></td>"
+                f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
                 f"<td><span><pre><code class='python'>from {operator[1]} import {operator[0]}</code></pre></span></td>"
                 f"</tr>"
+            )
+            # The below script generates the URL for the class definition by extracting the selected doc version from
+            # the current browser URL location.
+            operators_html += (
+                f"<script> "
+                f"var base_url = '' + window.location.pathname.split('/providers/')[0] + '/_api/';"
+                f"var class_def_link = base_url + '{class_def_link}';"
+                f"document.getElementById('{operator[0]}').setAttribute('href', class_def_link);"
+                f"</script>"
             )
         operators_html += "</table> <br/>"
 
         sensors_html = "<h3>Sensors</h3>" "<table>" "<th>#</th>" "<th>Sensor name</th>" "<th>Import path</th>"
         for index, sensor in enumerate(sensors, start=1):
-            class_def_link = (
-                BASE_CLASS_DEF_URL
-                + sensor[1].replace(".", "/")
-                + "/index.html#"
-                + sensor[1]
-                + "."
-                + sensor[0]
-            )
+            class_def_link = sensor[1].replace(".", "/") + "/index.html#" + sensor[1] + "." + sensor[0]
             sensors_html += (
                 f"<tr>"
                 f"<td>{index}</td>"
-                f"<td><span><a href={class_def_link}>{sensor[0]}</a></span></td>"
+                f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
                 f"<td><span><pre><code class='python'>from {sensor[1]} import {sensor[0]}</code></pre></span></td>"
                 f"</tr>"
+            )
+            sensors_html += (
+                f"<script> "
+                f"var base_url = '' + window.location.pathname.split('/providers/')[0] + '/_api/';"
+                f"var class_def_link = base_url + '{class_def_link}';"
+                f"document.getElementById('{sensor[0]}').setAttribute('href', class_def_link);"
+                f"</script>"
             )
         sensors_html += "</table> <br/>"
         base_html = (
