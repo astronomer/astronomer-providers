@@ -53,6 +53,7 @@ def create_context(task):
     task_instance = TaskInstance(task=task)
     task_instance.dag_run = dag_run
     task_instance.dag_id = dag.dag_id
+    task_instance.xcom_push = mock.MagicMock(key="return_value", value=["123"])
     return {
         "dag": dag,
         "run_id": dag_run.run_id,
@@ -78,10 +79,16 @@ def test_get_operator_classnames():
 
 
 @mock.patch("airflow.models.taskinstance.TaskInstance.xcom_pull")
-@mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
-def test__get_xcom_redshift_job_id_none(mock_execute, mock_context):
-    mock_execute.return_value = [], {}
-    mock_context.return_value = {}
+def test__get_xcom_redshift_job_id_none(mock_xcom_pull):
+    mock_xcom_pull.return_value = {}
     extractor = RedshiftAsyncExtractor(TASK)
-    redshift_job_id = extractor._get_xcom_redshift_job_id(mock_context)
+    redshift_job_id = extractor._get_xcom_redshift_job_id(mock_xcom_pull)
     assert redshift_job_id is None
+
+
+@mock.patch("airflow.models.taskinstance.TaskInstance")
+def test__get_xcom_redshift_job_id(mock_task_instance):
+    mock_task_instance.xcom_pull.return_value = ["123"]
+    extractor = RedshiftAsyncExtractor(TASK)
+    redshift_job_id = extractor._get_xcom_redshift_job_id(mock_task_instance)
+    assert "123" == redshift_job_id
