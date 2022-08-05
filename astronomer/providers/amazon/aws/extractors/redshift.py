@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors.redshift_data_extractor import RedshiftDataExtractor
@@ -16,7 +16,7 @@ class RedshiftAsyncExtractor(RedshiftDataExtractor):
         """Returns the list of operators this extractor works on."""
         return ["RedshiftDataOperatorAsync", "RedshiftSQLOperatorAsync"]
 
-    def _get_xcom_redshift_job_id(self, task_instance: TaskInstance) -> str:
+    def _get_xcom_redshift_job_id(self, task_instance: TaskInstance) -> Optional[str]:
         """Get query ids from XCOM"""
         redshift_job_id: List[str]
         redshift_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="return_value")
