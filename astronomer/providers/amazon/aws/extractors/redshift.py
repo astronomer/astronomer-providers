@@ -22,3 +22,4 @@ class RedshiftAsyncExtractor(RedshiftDataExtractor):
         redshift_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key="return_value")
         if len(redshift_job_id) > 0:
             return redshift_job_id[0]
+        return None
