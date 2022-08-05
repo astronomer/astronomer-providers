@@ -1,4 +1,6 @@
-from typing import Any, Optional, Union
+import inspect
+from functools import wraps
+from typing import Any, Optional, TypeVar, Union, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
@@ -8,6 +10,40 @@ from azure.mgmt.datafactory.aio import DataFactoryManagementClient
 from azure.mgmt.datafactory.models import PipelineRun
 
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
+
+T = TypeVar("T", bound=Any)
+
+
+def provide_targeted_factory_async(func: T) -> T:
+    """
+    Provide the targeted factory to the async decorated function in case it isn't specified.
+
+    If ``resource_group_name`` or ``factory_name`` is not provided it defaults to the value specified in
+    the connection extras.
+    """
+    signature = inspect.signature(func)
+
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        bound_args = signature.bind(*args, **kwargs)
+
+        async def bind_argument(arg: Any, default_key: str) -> None:
+            # Check if arg was not included in the function signature or, if it is, the value is not provided.
+            if arg not in bound_args.arguments or bound_args.arguments[arg] is None:
+                self = args[0]
+                conn = await sync_to_async(self.get_connection)(self.conn_id)
+                default_value = conn.extra_dejson.get(default_key)
+                if not default_value:
+                    raise AirflowException("Could not determine the targeted data factory.")
+
+                bound_args.arguments[arg] = conn.extra_dejson[default_key]
+
+        await bind_argument("resource_group_name", "extra__azure_data_factory__resource_group_name")
+        await bind_argument("factory_name", "extra__azure_data_factory__factory_name")
+
+        return await func(*bound_args.args, **bound_args.kwargs)
+
+    return cast(T, wrapper)
 
 
 class AzureDataFactoryHookAsync(AzureDataFactoryHook):
@@ -51,6 +87,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
             subscription_id=subscription_id,
         )
 
+    @provide_targeted_factory_async
     async def get_pipeline_run(
         self,
         run_id: str,
