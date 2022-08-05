@@ -65,8 +65,6 @@ class SnowflakeHookAsync(SnowflakeHook):
             with closing(conn.cursor(DictCursor)) as cur:
 
                 for sql_statement in sql:
-
-                    self.log.info("Running statement: %s, parameters: %s", sql_statement, parameters)
                     if parameters:
                         cur.execute_async(sql_statement, parameters)
                     else:
