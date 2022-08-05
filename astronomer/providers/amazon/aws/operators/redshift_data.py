@@ -42,7 +42,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         self.log.info("Query IDs %s", query_ids)
         if response.get("status") == "error":
             self.execute_complete(context, event=response)
-        context["ti"].xcom_push(key="query_ids", value=query_ids)
+        context["ti"].xcom_push(key="return_value", value=query_ids)
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftDataTrigger(
