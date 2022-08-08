@@ -1,3 +1,4 @@
+import datetime
 from unittest import mock
 
 import pytest
@@ -49,7 +50,9 @@ def test_http_response_check_does_not_run_async():
 
     with mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer") as mock_defer:
         task.execute({})
-        mock_defer.assert_called_once_with(timeout=None, trigger=mock.ANY, method_name="execute_complete")
+        mock_defer.assert_called_once_with(
+            timeout=datetime.timedelta(days=7), trigger=mock.ANY, method_name="execute_complete"
+        )
 
 
 @mock.patch("astronomer.providers.http.sensors.http.HttpSensor")

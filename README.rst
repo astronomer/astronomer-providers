@@ -136,6 +136,12 @@ We will only create Async operators for the "sync-version" of operators that do 
 For example, we won’t create an async Operator for a ``BigQueryCreateEmptyTableOperator`` but will create one
 for ``BigQueryInsertJobOperator`` that actually runs queries and can take hours in the worst case for task completion.
 
+To create async operators, we need to inherit from the corresponding airflow sync operators.
+If sync version isn't available, then inherit from airflow ``BaseOperator``.
+
+To create async sensors, we need to inherit from the corresponding sync sensors.
+If sync version isn't available, then inherit from airflow ``BaseSensorOperator``.
+
 Changelog
 ---------
 
@@ -165,6 +171,12 @@ Goals for the project
   that we develop
 - We would love to see the Airflow community members create, maintain and share their providers to build an Ecosystem
   of Providers.
+
+Limitations
+-----------
+
+- In Airflow sensors have a param ``mode`` which can be ``poke`` and ``reschedule``.
+  In async sensors, this param has no usage since tasks gets deferred to Triggerer.
 
 License
 -------

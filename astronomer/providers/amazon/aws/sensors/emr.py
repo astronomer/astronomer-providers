@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict
 
 from airflow import AirflowException
@@ -33,7 +34,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=EmrContainerSensorTrigger(
                 virtual_cluster_id=self.virtual_cluster_id,
                 job_id=self.job_id,
@@ -79,7 +80,7 @@ class EmrStepSensorAsync(EmrStepSensor):
     def execute(self, context: Context) -> None:
         """Deferred and give control to trigger"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=EmrStepSensorTrigger(
                 job_flow_id=self.job_flow_id,
                 step_id=self.step_id,
@@ -133,7 +134,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=EmrJobFlowSensorTrigger(
                 job_flow_id=self.job_flow_id,
                 aws_conn_id=self.aws_conn_id,

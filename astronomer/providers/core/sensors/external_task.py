@@ -24,7 +24,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
         # Defer to our trigger
         if not self.external_task_id:  # Tempting to explicitly check for None, but this captures falsy values
             self.defer(
-                timeout=self.execution_timeout,
+                timeout=datetime.timedelta(seconds=self.timeout),
                 trigger=DagStateTrigger(
                     dag_id=self.external_dag_id,
                     # The trigger does not do pass/fail, only "a state was reached",

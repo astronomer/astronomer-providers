@@ -1,10 +1,11 @@
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union, cast
+from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from airflow.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensor
+from airflow.sensors.base import BaseSensorOperator
 from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.s3 import (
@@ -15,7 +16,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
 )
 
 
-class S3KeySensorAsync(BaseOperator):
+class S3KeySensorAsync(BaseSensorOperator):
     """
     Waits for a key (a file-like instance on S3) to be present in a S3 bucket
     asynchronously. S3 being a key/value it does not support folders. The path
@@ -74,7 +75,7 @@ class S3KeySensorAsync(BaseOperator):
         """Check for a key in s3 and defers using the trigger"""
         self._resolve_bucket_and_key()
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=S3KeyTrigger(
                 bucket_name=cast(str, self.bucket_name),
                 bucket_key=self.bucket_key,
@@ -144,7 +145,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         """Defers using the trigger, and check for the file size"""
         self._resolve_bucket_and_key()
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=S3KeySizeTrigger(
                 bucket_name=cast(str, self.bucket_name),
                 bucket_key=self.bucket_key,
@@ -167,7 +168,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         return None
 
 
-class S3KeysUnchangedSensorAsync(BaseOperator):
+class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
     """
     Checks for changes in the number of objects at prefix in AWS S3
     bucket and returns True if the inactivity period has passed with no
@@ -200,39 +201,16 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         when this happens. If false an error will be raised.
     """
 
-    template_fields: Sequence[str] = ("bucket_name", "prefix")
-
     def __init__(
         self,
-        *,
-        bucket_name: str,
-        prefix: str,
-        aws_conn_id: str = "aws_default",
-        verify: Optional[Union[bool, str]] = None,
-        inactivity_period: float = 60 * 60,
-        min_objects: int = 1,
-        previous_objects: Optional[Set[str]] = None,
-        allow_delete: bool = True,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.bucket_name = bucket_name
-        self.prefix = prefix
-        if inactivity_period < 0:
-            raise ValueError("inactivity_period must be non-negative")
-        self.inactivity_period = inactivity_period
-        self.min_objects = min_objects
-        self.previous_objects = previous_objects or set()
-        self.inactivity_seconds = 0
-        self.allow_delete = allow_delete
-        self.aws_conn_id = aws_conn_id
-        self.verify = verify
-        self.last_activity_time: Optional[datetime] = None
 
     def execute(self, context: Context) -> None:
         """Defers Trigger class to check for changes in the number of objects at prefix in AWS S3"""
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=S3KeysUnchangedTrigger(
                 bucket_name=self.bucket_name,
                 prefix=self.prefix,
@@ -259,7 +237,7 @@ class S3KeysUnchangedSensorAsync(BaseOperator):
         return None
 
 
-class S3PrefixSensorAsync(BaseOperator):
+class S3PrefixSensorAsync(BaseSensorOperator):
     """
     Async implementation of the S3 Prefix Sensor.
     Gets deferred onto the Trigggerer and pokes
@@ -288,8 +266,6 @@ class S3PrefixSensorAsync(BaseOperator):
                  CA cert bundle than the one used by botocore.
     """
 
-    template_fields: Sequence[str] = ("prefix", "bucket_name")
-
     def __init__(
         self,
         *,
@@ -311,7 +287,7 @@ class S3PrefixSensorAsync(BaseOperator):
         """Defers trigger class to poke for a prefix or all prefixes to exist"""
         self.log.info("Poking for prefix : %s in bucket s3://%s", self.prefix, self.bucket_name)
         self.defer(
-            timeout=self.execution_timeout,
+            timeout=timedelta(seconds=self.timeout),
             trigger=S3PrefixTrigger(
                 bucket_name=self.bucket_name,
                 prefix=self.prefix,

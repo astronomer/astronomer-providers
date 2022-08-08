@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.providers.http.hooks.http import HttpHook
@@ -93,7 +94,7 @@ class HttpSensorAsync(HttpSensor):
             super().execute(context=context)
         else:
             self.defer(
-                timeout=self.execution_timeout,
+                timeout=timedelta(seconds=self.timeout),
                 trigger=HttpTrigger(
                     method=self.hook.method,  # TODO: Fix this to directly get method from ctor
                     endpoint=self.endpoint,
