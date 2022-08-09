@@ -64,7 +64,7 @@ run-static-checks: ## Run CI static code checks
 		--rm -it astronomer-providers-dev -- pre-commit run --all-files --show-diff-on-failure
 
 run-mypy: ## Run MyPy in Container
-	docker build -f dev/Dockerfile . -t astronomer-providers-dev
+	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
 		--rm -it astronomer-providers-dev \
