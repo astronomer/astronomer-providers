@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.3.0
     hooks:
       - id: check-merge-conflict
       - id: check-toml
@@ -28,7 +28,7 @@ repos:
       - id: python-check-blanket-type-ignore
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.13
+    rev: v1.3.0
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -41,7 +41,7 @@ repos:
       - id: markdown-link-check
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
 
@@ -58,7 +58,7 @@ repos:
         args: ["--profile=black"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 4.0.1
+    rev: 5.0.4
     hooks:
       - id: flake8
         additional_dependencies:
@@ -81,7 +81,7 @@ repos:
         args: ["--write-changes", "--ignore-words-list", "asend"]
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
         name: Check YAML files with yamllint
