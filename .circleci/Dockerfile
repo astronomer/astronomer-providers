@@ -7,6 +7,4 @@ RUN pip install --no-cache-dir -U -r ci/requirements.txt
 
 COPY . .
 
-ENV SETUPTOOLS_ENABLE_FEATURES="legacy-editable"
-
 RUN pip install -U .[all,tests]
