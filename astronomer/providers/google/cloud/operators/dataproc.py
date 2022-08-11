@@ -97,6 +97,11 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
 
         end_time: float = time.monotonic() + self.timeout
 
+        # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
+        self.log.info(
+            "In Dataproc Operator: End time is %s, monotonic time is %s", end_time, time.monotonic()
+        )
+
         self.defer(
             trigger=DataprocCreateClusterTrigger(
                 project_id=self.project_id,
