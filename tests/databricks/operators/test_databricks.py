@@ -241,7 +241,7 @@ def test_databricks_run_now_operator_async_hook(mock_get_hook):
         operator.execute(context=create_context(operator))
 
 
-@mock.patch("airflow.providers.databricks.operators.databricks.DatabricksRunNowOperator._get_hook")
+@mock.patch("airflow.providers.databricks.operators.databricks.DatabricksSubmitRunOperator._get_hook")
 def test_databricks_submit_run_operator_async_hook(mock_get_hook):
     """
     Asserts that a hooks is raising an type error for apache-airflow-providers-databricks>=3.2.0
