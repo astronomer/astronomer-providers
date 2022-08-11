@@ -25,7 +25,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         # It is imported from the Databricks base class.
         # Async calls (i.e. polling) are handled in the Trigger.
         try:
-            # for apache-airflow-providers-databricks<=3.2.0
+            # for apache-airflow-providers-databricks<3.2.0
             hook = self._get_hook()
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
@@ -81,7 +81,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         # Note: This hook makes non-async calls.
         # It is from the Databricks base class.
         try:
-            # for apache-airflow-providers-databricks<=3.2.0
+            # for apache-airflow-providers-databricks<3.2.0
             hook = self._get_hook()
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0

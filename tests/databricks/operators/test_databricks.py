@@ -228,7 +228,7 @@ def test_databricks_run_now_execute_complete_success(submit_run_response, get_ru
 @mock.patch("airflow.providers.databricks.operators.databricks.DatabricksRunNowOperator._get_hook")
 def test_databricks_run_now_operator_async_hook(mock_get_hook):
     """
-    Asserts that a hooks is raising an type error for apache-airflow-providers-databricks>=3.2.0
+    Asserts that the hook raises TypeError for apache-airflow-providers-databricks>=3.2.0
     when the DatabricksRunNowOperatorAsync is executed.
     """
     mock_get_hook.side_effect = TypeError("test exception")
@@ -244,7 +244,7 @@ def test_databricks_run_now_operator_async_hook(mock_get_hook):
 @mock.patch("airflow.providers.databricks.operators.databricks.DatabricksSubmitRunOperator._get_hook")
 def test_databricks_submit_run_operator_async_hook(mock_get_hook):
     """
-    Asserts that a hooks is raising an type error for apache-airflow-providers-databricks>=3.2.0
+    Asserts that the hook raises TypeError for apache-airflow-providers-databricks>=3.2.0
     when the DatabricksSubmitRunOperatorAsync is executed.
     """
     mock_get_hook.side_effect = TypeError("test exception")
