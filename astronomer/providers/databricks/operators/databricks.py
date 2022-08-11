@@ -24,7 +24,12 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         # Note: This hook makes non-async calls.
         # It is imported from the Databricks base class.
         # Async calls (i.e. polling) are handled in the Trigger.
-        hook = self._get_hook()
+        try:
+            # for apache-airflow-providers-databricks<=3.2.0
+            hook = self._get_hook()
+        except TypeError:
+            # for apache-airflow-providers-databricks>=3.2.0
+            hook = self._get_hook(caller="DatabricksSubmitRunOperatorAsync")
         self.run_id = hook.submit_run(self.json)
         job_id = hook.get_job_id(self.run_id)
 
@@ -75,7 +80,12 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         """
         # Note: This hook makes non-async calls.
         # It is from the Databricks base class.
-        hook = self._get_hook()
+        try:
+            # for apache-airflow-providers-databricks<=3.2.0
+            hook = self._get_hook()
+        except TypeError:
+            # for apache-airflow-providers-databricks>=3.2.0
+            hook = self._get_hook(caller="DatabricksRunNowOperatorAsync")
         self.run_id = hook.run_now(self.json)
 
         if self.do_xcom_push:
