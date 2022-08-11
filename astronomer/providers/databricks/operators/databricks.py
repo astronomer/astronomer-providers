@@ -29,6 +29,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
             hook = self._get_hook()
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
+            # TODO remove the ignore[call-arg] once databrick version 3.2.0 is released.
             hook = self._get_hook(caller="DatabricksSubmitRunOperatorAsync")  # type: ignore[call-arg]
         self.run_id = hook.submit_run(self.json)
         job_id = hook.get_job_id(self.run_id)
@@ -85,6 +86,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
             hook = self._get_hook()
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
+            # TODO remove the ignore[call-arg] once databrick version 3.2.0 is released.
             hook = self._get_hook(caller="DatabricksRunNowOperatorAsync")  # type: ignore[call-arg]
         self.run_id = hook.run_now(self.json)
 
