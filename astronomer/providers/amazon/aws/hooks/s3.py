@@ -1,13 +1,44 @@
+import asyncio
 import fnmatch
 import os
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from functools import wraps
+from inspect import signature
+from typing import Any, Dict, List, Optional, Set, TypeVar, cast
 
 from aiobotocore.client import AioBaseClient
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook, unify_bucket_name_and_key
+from asgiref.sync import sync_to_async
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
+
+T = TypeVar("T", bound=Any)
+
+
+def provide_bucket_name_async(func: T) -> T:
+    """
+    Function decorator that provides a bucket name taken from the connection
+    in case no bucket name has been passed to the function.
+    """
+    function_signature = signature(func)
+
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        bound_args = function_signature.bind(*args, **kwargs)
+
+        if "bucket_name" not in bound_args.arguments:
+            self = args[0]
+            if self.aws_conn_id:
+
+                connection = await sync_to_async(self.get_connection)(self.aws_conn_id)
+                if connection.schema:
+                    bound_args.arguments["bucket_name"] = connection.schema
+
+        return await func(*bound_args.args, **bound_args.kwargs)
+
+    return cast(T, wrapper)
 
 
 class S3HookAsync(AwsBaseHookAsync):
@@ -21,22 +52,25 @@ class S3HookAsync(AwsBaseHookAsync):
         kwargs["resource_type"] = "s3"
         super().__init__(*args, **kwargs)
 
-    @staticmethod
-    async def _check_exact_key(client: AioBaseClient, bucket: str, key: str) -> bool:
+    @provide_bucket_name_async
+    @unify_bucket_name_and_key
+    async def get_head_object(
+        self, client: AioBaseClient, key: str, bucket_name: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """
-        Checks if a key exists in a bucket asynchronously
+        Retrieves metadata of an object
 
         :param client: aiobotocore client
-        :param bucket: Name of the bucket in which the file is stored
+        :param bucket_name: Name of the bucket in which the file is stored
         :param key: S3 key that will point to the file
-        :return: True if the key exists and False if not.
         """
+        head_object_val: Optional[Dict[str, Any]] = None
         try:
-            await client.head_object(Bucket=bucket, Key=key)
-            return True
+            head_object_val = await client.head_object(Bucket=bucket_name, Key=key)
+            return head_object_val
         except ClientError as e:
             if e.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
-                return False
+                return head_object_val
             else:
                 raise e
 
@@ -80,41 +114,75 @@ class S3HookAsync(AwsBaseHookAsync):
 
         return prefixes
 
-    @staticmethod
-    async def _check_wildcard_key(client: AioBaseClient, bucket: str, wildcard_key: str) -> bool:
+    @provide_bucket_name_async
+    async def get_file_metadata(self, client: AioBaseClient, bucket_name: str, key: str) -> List[Any]:
         """
-        Checks that a key matching a wildcard expression exists in a bucket asynchronously
+        Gets a list of files that a key matching a wildcard expression exists in a bucket asynchronously
 
         :param client: aiobotocore client
-        :param bucket: the name of the bucket
-        :param wildcard_key: the path to the key
-        :return: True if a key exists and False if not.
+        :param bucket_name: the name of the bucket
+        :param key: the path to the key
         """
-        prefix = re.split(r"[\[\*\?]", wildcard_key, 1)[0]
+        prefix = re.split(r"[\[\*\?]", key, 1)[0]
         delimiter = ""
         paginator = client.get_paginator("list_objects_v2")
-        response = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
+        response = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)
+        files = []
         async for page in response:
             if "Contents" in page:
-                for k in page["Contents"]:
-                    if fnmatch.fnmatch(k["Key"], wildcard_key):
-                        return True
-        return False
+                files += page["Contents"]
+        return files
 
-    async def check_key(self, client: AioBaseClient, bucket: str, key: str, wildcard_match: bool) -> bool:
+    async def _check_key(
+        self,
+        client: AioBaseClient,
+        bucket_val: str,
+        wildcard_match: bool,
+        key: str,
+    ) -> bool:
         """
-        Checks if key exists or a key matching a wildcard expression exists in a bucket asynchronously
+        Function to check if wildcard_match is True get list of files that a key matching a wildcard expression exists
+        in a bucket asynchronously and return the boolean value. If  wildcard_match is False get the head object
+        from the bucket and return the boolean value.
+
+        :param client: aiobotocore client
+        :param bucket_val: the name of the bucket
+        :param key: S3 keys that will point to the file
+        :param wildcard_match: the path to the key
+        """
+        bucket_name, key = S3Hook.get_s3_bucket_key(bucket_val, key, "bucket_name", "bucket_key")
+        if wildcard_match:
+            keys = await self.get_file_metadata(client, bucket_name, key)
+            key_matches = [k for k in keys if fnmatch.fnmatch(k["Key"], key)]
+            if len(key_matches) == 0:
+                return False
+        else:
+            obj = await self.get_head_object(client, key, bucket_name)
+            if obj is None:
+                return False
+
+        return True
+
+    async def check_key(
+        self,
+        client: AioBaseClient,
+        bucket: str,
+        bucket_keys: List[str],
+        wildcard_match: bool,
+    ) -> bool:
+        """
+        Checks for all keys in bucket and returns boolean value
 
         :param client: aiobotocore client
         :param bucket: the name of the bucket
-        :param key: S3 key that will point to the file
+        :param bucket_keys: S3 keys that will point to the file
         :param wildcard_match: the path to the key
-        :return: True if a key exists and False if not.
         """
-        if wildcard_match:
-            return await self._check_wildcard_key(client, bucket, key)
-        else:
-            return await self._check_exact_key(client, bucket, key)
+        return all(
+            await asyncio.gather(
+                *(self._check_key(client, bucket, wildcard_match, key) for key in bucket_keys)
+            )
+        )
 
     async def _check_for_prefix(
         self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: Optional[str] = None
@@ -144,22 +212,23 @@ class S3HookAsync(AwsBaseHookAsync):
         self,
         client: AioBaseClient,
         bucket: str,
-        key: str,
+        bucket_keys: List[str],
         wildcard_match: bool,
         delimiter: Optional[str] = "/",
     ) -> List[Any]:
         """Gets a list of files in the bucket"""
-        prefix = key
-        if wildcard_match:
-            prefix = re.split(r"[\[\*\?]", key, 1)[0]
-
-        paginator = client.get_paginator("list_objects_v2")
-        response = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
         keys: List[Any] = []
-        async for page in response:
-            if "Contents" in page:
-                _temp = [k for k in page["Contents"] if isinstance(k.get("Size", None), (int, float))]
-                keys = keys + _temp
+        for key in bucket_keys:
+            prefix = key
+            if wildcard_match:
+                prefix = re.split(r"[\[\*\?]", key, 1)[0]
+
+            paginator = client.get_paginator("list_objects_v2")
+            response = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
+            async for page in response:
+                if "Contents" in page:
+                    _temp = [k for k in page["Contents"] if isinstance(k.get("Size", None), (int, float))]
+                    keys = keys + _temp
         return keys
 
     @staticmethod

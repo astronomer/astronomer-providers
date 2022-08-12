@@ -1,25 +1,55 @@
-S3 Sensor Async
-"""""""""""""""
+S3 Key Sensor Async
+"""""""""""""""""""
 
 
-To waits for a key (a file-like instance on S3) to be present in a S3 bucket asynchronously
-:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+Use :class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`. to wait for one or multiple keys to be present in an S3 bucket.
+For each key, it use aiobotocore to call
+`head_object <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.head_object>`__
+API (or `list_objects_v2 <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects_v2>`__
+API if ``wildcard_match`` is ``True``) to check whether it is present or not.
+Please keep in mind, especially when used to check a large volume of keys, that it makes one API call per key.
 
-.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
-    :language: python
-    :dedent: 4
-    :start-after: [START howto_sensor_s3_key_async]
-    :end-before: [END howto_sensor_s3_key_async]
-
-
-To waits for a key (a file-like instance on S3) to be present and be more than some size in a S3 bucket asynchronously
-:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySizeSensorAsync`.
+To check one file:
 
 .. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
     :language: python
     :dedent: 4
-    :start-after: [START howto_sensor_s3_key_size_async]
-    :end-before: [END howto_sensor_s3_key_size_async]
+    :start-after: [START howto_sensor_async_s3_key_single_key]
+    :end-before: [END howto_sensor_async_s3_key_single_key]
+
+To check multiple files:
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_async_s3_key_multiple_keys]
+    :end-before: [END howto_sensor_async_s3_key_multiple_keys]
+
+To check with an additional custom check you can define a function which receives a list of matched S3 object
+attributes and returns a boolean:
+
+- ``True``: a certain criteria is met
+- ``False``: the criteria isn't met
+
+This function is called for each key passed as parameter in ``bucket_key``.
+The reason why the parameter of this function is a list of objects is when ``wildcard_match`` is ``True``,
+multiple files can match one key. The list of matched S3 object attributes contain only the size and is this format:
+
+.. code-block:: python
+
+    [{"Size": int}]
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_s3_key_function_definition]
+    :end-before: [END howto_sensor_s3_key_function_definition]
+
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_sensor_async_s3_key_function]
+    :end-before: [END howto_sensor_async_s3_key_function]
 
 
 Checks for changes in the number of objects at prefix in AWS S3bucket
@@ -30,13 +60,3 @@ Checks for changes in the number of objects at prefix in AWS S3bucket
     :dedent: 4
     :start-after: [START howto_sensor_s3_key_unchanged_async]
     :end-before: [END howto_sensor_s3_key_unchanged_async]
-
-
-To waits asynchronously for a prefix or all prefixes to exist in S3 bucket
-:class:`~astronomer.providers.amazon.aws.sensor.s3.S3PrefixSensorAsync`.
-
-.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_s3.py
-    :language: python
-    :dedent: 4
-    :start-after: [START howto_sensor_s3_key_prefix_async]
-    :end-before: [END howto_sensor_s3_key_prefix_async]
