@@ -223,3 +223,37 @@ def test_databricks_run_now_execute_complete_success(submit_run_response, get_ru
         )
         is None
     )
+
+
+@mock.patch("airflow.providers.databricks.operators.databricks.DatabricksRunNowOperator._get_hook")
+def test_databricks_run_now_operator_async_hook(mock_get_hook):
+    """
+    Asserts that the hook raises TypeError for apache-airflow-providers-databricks>=3.2.0
+    when the DatabricksRunNowOperatorAsync is executed.
+    """
+    mock_get_hook.side_effect = TypeError("test exception")
+    operator = DatabricksRunNowOperatorAsync(
+        task_id="run_now",
+        databricks_conn_id=CONN_ID,
+    )
+
+    with pytest.raises(TypeError):
+        operator.execute(context=create_context(operator))
+
+
+@mock.patch("airflow.providers.databricks.operators.databricks.DatabricksSubmitRunOperator._get_hook")
+def test_databricks_submit_run_operator_async_hook(mock_get_hook):
+    """
+    Asserts that the hook raises TypeError for apache-airflow-providers-databricks>=3.2.0
+    when the DatabricksSubmitRunOperatorAsync is executed.
+    """
+    mock_get_hook.side_effect = TypeError("test exception")
+    operator = DatabricksSubmitRunOperatorAsync(
+        task_id="submit_run",
+        databricks_conn_id=CONN_ID,
+        existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+        notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+    )
+
+    with pytest.raises(TypeError):
+        operator.execute(context=create_context(operator))
