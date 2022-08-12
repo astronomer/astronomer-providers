@@ -1,5 +1,5 @@
-S3 Sensor Async
-"""""""""""""""
+S3 Key Sensor Async
+"""""""""""""""""""
 
 
 To wait for one or multiple keys to be present in an S3 bucket asynchronously, you can use
