@@ -80,9 +80,7 @@ async def test_s3_key_hook_get_head_object(mock_client, mock_head_object):
     """
     mock_client.return_value.head_object.return_value = {"ContentLength": 0}
     s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
-    task = await s3_hook_async.get_head_object(
-        mock_client.return_value, "s3://test_bucket/file", "test_bucket"
-    )
+    task = await s3_hook_async.get_head_object(mock_client.return_value, "s3://test_bucket/file")
     assert task == {"ContentLength": 0}
 
 
