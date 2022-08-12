@@ -16,7 +16,7 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
 
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
 S3_BUCKET_KEY = os.getenv("S3_BUCKET_KEY", "test")
-S3_BUCKET_KEY_2 = os.getenv("S3_BUCKET_KEY_2", "test2")
+S3_BUCKET_KEY_LIST = os.getenv("S3_BUCKET_KEY_LIST", "test2")
 S3_BUCKET_WILDCARD_KEY = os.getenv("S3_BUCKET_WILDCARD_KEY", "test*")
 PREFIX = os.getenv("S3_PREFIX", "test")
 INACTIVITY_PERIOD = float(os.getenv("INACTIVITY_PERIOD", 5))
@@ -87,7 +87,7 @@ with DAG(
     create_object_for_key2 = S3CreateObjectOperator(
         task_id="s3_create_object_for_key2",
         s3_bucket=S3_BUCKET_NAME,
-        s3_key=S3_BUCKET_KEY_2,
+        s3_key=S3_BUCKET_KEY_LIST,
         data=DATA,
         replace=True,
     )
@@ -97,7 +97,7 @@ with DAG(
     sensor_two_keys = S3KeySensorAsync(
         task_id="s3_sensor_two_keys",
         bucket_name=S3_BUCKET_NAME,
-        bucket_key=[S3_BUCKET_KEY, S3_BUCKET_KEY_2],
+        bucket_key=[S3_BUCKET_KEY, S3_BUCKET_KEY_LIST],
         aws_conn_id=AWS_CONN_ID,
     )
     # [END howto_sensor_async_s3_key_multiple_keys]
