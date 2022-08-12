@@ -2,8 +2,7 @@ S3 Key Sensor Async
 """""""""""""""""""
 
 
-To wait for one or multiple keys to be present in an S3 bucket asynchronously, you can use
-:class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+Use :class:`~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`. to wait for one or multiple keys to be present in an S3 bucket.
 For each key, it use aiobotocore to call
 `head_object <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.head_object>`__
 API (or `list_objects_v2 <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects_v2>`__
