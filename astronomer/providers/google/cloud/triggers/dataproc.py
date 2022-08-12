@@ -73,7 +73,22 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Check the status of cluster until reach the terminal state"""
+        # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
+        self.log.info(
+            "Creating Dataproc cluster: Before entering while loop, end time: %s, monotonic time: %s",
+            self.end_time,
+            time.monotonic(),
+        )
+
         while self.end_time > time.monotonic():
+
+            # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
+            self.log.info(
+                "Creating Dataproc cluster: In while loop, end time: %s , monotonic time: %s",
+                self.end_time,
+                time.monotonic(),
+            )
+
             try:
                 cluster = await self._get_cluster()
                 if cluster.status.state == cluster.status.State.RUNNING:
