@@ -463,6 +463,21 @@ async def test_s3__check_key_without_wild_card(mock_client, mock_head_object, mo
 
 @pytest.mark.asyncio
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_s3_bucket_key")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_head_object")
+@mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
+async def test_s3__check_key_none_without_wild_card(mock_client, mock_head_object, mock_get_bucket_key):
+    """Test _check_key function when get head object returns none"""
+    mock_get_bucket_key.return_value = "test_bucket", "test.txt"
+    mock_head_object.return_value = None
+    s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+    response = await s3_hook_async._check_key(
+        mock_client.return_value, "test_bucket", False, "s3://test_bucket/file/test.txt"
+    )
+    assert response is False
+
+
+@pytest.mark.asyncio
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_s3_bucket_key")
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_file_metadata")
 @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
 async def test_s3__check_key_with_wild_card(mock_client, mock_get_file_metadata, mock_get_bucket_key):
