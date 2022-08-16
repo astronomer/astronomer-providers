@@ -14,17 +14,17 @@ endif
 
 ASTRO_RUNTIME_IMAGE_NAME = "quay.io/astronomer/astro-runtime:5.0.6-base"
 
-dev: ## Create a development Environment using `docker-compose` file.
-	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker-compose -f dev/docker-compose.yaml up -d
+dev: ## Create a development Environment using `docker compose` file.
+	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker compose -f dev/docker-compose.yaml up -d
 
 logs: ## View logs of the all the containers
-	docker-compose -f dev/docker-compose.yaml logs --follow
+	docker compose -f dev/docker-compose.yaml logs --follow
 
 stop: ## Stop all the containers
-	docker-compose -f dev/docker-compose.yaml down
+	docker compose -f dev/docker-compose.yaml down
 
 clean: ## Remove all the containers along with volumes
-	docker-compose -f dev/docker-compose.yaml down  --volumes --remove-orphans
+	docker compose -f dev/docker-compose.yaml down  --volumes --remove-orphans
 	rm -rf dev/logs
 
 build: ## Build the Docker image (ignoring cache)
@@ -40,16 +40,16 @@ build-google-cloud: ## Build the Docker image with google-cloud cli installed
 	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile.google_cloud . -t astronomer-providers-dev:latest
 
 build-run: ## Build the Docker Image & then run the containers
-	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker-compose -f dev/docker-compose.yaml up --build -d
+	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker compose -f dev/docker-compose.yaml up --build -d
 
 docs:  ## Build the docs using Sphinx
 	cd docs && make clean html && cd .. && echo "Documentation built in $(shell pwd)/docs/_build/html/index.html"
 
 restart: ## Restart Triggerer, Scheduler and Worker containers
-	docker-compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler airflow-worker
+	docker compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler airflow-worker
 
 restart-all: ## Restart all the containers
-	docker-compose -f dev/docker-compose.yaml restart
+	docker compose -f dev/docker-compose.yaml restart
 
 run-tests: ## Run CI tests
 	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev

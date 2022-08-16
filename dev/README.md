@@ -24,16 +24,16 @@
     schema: airflow
   ```
 
-- Run `docker-compose up` to start all the services
-- If you want to add additional dependencies, add them to `setup.cfg` and re-run `docker-compose up`
+- Run `docker compose up` to start all the services
+- If you want to add additional dependencies, add them to `setup.cfg` and re-run `docker compose up`
 
 ## Useful Commands
 
 - **Stop** all the services
     ```shell
-    docker-compose down
+    docker compose down
     ```
 - **Cleanup** the environment
     ```shell
-    docker-compose down --volumes --remove-orphans
+    docker compose down --volumes --remove-orphans
     ```
