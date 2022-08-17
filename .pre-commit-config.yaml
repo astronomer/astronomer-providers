@@ -1,4 +1,6 @@
 ---
+ci:
+  skip: [markdown-link-check]
 repos:
   - repo: meta
     hooks:
