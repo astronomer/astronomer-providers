@@ -1,4 +1,6 @@
 ---
+ci:
+  skip: [markdown-link-check]
 repos:
   - repo: meta
     hooks:
@@ -39,8 +41,7 @@ repos:
     rev: v3.10.2
     hooks:
       - id: markdown-link-check
-        # Ignoring files containing dead links which are actually not dead.
-        exclude: dev/README.md|CODE_OF_CONDUCT.md
+        args: ["--config=mlc-config.json"]
 
   - repo: https://github.com/psf/black
     rev: 22.6.0
