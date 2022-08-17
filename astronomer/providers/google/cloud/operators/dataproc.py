@@ -181,7 +181,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             metadata=self.metadata,
         )
 
-        end_time: float = time.monotonic() + self.timeout
+        end_time: float = time.time() + self.timeout
 
         self.defer(
             trigger=DataprocDeleteClusterTrigger(
@@ -354,7 +354,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
             metadata=self.metadata,
         )
 
-        end_time: float = time.monotonic() + self.timeout
+        end_time: float = time.time() + self.timeout
 
         self.defer(
             trigger=DataprocCreateClusterTrigger(

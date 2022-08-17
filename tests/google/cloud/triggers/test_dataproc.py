@@ -193,7 +193,7 @@ async def test_run_running(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -218,7 +218,7 @@ async def test_run_pending(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -240,7 +240,7 @@ async def test_run_exception(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -257,7 +257,7 @@ async def test_run_timeout():
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() - 100,
+        end_time=time.time() - 100,
         metadata=(),
     )
 
@@ -273,7 +273,7 @@ def test__create_cluster(mock_create_cluster):
         region=TEST_REGION,
         cluster_name=TEST_CLUSTER_NAME,
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() - 100,
+        end_time=time.time() - 100,
         metadata=(),
     )
     trigger._create_cluster()
@@ -296,7 +296,7 @@ def test__diagnose_cluster(mock_diagnose_cluster):
         region=TEST_REGION,
         cluster_name=TEST_CLUSTER_NAME,
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() - 100,
+        end_time=time.time() - 100,
         metadata=(),
     )
     trigger._diagnose_cluster()
@@ -317,7 +317,7 @@ def test__delete_cluster(mock_delete_cluster):
         region=TEST_REGION,
         cluster_name=TEST_CLUSTER_NAME,
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() - 100,
+        end_time=time.time() - 100,
         metadata=(),
     )
     trigger._delete_cluster()
@@ -344,7 +344,7 @@ async def test__wait_for_deleting(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -366,7 +366,7 @@ async def test_wait_for_deleting_success(mock__get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
     assert await trigger._wait_for_deleting() is None
@@ -382,7 +382,7 @@ async def test_wait_for_deleting_exception(mock__get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
     with pytest.raises(Exception):
@@ -421,7 +421,7 @@ async def test__handle_error(
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
         delete_on_error=delete_on_error,
     )
@@ -442,7 +442,7 @@ async def test__handle_error_with_no_error():
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -490,7 +490,7 @@ async def test_delete_cluster_run_pending(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
 
@@ -513,7 +513,7 @@ async def test_delete_run_success(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
     generator = trigger.run()
@@ -532,7 +532,7 @@ async def test_delete_run_exception(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
     generator = trigger.run()
@@ -568,7 +568,7 @@ async def test_run_deleting(mock_get_cluster, mock_wait_for_deleting, mock_creat
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() + 100,
+        end_time=time.time() + 100,
         metadata=(),
     )
     asyncio.create_task(trigger.run().__anext__())
@@ -590,7 +590,7 @@ async def test_delete_run_timeout(mock_get_cluster):
         region=TEST_REGION,
         cluster_name="test_cluster",
         polling_interval=TEST_POLLING_INTERVAL,
-        end_time=time.monotonic() - 100,
+        end_time=time.time() - 100,
         metadata=(),
     )
     generator = trigger.run()
