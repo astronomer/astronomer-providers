@@ -10,6 +10,8 @@ from astronomer.providers.microsoft.azure.hooks.data_factory import (
     AzureDataFactoryHookAsync,
 )
 
+DEFAULT_RESOURCE_GROUP = "defaultResourceGroup"
+DEFAULT_FACTORY = "defaultFactory"
 AZURE_DATA_FACTORY_CONN_ID = "azure_data_factory_default"
 RESOURCE_GROUP_NAME = "team_provider_resource_group_test"
 DATAFACTORY_NAME = "ADFProvidersTeamDataFactory"
@@ -67,6 +69,58 @@ async def test_get_pipeline_run(mock_async_connection, mock_pipeline_run):
     hook = AzureDataFactoryHookAsync(AZURE_DATA_FACTORY_CONN_ID)
     response = await hook.get_pipeline_run(RUN_ID, RESOURCE_GROUP_NAME, DATAFACTORY_NAME)
     assert response == mock_pipeline_run
+
+
+@pytest.mark.asyncio
+@mock.patch("azure.mgmt.datafactory.models._models_py3.PipelineRun")
+@mock.patch(
+    "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_connection"
+)
+@mock.patch(
+    "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_async_conn"
+)
+async def test_get_pipeline_run_without_resource_name(
+    mock_async_connection, mock_get_connection, mock_pipeline_run
+):
+    """Test get_pipeline_run run function without passing the resource name to check the decorator function"""
+    mock_connection = Connection(
+        extra=json.dumps(
+            {
+                "extra__azure_data_factory__resource_group_name": RESOURCE_GROUP_NAME,
+                "extra__azure_data_factory__factory_name": DATAFACTORY_NAME,
+            }
+        )
+    )
+    mock_get_connection.return_value = mock_connection
+    mock_async_connection.return_value.__aenter__.return_value.pipeline_runs.get.return_value = (
+        mock_pipeline_run
+    )
+    hook = AzureDataFactoryHookAsync(AZURE_DATA_FACTORY_CONN_ID)
+    response = await hook.get_pipeline_run(RUN_ID, None, DATAFACTORY_NAME)
+    assert response == mock_pipeline_run
+
+
+@pytest.mark.asyncio
+@mock.patch("azure.mgmt.datafactory.models._models_py3.PipelineRun")
+@mock.patch(
+    "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_connection"
+)
+@mock.patch(
+    "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_async_conn"
+)
+async def test_get_pipeline_run_exception_without_resource(mock_conn, mock_get_connection, mock_pipeline_run):
+    """
+    Test get_pipeline_run function without passing the resource name to check the decorator function and
+    raise exception
+    """
+    mock_connection = Connection(
+        extra=json.dumps({"extra__azure_data_factory__factory_name": DATAFACTORY_NAME})
+    )
+    mock_get_connection.return_value = mock_connection
+    mock_conn.return_value.__aenter__.return_value.pipeline_runs.get.return_value = mock_pipeline_run
+    hook = AzureDataFactoryHookAsync(AZURE_DATA_FACTORY_CONN_ID)
+    with pytest.raises(AirflowException):
+        await hook.get_pipeline_run(RUN_ID, None, DATAFACTORY_NAME)
 
 
 @pytest.mark.asyncio
