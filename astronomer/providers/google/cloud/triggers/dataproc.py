@@ -73,22 +73,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Check the status of cluster until reach the terminal state"""
-        # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
-        self.log.info(
-            "Creating Dataproc cluster: Before entering while loop, end time: %s, monotonic time: %s",
-            self.end_time,
-            time.monotonic(),
-        )
-
-        while self.end_time > time.monotonic():
-
-            # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
-            self.log.info(
-                "Creating Dataproc cluster: In while loop, end time: %s , monotonic time: %s",
-                self.end_time,
-                time.monotonic(),
-            )
-
+        while self.end_time > time.time():
             try:
                 cluster = await self._get_cluster()
                 if cluster.status.state == cluster.status.State.RUNNING:
@@ -147,7 +132,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         )
 
     async def _wait_for_deleting(self) -> None:
-        while self.end_time > time.monotonic():
+        while self.end_time > time.time():
             try:
                 cluster = await self._get_cluster()
                 if cluster.status.State.DELETING:
@@ -243,7 +228,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger, ABC):
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Wait until cluster is deleted completely"""
         hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
-        while self.end_time > time.monotonic():
+        while self.end_time > time.time():
             try:
                 cluster = await hook.get_cluster(
                     region=self.region,  # type: ignore[arg-type]

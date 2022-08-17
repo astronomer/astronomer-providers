@@ -95,12 +95,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
                 raise
             self.log.info("Cluster already exists.")
 
-        end_time: float = time.monotonic() + self.timeout
-
-        # Add below temporary log to check timestamp values for debugging intermittent failure of the example DAG.
-        self.log.info(
-            "In Dataproc Operator: End time is %s, monotonic time is %s", end_time, time.monotonic()
-        )
+        end_time: float = time.time() + self.timeout
 
         self.defer(
             trigger=DataprocCreateClusterTrigger(
@@ -186,7 +181,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             metadata=self.metadata,
         )
 
-        end_time: float = time.monotonic() + self.timeout
+        end_time: float = time.time() + self.timeout
 
         self.defer(
             trigger=DataprocDeleteClusterTrigger(
@@ -359,7 +354,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
             metadata=self.metadata,
         )
 
-        end_time: float = time.monotonic() + self.timeout
+        end_time: float = time.time() + self.timeout
 
         self.defer(
             trigger=DataprocCreateClusterTrigger(
