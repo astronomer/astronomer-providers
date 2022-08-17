@@ -21,7 +21,7 @@ version_tag_only: &version_tag_only
 workflows:
   test:
     jobs:
-      - static-checks:
+      - markdown-link-check:
           <<: *all_branches_and_version_tag
       - mypy:
           <<: *all_branches_and_version_tag
@@ -34,7 +34,7 @@ workflows:
               python_version: ["3.8", "3.9", "3.10"]
           <<: *all_branches_and_version_tag
           requires:
-            - static-checks
+            - markdown-link-check
       - build-and-verify:
           <<: *all_branches_and_version_tag
           requires:
@@ -73,8 +73,8 @@ executors:
       - image: cimg/python:<<parameters.python_version>>
 
 jobs:
-  static-checks:
-    description: "Static checks"
+  markdown-link-check:
+    description: "Static checks (Markdown-link-check only)"
     executor: docker-executor
     steps:
       - checkout
@@ -89,7 +89,7 @@ jobs:
           name: Run pre-commit
           command: |
             pip install pre-commit
-            pre-commit run --all-files || { git --no-pager diff && false ; }
+            pre-commit run markdown-link-check --all-files || { git --no-pager diff && false ; }
       - save_cache:
           key: v1-pc-cache-{{ checksum "pre-commit-cache-key.txt" }}-
           paths:
