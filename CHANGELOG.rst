@@ -1,6 +1,32 @@
 Changelog
 =========
 
+1.8.0 (2022-08-16)
+------------------
+
+Bug Fixes
+"""""""""
+
+- Add poll interval to ``HttpSensorAsync``
+  (`#554 <https://github.com/astronomer/astronomer-providers/pull/554>`_)
+- Replace execution_timeout with timeout in all the async sensors
+  (`#555 <https://github.com/astronomer/astronomer-providers/pull/555>`_)
+- Get default 'resource_group_name' and 'factory_name' for
+  AzureDataFactoryPipelineRunStatusSensorAsync
+  (`#589 <https://github.com/astronomer/astronomer-providers/pull/589>`_)
+
+Enhancements
+""""""""""""
+
+- Add elaborate documentation and use cases for ``SnowflakeOperatorAsync``
+  (`#556 <https://github.com/astronomer/astronomer-providers/pull/556>`_)
+- Improve telemetry for Async Databricks Operators
+  (`#582 <https://github.com/astronomer/astronomer-providers/pull/582>`_)
+- Enhance ``S3KeySensorAsync`` to accept multiple keys and
+  deprecate ``S3PrefixSensorAsync`` and ``S3KeySizeSensorAsync``
+  (`#577 <https://github.com/astronomer/astronomer-providers/pull/577>`_)
+
+
 1.7.1 (2022-07-25)
 ------------------
 
