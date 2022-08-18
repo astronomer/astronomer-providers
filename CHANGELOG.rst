@@ -11,6 +11,9 @@ Bug Fixes
   (`#554 <https://github.com/astronomer/astronomer-providers/pull/554>`_)
 - Replace execution_timeout with timeout in all the async sensors
   (`#555 <https://github.com/astronomer/astronomer-providers/pull/555>`_)
+- Get default 'resource_group_name' and 'factory_name' for
+  AzureDataFactoryPipelineRunStatusSensorAsync
+  (`#589 <https://github.com/astronomer/astronomer-providers/pull/589>`_)
 
 Enhancements
 """"""""""""
