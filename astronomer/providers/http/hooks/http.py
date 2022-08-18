@@ -66,29 +66,7 @@ class HttpHookAsync(BaseHook):
 
         # headers may be passed through directly or in the "extra" field in the connection
         # definition
-        _headers = {}
-        auth = None
-
-        if self.http_conn_id:
-            conn = await sync_to_async(self.get_connection)(self.http_conn_id)
-
-            if conn.host and "://" in conn.host:
-                self.base_url = conn.host
-            else:
-                # schema defaults to HTTP
-                schema = conn.schema if conn.schema else "http"
-                host = conn.host if conn.host else ""
-                self.base_url = schema + "://" + host
-
-            if conn.port:
-                self.base_url = self.base_url + ":" + str(conn.port)
-            if conn.login:
-                auth = self.auth_type(conn.login, conn.password)
-            if conn.extra:
-                try:
-                    _headers.update(conn.extra_dejson)
-                except TypeError:
-                    self.log.warning("Connection to %s has invalid extra field.", conn.host)
+        _headers, auth = await self.get_conn_details()
         if headers:
             _headers.update(headers)
 
@@ -149,3 +127,31 @@ class HttpHookAsync(BaseHook):
         Most retryable errors are covered by status code >= 500.
         """
         return exception.status >= 500
+
+    async def get_conn_details(self):
+        """Get the connection details from the get_connection function to frame base url, auth details and headers"""
+        _headers = {}
+        auth = None
+
+        if self.http_conn_id:
+            conn = await sync_to_async(self.get_connection)(self.http_conn_id)
+
+            if conn.host and "://" in conn.host:
+                self.base_url = conn.host
+            else:
+                # schema defaults to HTTP
+                schema = conn.schema if conn.schema else "http"
+                host = conn.host if conn.host else ""
+                self.base_url = schema + "://" + host
+
+            if conn.port:
+                self.base_url = self.base_url + ":" + str(conn.port)
+            if conn.login:
+                auth = self.auth_type(conn.login, conn.password)
+            if conn.extra:
+                try:
+                    _headers.update(conn.extra_dejson)
+                except TypeError:
+                    self.log.warning("Connection to %s has invalid extra field.", conn.host)
+
+        return _headers, auth
