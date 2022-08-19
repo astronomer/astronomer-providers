@@ -1,5 +1,5 @@
 .PHONY: dev logs stop clean build build-emr_eks_container_example_dag-image build-aws build-google-cloud build-run docs
-.PHONY: restart restart-all run-tests run-static-checks run-mypy run-local-lineage-server test-rc-deps help
+.PHONY: restart restart-all run-tests run-static-checks run-mypy run-local-lineage-server test-rc-deps shell help
 
 # If the first argument is "run"...
 ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
@@ -83,6 +83,9 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	sleep 900
 	python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
 	git checkout setup.cfg
+
+shell:  ## Runs a shell within a container (Allows interactive session)
+	docker compose -f dev/docker-compose.yaml run --rm airflow-scheduler bash
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'

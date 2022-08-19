@@ -95,6 +95,7 @@ You can configure the Docker-based development environment as follows:
    - ``make run-mypy`` - Run MyPy checks
    - ``make run-tests`` - Run CI tests
    - ``make run-static-checks`` - Run CI static code checks
+   - ``make shell`` - To run bash/shell within a container (Allows interactive session)
 
    Following ports are accessible from the host machine:
 
