@@ -147,7 +147,7 @@ class AzureDataFactoryTrigger(BaseTrigger):
                 factory_name=self.factory_name,
             )
             if self.wait_for_termination:
-                while self.end_time > time.monotonic():
+                while self.end_time > time.time():
                     pipeline_status = await hook.get_adf_pipeline_run_status(
                         run_id=self.run_id,
                         resource_group_name=self.resource_group_name,

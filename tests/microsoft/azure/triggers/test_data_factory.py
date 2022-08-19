@@ -20,7 +20,7 @@ AZ_PIPELINE_RUN_ID = "123"
 AZ_RESOURCE_GROUP_NAME = "test-rg"
 AZ_FACTORY_NAME = "test-factory"
 AZ_DATA_FACTORY_CONN_ID = "test-conn"
-AZ_PIPELINE_END_TIME = time.monotonic() + 60 * 60 * 24 * 7
+AZ_PIPELINE_END_TIME = time.time() + 60 * 60 * 24 * 7
 
 
 def test_adf_pipeline_run_status_sensors_trigger_serialization():
@@ -328,7 +328,7 @@ async def test_azure_data_factory_trigger_run_timeout(mock_pipeline_run_status):
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=time.monotonic(),
+        end_time=time.time(),
     )
     generator = trigger.run()
     actual = await generator.asend(None)
