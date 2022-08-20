@@ -28,9 +28,7 @@ class TestKubernetesHookAsync:
         cluster_context,
     ):
         """
-        Asserts that a run state is returned as expected while a Databricks run
-        is in a PENDING state (i.e. "RUNNING") and after it reaches a TERMINATED
-        state (i.e. "SUCCESS").
+        Asserts that when in_cluster set true and false then correct kube configuration method awaited.
         """
         hook = KubernetesHookAsync(
             in_cluster=in_cluster,

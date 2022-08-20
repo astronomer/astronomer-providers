@@ -197,8 +197,8 @@ class TestWaitContainerTrigger:
     async def test_running_log_interval(self, load_kube_config, logging_interval, exp_event):
         """
         If log interval given, should emit event with running status and last log time.
-        Otherwise, should should make it to second loop and emit "done" event.
-        For this test we emit container statuses "running running not".
+        Otherwise, should make it to second loop and emit "done" event.
+        For this test we emit container status "running, running not".
         The first "running" status gets us out of wait_for_pod_start.
         The second "running" will fire a "running" event when logging interval is non-None.  When logging
         interval is None, the second "running" status will just result in continuation of the loop.  And

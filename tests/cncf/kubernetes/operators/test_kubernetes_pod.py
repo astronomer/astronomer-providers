@@ -157,9 +157,7 @@ class TestKubernetesPodOperatorAsync:
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         assert op.execute(context=create_context(op)) is None
 
-    @mock.patch(
-        "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.trigger_reentry"
-    )
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.trigger_reentry")
     def test_execute_complete(self, mock_trigger_reentry):
         mock_trigger_reentry.return_value = {}
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
