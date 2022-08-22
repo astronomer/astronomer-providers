@@ -30,7 +30,7 @@ repos:
       - id: python-check-blanket-type-ignore
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.0
+    rev: v1.3.1
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -75,7 +75,7 @@ repos:
           - flake8-bugbear
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
