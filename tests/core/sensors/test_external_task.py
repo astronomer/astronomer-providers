@@ -52,11 +52,11 @@ class TestExternalTaskSensorAsync:
     def test_task_defer_when_external_task_id_empty(self, context):
         """
         Asserts that the DagStateTrigger will be fired when the sensor
-        is provided with a falsy value for external_task_id rather than None.
+        is provided with a false value for external_task_id rather than None.
         """
         sensor = ExternalTaskSensorAsync(
             task_id=self.TASK_ID,
-            external_task_id="",  # This is a falsy empty string
+            external_task_id="",  # This is a falsely empty string
             external_dag_id=self.EXTERNAL_DAG_ID,
         )
 
