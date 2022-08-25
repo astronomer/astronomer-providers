@@ -59,7 +59,7 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
             parameters=self.parameters,
         )
         run_id = vars(response)["run_id"]
-        context["ti"].xcom_push(key="run_id", value=run_id)        
+        context["ti"].xcom_push(key="run_id", value=run_id)
         self.defer(
             timeout=self.execution_timeout,
             trigger=AzureDataFactoryTrigger(
