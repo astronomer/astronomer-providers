@@ -328,7 +328,7 @@ async def test_azure_data_factory_trigger_run_timeout(mock_pipeline_run_status):
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        timeout=time.time(),
+        timeout=0,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
