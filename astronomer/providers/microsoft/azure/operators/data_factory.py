@@ -1,4 +1,3 @@
-import time
 from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
