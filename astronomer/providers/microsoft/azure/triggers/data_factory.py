@@ -84,7 +84,7 @@ class AzureDataFactoryTrigger(BaseTrigger):
 
     :param run_id: Run id of a Azure data pipeline run job.
     :param azure_data_factory_conn_id: The connection identifier for connecting to Azure Data Factory.
-    :param end_time: Time in seconds when triggers will timeout.
+    :param timeout: Time in seconds when triggers will timeout.
     :param resource_group_name: The resource group name.
     :param factory_name: The data factory name.
     :param wait_for_termination: Flag to wait on a pipeline run's termination.
@@ -107,7 +107,7 @@ class AzureDataFactoryTrigger(BaseTrigger):
         self,
         run_id: str,
         azure_data_factory_conn_id: str,
-        end_time: float,
+        timeout: int,
         resource_group_name: Optional[str] = None,
         factory_name: Optional[str] = None,
         wait_for_termination: bool = True,
@@ -120,7 +120,7 @@ class AzureDataFactoryTrigger(BaseTrigger):
         self.wait_for_termination = wait_for_termination
         self.resource_group_name = resource_group_name
         self.factory_name = factory_name
-        self.end_time = end_time
+        self.timeout = timeout
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes AzureDataFactoryTrigger arguments and classpath."""
@@ -133,7 +133,7 @@ class AzureDataFactoryTrigger(BaseTrigger):
                 "wait_for_termination": self.wait_for_termination,
                 "resource_group_name": self.resource_group_name,
                 "factory_name": self.factory_name,
-                "end_time": self.end_time,
+                "timeout": self.timeout,
             },
         )
 
@@ -146,8 +146,9 @@ class AzureDataFactoryTrigger(BaseTrigger):
                 resource_group_name=self.resource_group_name,
                 factory_name=self.factory_name,
             )
+            start_time = time.monotonic()
             if self.wait_for_termination:
-                while self.end_time > time.time():
+                while self.timeout > time.monotonic() - start_time:
                     pipeline_status = await hook.get_adf_pipeline_run_status(
                         run_id=self.run_id,
                         resource_group_name=self.resource_group_name,

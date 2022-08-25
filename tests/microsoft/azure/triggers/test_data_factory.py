@@ -20,7 +20,7 @@ AZ_PIPELINE_RUN_ID = "123"
 AZ_RESOURCE_GROUP_NAME = "test-rg"
 AZ_FACTORY_NAME = "test-factory"
 AZ_DATA_FACTORY_CONN_ID = "test-conn"
-AZ_PIPELINE_END_TIME = time.time() + 60 * 60 * 24 * 7
+AZ_PIPELINE_END_TIMEOUT = 60 * 60 * 24 * 7
 
 
 def test_adf_pipeline_run_status_sensors_trigger_serialization():
@@ -158,7 +158,7 @@ def test_azure_data_factory_trigger_serialization():
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
 
     classpath, kwargs = trigger.serialize()
@@ -168,7 +168,7 @@ def test_azure_data_factory_trigger_serialization():
         "resource_group_name": AZ_RESOURCE_GROUP_NAME,
         "factory_name": AZ_FACTORY_NAME,
         "azure_data_factory_conn_id": AZ_DATA_FACTORY_CONN_ID,
-        "end_time": AZ_PIPELINE_END_TIME,
+        "timeout": AZ_PIPELINE_END_TIMEOUT,
         "wait_for_termination": True,
         "check_interval": 60,
     }
@@ -187,7 +187,7 @@ async def test_azure_data_factory_trigger_run_without_wait(mock_pipeline_run_sta
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
         wait_for_termination=False,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -221,7 +221,7 @@ async def test_azure_data_factory_trigger_run_pending(mock_pipeline_run_status, 
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
@@ -243,7 +243,7 @@ async def test_azure_data_factory_trigger_run_success(mock_pipeline_run_status):
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -276,7 +276,7 @@ async def test_azure_data_factory_trigger_run_fail(mock_pipeline_run_status, sta
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -302,7 +302,7 @@ async def test_azure_data_factory_trigger_run_exception(mock_pipeline_run_status
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=AZ_PIPELINE_END_TIME,
+        timeout=AZ_PIPELINE_END_TIMEOUT,
     )
     task = [i async for i in trigger.run()]
     response = TriggerEvent(
@@ -321,14 +321,14 @@ async def test_azure_data_factory_trigger_run_exception(mock_pipeline_run_status
     "astronomer.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHookAsync.get_adf_pipeline_run_status"
 )
 async def test_azure_data_factory_trigger_run_timeout(mock_pipeline_run_status):
-    """Assert that run timeout after end_time elapsed"""
+    """Assert that run timeout after timeout elapsed"""
     mock_pipeline_run_status.return_value = AzureDataFactoryTrigger.QUEUED
     trigger = AzureDataFactoryTrigger(
         run_id=AZ_PIPELINE_RUN_ID,
         resource_group_name=AZ_RESOURCE_GROUP_NAME,
         factory_name=AZ_FACTORY_NAME,
         azure_data_factory_conn_id=AZ_DATA_FACTORY_CONN_ID,
-        end_time=time.time(),
+        timeout=time.time(),
     )
     generator = trigger.run()
     actual = await generator.asend(None)
