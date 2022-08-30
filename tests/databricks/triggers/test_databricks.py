@@ -3,6 +3,7 @@ import logging
 from unittest import mock
 
 import pytest
+from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import RunState
 from airflow.triggers.base import TriggerEvent
 
@@ -148,4 +149,32 @@ async def test_databricks_trigger_terminated(run_state):
             }
         )
         == actual
+    )
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_state_async")
+async def test_databricks_trigger_exception(run_state):
+    """
+    Tests that the DatabricksTrigger yield error in case of exception
+    """
+    run_state.side_effect = AirflowException("Bad request")
+
+    trigger = DatabricksTrigger(
+        conn_id=CONN_ID,
+        task_id=TASK_ID,
+        run_id=RUN_ID,
+        retry_limit=RETRY_LIMIT,
+        retry_delay=RETRY_DELAY,
+        polling_period_seconds=POLLING_PERIOD_SECONDS,
+    )
+
+    generator = trigger.run()
+    actual = await generator.asend(None)
+
+    assert actual == TriggerEvent(
+        {
+            "status": "error",
+            "message": "Bad request",
+        }
     )
