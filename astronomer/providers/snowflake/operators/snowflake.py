@@ -91,7 +91,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
 
         default_query_tag = f"airflow_openlineage_{self.task_id}_{self.dag.dag_id}_{context['ti'].try_number}"
         query_tag = (
-            self.parameters.get("query_tag", default_query_tag) if self.parameters else default_query_tag
+            self.parameters.get("query_tag", default_query_tag)
+            if isinstance(self.parameters, dict)
+            else default_query_tag
         )
         session_query_tag = f"ALTER SESSION SET query_tag = '{query_tag}';"
         if isinstance(self.sql, str):
@@ -104,7 +106,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL after adding query tag: %s", self.sql)
 
         hook = self.get_db_hook()
-        hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)
+        hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)  # type: ignore[arg-type]
         self.query_ids = hook.query_ids
 
         if self.do_xcom_push:
@@ -239,7 +241,9 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
             token_life_time=self.token_life_time,
             token_renewal_delta=self.token_renewal_delta,
         )
-        hook.execute_query(self.sql, statement_count=self.statement_count, bindings=self.bindings)
+        hook.execute_query(
+            self.sql, statement_count=self.statement_count, bindings=self.bindings  # type: ignore[arg-type]
+        )
         self.query_ids = hook.query_ids
         self.log.info("List of query ids %s", self.query_ids)
 
