@@ -116,8 +116,8 @@ class DatabricksHookAsync(DatabricksHook):
                 except ClientResponseError as e:
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
-                        # Don't retry.
-                        return {"Response": {e.message}, "Status Code": {e.status}}
+                        # Don't retry rather raise exception
+                        raise AirflowException(str(e))
                     self._log_request_error(attempt_num, str(e))
 
                 if attempt_num == self.retry_limit:

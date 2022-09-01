@@ -69,24 +69,27 @@ class DatabricksTrigger(BaseTrigger):
         """
         hook = self._get_async_hook()
         while True:
-            run_state = await hook.get_run_state_async(self.run_id)
-            if run_state.is_terminal:
-                if run_state.is_successful:
-                    yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "job_id": self.job_id,
-                            "run_id": self.run_id,
-                            "run_page_url": self.run_page_url,
-                        }
-                    )
+            try:
+                run_state = await hook.get_run_state_async(self.run_id)
+                if run_state.is_terminal:
+                    if run_state.is_successful:
+                        yield TriggerEvent(
+                            {
+                                "status": "success",
+                                "job_id": self.job_id,
+                                "run_id": self.run_id,
+                                "run_page_url": self.run_page_url,
+                            }
+                        )
+                    else:
+                        error_message = f"{self.task_id} failed with terminal state: {run_state}"
+                        yield TriggerEvent({"status": "error", "message": str(error_message)})
                 else:
-                    error_message = f"{self.task_id} failed with terminal state: {run_state}"
-                    yield TriggerEvent({"status": "error", "message": str(error_message)})
-            else:
-                self.log.info("%s in run state: %s", self.task_id, run_state)
-                self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
-                await asyncio.sleep(self.polling_period_seconds)
+                    self.log.info("%s in run state: %s", self.task_id, run_state)
+                    self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
+                    await asyncio.sleep(self.polling_period_seconds)
+            except Exception as e:
+                yield TriggerEvent({"status": "error", "message": str(e)})
 
     def _get_async_hook(self) -> DatabricksHookAsync:
         return DatabricksHookAsync(

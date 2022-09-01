@@ -139,9 +139,8 @@ async def test_do_api_call_async_non_retryable_error(aioresponse):
         status=400,
     )
 
-    response = await hook._do_api_call_async(GET_RUN_ENDPOINT, params)
-
-    assert response == {"Response": {"Bad Request"}, "Status Code": {400}}
+    with pytest.raises(AirflowException):
+        await hook._do_api_call_async(GET_RUN_ENDPOINT, params)
 
 
 @pytest.mark.asyncio
