@@ -7,11 +7,14 @@ Changelog
 Bug Fixes
 """""""""
 
+- Fix timeout errors on ``AzureDataFactoryRunPipelineOperatorAsync``
+  (`#602 <https://github.com/astronomer/astronomer-providers/pull/602>`_)
 - Remove ``Werkzeug`` dependency as the error
   ``ImportError: cannot import name 'parse_rule' from 'werkzeug.routing'``
   no longer occurs
 - Raise exception in case of user error in async Databricks Operator
   (`#612 <https://github.com/astronomer/astronomer-providers/pull/612>`_)
+
 
 1.8.0 (2022-08-16)
 ------------------
