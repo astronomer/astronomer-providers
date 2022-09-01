@@ -26,11 +26,10 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
         # Async calls (i.e. polling) are handled in the Trigger.
         try:
             # for apache-airflow-providers-databricks<3.2.0
-            hook = self._get_hook()
+            hook = self._get_hook()  # type: ignore[call-arg]
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
-            # TODO remove the ignore[call-arg] once databrick version 3.2.0 is released.
-            hook = self._get_hook(caller="DatabricksSubmitRunOperatorAsync")  # type: ignore[call-arg]
+            hook = self._get_hook(caller="DatabricksSubmitRunOperatorAsync")
         self.run_id = hook.submit_run(self.json)
         job_id = hook.get_job_id(self.run_id)
 
@@ -83,11 +82,10 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         # It is from the Databricks base class.
         try:
             # for apache-airflow-providers-databricks<3.2.0
-            hook = self._get_hook()
+            hook = self._get_hook()  # type: ignore[call-arg]
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
-            # TODO remove the ignore[call-arg] once databrick version 3.2.0 is released.
-            hook = self._get_hook(caller="DatabricksRunNowOperatorAsync")  # type: ignore[call-arg]
+            hook = self._get_hook(caller="DatabricksRunNowOperatorAsync")
         self.run_id = hook.run_now(self.json)
 
         if self.do_xcom_push:
