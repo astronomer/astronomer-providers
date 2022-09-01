@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.8.1 (2022-09-01)
+------------------
+
+Bug Fixes
+"""""""""
+
+- Remove ``Werkzeug`` dependency as the error
+  ``ImportError: cannot import name 'parse_rule' from 'werkzeug.routing'``
+  no longer occurs
+- Raise exception in case of user error in async Databricks Operator
+  (`#612 <https://github.com/astronomer/astronomer-providers/pull/612>`_)
+
 1.8.0 (2022-08-16)
 ------------------
 
