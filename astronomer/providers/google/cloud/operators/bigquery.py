@@ -363,7 +363,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:
         """Execute the job in sync mode and defers the trigger with job id to poll for the status"""
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         self.log.info("Using ratio formula: %s", self.ratio_formula)
@@ -431,7 +431,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
+    def execute(self, context: Context) -> None:  # noqa: D102
         hook = _BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         job = self._submit_job(hook, job_id="")
