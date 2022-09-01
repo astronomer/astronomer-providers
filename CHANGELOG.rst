@@ -9,7 +9,7 @@ Bug Fixes
 
 - Fix timeout errors on ``AzureDataFactoryRunPipelineOperatorAsync``
   (`#602 <https://github.com//pull/602>`_)
-- Remove werkzeug dep & limit protobuf to 3.20.0 (`#615 <https://github.com//pull/615>`_)
+- Remove ``werkzeug`` dep & limit ``protobuf`` to ``3.20.0`` (`#615 <https://github.com//pull/615>`_)
 - Raise exception in case of user error in async Databricks Operator
   (`#612 <https://github.com//pull/612>`_)
 
