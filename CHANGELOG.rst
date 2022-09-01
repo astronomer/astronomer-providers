@@ -1,6 +1,19 @@
 Changelog
 =========
 
+1.8.1 (2022-09-01)
+------------------
+
+Bug Fixes
+"""""""""
+
+- Fix timeout errors on ``AzureDataFactoryRunPipelineOperatorAsync``
+  (`#602 <https://github.com/astronomer/astronomer-providers/pull/602>`_)
+- Remove ``werkzeug`` dep & limit ``protobuf`` to ``3.20.0`` (`#615 <https://github.com/astronomer/astronomer-providers/pull/615>`_)
+- Raise exception in case of user error in async Databricks Operator
+  (`#612 <https://github.com/astronomer/astronomer-providers/pull/612>`_)
+
+
 1.8.0 (2022-08-16)
 ------------------
 
