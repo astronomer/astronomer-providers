@@ -51,3 +51,13 @@ def test_custom_xcom_gcs_deserialize(mock_download, job_id):
     real_job_id = BaseXCom(value=json.dumps(job_id).encode("UTF-8"))
     result = CustomXcomGCS.deserialize_value(real_job_id)
     assert result == job_id
+
+
+def test_custom_xcom_gcs_orm_deserialize_value():
+    """
+    Asserts that custom xcom has called the orm deserialized
+    value method and check for data.
+    """
+
+    result = CustomXcomGCS().orm_deserialize_value()
+    assert result == "XCOM uploaded to GCS"

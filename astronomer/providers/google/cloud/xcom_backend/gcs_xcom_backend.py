@@ -1,6 +1,7 @@
 import json
+import os
 import uuid
-from typing import Any
+from typing import Any, Union
 
 import pandas as pd
 from airflow.models.xcom import BaseXCom
@@ -9,15 +10,15 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 class CustomXcomGCS(BaseXCom):
     """
-    Example Custom Xcom persistence class extends base to support Pandas Dataframes.
+    Custom XCOM persistence class extends base to support various datatypes.
     Add the below line in the environment
     AIRFLOW__CORE__XCOM_BACKEND:
     astronomer.providers.google.cloud.xcom_backend.gcs_xcom_backend.py.CustomXcomGCS
     """
 
-    PREFIX = "GCSXCOM_"
-    gcp_conn_id = "google_cloud_default"
-    BUCKET_NAME = "rajath_xocm_testing"
+    PREFIX = os.getenv("PREFIX", "GCSXCOM_")
+    gcp_conn_id = os.getenv("CONNECTION_NAME", "google_cloud_default")
+    BUCKET_NAME = os.getenv("BUCKET_NAME", "rajath_xocm_testing")
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
@@ -34,7 +35,7 @@ class CustomXcomGCS(BaseXCom):
         return key_str
 
     @staticmethod
-    def read_value(filename: str) -> str:
+    def read_value(filename: str) -> Union[str, bytes]:
         """Downalod the file from GCS"""
         # Here we download the file from GCS
         hook = GCSHook(gcp_conn_id=CustomXcomGCS.gcp_conn_id)
@@ -42,7 +43,7 @@ class CustomXcomGCS(BaseXCom):
         return data
 
     @staticmethod
-    def serialize_value(value: Any) -> Any:
+    def serialize_value(value: Any) -> Any:  # type: ignore[override]
         """Custom XCOM for GCS to serialize the data"""
         value = CustomXcomGCS.write_and_upload_value(value)
         return BaseXCom.serialize_value(value)
@@ -57,5 +58,10 @@ class CustomXcomGCS(BaseXCom):
         return result
 
     def orm_deserialize_value(self) -> str:
-        """ORM deserialize"""
+        """
+        Deserialize amethod which is used to reconstruct ORM XCom object.
+        This method should be overridden in custom XCom backends to avoid
+        unnecessary request or other resource consuming operations when
+        creating XCom orm model.
+        """
         return "XCOM uploaded to GCS"
