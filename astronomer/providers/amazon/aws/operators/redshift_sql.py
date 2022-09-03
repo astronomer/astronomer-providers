@@ -1,11 +1,11 @@
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
@@ -30,7 +30,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Makes a sync call to RedshiftDataHook and execute the query and gets back the query_ids list and
         defers trigger to poll for the status for the query executed
@@ -38,7 +38,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         redshift_data_hook = RedshiftDataHook(aws_conn_id=self.redshift_conn_id)
         query_ids, response = redshift_data_hook.execute_query(sql=cast(str, self.sql), params=self.params)
         if response.get("status") == "error":
-            self.execute_complete({}, response)
+            self.execute_complete(cast(Context, {}), response)
             return
         context["ti"].xcom_push(key="return_value", value=query_ids)
         self.defer(
@@ -52,7 +52,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

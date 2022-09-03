@@ -6,12 +6,12 @@ from airflow.providers.microsoft.azure.sensors.wasb import (
     WasbBlobSensor,
     WasbPrefixSensor,
 )
-from airflow.utils.context import Context
 
 from astronomer.providers.microsoft.azure.triggers.wasb import (
     WasbBlobSensorTrigger,
     WasbPrefixSensorTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class WasbBlobSensorAsync(WasbBlobSensor):
@@ -56,7 +56,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -122,7 +122,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

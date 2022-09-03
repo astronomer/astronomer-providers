@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.operators.databricks import (
@@ -9,13 +9,11 @@ from airflow.providers.databricks.operators.databricks import (
 )
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
+from astronomer.providers.utils.typing_compat import Context
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D101
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Execute the Databricks trigger, and defer execution as expected. It makes two non-async API calls to
         submit the run, and retrieve the run page URL. It also pushes these
@@ -57,7 +55,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -71,7 +69,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):  # noqa: D1
 
 
 class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Logic that the operator uses to execute the Databricks trigger,
         and defer execution as expected. It makes two non-async API calls to
@@ -112,7 +110,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):  # noqa: D101
         )
 
     def execute_complete(
-        self, context: "Context", event: Any = None
+        self, context: Context, event: Any = None
     ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.

@@ -5,7 +5,6 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
-from airflow.utils.context import Context
 from kubernetes.client import models as k8s
 from pendulum import DateTime
 
@@ -13,6 +12,7 @@ from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
     WaitContainerTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class PodNotFoundException(AirflowException):

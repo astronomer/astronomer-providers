@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.utils.context import Context
 from airflow.utils.session import provide_session
 
 from astronomer.providers.core.triggers.external_task import (
     DagStateTrigger,
     TaskStateTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

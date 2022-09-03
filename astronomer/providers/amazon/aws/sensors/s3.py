@@ -1,18 +1,18 @@
 import typing
 import warnings
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, List, Optional, Sequence, Union, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensor
 from airflow.sensors.base import BaseSensorOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class S3KeySensorAsync(BaseSensorOperator):
@@ -91,7 +91,7 @@ class S3KeySensorAsync(BaseSensorOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> Optional[bool]:
+    def execute_complete(self, context: Context, event: Any = None) -> Optional[bool]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -188,7 +188,7 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

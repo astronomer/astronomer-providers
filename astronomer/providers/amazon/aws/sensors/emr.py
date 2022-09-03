@@ -7,13 +7,13 @@ from airflow.providers.amazon.aws.sensors.emr import (
     EmrJobFlowSensor,
     EmrStepSensor,
 )
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.emr import (
     EmrContainerSensorTrigger,
     EmrJobFlowSensorTrigger,
     EmrStepSensorTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class EmrContainerSensorAsync(EmrContainerSensor):
@@ -45,7 +45,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -92,7 +92,7 @@ class EmrStepSensorAsync(EmrStepSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -145,7 +145,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
