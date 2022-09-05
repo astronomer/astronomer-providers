@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any, List
 
 from airflow import DAG, settings
+from airflow.exceptions import AirflowException
 from airflow.models import Connection, Variable
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.emr import (
@@ -220,6 +221,10 @@ def create_key_pair() -> None:
 
     # write private key to file with 400 permissions
     os.chmod(f"/tmp/{PEM_FILENAME}.pem", 0o400)
+    # check if the PEM file exists or not.
+    if not os.path.exists(f"/tmp/{PEM_FILENAME}.pem"):
+        # if it doesn't exists raise an error.
+        raise AirflowException("PEM file wasn't copied properly.")
 
 
 def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
