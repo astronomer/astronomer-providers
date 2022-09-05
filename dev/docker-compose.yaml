@@ -23,7 +23,8 @@ x-airflow-common:
     AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
     OPENLINEAGE_URL: http://host.docker.internal:5050/
     OPENLINEAGE_EXTRACTORS: "astronomer.providers.google.cloud.extractors.bigquery.BigQueryAsyncExtractor;\
-                            astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor"
+                            astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor;\
+                            astronomer.providers.amazon.aws.extractors.redshift.RedshiftAsyncDataExtractor"
   volumes:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
