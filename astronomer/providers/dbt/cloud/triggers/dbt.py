@@ -56,7 +56,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         """Make async connection to Dbt, polls for the pipeline run status"""
         hook = DbtCloudHookAsync(self.conn_id)
         try:
-            job_run_status = hook.get_job_status(self.run_id, self.account_id)
+            job_run_status = await hook.get_job_status(self.run_id, self.account_id)
 
             while (
                 not DbtCloudJobRunStatus.is_terminal(job_run_status)
@@ -71,9 +71,9 @@ class DbtCloudRunJobTrigger(BaseTrigger):
                             "run_id": self.run_id,
                         }
                     )
-                await asyncio.sleep(self.check_interval)
+                await asyncio.sleep(self.poll_interval)
 
-                job_run_status = hook.get_job_status(self.run_id, self.account_id)
+                job_run_status = await hook.get_job_status(self.run_id, self.account_id)
 
             if job_run_status in DbtCloudJobRunStatus.SUCCESS.value:
                 yield TriggerEvent(

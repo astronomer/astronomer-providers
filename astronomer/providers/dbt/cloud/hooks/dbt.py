@@ -25,22 +25,23 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
     def __init__(self, dbt_cloud_conn_id: str = default_conn_name, *args, **kwargs) -> None:
         super().__init__(auth_type=TokenAuth)
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
-        tenant = self.connection.schema if self.connection.schema else "cloud"
-
-        self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
 
     @cached_property
-    async def connection(self) -> Connection:
+    async def dbt_connection(self) -> Connection:
         """Get the DBT cloud connection details async"""
         _connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
         if not _connection.password:
             raise AirflowException("An API token is required to connect to dbt Cloud.")
+
+        tenant = _connection.schema if _connection.schema else "cloud"
+        self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         return _connection
 
     async def get_conn_details(self):
         """Get the auth details from the connection details"""
         _headers = {}
-        auth = self.auth_type(self.connection.password)
+        dbt_connection = await self.dbt_connection
+        auth = self.auth_type(dbt_connection.password)
         return _headers, auth
 
     @fallback_to_default_account
@@ -48,7 +49,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
         self, run_id: int, account_id: Optional[int] = None, include_related: Optional[List[str]] = None
     ) -> Any:
         """
-        Uses Http async call to retrieves metadata for a specific run of a dbt Cloud job.
+        Uses Http async call to retrieve metadata for a specific run of a dbt Cloud job.
 
         :param run_id: The ID of a dbt Cloud job run.
         :param account_id: Optional. The ID of a dbt Cloud account.

@@ -39,7 +39,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
 
     def execute(self, context: "Context") -> None:
         """Submits a job which generates a run_id and gets deferred"""
-        hook = DbtCloudHook(self.dbt_cloud_conn_id)
+        hook = DbtCloudHook(dbt_cloud_conn_id=self.dbt_cloud_conn_id)
         trigger_job_response = hook.trigger_job_run(
             account_id=self.account_id,
             job_id=self.job_id,
@@ -66,13 +66,14 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> int:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event:
+        if event and "status" in event:
             if event["status"] == "error":
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
+            return event["run_id"]
