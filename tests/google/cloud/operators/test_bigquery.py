@@ -40,7 +40,7 @@ def context():
     yield context
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_insert_job_operator_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryInsertJobTrigger will be fired
@@ -143,7 +143,7 @@ def test_bigquery_insert_job_operator_execute_complete():
     mock_log_info.assert_called_with("%s completed with response %s ", "insert_query_job", "Job completed")
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_insert_job_operator_with_job_id_generate(mock_hook):
     job_id = "123456"
     hash_ = "hash"
@@ -187,7 +187,7 @@ def test_bigquery_insert_job_operator_with_job_id_generate(mock_hook):
     )
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_execute_reattach(mock_hook):
     job_id = "123456"
     hash_ = "hash"
@@ -231,7 +231,7 @@ def test_execute_reattach(mock_hook):
     job._begin.assert_called_once_with()
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_execute_force_rerun(mock_hook):
     job_id = "123456"
     hash_ = "hash"
@@ -281,7 +281,7 @@ def test_execute_force_rerun(mock_hook):
     )
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_check_operator_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryCheckTrigger will be fired
@@ -391,7 +391,7 @@ def test_bigquery_interval_check_operator_execute_failure(context):
         operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_interval_check_operator_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryIntervalCheckTrigger will be fired
@@ -418,7 +418,7 @@ def test_bigquery_interval_check_operator_async(mock_hook):
     ), "Trigger is not a BigQueryIntervalCheckTrigger"
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_get_data_operator_async_with_selected_fields(mock_hook):
     """
     Asserts that a task is deferred and a BigQuerygetDataTrigger will be fired
@@ -444,7 +444,7 @@ def test_bigquery_get_data_operator_async_with_selected_fields(mock_hook):
     assert isinstance(exc.value.trigger, BigQueryGetDataTrigger), "Trigger is not a BigQueryGetDataTrigger"
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_get_data_operator_async_without_selected_fields(mock_hook):
     """
     Asserts that a task is deferred and a BigQuerygetDataTrigger will be fired
@@ -511,7 +511,7 @@ def _get_value_check_async_operator(use_legacy_sql: bool = False):
     )
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_value_check_async(mock_hook):
     """
     Asserts that a task is deferred and a BigQueryValueCheckTrigger will be fired
