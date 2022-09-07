@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryJob
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryGetDataOperator,
@@ -14,7 +14,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.utils.context import Context
 from google.api_core.exceptions import Conflict
 
-from astronomer.providers.google.cloud.hooks.bigquery import BigQueryHook
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
