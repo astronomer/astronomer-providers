@@ -93,8 +93,8 @@ def create_context(task):
     }
 
 
-@mock.patch("astronomer.providers.google.cloud.extractors.bigquery._BigQueryHook")
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.extractors.bigquery.BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 @mock.patch("airflow.models.TaskInstance.xcom_pull")
 @mock.patch("openlineage.common.provider.bigquery.BigQueryDatasetsProvider.get_facets")
 def test_extract_on_complete(mock_bg_dataset_provider, mock_xcom_pull, mock_hook, mock_extractor_hook):
@@ -157,7 +157,7 @@ def test_extractor_works_on_operator():
     assert type(operator).__name__ in BigQueryAsyncExtractor.get_operator_classnames()
 
 
-@mock.patch("astronomer.providers.google.cloud.operators.bigquery._BigQueryHook")
+@mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_unavailable_xcom_raises_exception(mock_hook):
     """
     Tests that an exception is raised when the custom extractor is not available to retrieve required XCOM for the
