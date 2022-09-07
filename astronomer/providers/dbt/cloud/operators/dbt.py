@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudHook
@@ -37,7 +37,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :return: The ID of the triggered dbt Cloud job run.
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: "Context") -> None:  # type: ignore[override]
         """Submits a job which generates a run_id and gets deferred"""
         hook = DbtCloudHook(dbt_cloud_conn_id=self.dbt_cloud_conn_id)
         trigger_job_response = hook.trigger_job_run(
@@ -66,7 +66,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> int:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> Optional[int]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -76,4 +76,6 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
             if event["status"] == "error":
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
-            return event["run_id"]
+            run_id: int = event["run_id"]
+            return run_id
+        return None

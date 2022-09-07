@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Union
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -128,7 +128,7 @@ class HttpHookAsync(BaseHook):
         """
         return exception.status >= 500
 
-    async def get_conn_details(self):
+    async def get_conn_details(self) -> Tuple[Dict, Any]:
         """Get the connection details from the get_connection function to frame base url, auth details and headers"""
         _headers = {}
         auth = None

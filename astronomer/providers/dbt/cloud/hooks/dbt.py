@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from airflow import AirflowException
 from airflow.compat.functools import cached_property
@@ -37,7 +37,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
         self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         return _connection
 
-    async def get_conn_details(self):
+    async def get_conn_details(self) -> Tuple[Dict, Any]:
         """Get the auth details from the connection details"""
         _headers = {}
         dbt_connection = await self.dbt_connection
@@ -47,7 +47,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
     @fallback_to_default_account
     async def get_job_status(
         self, run_id: int, account_id: Optional[int] = None, include_related: Optional[List[str]] = None
-    ) -> Any:
+    ) -> int:
         """
         Uses Http async call to retrieve metadata for a specific run of a dbt Cloud job.
 
