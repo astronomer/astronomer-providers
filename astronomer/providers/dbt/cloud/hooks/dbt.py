@@ -61,21 +61,19 @@ class DbtCloudHookAsync(BaseHook, ABC):
     hook_name = "dbt Cloud"
 
     def __init__(self, dbt_cloud_conn_id: str):
-        self.connection = dbt_cloud_conn_id
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
         self.base_url = ""
 
     async def get_headers(self) -> Dict[str, Any]:
         """Get Headers, base url from the connection details"""
         headers: Dict[str, Any] = {}
-        self.connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
-        print(self.connection)
-        tenant = self.connection.schema if self.connection.schema else "cloud"
+        connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
+        tenant = connection.schema if connection.schema else "cloud"
         self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         package_name, provider_version = _get_provider_info()
         headers["User-Agent"] = f"{package_name}-v{provider_version}"
         headers["Content-Type"] = "application/json"
-        headers["Authorization"] = f"Token {self.connection.password}"
+        headers["Authorization"] = f"Token {connection.password}"
         return headers
 
     def get_request_url_params(
