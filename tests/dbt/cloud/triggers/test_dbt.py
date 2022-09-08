@@ -3,7 +3,6 @@ import time
 from unittest import mock
 
 import pytest
-from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudJobRunStatus
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
 from tests.utils.config import Config
@@ -39,14 +38,10 @@ class TestDbtCloudRunJobTrigger:
         }
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "mock_cloud_job_run_status",
-        [DbtCloudJobRunStatus.QUEUED, DbtCloudJobRunStatus.STARTING, DbtCloudJobRunStatus.RUNNING],
-    )
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_job_status")
-    async def test_dbt_run_job_trigger(self, mocked_get_job_status, mock_cloud_job_run_status):
+    @mock.patch("astronomer.providers.dbt.cloud.triggers.dbt.DbtCloudRunJobTrigger.is_still_running")
+    async def test_dbt_run_job_trigger(self, mocked_is_still_running):
         """Test DbtCloudRunJobTrigger is triggered with mocked details and run successfully."""
-        mocked_get_job_status.return_value = mock_cloud_job_run_status
+        mocked_is_still_running.return_value = True
         trigger = DbtCloudRunJobTrigger(
             conn_id=self.CONN_ID,
             poll_interval=Config.POLL_INTERVAL,
@@ -59,5 +54,5 @@ class TestDbtCloudRunJobTrigger:
         await asyncio.sleep(0.5)
 
         # TriggerEvent was not returned
-        assert task.done() is True
+        assert task.done() is False
         asyncio.get_event_loop().stop()
