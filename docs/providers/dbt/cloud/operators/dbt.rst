@@ -2,8 +2,7 @@ dbt Cloud Operator Async
 """"""""""""""""""""""""
 
 
-Executes a dbt Cloud job asynchronously. Trigger the dbt cloud job via worker to dbt and with run id in response
-poll for the status in trigger.
+To Execute a dbt Cloud job and polls for status asynchronously
 :class:`~astronomer.providers.dbt.cloud.operators.dbt.DbtCloudRunJobOperatorAsync`.
 
 .. exampleinclude:: /../astronomer/providers/dbt/cloud/example_dags/example_dbt_cloud.py
