@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, Tuple
 
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudJobRunStatus
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -26,8 +26,8 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         conn_id: str,
         poll_interval: float,
         end_time: float,
-        run_id: Optional[int],
-        account_id: Optional[int],
+        run_id: int,
+        account_id: int,
         wait_for_termination: bool = True,
     ):
         super().__init__()

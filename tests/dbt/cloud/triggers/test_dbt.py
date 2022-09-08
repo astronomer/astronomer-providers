@@ -97,7 +97,7 @@ class TestDbtCloudRunJobTrigger:
     @mock.patch("astronomer.providers.dbt.cloud.triggers.dbt.DbtCloudRunJobTrigger.is_still_running")
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_job_status")
     async def test_dbt_job_run_exception(self, mock_get_job_status, mocked_is_still_running):
-        """Assert that run catch exception if Azure API throw exception"""
+        """Assert that run catch exception if dbt cloud job API throw exception"""
         mocked_is_still_running.return_value = False
         mock_get_job_status.side_effect = Exception("Test exception")
         trigger = DbtCloudRunJobTrigger(
@@ -157,6 +157,7 @@ class TestDbtCloudRunJobTrigger:
     )
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_job_status")
     async def test_dbt_job_run_is_still_running(self, mock_get_job_status, mock_response, expected_status):
+        """Test is_still_running with mocked response job status and assert the return response with expected value"""
         mock_get_job_status.return_value = mock_response
         trigger = DbtCloudRunJobTrigger(
             conn_id=self.CONN_ID,

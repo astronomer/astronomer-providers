@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from airflow import AirflowException
 from airflow.compat.functools import cached_property
@@ -8,6 +8,9 @@ from airflow.providers.dbt.cloud.hooks.dbt import TokenAuth, fallback_to_default
 from asgiref.sync import sync_to_async
 
 from astronomer.providers.http.hooks.http import HttpHookAsync
+
+if TYPE_CHECKING:
+    from aiohttp.client_reqrep import ClientResponse
 
 
 def _get_provider_info() -> Tuple[str, str]:
@@ -32,13 +35,13 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
     conn_type = "dbt_cloud"
     hook_name = "dbt Cloud"
 
-    def __init__(self, dbt_cloud_conn_id: str = default_conn_name, *args, **kwargs) -> None:
+    def __init__(self, dbt_cloud_conn_id: str = default_conn_name, *args: Any, **kwargs: Any) -> None:
         super().__init__(auth_type=TokenAuth)
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
-        self.http_conn_id = None
+        self.http_conn_id = ""
 
     @cached_property
-    async def dbt_connection(self) -> Connection:
+    async def dbt_connection(self) -> "Connection":
         """Get the DBT cloud connection details async"""
         _connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
         if not _connection.password:
@@ -49,7 +52,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
 
         return _connection
 
-    async def get_conn_details(self) -> Tuple[Dict, Any]:
+    async def get_conn_details(self) -> Tuple[Dict[str, Any], Any]:
         """Get the auth and headers details from the connection details"""
         _headers = {}
         dbt_connection = await self.dbt_connection
@@ -63,7 +66,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
     @fallback_to_default_account
     async def get_job_details(
         self, run_id: int, account_id: Optional[int] = None, include_related: Optional[List[str]] = None
-    ) -> int:
+    ) -> "ClientResponse":
         """
         Uses Http async call to retrieve metadata for a specific run of a dbt Cloud job.
 
@@ -74,9 +77,9 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
         """
         self.method = "GET"
         headers, auth = await self.get_conn_details()
-        data = {}
+        data: Dict[str, Any] = {}
         if include_related:
-            data = include_related
+            data = {"include_related": include_related}
         response = await self.run(endpoint=f"{account_id}/runs/{run_id}/", data=data, headers=headers)
         return response
 
