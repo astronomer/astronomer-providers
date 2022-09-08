@@ -12,7 +12,7 @@ def get_provider_info() -> Dict[str, Any]:
     return {
         # Required.
         "package-name": "astronomer-providers",
-        "name": "Astro SQL Provider",
+        "name": "Astronomer Providers",
         "description": config["metadata"]["description"],
         "versions": [config["metadata"]["version"]],
         # Optional.
