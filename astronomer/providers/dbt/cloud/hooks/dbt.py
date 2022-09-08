@@ -10,6 +10,16 @@ from asgiref.sync import sync_to_async
 from astronomer.providers.http.hooks.http import HttpHookAsync
 
 
+def _get_provider_info() -> Tuple[str, str]:
+    from airflow.providers_manager import ProvidersManager
+
+    manager = ProvidersManager()
+    package_name = manager.hooks[DbtCloudHookAsync.conn_type].package_name  # type: ignore[union-attr]
+    provider = manager.providers[package_name]
+
+    return package_name, provider.version
+
+
 class DbtCloudHookAsync(HttpHookAsync, ABC):
     """
     Interact with dbt Cloud using the V2 API.
@@ -25,6 +35,7 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
     def __init__(self, dbt_cloud_conn_id: str = default_conn_name, *args, **kwargs) -> None:
         super().__init__(auth_type=TokenAuth)
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
+        self.http_conn_id = None
 
     @cached_property
     async def dbt_connection(self) -> Connection:
@@ -35,17 +46,22 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
 
         tenant = _connection.schema if _connection.schema else "cloud"
         self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
+
         return _connection
 
     async def get_conn_details(self) -> Tuple[Dict, Any]:
-        """Get the auth details from the connection details"""
+        """Get the auth and headers details from the connection details"""
         _headers = {}
         dbt_connection = await self.dbt_connection
         auth = self.auth_type(dbt_connection.password)
+        package_name, provider_version = _get_provider_info()
+        _headers["User-Agent"] = f"{package_name}-v{provider_version}"
+        _headers["Content-Type"] = "application/json"
+        _headers["Authorization"] = f"Token {dbt_connection.password}"
         return _headers, auth
 
     @fallback_to_default_account
-    async def get_job_status(
+    async def get_job_details(
         self, run_id: int, account_id: Optional[int] = None, include_related: Optional[List[str]] = None
     ) -> int:
         """
@@ -57,8 +73,28 @@ class DbtCloudHookAsync(HttpHookAsync, ABC):
             Valid values are "trigger", "job", "repository", and "environment".
         """
         self.method = "GET"
-        job_run = await self.run(
-            endpoint=f"{account_id}/runs/{run_id}/", data={"include_related": include_related}
-        )
-        job_run_status = job_run.json()["data"]["status"]
+        headers, auth = await self.get_conn_details()
+        data = {}
+        if include_related:
+            data = include_related
+        response = await self.run(endpoint=f"{account_id}/runs/{run_id}/", data=data, headers=headers)
+        return response
+
+    async def get_job_status(
+        self, run_id: int, account_id: Optional[int] = None, include_related: Optional[List[str]] = None
+    ) -> int:
+        """
+        Retrieves the status for a specific run of a dbt Cloud job.
+
+        :param run_id: The ID of a dbt Cloud job run.
+        :param account_id: Optional. The ID of a dbt Cloud account.
+        :param include_related: Optional. List of related fields to pull with the run.
+            Valid values are "trigger", "job", "repository", and "environment".
+        """
+        self.log.info("Getting the status of job run %s.", str(run_id))
+
+        job_run = await self.get_job_details(account_id=account_id, run_id=run_id)
+        response = await job_run.json()
+        job_run_status = response["data"]["status"]
+
         return job_run_status
