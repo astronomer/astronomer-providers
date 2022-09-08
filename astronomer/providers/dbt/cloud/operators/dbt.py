@@ -25,9 +25,8 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :param steps_override: Optional. List of dbt commands to execute when triggering the job instead of those
         configured in dbt Cloud.
     :param schema_override: Optional. Override the destination schema in the configured target for this job.
-    :param wait_for_termination: Flag to wait on a job run's termination.  By default, this feature is
-        enabled but could be disabled to perform an asynchronous wait for a long-running job run execution
-        using the ``DbtCloudJobRunSensor``.
+    :param wait_for_termination: This Flag is disabled in this async operator.wait_for_termination
+        will be always set True
     :param timeout: Time in seconds to wait for a job run to reach a terminal status for non-asynchronous
         waits. Used only if ``wait_for_termination`` is True. Defaults to 7 days.
     :param check_interval: Time in seconds to check on a job run's status for non-asynchronous waits.
@@ -57,7 +56,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
             timeout=self.execution_timeout,
             trigger=DbtCloudRunJobTrigger(
                 run_id=run_id,
-                wait_for_termination=self.wait_for_termination,
+                wait_for_termination=True,
                 conn_id=self.dbt_cloud_conn_id,
                 account_id=self.account_id,
                 poll_interval=self.check_interval,

@@ -76,7 +76,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
                         "run_id": self.run_id,
                     }
                 )
-            elif job_run_status == DbtCloudJobRunStatus.CANCELLED:
+            elif job_run_status == DbtCloudJobRunStatus.CANCELLED.value:
                 yield TriggerEvent(
                     {
                         "status": "cancelled",
@@ -97,7 +97,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
 
     async def is_still_running(self) -> bool:
         """
-        Async function to check whether the job is submitted via async API is still
+        Async function to check whether the job is submitted via async API is in
         running state and returns True if it is still running else
         return False
         """
