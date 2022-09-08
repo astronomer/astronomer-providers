@@ -1,4 +1,3 @@
-from abc import ABC
 from functools import wraps
 from inspect import signature
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, cast
@@ -10,23 +9,15 @@ from airflow.hooks.base import BaseHook
 from airflow.models import Connection
 from asgiref.sync import sync_to_async
 
+from astronomer.providers.package import get_provider_info
+
 T = TypeVar("T", bound=Any)
-
-
-def _get_provider_info() -> Tuple[str, str]:
-    from airflow.providers_manager import ProvidersManager
-
-    manager = ProvidersManager()
-    package_name = manager.hooks[DbtCloudHookAsync.conn_type].package_name  # type: ignore[union-attr]
-    provider = manager.providers[package_name]
-
-    return package_name, provider.version
 
 
 def provide_account_id(func: T) -> T:
     """
-    Function decorator that provides a bucket name taken from the connection
-    in case no bucket name has been passed to the function.
+    Decorator which provides a fallback value for ``account_id``. If the ``account_id`` is None or not passed
+    to the decorated function, the value will be taken from the configured dbt Cloud Airflow Connection.
     """
     function_signature = signature(func)
 
@@ -38,6 +29,7 @@ def provide_account_id(func: T) -> T:
             self = args[0]
             if self.dbt_cloud_conn_id:
                 connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
+                print(connection)
                 default_account_id = connection.login
                 if not default_account_id:
                     raise AirflowException("Could not determine the dbt Cloud account.")
@@ -48,7 +40,7 @@ def provide_account_id(func: T) -> T:
     return cast(T, wrapper)
 
 
-class DbtCloudHookAsync(BaseHook, ABC):
+class DbtCloudHookAsync(BaseHook):
     """
     Interact with dbt Cloud using the V2 API.
 
@@ -70,8 +62,10 @@ class DbtCloudHookAsync(BaseHook, ABC):
         connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
         tenant = connection.schema if connection.schema else "cloud"
         self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
-        package_name, provider_version = _get_provider_info()
-        headers["User-Agent"] = f"{package_name}-v{provider_version}"
+        provider_info = get_provider_info()
+        package_name = provider_info["package-name"]
+        version = provider_info["versions"]
+        headers["User-Agent"] = f"{package_name}-v{version}"
         headers["Content-Type"] = "application/json"
         headers["Authorization"] = f"Token {connection.password}"
         return headers

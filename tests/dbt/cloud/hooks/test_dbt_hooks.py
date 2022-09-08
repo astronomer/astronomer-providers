@@ -9,6 +9,7 @@ from airflow import AirflowException
 from airflow.models.connection import Connection
 
 from astronomer.providers.dbt.cloud.hooks.dbt import DbtCloudHookAsync
+from astronomer.providers.package import get_provider_info
 
 SAMPLE_RESPONSE = {
     "data": {"status": 1, "status_message": "Success"},
@@ -25,7 +26,7 @@ SAMPLE_RESPONSE_WITH_ERROR = {
 }
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": "Token None",
+    "Authorization": "Token newT0k3n",
     "User-Agent": "dbtcloud-v1.2",
 }
 
@@ -56,14 +57,54 @@ class TestDbtCloudJobRunHookAsync:
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers")
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
-    async def test_get_job_details(self, mock_get, mock_get_request_url_params, mock_get_headers):
+    async def test_get_job_details(
+        self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
+    ):
+        mock_get_conn.return_value = Connection(
+            conn_id=self.CONN_ID,
+            conn_type="test",
+            login=1234,
+            password="newT0k3n",
+            schema="Tenant",
+            extra=json.dumps(
+                {
+                    "login": "test",
+                    "password": "newT0k3n",
+                    "schema": "Tenant",
+                }
+            ),
+        )
         mock_get_headers.return_value = HEADERS
         mock_get_request_url_params.return_value = "/test/airflow/", {}
         mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
-        hook = DbtCloudHookAsync(dbt_cloud_conn_id="test_conn")
-        response = await hook.get_job_details(self.RUN_ID, self.ACCOUNT_ID)
+        hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
+        response = await hook.get_job_details(self.RUN_ID)
         assert response == SAMPLE_RESPONSE
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers")
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
+    async def test_get_job_details_without_account_id_exception(
+        self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
+    ):
+        mock_get_conn.return_value = Connection(
+            extra=json.dumps(
+                {
+                    "password": "newT0k3n",
+                    "schema": "Tenant",
+                }
+            )
+        )
+        mock_get_headers.return_value = HEADERS
+        mock_get_request_url_params.return_value = "/test/airflow/", {}
+        mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
+        hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
+        with pytest.raises(AirflowException):
+            await hook.get_job_details(self.RUN_ID)
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers")
@@ -102,23 +143,26 @@ class TestDbtCloudJobRunHookAsync:
         assert param == expected_param
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "connection_details",
-        [
-            (
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
+    async def test_get_headers(self, mock_get_connection):
+        mock_get_connection.return_value = Connection(
+            conn_id=self.CONN_ID,
+            conn_type="test",
+            login=1234,
+            password="newT0k3n",
+            schema="Tenant",
+            extra=json.dumps(
                 {
                     "login": "test",
                     "password": "newT0k3n",
                     "schema": "Tenant",
                 }
             ),
-        ],
-    )
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt._get_provider_info")
-    async def test_get_headers(self, mock_get_provider_info, mock_get_connection, connection_details):
-        mock_get_provider_info.return_value = "dbtcloud", "1.2"
-        mock_get_connection.return_value = Connection(extra=json.dumps(connection_details))
+        )
+        provider_info = get_provider_info()
+        package_name = provider_info["package-name"]
+        version = provider_info["versions"]
+        HEADERS["User-Agent"] = f"{package_name}-v{version}"
         hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
         resp = await hook.get_headers()
         assert resp == HEADERS
