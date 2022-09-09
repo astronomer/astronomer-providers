@@ -54,11 +54,11 @@ class DbtCloudHookAsync(BaseHook):
     def __init__(self, dbt_cloud_conn_id: str):
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
 
-    async def get_headers_tenants_from_connection(self) -> Dict[str, Any]:
+    async def get_headers_tenants_from_connection(self) -> Tuple[Dict[str, Any], str]:
         """Get Headers, tenants from the connection details"""
         headers: Dict[str, Any] = {}
         connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
-        tenant = connection.schema if connection.schema else "cloud"
+        tenant: str = connection.schema if connection.schema else "cloud"
         provider_info = get_provider_info()
         package_name = provider_info["package-name"]
         version = provider_info["versions"]
