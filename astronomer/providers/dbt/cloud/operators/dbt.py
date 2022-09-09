@@ -21,7 +21,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :param dbt_cloud_conn_id: The connection ID for connecting to dbt Cloud.
     :param job_id: The ID of a dbt Cloud job.
     :param account_id: Optional. The ID of a dbt Cloud account.
-    :param trigger_reason: Optional. Description of the reason to trigger the job.
+    :param trigger_reason: Description of the reason to trigger the job.
     :param steps_override: Optional. List of dbt commands to execute when triggering the job instead of those
         configured in dbt Cloud.
     :param schema_override: Optional. Override the destination schema in the configured target for this job.

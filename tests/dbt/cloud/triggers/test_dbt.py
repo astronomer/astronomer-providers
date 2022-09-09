@@ -73,7 +73,7 @@ class TestDbtCloudRunJobTrigger:
     async def test_dbt_job_run_for_terminal_status(
         self, mock_get_job_status, mocked_is_still_running, mock_value, mock_status, mock_message
     ):
-        """Assert that run trigger success message in case of pipeline success"""
+        """Assert that run trigger success message in case of job success"""
         mocked_is_still_running.return_value = False
         mock_get_job_status.return_value = mock_value
         trigger = DbtCloudRunJobTrigger(

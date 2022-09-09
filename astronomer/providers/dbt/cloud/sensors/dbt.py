@@ -53,9 +53,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
         successful.
         """
         if event and "status" in event:
-            if event["status"] == "error":
-                raise AirflowException(event["message"])
-            elif event["status"] == "cancelled":
+            if event["status"] in ["error", "cancelled"]:
                 raise AirflowException(event["message"])
             self.log.info(event["message"])
             run_id: int = event["run_id"]

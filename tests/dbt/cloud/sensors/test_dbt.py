@@ -50,7 +50,7 @@ class TestDbtCloudJobRunSensorAsync:
         ],
     )
     def test_dbt_job_run_sensor_async_execute_complete_failure(self, mock_status, mock_message):
-        """Assert execute_complete method fail"""
+        """Assert execute_complete method to raise exception on the cancelled and error status"""
         task = DbtCloudJobRunSensorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
             task_id=self.TASK_ID,

@@ -29,7 +29,6 @@ def provide_account_id(func: T) -> T:
             self = args[0]
             if self.dbt_cloud_conn_id:
                 connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
-                print(connection)
                 default_account_id = connection.login
                 if not default_account_id:
                     raise AirflowException("Could not determine the dbt Cloud account.")
@@ -54,33 +53,33 @@ class DbtCloudHookAsync(BaseHook):
 
     def __init__(self, dbt_cloud_conn_id: str):
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
-        self.base_url = ""
 
-    async def get_headers(self) -> Dict[str, Any]:
-        """Get Headers, base url from the connection details"""
+    async def get_headers_tenants_from_connection(self) -> Dict[str, Any]:
+        """Get Headers, tenants from the connection details"""
         headers: Dict[str, Any] = {}
         connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
         tenant = connection.schema if connection.schema else "cloud"
-        self.base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         provider_info = get_provider_info()
         package_name = provider_info["package-name"]
         version = provider_info["versions"]
         headers["User-Agent"] = f"{package_name}-v{version}"
         headers["Content-Type"] = "application/json"
         headers["Authorization"] = f"Token {connection.password}"
-        return headers
+        return headers, tenant
 
+    @staticmethod
     def get_request_url_params(
-        self, endpoint: str, include_related: Optional[List[str]] = None
+        tenant: str, endpoint: str, include_related: Optional[List[str]] = None
     ) -> Tuple[str, Dict[str, Any]]:
         """Form URL from base url and endpoint url"""
         data: Dict[str, Any] = {}
+        base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         if include_related:
             data = {"include_related": include_related}
-        if self.base_url and not self.base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
-            url = self.base_url + "/" + endpoint
+        if base_url and not base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
+            url = base_url + "/" + endpoint
         else:
-            url = (self.base_url or "") + (endpoint or "")
+            url = (base_url or "") + (endpoint or "")
         return url, data
 
     @provide_account_id
@@ -96,9 +95,8 @@ class DbtCloudHookAsync(BaseHook):
             Valid values are "trigger", "job", "repository", and "environment".
         """
         endpoint = f"{account_id}/runs/{run_id}/"
-        headers = await self.get_headers()
-        url, params = self.get_request_url_params(endpoint, include_related)
-        print("headers ", headers)
+        headers, tenant = await self.get_headers_tenants_from_connection()
+        url, params = self.get_request_url_params(tenant, endpoint, include_related)
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url, params=params) as response:
                 try:
@@ -120,7 +118,9 @@ class DbtCloudHookAsync(BaseHook):
         """
         try:
             self.log.info("Getting the status of job run %s.", str(run_id))
-            response = await self.get_job_details(account_id=account_id, run_id=run_id)
+            response = await self.get_job_details(
+                run_id, account_id=account_id, include_related=include_related
+            )
             job_run_status: int = response["data"]["status"]
             return job_run_status
         except Exception as e:
