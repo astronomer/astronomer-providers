@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
@@ -46,7 +46,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> int:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> Optional[int]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
