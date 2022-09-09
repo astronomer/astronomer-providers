@@ -12,7 +12,7 @@ from astronomer.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperatorA
 from astronomer.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensorAsync
 
 DBT_CLOUD_CONN_ID = os.getenv("ASTRO_DBT_CLOUD_CONN", "dbt_cloud_default")
-DBT_CLOUD_ACCOUNT_ID = os.getenv("ASTRO_DBT_CLOUD_ACCOUNT_ID", 88348)
+DBT_CLOUD_ACCOUNT_ID = os.getenv("ASTRO_DBT_CLOUD_ACCOUNT_ID", 12345)
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 
@@ -37,7 +37,7 @@ with DAG(
     # [START howto_operator_dbt_cloud_run_job_async]
     trigger_dbt_job_run_async = DbtCloudRunJobOperatorAsync(
         task_id="trigger_dbt_job_run_async",
-        job_id=125225,
+        job_id=1111111,
         check_interval=10,
         timeout=300,
         trigger_reason="Test run",
@@ -46,7 +46,7 @@ with DAG(
 
     trigger_job_run2 = DbtCloudRunJobOperator(
         task_id="trigger_job_run2",
-        job_id=125225,
+        job_id=11111,
         wait_for_termination=False,
         additional_run_config={"threads_override": 8},
         trigger_reason="Test run",
