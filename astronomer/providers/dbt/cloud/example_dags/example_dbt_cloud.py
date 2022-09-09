@@ -4,9 +4,12 @@ import os
 from datetime import timedelta
 
 from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperatorAsync
+from astronomer.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensorAsync
 
 DBT_CLOUD_CONN_ID = os.getenv("ASTRO_DBT_CLOUD_CONN", "dbt_cloud_default")
 DBT_CLOUD_ACCOUNT_ID = os.getenv("ASTRO_DBT_CLOUD_ACCOUNT_ID", 88348)
@@ -29,11 +32,33 @@ with DAG(
     tags=["example", "async", "dbt-cloud"],
     catchup=False,
 ) as dag:
+    begin = EmptyOperator(task_id="begin")
+    end = EmptyOperator(task_id="end")
     # [START howto_operator_dbt_cloud_run_job_async]
-    trigger_dbt_job_run = DbtCloudRunJobOperatorAsync(
-        task_id="trigger_dbt_job_run",
+    trigger_dbt_job_run_async = DbtCloudRunJobOperatorAsync(
+        task_id="trigger_dbt_job_run_async",
         job_id=125225,
         check_interval=10,
         timeout=300,
+        trigger_reason="Test run",
     )
     # [END howto_operator_dbt_cloud_run_job_async]
+
+    trigger_job_run2 = DbtCloudRunJobOperator(
+        task_id="trigger_job_run2",
+        job_id=125225,
+        wait_for_termination=False,
+        additional_run_config={"threads_override": 8},
+        trigger_reason="Test run",
+    )
+
+    # [START howto_operator_dbt_cloud_run_job_sensor_async]
+    job_run_sensor_async = DbtCloudJobRunSensorAsync(
+        task_id="job_run_sensor_async", run_id=trigger_job_run2.output, timeout=20
+    )
+    # [END howto_operator_dbt_cloud_run_job_sensor_async]
+
+    begin >> trigger_dbt_job_run_async
+    begin >> trigger_job_run2
+    trigger_job_run2 >> job_run_sensor_async >> end
+    trigger_dbt_job_run_async >> end

@@ -57,7 +57,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         hook = DbtCloudHookAsync(self.conn_id)
         try:
             while await self.is_still_running():
-                if self.end_time < time.time():
+                if self.wait_for_termination and self.end_time < time.time():
                     yield TriggerEvent(
                         {
                             "status": "error",
