@@ -61,13 +61,3 @@ class TestDbtCloudJobRunSensorAsync:
             task.execute_complete(
                 context={}, event={"status": mock_status, "message": mock_message, "run_id": self.DBT_RUN_ID}
             )
-
-    def test_dbt_job_run_sensor_execute_event_none(self):
-        task = DbtCloudJobRunSensorAsync(
-            dbt_cloud_conn_id=self.CONN_ID,
-            task_id=self.TASK_ID,
-            run_id=self.DBT_RUN_ID,
-            timeout=self.TIMEOUT,
-        )
-        res = task.execute_complete(context={}, event=None)
-        assert res is None

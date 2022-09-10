@@ -56,7 +56,7 @@ class TestDbtCloudRunJobOperatorAsync:
 
         assert isinstance(exc.value.trigger, DbtCloudRunJobTrigger), "Trigger is not a DbtCloudRunJobTrigger"
 
-    def test_dbt_run_job_op_with_exception(self, context):
+    def test_dbt_run_job_op_with_exception(self):
         """Test DbtCloudRunJobOperatorAsync to raise exception"""
         dbt_op = DbtCloudRunJobOperatorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
@@ -76,7 +76,7 @@ class TestDbtCloudRunJobOperatorAsync:
             ({"status": "success", "message": "Job run 48617 has completed successfully.", "run_id": 1234}),
         ],
     )
-    def test_dbt_job_execute_complete(self, context, mock_event):
+    def test_dbt_job_execute_complete(self, mock_event):
         """Test DbtCloudRunJobOperatorAsync by mocking the success response and assert the log and return value"""
         dbt_op = DbtCloudRunJobOperatorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
@@ -90,14 +90,3 @@ class TestDbtCloudRunJobOperatorAsync:
             assert dbt_op.execute_complete(context=None, event=mock_event) == self.DBT_RUN_ID
 
         mock_log_info.assert_called_with("Job run 48617 has completed successfully.")
-
-    def test_dbt_job_run_op_execute_event_none(self):
-        task = DbtCloudRunJobOperatorAsync(
-            dbt_cloud_conn_id=self.CONN_ID,
-            task_id=self.TASK_ID,
-            job_id=self.DBT_RUN_ID,
-            check_interval=self.CHECK_INTERVAL,
-            timeout=self.TIMEOUT,
-        )
-        res = task.execute_complete(context={}, event=None)
-        assert res is None

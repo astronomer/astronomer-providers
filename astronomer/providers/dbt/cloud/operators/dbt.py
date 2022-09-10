@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudHook
@@ -15,7 +15,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     poll for the status in trigger.
 
     .. seealso::
-        For more information on how to use this operator, take a look at the guide:
+        For more information on sync Operator DbtCloudRunJobOperator, take a look at the guide:
         :ref:`howto/operator:DbtCloudRunJobOperator`
 
     :param dbt_cloud_conn_id: The connection ID for connecting to dbt Cloud.
@@ -25,12 +25,8 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :param steps_override: Optional. List of dbt commands to execute when triggering the job instead of those
         configured in dbt Cloud.
     :param schema_override: Optional. Override the destination schema in the configured target for this job.
-    :param wait_for_termination: This Flag is disabled in this async operator.wait_for_termination
-        will be always set True
-    :param timeout: Time in seconds to wait for a job run to reach a terminal status for non-asynchronous
-        waits. Used only if ``wait_for_termination`` is True. Defaults to 7 days.
-    :param check_interval: Time in seconds to check on a job run's status for non-asynchronous waits.
-        Used only if ``wait_for_termination`` is True. Defaults to 60 seconds.
+    :param timeout: Time in seconds to wait for a job run to reach a terminal status. Defaults to 7 days.
+    :param check_interval: Time in seconds to check on a job run's status. Defaults to 60 seconds.
     :param additional_run_config: Optional. Any additional parameters that should be included in the API
         request when triggering the job.
     :return: The ID of the triggered dbt Cloud job run.
@@ -55,26 +51,22 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
         self.defer(
             timeout=self.execution_timeout,
             trigger=DbtCloudRunJobTrigger(
-                run_id=run_id,
-                wait_for_termination=True,
                 conn_id=self.dbt_cloud_conn_id,
+                run_id=run_id,
+                end_time=end_time,
                 account_id=self.account_id,
                 poll_interval=self.check_interval,
-                end_time=end_time,
             ),
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Optional[Dict[str, Any]]) -> Optional[int]:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> int:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event and "status" in event:
-            if event["status"] == "error":
-                raise AirflowException(event["message"])
-            self.log.info(event["message"])
-            run_id: int = event["run_id"]
-            return run_id
-        return None
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(event["message"])
+        return int(event["run_id"])

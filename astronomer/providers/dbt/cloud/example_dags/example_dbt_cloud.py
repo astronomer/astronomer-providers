@@ -33,7 +33,7 @@ with DAG(
     tags=["example", "async", "dbt-cloud"],
     catchup=False,
 ) as dag:
-    begin = EmptyOperator(task_id="begin")
+    start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
     # [START howto_operator_dbt_cloud_run_job_async]
     trigger_dbt_job_run_async = DbtCloudRunJobOperatorAsync(
@@ -59,7 +59,6 @@ with DAG(
     )
     # [END howto_operator_dbt_cloud_run_job_sensor_async]
 
-    begin >> trigger_dbt_job_run_async
-    begin >> trigger_job_run2
-    trigger_job_run2 >> job_run_sensor_async >> end
-    trigger_dbt_job_run_async >> end
+    start >> [trigger_dbt_job_run_async, trigger_job_run2]
+    trigger_job_run2 >> job_run_sensor_async
+    [job_run_sensor_async, trigger_dbt_job_run_async] >> end

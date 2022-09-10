@@ -71,7 +71,14 @@ class DbtCloudHookAsync(BaseHook):
     def get_request_url_params(
         tenant: str, endpoint: str, include_related: Optional[List[str]] = None
     ) -> Tuple[str, Dict[str, Any]]:
-        """Form URL from base url and endpoint url"""
+        """
+        Form URL from base url and endpoint url
+
+        :param tenant: The tenant name which is need to be replaced in base url.
+        :param endpoint: Endpoint url to be requested.
+        :param include_related: Optional. List of related fields to pull with the run.
+            Valid values are "trigger", "job", "repository", and "environment".
+        """
         data: Dict[str, Any] = {}
         base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
         if include_related:

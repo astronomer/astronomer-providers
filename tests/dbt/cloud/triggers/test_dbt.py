@@ -26,7 +26,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=self.END_TIME,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         classpath, kwargs = trigger.serialize()
         assert classpath == "astronomer.providers.dbt.cloud.triggers.dbt.DbtCloudRunJobTrigger"
@@ -36,7 +35,6 @@ class TestDbtCloudRunJobTrigger:
             "conn_id": self.CONN_ID,
             "end_time": self.END_TIME,
             "poll_interval": self.POLL_INTERVAL,
-            "wait_for_termination": True,
         }
 
     @pytest.mark.asyncio
@@ -50,7 +48,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=self.END_TIME,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         task = asyncio.create_task(trigger.run().__anext__())
         await asyncio.sleep(0.5)
@@ -82,7 +79,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=self.END_TIME,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         expected_result = {
             "status": mock_status,
@@ -106,7 +102,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=self.END_TIME,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         task = [i async for i in trigger.run()]
         response = TriggerEvent(
@@ -133,7 +128,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=end_time,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         generator = trigger.run()
         actual = await generator.asend(None)
@@ -165,7 +159,6 @@ class TestDbtCloudRunJobTrigger:
             end_time=self.END_TIME,
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
-            wait_for_termination=True,
         )
         response = await trigger.is_still_running()
         assert response == expected_status

@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
@@ -13,21 +13,24 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
     Checks the status of a dbt Cloud job run.
 
     .. seealso::
-        For more information on how to use this sensor, take a look at the guide:
+        For more information on sync Sensor DbtCloudJobRunSensor, take a look at the guide::
         :ref:`howto/operator:DbtCloudJobRunSensor`
 
     :param dbt_cloud_conn_id: The connection identifier for connecting to dbt Cloud.
     :param run_id: The job run identifier.
     :param account_id: The dbt Cloud account identifier.
+    :param timeout: Time in seconds to wait for a job run to reach a terminal status. Defaults to 7 days.
     """
 
     def __init__(
         self,
         *,
         poll_interval: float = 5,
+        timeout: float = 60 * 60 * 24 * 7,
         **kwargs: Any,
     ):
         self.poll_interval = poll_interval
+        self.timeout = timeout
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
@@ -37,7 +40,6 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
             timeout=self.execution_timeout,
             trigger=DbtCloudRunJobTrigger(
                 run_id=self.run_id,
-                wait_for_termination=False,
                 conn_id=self.dbt_cloud_conn_id,
                 account_id=self.account_id,
                 poll_interval=self.poll_interval,
@@ -46,16 +48,13 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Optional[Dict[str, Any]]) -> Optional[int]:
+    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> int:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event and "status" in event:
-            if event["status"] in ["error", "cancelled"]:
-                raise AirflowException(event["message"])
-            self.log.info(event["message"])
-            run_id: int = event["run_id"]
-            return run_id
-        return None
+        if event["status"] in ["error", "cancelled"]:
+            raise AirflowException(event["message"])
+        self.log.info(event["message"])
+        return int(event["run_id"])
