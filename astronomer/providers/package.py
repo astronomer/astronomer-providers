@@ -13,8 +13,8 @@ def get_provider_info() -> Dict[str, Any]:
         # Required.
         "package-name": "astronomer-providers",
         "name": "Astronomer Providers",
-        "description": config["metadata"]["description"],
-        "versions": [config["metadata"]["version"]],
+        "description": config.get("metadata", "description", fallback=""),
+        "versions": [config.get("metadata", "version", fallback="")],
         # Optional.
         "hook-class-names": [],
         "extra-links": [],
