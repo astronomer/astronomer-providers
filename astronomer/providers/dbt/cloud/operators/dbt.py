@@ -1,12 +1,14 @@
 import time
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudHook
 from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
+
+if TYPE_CHECKING:
+    from airflow.utils.context import Context
 
 
 class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
@@ -21,7 +23,8 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :param dbt_cloud_conn_id: The connection ID for connecting to dbt Cloud.
     :param job_id: The ID of a dbt Cloud job.
     :param account_id: Optional. The ID of a dbt Cloud account.
-    :param trigger_reason: Description of the reason to trigger the job.
+    :param trigger_reason: Optional Description of the reason to trigger the job. Dbt requires the trigger reason while
+        making an API. if it is not provided uses the default reasons.
     :param steps_override: Optional. List of dbt commands to execute when triggering the job instead of those
         configured in dbt Cloud.
     :param schema_override: Optional. Override the destination schema in the configured target for this job.
@@ -34,6 +37,10 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
 
     def execute(self, context: "Context") -> None:  # type: ignore[override]
         """Submits a job which generates a run_id and gets deferred"""
+        if self.trigger_reason is None:
+            self.trigger_reason = (
+                f"Triggered via Apache Airflow by task {self.task_id!r} in the {self.dag.dag_id} DAG."
+            )
         hook = DbtCloudHook(dbt_cloud_conn_id=self.dbt_cloud_conn_id)
         trigger_job_response = hook.trigger_job_run(
             account_id=self.account_id,

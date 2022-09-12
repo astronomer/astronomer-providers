@@ -1,11 +1,13 @@
 import time
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
-from airflow.utils.context import Context
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
+
+if TYPE_CHECKING:
+    from airflow.utils.context import Context
 
 
 class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
@@ -33,7 +35,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
         self.timeout = timeout
         super().__init__(**kwargs)
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         end_time = time.time() + self.timeout
         self.defer(

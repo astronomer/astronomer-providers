@@ -6,6 +6,7 @@ import pytest
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudJobRunStatus
 from airflow.triggers.base import TriggerEvent
 
+from astronomer.providers.dbt.cloud.hooks.dbt import DbtCloudHookAsync
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
 
 
@@ -152,7 +153,8 @@ class TestDbtCloudRunJobTrigger:
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_job_status")
     async def test_dbt_job_run_is_still_running(self, mock_get_job_status, mock_response, expected_status):
         """Test is_still_running with mocked response job status and assert the return response with expected value"""
-        mock_get_job_status.return_value = mock_response
+        hook = mock.AsyncMock(DbtCloudHookAsync)
+        hook.get_job_status.return_value = mock_response
         trigger = DbtCloudRunJobTrigger(
             conn_id=self.CONN_ID,
             poll_interval=self.POLL_INTERVAL,
@@ -160,5 +162,5 @@ class TestDbtCloudRunJobTrigger:
             run_id=self.RUN_ID,
             account_id=self.ACCOUNT_ID,
         )
-        response = await trigger.is_still_running()
+        response = await trigger.is_still_running(hook)
         assert response == expected_status

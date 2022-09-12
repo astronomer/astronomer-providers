@@ -41,7 +41,6 @@ with DAG(
         job_id=DBT_CLOUD_JOB_ID,
         check_interval=10,
         timeout=300,
-        trigger_reason="Test run",
     )
     # [END howto_operator_dbt_cloud_run_job_async]
 
@@ -50,7 +49,6 @@ with DAG(
         job_id=DBT_CLOUD_JOB_ID,
         wait_for_termination=False,
         additional_run_config={"threads_override": 8},
-        trigger_reason="Test run",
     )
 
     # [START howto_operator_dbt_cloud_run_job_sensor_async]
@@ -59,6 +57,5 @@ with DAG(
     )
     # [END howto_operator_dbt_cloud_run_job_sensor_async]
 
-    start >> [trigger_dbt_job_run_async, trigger_job_run2]
-    trigger_job_run2 >> job_run_sensor_async
-    [job_run_sensor_async, trigger_dbt_job_run_async] >> end
+    start >> trigger_dbt_job_run_async >> end
+    start >> trigger_job_run2 >> job_run_sensor_async >> end

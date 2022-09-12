@@ -83,9 +83,9 @@ Extras
      - ``pip install 'astronomer-providers[databricks]'``
      - Databricks
 
-   * - ``dbt``
-     - ``pip install 'astronomer-providers[dbt]'``
-     - Dbt
+   * - ``dbt.cloud``
+     - ``pip install 'astronomer-providers[dbt.cloud]'``
+     - Dbt Cloud
 
    * - ``google``
      - ``pip install 'astronomer-providers[google]'``

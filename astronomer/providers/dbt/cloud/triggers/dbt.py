@@ -52,7 +52,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         """Make async connection to Dbt, polls for the pipeline run status"""
         hook = DbtCloudHookAsync(self.conn_id)
         try:
-            while await self.is_still_running():
+            while await self.is_still_running(hook):
                 if self.end_time < time.time():
                     yield TriggerEvent(
                         {
@@ -91,13 +91,12 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e), "run_id": self.run_id})
 
-    async def is_still_running(self) -> bool:
+    async def is_still_running(self, hook: DbtCloudHookAsync) -> bool:
         """
         Async function to check whether the job is submitted via async API is in
         running state and returns True if it is still running else
         return False
         """
-        hook = DbtCloudHookAsync(self.conn_id)
         job_run_status = await hook.get_job_status(self.run_id, self.account_id)
         if not DbtCloudJobRunStatus.is_terminal(job_run_status):
             return True

@@ -1,4 +1,4 @@
-dbt Example DAG
+dbt Cloud Example DAG
 ------------------
 
 .. toctree::

@@ -14,8 +14,11 @@ class TestDbtCloudJobRunSensorAsync:
     DBT_RUN_ID = 1234
     TIMEOUT = 300
 
-    def test_dbt_job_run_sensor_async(self, context):
+    @mock.patch("typing.TYPE_CHECKING")
+    def test_dbt_job_run_sensor_async(self, mock_type_checking, context):
         """Assert execute method defer for Dbt cloud job run status sensors"""
+
+        mock_type_checking = True  # noqa: F841
         task = DbtCloudJobRunSensorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
             task_id=self.TASK_ID,
