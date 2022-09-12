@@ -6,7 +6,7 @@ from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from airflow.utils.context import Context
 
 

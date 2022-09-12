@@ -41,13 +41,11 @@ class TestDbtCloudRunJobOperatorAsync:
 
     @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_connection")
     @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.trigger_job_run")
-    @mock.patch("typing.TYPE_CHECKING")
-    def test_dbt_run_job_op_async(self, mock_type_checking, mock_dbt_hook, mock_trigger_job_run):
+    def test_dbt_run_job_op_async(self, mock_dbt_hook, mock_trigger_job_run):
         """
         Asserts that a task is deferred and an DbtCloudRunJobTrigger will be fired
         when the DbtCloudRunJobOperatorAsync is provided with all required arguments
         """
-        mock_type_checking = True  # noqa: F841
         dbt_op = DbtCloudRunJobOperatorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
             task_id=self.TASK_ID,
