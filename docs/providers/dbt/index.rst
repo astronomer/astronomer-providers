@@ -1,5 +1,5 @@
 dbt Cloud Example DAG
-------------------
+----------------------
 
 .. toctree::
   :hidden:
