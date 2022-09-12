@@ -10,6 +10,7 @@ Async Provider Example DAG's
     CNCF <cncf/index>
     Core <core/index>
     Databricks <databricks/index>
+    dbt <dbt/index>
     Google <google/index>
     HTTP <http/index>
     Microsoft <microsoft/index>
@@ -21,6 +22,7 @@ Async Provider Example DAG's
 * `CNCF <cncf/index.html>`_
 * `Core <core/index.html>`_
 * `Databricks <databricks/index>`_
+* `dbt <dbt/index>`_
 * `Google <google/index>`_
 * `HTTP <http/index>`_
 * `Microsoft <microsoft/index>`_
