@@ -1,4 +1,3 @@
-import pytest
 from airflow.version import version as airflow_version
 from packaging.version import Version
 
