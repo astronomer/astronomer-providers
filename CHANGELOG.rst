@@ -1,6 +1,47 @@
 Changelog
 =========
 
+1.9.0 (2022-09-13)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 2 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``DbtCloudJobRunSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/dbt/cloud/example_dags/example_dbt_cloud.py>`__
+
+   * - ``DbtCloudRunJobOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/dbt/cloud/example_dags/example_dbt_cloud.py>`__
+
+
+Bug Fixes
+"""""""""
+
+- Include ``astronomer-providers`` in the Providers view within the Airflow UI
+  (`#626 <https://github.com/astronomer/astronomer-providers/pull/626>`_)
+
+Enhancements
+""""""""""""
+
+- Implement OpenLineage custom extractor for Redshift Async Operators
+  (`#561 <https://github.com/astronomer/astronomer-providers/pull/561>`_)
+
+
 1.8.1 (2022-09-01)
 ------------------
 
