@@ -70,7 +70,7 @@ if __name__ == "__main__":
             "The following files are importing `airflow.utils.context.Context`. "
             "This is not compatible with the minimum `apache-airflow` requirement of this repository. "
             "Please use `astronomer.providers.utils.typing_compat.Context` instead.\n\n\t{}".format(
-                "\n".join(files_needing_typing_compat)
+                "\n\t".join(files_needing_typing_compat)
             )
         )
 
