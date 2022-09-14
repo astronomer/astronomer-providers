@@ -1,5 +1,5 @@
 """This module contains Google Cloud Storage sensors."""
-
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Union
 
@@ -50,12 +50,21 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
 
     def execute(self, context: "Context") -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
+        # TODO: Remove once deprecated
+        if self.polling_interval:
+            self.poke_interval = self.polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=GCSBlobTrigger(
                 bucket=self.bucket,
                 object_name=self.object,
-                polling_period_seconds=self.polling_interval,
+                polling_period_seconds=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,

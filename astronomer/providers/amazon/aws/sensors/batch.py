@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict
 
@@ -31,7 +32,15 @@ class BatchSensorAsync(BatchSensor):
         poll_interval: float = 5,
         **kwargs: Any,
     ):
-        self.poll_interval = poll_interval
+        # TODO: Remove once deprecated
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
@@ -42,7 +51,7 @@ class BatchSensorAsync(BatchSensor):
                 job_id=self.job_id,
                 aws_conn_id=self.aws_conn_id,
                 region_name=self.region_name,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

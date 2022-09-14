@@ -1,4 +1,5 @@
 """This module contains Google Big Query sensors."""
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -50,13 +51,22 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
+        # TODO: Remove once deprecated
+        if self.polling_interval:
+            self.poke_interval = self.polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=BigQueryTableExistenceTrigger(
                 dataset_id=self.dataset_id,
                 table_id=self.table_id,
                 project_id=self.project_id,
-                poll_interval=self.polling_interval,
+                poll_interval=self.poke_interval,
                 gcp_conn_id=self.gcp_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,

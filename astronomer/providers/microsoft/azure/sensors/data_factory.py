@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict
 
@@ -34,6 +35,15 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=ADFPipelineRunStatusSensorTrigger(
@@ -41,7 +51,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
                 azure_data_factory_conn_id=self.azure_data_factory_conn_id,
                 resource_group_name=self.resource_group_name,
                 factory_name=self.factory_name,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict
 
@@ -33,6 +34,15 @@ class EmrContainerSensorAsync(EmrContainerSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=EmrContainerSensorTrigger(
@@ -133,6 +143,15 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=EmrJobFlowSensorTrigger(
@@ -140,7 +159,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
                 aws_conn_id=self.aws_conn_id,
                 target_states=self.target_states,
                 failed_states=self.failed_states,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

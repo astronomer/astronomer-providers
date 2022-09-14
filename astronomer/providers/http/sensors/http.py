@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -93,6 +94,15 @@ class HttpSensorAsync(HttpSensor):
         if self.response_check:
             super().execute(context=context)
         else:
+            # TODO: Remove once deprecated
+            if self.poll_interval:
+                self.poke_interval = self.poll_interval
+                warnings.warn(
+                    "Argument `poll_interval` is deprecated and will be removed "
+                    "in a future release.  Please use  `poke_interval` instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=HttpTrigger(
@@ -101,7 +111,7 @@ class HttpSensorAsync(HttpSensor):
                     data=self.request_params,
                     headers=self.headers,
                     extra_options=self.extra_options,
-                    poll_interval=self.poll_interval,
+                    poll_interval=self.poke_interval,
                 ),
                 method_name="execute_complete",
             )

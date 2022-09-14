@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Dict, Optional
 
@@ -42,6 +43,15 @@ class HivePartitionSensorAsync(HivePartitionSensor):
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=HivePartitionTrigger(

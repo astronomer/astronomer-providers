@@ -1,4 +1,5 @@
 import time
+import warnings
 from typing import Any, Dict
 
 from airflow import AirflowException
@@ -35,6 +36,15 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
 
     def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         end_time = time.time() + self.timeout
         self.defer(
             timeout=self.execution_timeout,
@@ -42,7 +52,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
                 run_id=self.run_id,
                 conn_id=self.dbt_cloud_conn_id,
                 account_id=self.account_id,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
                 end_time=end_time,
             ),
             method_name="execute_complete",

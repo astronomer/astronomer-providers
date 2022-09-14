@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
@@ -44,6 +45,15 @@ class WasbBlobSensorAsync(WasbBlobSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=WasbBlobSensorTrigger(
@@ -51,7 +61,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
                 blob_name=self.blob_name,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
@@ -108,6 +118,15 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        # TODO: Remove once deprecated
+        if self.poll_interval:
+            self.poke_interval = self.poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=WasbPrefixSensorTrigger(
@@ -117,7 +136,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
                 delimiter=self.delimiter,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
