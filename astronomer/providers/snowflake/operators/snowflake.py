@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from airflow.exceptions import AirflowException
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -15,6 +14,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeTrigger,
     get_db_hook,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
@@ -124,7 +124,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         )
 
     def execute_complete(
-        self, context: Dict[str, Any], event: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
     ) -> None:
         """
         Callback for when the trigger fires - returns immediately.
@@ -263,7 +263,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         )
 
     def execute_complete(
-        self, context: Dict[str, Any], event: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
     ) -> None:
         """
         Callback for when the trigger fires - returns immediately.

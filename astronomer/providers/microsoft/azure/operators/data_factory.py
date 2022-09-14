@@ -1,16 +1,16 @@
 import time
-from typing import Any, Dict
+from typing import Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
 from airflow.providers.microsoft.azure.operators.data_factory import (
     AzureDataFactoryRunPipelineOperator,
 )
-from airflow.utils.context import Context
 
 from astronomer.providers.microsoft.azure.triggers.data_factory import (
     AzureDataFactoryTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperator):
@@ -45,7 +45,7 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
         Used only if ``wait_for_termination``
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Submits a job which generates a run_id and gets deferred"""
         hook = AzureDataFactoryHook(azure_data_factory_conn_id=self.azure_data_factory_conn_id)
         response = hook.run_pipeline(
@@ -75,7 +75,7 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

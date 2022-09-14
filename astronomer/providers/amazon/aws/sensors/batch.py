@@ -3,9 +3,9 @@ from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.batch import BatchSensor
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.batch import BatchSensorTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class BatchSensorAsync(BatchSensor):
@@ -34,7 +34,7 @@ class BatchSensorAsync(BatchSensor):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure or a success state"""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
@@ -47,7 +47,7 @@ class BatchSensorAsync(BatchSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

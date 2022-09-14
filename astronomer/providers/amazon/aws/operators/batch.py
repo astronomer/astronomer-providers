@@ -11,9 +11,9 @@ from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.batch import BatchOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.batch import BatchOperatorTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class BatchOperatorAsync(BatchOperator):
@@ -53,7 +53,7 @@ class BatchOperatorAsync(BatchOperator):
             | ``waiter = waiters.get_waiter("JobComplete")``
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
@@ -79,7 +79,7 @@ class BatchOperatorAsync(BatchOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

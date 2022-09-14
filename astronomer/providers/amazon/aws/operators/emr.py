@@ -3,9 +3,9 @@ from typing import Any, Dict
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.emr import EmrContainerHook
 from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.triggers.emr import EmrContainerOperatorTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class EmrContainerOperatorAsync(EmrContainerOperator):
@@ -28,7 +28,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
         Defaults to None, which will poll until the job is *not* in a pending, submitted, or running state.
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Deferred and give control to trigger"""
         hook = EmrContainerHook(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
         job_id = hook.submit_job(
@@ -52,7 +52,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Dict[str, Any]) -> str:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

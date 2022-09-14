@@ -1,14 +1,12 @@
 import time
-from typing import TYPE_CHECKING, Any, Dict
+from typing import Any, Dict
 
 from airflow import AirflowException
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudHook
 from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
-
-if TYPE_CHECKING:  # pragma: no cover
-    from airflow.utils.context import Context
+from astronomer.providers.utils.typing_compat import Context
 
 
 class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):

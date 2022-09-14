@@ -2,10 +2,10 @@ from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.redshift_data import RedshiftDataOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_data import RedshiftDataTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class RedshiftDataOperatorAsync(RedshiftDataOperator):
@@ -32,7 +32,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Makes a sync call to RedshiftDataHook, executes the query and gets back the list of query_ids and
         defers trigger to poll for the status for the queries executed.
@@ -54,7 +54,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

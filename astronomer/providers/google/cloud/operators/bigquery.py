@@ -11,7 +11,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryIntervalCheckOperator,
     BigQueryValueCheckOperator,
 )
-from airflow.utils.context import Context
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
@@ -21,6 +20,7 @@ from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 

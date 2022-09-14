@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.redshift_cluster import RedshiftHook
@@ -11,9 +11,7 @@ from airflow.providers.amazon.aws.operators.redshift_cluster import (
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterTrigger,
 )
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
+from astronomer.providers.utils.typing_compat import Context
 
 
 class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
@@ -44,7 +42,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Logic that the operator uses to correctly identify which trigger to
         execute, and defer execution as expected.
@@ -74,7 +72,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
                 "Unable to delete cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -114,7 +112,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Logic that the operator uses to correctly identify which trigger to
         execute, and defer execution as expected.
@@ -138,7 +136,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
                 "Unable to resume cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -180,7 +178,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Logic that the operator uses to correctly identify which trigger to
         execute, and defer execution as expected.
@@ -204,7 +202,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
                 "Unable to pause cluster since cluster is currently in status: %s", cluster_state
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

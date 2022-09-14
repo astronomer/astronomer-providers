@@ -3,9 +3,9 @@ from typing import Any, Dict, Optional
 
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.http.sensors.http import HttpSensor
-from airflow.utils.context import Context
 
 from astronomer.providers.http.triggers.http import HttpTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class HttpSensorAsync(HttpSensor):
@@ -106,7 +106,7 @@ class HttpSensorAsync(HttpSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[Any, Any]] = None) -> None:
+    def execute_complete(self, context: Context, event: Optional[Dict[Any, Any]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

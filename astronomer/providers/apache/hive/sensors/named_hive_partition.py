@@ -5,11 +5,11 @@ from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensor,
 )
-from airflow.utils.context import Context
 
 from astronomer.providers.apache.hive.triggers.named_hive_partition import (
     NamedHivePartitionTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
@@ -41,7 +41,7 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
     :param metastore_conn_id: Metastore thrift service connection id.
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Submit a job to Hive and defer"""
         if not self.partition_names:
             raise ValueError("Partition array can't be empty")
@@ -55,7 +55,7 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Optional[Dict[str, str]] = None) -> None:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

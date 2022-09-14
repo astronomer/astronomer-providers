@@ -8,12 +8,12 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from airflow.providers.google.cloud.operators.kubernetes_engine import (
     GKEStartPodOperator,
 )
-from airflow.utils.context import Context
 from kubernetes.client import models as k8s
 
 from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
     GKEStartPodTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class GKEStartPodOperatorAsync(KubernetesPodOperator):
@@ -80,7 +80,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.pod_namespace: str = ""
         self.poll_interval = poll_interval
 
-    def _get_or_create_pod(self, context: "Context") -> None:
+    def _get_or_create_pod(self, context: Context) -> None:
         """A wrapper to fetch GKE config and get or create a pod"""
         with GKEStartPodOperator.get_gke_config_file(
             gcp_conn_id=self.gcp_conn_id,
@@ -97,7 +97,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             self.pod_name = self.pod.metadata.name
             self.pod_namespace = self.pod.metadata.namespace
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Look for a pod, if not found then create one and defer"""
         self._get_or_create_pod(context)
         self.log.info("Created pod=%s in namespace=%s", self.pod_name, self.pod_namespace)

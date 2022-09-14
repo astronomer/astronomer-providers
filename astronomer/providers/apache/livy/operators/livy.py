@@ -3,9 +3,9 @@ from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
 from airflow.providers.apache.livy.operators.livy import LivyOperator
-from airflow.utils.context import Context
 
 from astronomer.providers.apache.livy.triggers.livy import LivyTrigger
+from astronomer.providers.utils.typing_compat import Context
 
 
 class LivyOperatorAsync(LivyOperator):
@@ -40,7 +40,7 @@ class LivyOperatorAsync(LivyOperator):
             See Tenacity documentation at https://github.com/jd/tenacity
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
@@ -61,7 +61,7 @@ class LivyOperatorAsync(LivyOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[Any, Any], event: Dict[str, Any]) -> Any:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

@@ -1,13 +1,13 @@
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
-from airflow.utils.context import Context
 
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class HivePartitionSensorAsync(HivePartitionSensor):
@@ -54,7 +54,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

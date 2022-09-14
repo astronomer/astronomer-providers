@@ -10,7 +10,6 @@ from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectUpdateSensor,
     GCSUploadSessionCompleteSensor,
 )
-from airflow.utils.context import Context
 
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSBlobTrigger,
@@ -18,6 +17,7 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):

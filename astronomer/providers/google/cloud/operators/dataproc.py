@@ -14,7 +14,6 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
-from airflow.utils.context import Context
 from google.api_core.exceptions import AlreadyExists
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
@@ -22,6 +21,7 @@ from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocDeleteClusterTrigger,
     DataProcSubmitTrigger,
 )
+from astronomer.providers.utils.typing_compat import Context
 
 
 class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
@@ -113,7 +113,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]] = None) -> Any:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, Any]] = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -167,7 +167,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
         if self.timeout is None:
             self.timeout: float = 24 * 60 * 60
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Call delete cluster API and defer to wait for cluster to completely deleted"""
         hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         self.log.info("Deleting cluster: %s", self.cluster_name)
@@ -196,7 +196,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]] = None) -> Any:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, Any]] = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -239,7 +239,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
@@ -269,7 +269,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
