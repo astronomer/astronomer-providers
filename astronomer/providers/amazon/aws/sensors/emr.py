@@ -58,7 +58,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
                 job_id=self.job_id,
                 max_tries=self.max_retries,
                 aws_conn_id=self.aws_conn_id,
-                poll_interval=self.poll_interval,
+                poll_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

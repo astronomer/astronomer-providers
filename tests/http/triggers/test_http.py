@@ -19,5 +19,5 @@ def test_http_trigger_serialization():
         "extra_options": {},
         "headers": {"Content-Type": "application/json"},
         "http_conn_id": "http_default",
-        "poll_interval": 5.0,
+        "poke_interval": 5.0,
     }

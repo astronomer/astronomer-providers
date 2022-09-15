@@ -51,7 +51,7 @@ class BatchSensorAsync(BatchSensor):
                 job_id=self.job_id,
                 aws_conn_id=self.aws_conn_id,
                 region_name=self.region_name,
-                poll_interval=self.poke_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

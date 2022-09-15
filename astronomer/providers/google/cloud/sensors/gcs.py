@@ -63,7 +63,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
             trigger=GCSBlobTrigger(
                 bucket=self.bucket,
                 object_name=self.object,
-                polling_period_seconds=self.poke_interval,
+                poke_interval=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,
@@ -133,7 +133,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             trigger=GCSPrefixBlobTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
-                polling_period_seconds=self.poke_interval,
+                poke_interval=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,
@@ -216,7 +216,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
             trigger=GCSUploadSessionTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
-                polling_period_seconds=self.poke_interval,
+                poke_interval=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 inactivity_period=self.inactivity_period,
                 min_objects=self.min_objects,
@@ -292,7 +292,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                 bucket=self.bucket,
                 object_name=self.object,
                 ts=self.ts_func(context),
-                polling_period_seconds=self.poke_interval,
+                poke_interval=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,

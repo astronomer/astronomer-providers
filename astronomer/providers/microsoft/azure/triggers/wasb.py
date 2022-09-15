@@ -14,7 +14,7 @@ class WasbBlobSensorTrigger(BaseTrigger):
     :param container_name: name of the container in which the blob should be searched for
     :param blob_name: name of the blob to check existence for
     :param wasb_conn_id: the connection identifier for connecting to Azure WASB
-    :param poll_interval:  polling period in seconds to check for the status
+    :param poke_interval:  polling period in seconds to check for the status
     :param public_read: whether an anonymous public read access should be used. Default is False
     """
 
@@ -24,13 +24,13 @@ class WasbBlobSensorTrigger(BaseTrigger):
         blob_name: str,
         wasb_conn_id: str = "wasb_default",
         public_read: bool = False,
-        poll_interval: float = 5.0,
+        poke_interval: float = 5.0,
     ):
         super().__init__()
         self.container_name = container_name
         self.blob_name = blob_name
         self.wasb_conn_id = wasb_conn_id
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
         self.public_read = public_read
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -41,7 +41,7 @@ class WasbBlobSensorTrigger(BaseTrigger):
                 "container_name": self.container_name,
                 "blob_name": self.blob_name,
                 "wasb_conn_id": self.wasb_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
                 "public_read": self.public_read,
             },
         )
@@ -63,10 +63,10 @@ class WasbBlobSensorTrigger(BaseTrigger):
                     else:
                         message = (
                             f"Blob {self.blob_name} not available yet in container {self.container_name}."
-                            f" Sleeping for {self.poll_interval} seconds"
+                            f" Sleeping for {self.poke_interval} seconds"
                         )
                         self.log.info(message)
-                        await asyncio.sleep(self.poll_interval)
+                        await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
@@ -83,7 +83,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
             ``copy`, ``deleted``
     :param delimiter: filters objects based on the delimiter (for e.g '.csv')
     :param wasb_conn_id: the connection identifier for connecting to Azure WASB
-    :param poll_interval:  polling period in seconds to check for the status
+    :param poke_interval:  polling period in seconds to check for the status
     :param public_read: whether an anonymous public read access should be used. Default is False
     """
 
@@ -95,7 +95,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
         delimiter: Optional[str] = "/",
         wasb_conn_id: str = "wasb_default",
         public_read: bool = False,
-        poll_interval: float = 5.0,
+        poke_interval: float = 5.0,
     ):
         super().__init__()
         self.container_name = container_name
@@ -103,7 +103,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
         self.include = include
         self.delimiter = delimiter
         self.wasb_conn_id = wasb_conn_id
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
         self.public_read = public_read
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -116,7 +116,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
                 "include": self.include,
                 "delimiter": self.delimiter,
                 "wasb_conn_id": self.wasb_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
                 "public_read": self.public_read,
             },
         )
@@ -140,9 +140,9 @@ class WasbPrefixSensorTrigger(BaseTrigger):
                     else:
                         message = (
                             f"Prefix {self.prefix} not available yet in container {self.container_name}."
-                            f" Sleeping for {self.poll_interval} seconds"
+                            f" Sleeping for {self.poke_interval} seconds"
                         )
                         self.log.info(message)
-                        await asyncio.sleep(self.poll_interval)
+                        await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

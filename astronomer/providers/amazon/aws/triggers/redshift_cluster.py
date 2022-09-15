@@ -107,7 +107,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
     :param aws_conn_id: Reference to AWS connection id for redshift
     :param cluster_identifier: unique identifier of a cluster
     :param target_status: Reference to the status which needs to be checked
-    :param polling_period_seconds:  polling period in seconds to check for the status
+    :param poke_interval:  polling period in seconds to check for the status
     """
 
     def __init__(
@@ -116,14 +116,14 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         aws_conn_id: str,
         cluster_identifier: str,
         target_status: str,
-        polling_period_seconds: float,
+        poke_interval: float,
     ):
         super().__init__()
         self.task_id = task_id
         self.aws_conn_id = aws_conn_id
         self.cluster_identifier = cluster_identifier
         self.target_status = target_status
-        self.polling_period_seconds = polling_period_seconds
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes RedshiftClusterSensorTrigger arguments and classpath."""
@@ -134,7 +134,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
                 "aws_conn_id": self.aws_conn_id,
                 "cluster_identifier": self.cluster_identifier,
                 "target_status": self.target_status,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -148,6 +148,6 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
                     "status"
                 ] == "error":
                     yield TriggerEvent(res)
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

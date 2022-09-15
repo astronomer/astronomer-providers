@@ -60,7 +60,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
                 blob_name=self.blob_name,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poke_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
@@ -134,7 +134,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
                 delimiter=self.delimiter,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poke_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

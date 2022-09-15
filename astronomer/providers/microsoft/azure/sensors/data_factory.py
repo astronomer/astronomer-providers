@@ -50,7 +50,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
                 azure_data_factory_conn_id=self.azure_data_factory_conn_id,
                 resource_group_name=self.resource_group_name,
                 factory_name=self.factory_name,
-                poll_interval=self.poke_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

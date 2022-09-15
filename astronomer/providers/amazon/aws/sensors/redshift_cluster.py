@@ -45,7 +45,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
                 aws_conn_id=self.aws_conn_id,
                 cluster_identifier=self.cluster_identifier,
                 target_status=self.target_status,
-                polling_period_seconds=self.poke_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

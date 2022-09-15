@@ -81,7 +81,7 @@ def test_redshift_sensor_async_execute_complete_event_none():
 
 
 def test_poll_interval_deprecation_warning():
-    """Test DeprecationWarning for BatchSensorAsync by setting param poll_interval"""
+    """Test DeprecationWarning for BigQueryTableExistenceSensorAsync by setting param poll_interval"""
     with pytest.warns(expected_warning=DeprecationWarning):
         BigQueryTableExistenceSensorAsync(
             task_id="task-id",
