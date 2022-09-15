@@ -59,19 +59,6 @@ def test_emr_container_sensor_async_execute_failure(context):
         task.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
 
 
-def test_emr_container_sensor_async_deprecation_warning(context):
-    """Test DeprecationWarning in EmrContainerSensorAsync by having poll_interval param"""
-    with pytest.warns(expected_warning=DeprecationWarning):
-        EmrContainerSensorAsync(
-            task_id=TASK_ID,
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            poll_interval=5,
-            max_retries=1,
-            aws_conn_id=AWS_CONN_ID,
-        )
-
-
 def test_emr_container_sensor_async_execute_complete():
     """Asserts that logging occurs as expected"""
     task = EmrContainerSensorAsync(
@@ -142,13 +129,3 @@ def test_emr_job_flow_sensor_async_execute_complete_event_none():
         job_flow_id=JOB_ID,
     )
     assert task.execute_complete(context=None, event=None) is None
-
-
-def test_poll_interval_deprecation_warning():
-    """Test DeprecationWarning by having poll_interval param"""
-    with pytest.warns(expected_warning=DeprecationWarning):
-        EmrJobFlowSensorAsync(
-            task_id=TASK_ID,
-            job_flow_id=JOB_ID,
-            poll_interval=5.0,
-        )

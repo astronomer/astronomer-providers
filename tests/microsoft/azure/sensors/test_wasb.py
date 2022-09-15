@@ -71,6 +71,7 @@ def test_wasb_blob_sensor_execute_complete_failure():
 
 def test_poll_interval_deprecation_warning_wasb_blob():
     """Test DeprecationWarning for WasbBlobSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         WasbBlobSensorAsync(
             task_id="wasb_blob_sensor_async",
@@ -127,6 +128,7 @@ def test_wasb_prefix_sensor_execute_complete_failure():
 
 def test_poll_interval_deprecation_warning():
     """Test DeprecationWarning for WasbPrefixSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         WasbPrefixSensorAsync(
             task_id="wasb_prefix_sensor_async",

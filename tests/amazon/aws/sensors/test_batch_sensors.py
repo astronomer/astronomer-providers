@@ -68,6 +68,7 @@ def test_batch_sensor_async_execute_complete(caplog, event):
 
 def test_poll_interval_deprecation_warning():
     """Test DeprecationWarning for BatchSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         BatchSensorAsync(
             task_id="task",

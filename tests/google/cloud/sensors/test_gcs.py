@@ -120,6 +120,7 @@ def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
 
 def test_poll_interval_deprecation_warning_prefix_existence():
     """Test DeprecationWarning for GCSObjectsWithPrefixExistenceSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         GCSObjectsWithPrefixExistenceSensorAsync(
             task_id="task-id",
@@ -177,6 +178,7 @@ def test_gcs_upload_session_complete_sensor_async_execute_complete():
 
 def test_poll_interval_deprecation_warning_gcs_upload_session():
     """Test DeprecationWarning for GCSUploadSessionCompleteSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         GCSUploadSessionCompleteSensorAsync(
             task_id="task-id",
@@ -236,6 +238,7 @@ def test_gcs_object_update_sensor_async_execute_complete():
 
 def test_poll_interval_deprecation_warning():
     """Test DeprecationWarning for GCSObjectUpdateSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         GCSObjectUpdateSensorAsync(
             task_id="task-id",

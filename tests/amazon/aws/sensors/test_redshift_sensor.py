@@ -77,6 +77,7 @@ def test_redshift_sensor_async_execute_complete_event_none():
 
 def test_poll_interval_deprecation_warning():
     """Test DeprecationWarning for RedshiftClusterSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         RedshiftClusterSensorAsync(
             task_id=TASK_ID,

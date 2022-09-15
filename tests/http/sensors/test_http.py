@@ -67,5 +67,6 @@ def test_http_sensor_async_hook_initialisation_attribute_error(mock_http_sensor)
 
 def test_poll_interval_deprecation_warning():
     """Test DeprecationWarning for HttpSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
     with pytest.warns(expected_warning=DeprecationWarning):
         HttpSensorAsync(task_id="check_hook_initialisation", endpoint="", poll_interval=5.0)

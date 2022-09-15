@@ -1,5 +1,4 @@
 import time
-import warnings
 from typing import Any, Dict
 
 from airflow import AirflowException
@@ -30,15 +29,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
         timeout: float = 60 * 60 * 24 * 7,
         **kwargs: Any,
     ):
-        # TODO: Remove once deprecated
-        if poll_interval:
-            self.poke_interval = poll_interval
-            warnings.warn(
-                "Argument `poll_interval` is deprecated and will be removed "
-                "in a future release.  Please use  `poke_interval` instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        self.poll_interval = poll_interval
         self.timeout = timeout
         super().__init__(**kwargs)
 
@@ -51,7 +42,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
                 run_id=self.run_id,
                 conn_id=self.dbt_cloud_conn_id,
                 account_id=self.account_id,
-                poll_interval=self.poke_interval,
+                poll_interval=self.poll_interval,
                 end_time=end_time,
             ),
             method_name="execute_complete",

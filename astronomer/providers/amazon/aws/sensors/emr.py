@@ -1,4 +1,3 @@
-import warnings
 from datetime import timedelta
 from typing import Any, Dict
 
@@ -129,15 +128,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
         poll_interval: float = 5,
         **kwargs: Any,
     ):
-        # TODO: Remove once deprecated
-        if poll_interval:
-            self.poke_interval = poll_interval
-            warnings.warn(
-                "Argument `poll_interval` is deprecated and will be removed "
-                "in a future release.  Please use  `poke_interval` instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
@@ -149,7 +140,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
                 aws_conn_id=self.aws_conn_id,
                 target_states=self.target_states,
                 failed_states=self.failed_states,
-                poll_interval=self.poke_interval,
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
         )
