@@ -32,23 +32,6 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         check query status on athena, defaults to 10
     """
 
-    def __init__(
-        self,
-        *,
-        poll_interval: float = 5,
-        **kwargs: Any,
-    ):
-        # TODO: Remove once deprecated
-        if poll_interval:
-            self.poke_interval = poll_interval
-            warnings.warn(
-                "Argument `poll_interval` is deprecated and will be removed "
-                "in a future release.  Please use  `poke_interval` instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        super().__init__(**kwargs)
-
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
@@ -58,7 +41,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
                 job_id=self.job_id,
                 max_tries=self.max_retries,
                 aws_conn_id=self.aws_conn_id,
-                poll_interval=self.poke_interval,
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
         )
