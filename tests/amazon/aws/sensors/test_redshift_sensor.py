@@ -73,3 +73,14 @@ def test_redshift_sensor_async_execute_complete_event_none():
     with mock.patch.object(task.log, "info") as mock_log_info:
         task.execute_complete(context=None, event=None)
     mock_log_info.assert_called_with("%s completed successfully.", TASK_ID)
+
+
+def test_poll_interval_deprecation_warning():
+    """Test DeprecationWarning for RedshiftClusterSensorAsync by setting param poll_interval"""
+    with pytest.warns(expected_warning=DeprecationWarning):
+        RedshiftClusterSensorAsync(
+            task_id=TASK_ID,
+            cluster_identifier="astro-redshift-cluster-1",
+            target_status="available",
+            poll_interval=5.0,
+        )

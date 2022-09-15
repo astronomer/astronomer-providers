@@ -61,3 +61,14 @@ class TestDbtCloudJobRunSensorAsync:
             task.execute_complete(
                 context={}, event={"status": mock_status, "message": mock_message, "run_id": self.DBT_RUN_ID}
             )
+
+    def test_poll_interval_deprecation_warning(self):
+        """Test DeprecationWarning for DbtCloudJobRunSensorAsync by setting param poll_interval"""
+        with pytest.warns(expected_warning=DeprecationWarning):
+            DbtCloudJobRunSensorAsync(
+                dbt_cloud_conn_id=self.CONN_ID,
+                task_id=self.TASK_ID,
+                run_id=self.DBT_RUN_ID,
+                timeout=self.TIMEOUT,
+                poll_interval=5.0,
+            )

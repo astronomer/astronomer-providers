@@ -46,20 +46,19 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.polling_interval = polling_interval
-        self.gcp_conn_id = gcp_conn_id
-
-    def execute(self, context: Context) -> None:
-        """Airflow runs this method on the worker and defers using the trigger."""
         # TODO: Remove once deprecated
-        if self.polling_interval:
-            self.poke_interval = self.polling_interval
+        if polling_interval:
+            self.poke_interval = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        self.gcp_conn_id = gcp_conn_id
+
+    def execute(self, context: Context) -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=BigQueryTableExistenceTrigger(

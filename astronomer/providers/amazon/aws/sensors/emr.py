@@ -32,17 +32,25 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         check query status on athena, defaults to 10
     """
 
-    def execute(self, context: Context) -> None:
-        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+    def __init__(
+        self,
+        *,
+        poll_interval: float = 5,
+        **kwargs: Any,
+    ):
         # TODO: Remove once deprecated
-        if self.poll_interval:
-            self.poke_interval = self.poll_interval
+        if poll_interval:
+            self.poke_interval = poll_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        super().__init__(**kwargs)
+
+    def execute(self, context: Context) -> None:
+        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=EmrContainerSensorTrigger(
@@ -138,20 +146,19 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
         poll_interval: float = 5,
         **kwargs: Any,
     ):
-        self.poll_interval = poll_interval
-        super().__init__(**kwargs)
-
-    def execute(self, context: Context) -> None:
-        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         # TODO: Remove once deprecated
-        if self.poll_interval:
-            self.poke_interval = self.poll_interval
+        if poll_interval:
+            self.poke_interval = poll_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        super().__init__(**kwargs)
+
+    def execute(self, context: Context) -> None:
+        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=EmrJobFlowSensorTrigger(

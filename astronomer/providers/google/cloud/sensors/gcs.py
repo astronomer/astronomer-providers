@@ -45,20 +45,19 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
-        super().__init__(**kwargs)
-        self.polling_interval = polling_interval
-
-    def execute(self, context: "Context") -> None:
-        """Airflow runs this method on the worker and defers using the trigger."""
         # TODO: Remove once deprecated
-        if self.polling_interval:
-            self.poke_interval = self.polling_interval
+        if polling_interval:
+            self.poke_interval = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        super().__init__(**kwargs)
+
+    def execute(self, context: "Context") -> None:
+        """Airflow runs this method on the worker and defers using the trigger."""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=GCSBlobTrigger(
@@ -116,8 +115,16 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
+        # TODO: Remove once deprecated
+        if polling_interval:
+            self.poke_interval = polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(**kwargs)
-        self.polling_interval = polling_interval
 
     def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
         """Airflow runs this method on the worker and defers using the trigger."""
@@ -126,7 +133,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             trigger=GCSPrefixBlobTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
-                polling_period_seconds=self.polling_interval,
+                polling_period_seconds=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,
@@ -191,8 +198,16 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
+        # TODO: Remove once deprecated
+        if polling_interval:
+            self.poke_interval = polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(**kwargs)
-        self.polling_interval = polling_interval
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
@@ -201,7 +216,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
             trigger=GCSUploadSessionTrigger(
                 bucket=self.bucket,
                 prefix=self.prefix,
-                polling_period_seconds=self.polling_interval,
+                polling_period_seconds=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 inactivity_period=self.inactivity_period,
                 min_objects=self.min_objects,
@@ -258,8 +273,16 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         polling_interval: float = 5,
         **kwargs: Any,
     ) -> None:
+        # TODO: Remove once deprecated
+        if polling_interval:
+            self.poke_interval = polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(**kwargs)
-        self.polling_interval = polling_interval
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
@@ -269,7 +292,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                 bucket=self.bucket,
                 object_name=self.object,
                 ts=self.ts_func(context),
-                polling_period_seconds=self.polling_interval,
+                polling_period_seconds=self.poke_interval,
                 google_cloud_conn_id=self.google_cloud_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,

@@ -69,6 +69,17 @@ def test_wasb_blob_sensor_execute_complete_failure():
         task.execute_complete(context={}, event={"status": "error", "message": ""})
 
 
+def test_poll_interval_deprecation_warning_wasb_blob():
+    """Test DeprecationWarning for WasbBlobSensorAsync by setting param poll_interval"""
+    with pytest.warns(expected_warning=DeprecationWarning):
+        WasbBlobSensorAsync(
+            task_id="wasb_blob_sensor_async",
+            container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
+            blob_name=TEST_DATA_STORAGE_BLOB_NAME,
+            poll_interval=5.0,
+        )
+
+
 def test_wasb_prefix_sensor_async(context):
     """Assert execute method defer for wasb prefix sensor"""
     task = WasbPrefixSensorAsync(
@@ -112,3 +123,14 @@ def test_wasb_prefix_sensor_execute_complete_failure():
     )
     with pytest.raises(AirflowException):
         task.execute_complete(context={}, event={"status": "error", "message": ""})
+
+
+def test_poll_interval_deprecation_warning():
+    """Test DeprecationWarning for WasbPrefixSensorAsync by setting param poll_interval"""
+    with pytest.warns(expected_warning=DeprecationWarning):
+        WasbPrefixSensorAsync(
+            task_id="wasb_prefix_sensor_async",
+            container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
+            prefix=TEST_DATA_STORAGE_BLOB_NAME,
+            poll_interval=5.0,
+        )

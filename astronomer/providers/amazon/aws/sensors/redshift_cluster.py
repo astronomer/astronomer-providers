@@ -25,20 +25,19 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         poll_interval: float = 5,
         **kwargs: Any,
     ):
-        self.poll_interval = poll_interval
-        super().__init__(**kwargs)
-
-    def execute(self, context: Context) -> None:
-        """Check for the target_status and defers using the trigger"""
         # TODO: Remove once deprecated
-        if self.poll_interval:
-            self.poke_interval = self.poll_interval
+        if poll_interval:
+            self.poke_interval = poll_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        super().__init__(**kwargs)
+
+    def execute(self, context: Context) -> None:
+        """Check for the target_status and defers using the trigger"""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=RedshiftClusterSensorTrigger(

@@ -78,3 +78,15 @@ def test_redshift_sensor_async_execute_complete_event_none():
     )
     with pytest.raises(AirflowException):
         task.execute_complete(context=None, event=None)
+
+
+def test_poll_interval_deprecation_warning():
+    """Test DeprecationWarning for BatchSensorAsync by setting param poll_interval"""
+    with pytest.warns(expected_warning=DeprecationWarning):
+        BigQueryTableExistenceSensorAsync(
+            task_id="task-id",
+            project_id=PROJECT_ID,
+            dataset_id=DATASET_NAME,
+            table_id=TABLE_NAME,
+            polling_interval=5.0,
+        )

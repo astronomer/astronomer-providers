@@ -30,21 +30,20 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
         timeout: float = 60 * 60 * 24 * 7,
         **kwargs: Any,
     ):
-        self.poll_interval = poll_interval
-        self.timeout = timeout
-        super().__init__(**kwargs)
-
-    def execute(self, context: "Context") -> None:
-        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         # TODO: Remove once deprecated
-        if self.poll_interval:
-            self.poke_interval = self.poll_interval
+        if poll_interval:
+            self.poke_interval = poll_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
+        self.timeout = timeout
+        super().__init__(**kwargs)
+
+    def execute(self, context: "Context") -> None:
+        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         end_time = time.time() + self.timeout
         self.defer(
             timeout=self.execution_timeout,
