@@ -169,10 +169,11 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             raise error
 
 
-def create_key_pair() -> None:
+def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     """
     Load the private_key from airflow variable and creates a pem_file
-    at /tmp/.
+    at /tmp/. SSH into the machine and execute the bash script from the list
+    of commands.
     """
     # remove the file if it exists
     if os.path.exists(f"/tmp/{PEM_FILENAME}.pem"):
@@ -189,12 +190,6 @@ def create_key_pair() -> None:
         # if it doesn't exists raise an error.
         raise AirflowException("PEM file wasn't copied properly.")
 
-
-def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
-    """
-    SSH into the machine and execute the bash script from the list
-    of commands.
-    """
     import paramiko
 
     key = paramiko.RSAKey.from_private_key_file(kwargs["path_to_pem_file"])
@@ -262,13 +257,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "livy"],
 ) as dag:
-    # [START howto_create_key_pair_file]
-    create_key_pair_file = PythonOperator(
-        task_id="create_key_pair_file",
-        python_callable=create_key_pair,
-    )
-    # [END howto_create_key_pair_file]
-
     # [START howto_operator_emr_create_job_flow]
     cluster_creator = EmrCreateJobFlowOperator(
         task_id="cluster_creator",
@@ -334,8 +322,7 @@ with DAG(
     # [END howto_operator_emr_terminate_job_flow]
 
     (
-        create_key_pair_file
-        >> cluster_creator
+        cluster_creator
         >> describe_created_cluster
         >> get_and_add_ip_address_for_inbound_rules
         >> ssh_and_copy_pifile_to_hdfs
