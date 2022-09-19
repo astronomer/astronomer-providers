@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from unittest import mock
 
 import pytest
@@ -91,10 +92,10 @@ async def test_wasb_blob_sensor_trigger_success(mock_check_for_blob):
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob")
-async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob):
+async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob, caplog):
     """Tests the WasbBlobSensorTrigger sleeps waiting for the blob to arrive."""
     mock_check_for_blob.side_effect = [False, True]
-
+    caplog.set_level(logging.INFO)
     trigger = WasbBlobSensorTrigger(
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
@@ -102,7 +103,7 @@ async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob):
         poll_interval=POLL_INTERVAL,
     )
 
-    with mock.patch.object(trigger.log, "info") as mock_log_info:
+    with mock.patch.object(trigger.log, "info"):
         task = asyncio.create_task(trigger.run().__anext__())
 
     await asyncio.sleep(POLL_INTERVAL + 0.5)
@@ -112,7 +113,7 @@ async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob):
             f"Blob {TEST_DATA_STORAGE_BLOB_NAME} not available yet in container {TEST_DATA_STORAGE_CONTAINER_NAME}."
             f" Sleeping for {POLL_INTERVAL} seconds"
         )
-        mock_log_info.assert_called_once_with(message)
+        assert message in caplog.text
     asyncio.get_event_loop().stop()
 
 
