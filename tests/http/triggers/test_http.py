@@ -1,11 +1,12 @@
-# import asyncio
-# from unittest import mock
-# from unittest.mock import AsyncMock
-#
-# import pytest
-# from airflow.triggers.base import TriggerEvent
-# from asynctest import CoroutineMock
+import asyncio
+from unittest import mock
+from unittest.mock import AsyncMock
 
+import asynctest
+import pytest
+from airflow.triggers.base import TriggerEvent
+
+from astronomer.providers.http.hooks.http import HttpHookAsync
 from astronomer.providers.http.triggers.http import (
     ExternalDeploymentTaskTrigger,
     HttpTrigger,
@@ -56,47 +57,38 @@ def test_deployment_task_trigger_serialization():
     }
 
 
-# @pytest.mark.asyncio
-# @mock.patch("astronomer.providers.http.triggers.http.ExternalDeploymentTaskTrigger._get_async_hook")
-# @mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
-# async def test_deployment_task_run_exception(mock_run, mock_get_async_hook):
-#     """Assert that run catch exception if dbt cloud job API throw exception"""
-#     mock_run.side_effect = Exception("Test exception")
-#     trigger = ExternalDeploymentTaskTrigger(
-#         endpoint="test-endpoint",
-#         http_conn_id="http_default",
-#         method="GET",
-#         headers={"Content-Type": "application/json"},
-#     )
-#     task = [i async for i in trigger.run()]
-#     response = TriggerEvent(
-#         {
-#             "state": "error",
-#             "message": "Test exception",
-#         }
-#     )
-#     assert len(task) == 1
-#     assert response in task
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
+async def test_deployment_task_run_trigger(mock_run):
+    """Test ExternalDeploymentTaskTrigger is triggered and in running state."""
+    mock.AsyncMock(HttpHookAsync)
+    mock_run.return_value.json = AsyncMock(return_value={"state": "running"})
+    trigger = ExternalDeploymentTaskTrigger(
+        endpoint="test-endpoint",
+        http_conn_id="http_default",
+        method="GET",
+        headers={"Content-Type": "application/json"},
+    )
+    task = asyncio.create_task(trigger.run().__anext__())
+    await asyncio.sleep(0.5)
+
+    # TriggerEvent was not returned
+    assert task.done() is False
+    asyncio.get_event_loop().stop()
 
 
-# @pytest.mark.asyncio
-# @mock.patch("astronomer.providers.http.triggers.http.ExternalDeploymentTaskTrigger._get_async_hook")
-# @mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync")
-# @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
-# async def test_deployment_task_run_exception(mock_get, mock_run, mock_get_async_hook):
-#     """Assert that run catch exception if dbt cloud job API throw exception"""
-#     # returned_data = {"key": "value"}
-#     # mock_run.return_value.__aenter__.return_value.json = CoroutineMock(
-#     #     side_effect=lambda: returned_data
-#     # )
-#     # mock_run.return_value.__aenter__.return_value.json = AsyncMock(return_value={"state": "success"})
-#     mock_run.return_value.run.return_value = AsyncMock(return_value={"state": "success"})
-#     trigger = ExternalDeploymentTaskTrigger(
-#         endpoint="test-endpoint",
-#         http_conn_id="http_default",
-#         method="GET",
-#         headers={"Content-Type": "application/json"},
-#     )
-#     generator = trigger.run()
-#     actual = await generator.asend(None)
-#     assert TriggerEvent({"state": "success"}) == actual
+@pytest.mark.asyncio
+@asynctest.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
+async def test_deployment_complete(mock_run):
+    """Assert ExternalDeploymentTaskTrigger runs and complete the run in success state"""
+    mock.AsyncMock(HttpHookAsync)
+    mock_run.return_value.json = AsyncMock(return_value={"state": "success"})
+    trigger = ExternalDeploymentTaskTrigger(
+        endpoint="test-endpoint",
+        http_conn_id="http_default",
+        method="GET",
+        headers={"Content-Type": "application/json"},
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"state": "success"}) == actual
