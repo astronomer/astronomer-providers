@@ -1,5 +1,4 @@
 import uuid
-from abc import ABC
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -14,7 +13,7 @@ from cryptography.hazmat.primitives import serialization
 from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerator
 
 
-class SnowflakeSqlApiHookAsync(SnowflakeHook, ABC):
+class SnowflakeSqlApiHookAsync(SnowflakeHook):
     """
     A client to interact with Snowflake using SQL API  and allows submitting
     multiple SQL statements in a single request. In combination with aiohttp, make post request to submit SQL
