@@ -1,6 +1,5 @@
 import asyncio
 import time
-from abc import ABC
 from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
 
 from airflow.exceptions import AirflowException
@@ -13,7 +12,7 @@ from google.cloud.dataproc_v1.types import JobStatus, clusters
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 
 
-class DataprocCreateClusterTrigger(BaseTrigger, ABC):
+class DataprocCreateClusterTrigger(BaseTrigger):
     """
     Asynchronously check the status of a cluster
 
@@ -177,7 +176,7 @@ class DataprocCreateClusterTrigger(BaseTrigger, ABC):
         )
 
 
-class DataprocDeleteClusterTrigger(BaseTrigger, ABC):
+class DataprocDeleteClusterTrigger(BaseTrigger):
     """
     Asynchronously check the status of a cluster
 

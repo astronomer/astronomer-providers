@@ -1,5 +1,4 @@
 import asyncio
-from abc import ABC
 from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -11,7 +10,7 @@ from astronomer.providers.amazon.aws.hooks.emr import (
 )
 
 
-class EmrContainerBaseTrigger(BaseTrigger, ABC):
+class EmrContainerBaseTrigger(BaseTrigger):
     """
     Poll for the status of EMR container until reaches terminal state
 

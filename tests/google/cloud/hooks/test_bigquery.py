@@ -1,3 +1,4 @@
+import logging
 from unittest import mock
 
 import pytest
@@ -58,6 +59,7 @@ async def test_get_job_status_oserror(mock_job_instance):
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_instance")
 async def test_get_job_status_exception(mock_job_instance, caplog):
     """Assets that the logging is done correctly when BigQueryHookAsync raises Exception"""
+    caplog.set_level(logging.INFO)
     mock_job_instance.return_value.result.side_effect = Exception()
     hook = BigQueryHookAsync()
     await hook.get_job_status(job_id=JOB_ID, project_id=PROJECT_ID)

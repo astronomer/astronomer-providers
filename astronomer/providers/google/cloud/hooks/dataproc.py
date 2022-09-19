@@ -1,5 +1,4 @@
 import warnings
-from abc import ABC
 from typing import Any, Optional, Sequence, Tuple, Union
 
 from airflow.providers.google.common.consts import CLIENT_INFO
@@ -17,7 +16,7 @@ from google.cloud.dataproc_v1.types import clusters
 JobType = Union[Job, Any]
 
 
-class DataprocHookAsync(GoogleBaseHook, ABC):
+class DataprocHookAsync(GoogleBaseHook):
     """Async Hook for Google Cloud Dataproc APIs"""
 
     def get_cluster_client(
