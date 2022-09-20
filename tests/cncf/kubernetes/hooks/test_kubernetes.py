@@ -51,6 +51,7 @@ class TestKubernetesHookAsync:
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync._load_config")
     async def test_get_api_client_async(self, mock__load_config):
+        """Assert that get_api_client_async return correct client type"""
         mock__load_config.return_value = client.ApiClient()
 
         hook = KubernetesHookAsync(
@@ -66,6 +67,7 @@ class TestKubernetesHookAsync:
     @mock.patch("kubernetes_asyncio.config.load_kube_config")
     @mock.patch("airflow.hooks.base.BaseHook.get_connection")
     async def test_load_config_with_conn_id(self, mock_get_connection, load_kube_config):
+        """Assert that kube client get loaded from Airflow connection"""
         hook = KubernetesHookAsync(conn_id="test_conn")
         mock_get_connection.return_value = get_conn()
         await hook._load_config()
@@ -75,6 +77,7 @@ class TestKubernetesHookAsync:
     @mock.patch("kubernetes_asyncio.config.load_incluster_config")
     @mock.patch("airflow.hooks.base.BaseHook.get_connection")
     async def test_load_config_with_in_cluster(self, mock_get_connection, load_incluster_config):
+        """Assert that kube client get loaded from in cluster config"""
         hook = KubernetesHookAsync(in_cluster=True)
         mock_get_connection.return_value = Connection(
             conn_id="test_conn",
@@ -86,6 +89,7 @@ class TestKubernetesHookAsync:
     @pytest.mark.asyncio
     @mock.patch("airflow.hooks.base.BaseHook.get_connection")
     async def test_load_config_with_more_than_one_config(self, mock_get_connection):
+        """Assert that raise exception if more than on config provided"""
         hook = KubernetesHookAsync(in_cluster=True, config_file="kube_config_path")
         mock_get_connection.return_value = Connection(
             conn_id="test_conn",
@@ -98,6 +102,7 @@ class TestKubernetesHookAsync:
     @mock.patch("kubernetes_asyncio.config.load_kube_config")
     @mock.patch("airflow.hooks.base.BaseHook.get_connection")
     async def test_load_config_with_kube_config_path(self, mock_get_connection, mock_load_kube_config):
+        """Assert that raise config get loaded from kube config file path"""
         hook = KubernetesHookAsync(in_cluster=False)
         mock_get_connection.return_value = Connection(
             conn_id="test_conn",
@@ -112,6 +117,7 @@ class TestKubernetesHookAsync:
     @mock.patch("kubernetes_asyncio.config.load_kube_config")
     @mock.patch("airflow.hooks.base.BaseHook.get_connection")
     async def test_load_config_with_kube_config(self, mock_get_connection, mock_load_kube_config):
+        """Assert that raise config get loaded from kube config"""
         hook = KubernetesHookAsync(in_cluster=False)
         mock_get_connection.return_value = Connection(
             conn_id="test_conn",

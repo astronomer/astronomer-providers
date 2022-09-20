@@ -19,6 +19,7 @@ KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
 
 class TestKubernetesPodOperatorAsync:
     def test_raise_for_trigger_status_pending_timeout(self):
+        """Assert trigger raise exception in case of timeout"""
         with pytest.raises(PodLaunchTimeoutException):
             KubernetesPodOperatorAsync.raise_for_trigger_status(
                 {
@@ -29,6 +30,7 @@ class TestKubernetesPodOperatorAsync:
             )
 
     def test_raise_for_trigger_status_done(self):
+        """Assert trigger don't raise exception in case of status is done"""
         assert KubernetesPodOperatorAsync.raise_for_trigger_status({"status": "done"}) is None
 
     @mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
@@ -108,6 +110,7 @@ class TestKubernetesPodOperatorAsync:
         get_kube_client,
         cleanup,
     ):
+        """Assert if pod not found then raise exception"""
         find_pod.return_value = None
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         context = create_context(op)
@@ -129,6 +132,7 @@ class TestKubernetesPodOperatorAsync:
         get_kube_client,
         cleanup,
     ):
+        """Assert that trigger_reentry raise exception in case of error"""
         find_pod.return_value = MagicMock()
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         with pytest.raises(PodLaunchTimeoutException):
@@ -143,6 +147,7 @@ class TestKubernetesPodOperatorAsync:
             )
 
     def test_defer_with_kwargs(self):
+        """Assert that with kwargs throw exception"""
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         with pytest.raises(ValueError):
             op.defer(kwargs={"timeout": 10})
@@ -151,6 +156,7 @@ class TestKubernetesPodOperatorAsync:
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
     def test_execute(self, mock_defer, mock_get_or_create_pod, mock_build_pod_request_obj):
+        """Assert that execute succeeded"""
         mock_get_or_create_pod.return_value = {}
         mock_build_pod_request_obj.return_value = {}
         mock_defer.return_value = {}
@@ -159,6 +165,7 @@ class TestKubernetesPodOperatorAsync:
 
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.trigger_reentry")
     def test_execute_complete(self, mock_trigger_reentry):
+        """Assert that execute_complete succeeded"""
         mock_trigger_reentry.return_value = {}
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         assert op.execute_complete(context=create_context(op), event={}) is None
