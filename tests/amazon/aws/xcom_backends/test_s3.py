@@ -31,12 +31,12 @@ def test_custom_xcom_gcs_write_and_upload(mock_upload, mock_uuid, job_id):
     """
     mock_uuid.return_value = "12345667890"
     result = S3XComBackend.write_and_upload_value(job_id)
-    assert result == "S3XCOM_" + "12345667890"
+    assert result == "s3_xcom_" + "12345667890"
 
 
 @pytest.mark.parametrize(
     "job_id",
-    ["S3XCOM_1234", "1234"],
+    ["s3_xcom__1234", "1234"],
 )
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
 def test_custom_xcom_gcs_deserialize(mock_download, job_id):
@@ -55,4 +55,4 @@ def test_custom_xcom_gcs_orm_deserialize_value():
     value method and check for data.
     """
     result = S3XComBackend().orm_deserialize_value()
-    assert result == "XCOM is uploaded into S3 bucket: some_bucket_name"
+    assert result == "XCOM is uploaded into S3 bucket: airflow_xcom_backend_default_bucket"

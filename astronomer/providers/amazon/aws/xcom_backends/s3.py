@@ -16,9 +16,9 @@ class S3XComBackend(BaseXCom):
     `astronomer.providers.amazon.aws.xcom_backends.s3.S3XComBackend`
     """
 
-    PREFIX = os.getenv("PREFIX", "S3XCOM_")
+    PREFIX = os.getenv("PREFIX", "s3_xcom_")
     AWS_CONN_ID = os.getenv("CONNECTION_NAME", "aws_default")
-    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "some_bucket_name")
+    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
@@ -59,9 +59,8 @@ class S3XComBackend(BaseXCom):
 
     def orm_deserialize_value(self) -> str:
         """
-        Deserialize amethod which is used to reconstruct ORM XCom object.
-        This method should be overridden in custom XCom backends to avoid
-        unnecessary request or other resource consuming operations when
-        creating XCom ORM model.
+        Deserialize method which is used to reconstruct ORM XCom object.
+        This method help to avoid unnecessary request or other
+        resource-consuming operations when creating XCom ORM model.
         """
         return f"XCOM is uploaded into S3 bucket: {S3XComBackend.BUCKET_NAME}"
