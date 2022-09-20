@@ -1,5 +1,5 @@
 from fnmatch import fnmatch
-from typing import Any, List
+from typing import List
 
 import asyncssh
 from airflow.exceptions import AirflowException
@@ -98,7 +98,7 @@ class SFTPHookAsync(BaseHook):
 
             return ssh_client
 
-    async def list_directory(self, path: Any[str] = "") -> List[str]:
+    async def list_directory(self, path: str = "") -> List[str]:
         """Returns a list of files on the SFTP server at the provided path"""
         ssh_conn = await self._get_conn()
         sftp_client = await ssh_conn.start_sftp_client()
@@ -108,7 +108,7 @@ class SFTPHookAsync(BaseHook):
         except asyncssh.SFTPNoSuchFile:
             raise AirflowException(f"No files at path {path} found — Deferring")
 
-    async def get_file_by_pattern(self, path: Any[str] = "", fnmatch_pattern: Any[str] = "") -> str:
+    async def get_file_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> str:
         """
         Returns the name of a file matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
