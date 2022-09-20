@@ -7,18 +7,14 @@ from astronomer.providers.utils.typing_compat import Context
 
 class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
     """
-    External deployment task sensor check for the response state success, continue polling till
-    the response state is success. Inherits from HttpSensorAsync which
+    External deployment task sensor Make API call and poll for the response state of the deployment.
+    Inherits from HttpSensorAsync which
 
     :param http_conn_id: The Connection ID to run the sensor against
     :param method: The HTTP request method to use
     :param endpoint: The relative part of the full url
     :param request_params: The parameters to be added to the GET url
     :param headers: The HTTP headers to be added to the GET request
-    :param response_check: A check against the 'requests' response object.
-        The callable takes the response object as the first positional argument
-        and optionally any number of keyword arguments available in the context dictionary.
-        It should return True for 'pass' and False otherwise.
     :param extra_options: Extra options for the 'requests' library, see the
         'requests' documentation (options to modify timeout, ssl, etc.)
     :param tcp_keep_alive: Enable TCP Keep Alive for the connection.
@@ -43,12 +39,12 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[Any, Any]] = None) -> None:
+    def execute_complete(self, context: "Context", event: Optional[Dict[str, Any]] = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Return true and log the response if state is not success state raise ValueError
         """
-        if event.get("state"):
+        if event and "state" in event:
             if event["state"] == "success":
                 self.log.info("Task Succeeded with response: %s", event)
                 return True
