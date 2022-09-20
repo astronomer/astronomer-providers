@@ -1,5 +1,5 @@
 from fnmatch import fnmatch
-from typing import List, Optional
+from typing import Any, List
 
 import asyncssh
 from airflow.exceptions import AirflowException
@@ -29,16 +29,16 @@ class SFTPHookAsync(BaseHook):
     hook_name = "SFTP"
     default_known_hosts = '"~/.ssh/known_hosts"'
 
-    def __init__(
+    def __init__(  # nosec: B107
         self,
         sftp_conn_id: str = default_conn_name,
-        host: str = None,
+        host: str = "",
         port: int = 22,
-        username: str = None,
-        password: str = None,
+        username: str = "",
+        password: str = "",
         known_hosts: str = default_known_hosts,
-        key_file: str = None,
-        passphrase: str = None,
+        key_file: str = "",
+        passphrase: str = "",
     ) -> None:
         self.sftp_conn_id = sftp_conn_id
         self.host = host
@@ -49,7 +49,7 @@ class SFTPHookAsync(BaseHook):
         self.key_file = key_file
         self.passphrase = passphrase
 
-    async def _get_conn(self) -> asyncssh.SFTPClient:
+    async def _get_conn(self) -> asyncssh.SSHClientConnection:
         """
         Asynchronously connect to the SFTP server as an SSH client
 
@@ -66,7 +66,7 @@ class SFTPHookAsync(BaseHook):
             if conn.extra is not None:
                 extra_options = conn.extra_dejson
 
-                if "key_file" in extra_options and self.key_file is None:
+                if "key_file" in extra_options and self.key_file == "":
                     self.key_file = extra_options.get("key_file")
 
                 if "known_hosts" in extra_options:
@@ -98,7 +98,7 @@ class SFTPHookAsync(BaseHook):
 
             return ssh_client
 
-    async def list_directory(self, path: Optional[str] = None) -> List[str]:
+    async def list_directory(self, path: Any[str] = "") -> List[str]:
         """Returns a list of files on the SFTP server at the provided path"""
         ssh_conn = await self._get_conn()
         sftp_client = await ssh_conn.start_sftp_client()
@@ -108,9 +108,7 @@ class SFTPHookAsync(BaseHook):
         except asyncssh.SFTPNoSuchFile:
             raise AirflowException(f"No files at path {path} found — Deferring")
 
-    async def get_file_by_pattern(
-        self, path: Optional[str] = None, fnmatch_pattern: Optional[str] = None
-    ) -> str:
+    async def get_file_by_pattern(self, path: Any[str] = "", fnmatch_pattern: Any[str] = "") -> str:
         """
         Returns the name of a file matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
