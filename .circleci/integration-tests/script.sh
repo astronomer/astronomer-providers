@@ -4,15 +4,10 @@
 # will be marked as 'success' and the DAG will proceed on to the subsequent tasks.
 set -e
 
-# This script use to update a staging Astro staging and cloud Airflow deployment.
+# This script deploys to an already existing Astro Cloud Airflow deployment.
 # It currently does not support creating a new deployment.
-# To deploy on 'staging' execute the script with below positional params
-#         bash script.sh staging <DOCKER_REGISTRY> <RELEASE_NAME>  <ASTRO_API_KEY>
-#         - DOCKER_REGISTRY: Docker registry domain. Script will push the docker image here.
-#         - RELEASE_NAME: Staging deployment release name. Get it from staging deployment UI.
-#         - ASTRO_API_KEY: Staging deployment service account API key.
 #
-# To deploy on 'Astro Cloud' execute the script with below positional params
+# Execute the script with below positional params
 #         bash script.sh astro-cloud <DOCKER_REGISTRY> <ORGANIZATION_ID>  <DEPLOYMENT_ID> <ASTRONOMER_KEY_ID> <ASTRONOMER_KEY_SECRET>
 #         - DOCKER_REGISTRY: Docker registry domain. Script will push the docker image here.
 #         - ORGANIZATION_ID: Astro cloud deployment organization Id. Get it from UI.
@@ -26,15 +21,12 @@ PROVIDER_PATH=${PROJECT_PATH}/astronomer/providers/
 
 function echo_help() {
     echo "Usage:"
-    echo "DEPLOYMENT_INSTANCE:    Deployment instance. Valid Value staging | astro-cloud"
+    echo "DEPLOYMENT_INSTANCE:    Deployment instance. Valid Value astro-cloud"
     echo "DOCKER_REGISTRY:        Docker registry"
-    echo "RELEASE_NAME:           Release name of the deployment"
-    echo "ASTRONOMER_API_KEY      Deployment service account API key"
     echo "ORGANIZATION_ID         Astro cloud organization Id"
     echo "DEPLOYMENT_ID           Astro cloud Deployment id"
     echo "ASTRONOMER_KEY_ID       Astro cloud service account API key id"
     echo "ASTRONOMER_KEY_SECRET   Astro cloud service account API key secret"
-    echo "bash script.sh staging <DOCKER_REGISTRY> <RELEASE_NAME>  <ASTRO_API_KEY>"
     echo "bash script.sh astro-cloud <DOCKER_REGISTRY> <ORGANIZATION_ID>  <DEPLOYMENT_ID> <ASTRONOMER_KEY_ID> <ASTRONOMER_KEY_SECRET>"
 }
 
@@ -54,28 +46,20 @@ if [ "$1" == "-h" ]; then
 fi
 
 DEPLOYMENT_INSTANCE=$1
-# Variable for Staging deployment
 DOCKER_REGISTRY=""
-RELEASE_NAME=""
-ASTRONOMER_API_KEY=""
-# Variable for astro-cloud deployment
 ORGANIZATION_ID=""
 DEPLOYMENT_ID=""
 ASTRONOMER_KEY_ID=""
 ASTRONOMER_KEY_SECRET=""
 
-if [[ ${DEPLOYMENT_INSTANCE} == "staging" ]]; then
-  DOCKER_REGISTRY=$2
-  RELEASE_NAME=$3
-  ASTRONOMER_API_KEY=$4
-elif [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
+if [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
   DOCKER_REGISTRY=$2
   ORGANIZATION_ID=$3
   DEPLOYMENT_ID=$4
   ASTRONOMER_KEY_ID=$5
   ASTRONOMER_KEY_SECRET=$6
 else
-  echo "DEPLOYMENT_INSTANCE can be either staging or astro-cloud"
+  echo "Valid value for DEPLOYMENT_INSTANCE can only be astro-cloud"
   echo_help
   exit 1
 fi
