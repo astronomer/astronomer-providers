@@ -11,7 +11,6 @@ from astronomer.providers.utils.typing_compat import Context
 class SFTPSensorAsync(SFTPSensor):
     """
     Polls an SFTP server continuously until a file_pattern is matched at a defined path
-    Polls for the file pattern every `poll_interval` seconds
 
     :param path: The path on the SFTP server to search for a file matching the file pattern.
                  Authentication method used in the SFTP connection must have access to this path
@@ -26,15 +25,12 @@ class SFTPSensorAsync(SFTPSensor):
                 [!seq]  | Matches any character not in seq
 
                 For example, *.txt : Matches any file on the path ending in .txt
-
-    :param poll_interval: How often, in seconds, to check for the existence of the file on the SFTP server
     """
 
-    def __init__(self, *, path: str, file_pattern: str = "", poll_interval: float = 5, **kwargs: Any) -> None:
+    def __init__(self, *, path: str, file_pattern: str = "", **kwargs: Any) -> None:
 
         self.path = path
         self.file_pattern = file_pattern
-        self.poll_interval = poll_interval
 
         super().__init__(path=path, file_pattern=file_pattern, **kwargs)
         self.hook = SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)
@@ -50,7 +46,7 @@ class SFTPSensorAsync(SFTPSensor):
                 path=self.path,
                 file_pattern=self.file_pattern,
                 sftp_conn_id=self.sftp_conn_id,
-                poll_interval=self.poll_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
