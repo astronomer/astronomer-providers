@@ -1,0 +1,24 @@
+---
+tenant-blocklist:
+  - 00001111-2222-3333-4444-555566667777
+
+tenants:
+  77776666-5555-4444-3333-222211110000:
+    presets:
+      - common
+    filters:
+      AzureADUser:
+        - property: Name
+          type: contains
+          value: ImportantUser
+      ServicePrincipal:
+        - type: contains
+          property: Name
+          value: testing-azure-nuke
+
+presets:
+  common:
+    filters:
+      ResourceGroup:
+        - Default
+        - NetworkWatcherRG
