@@ -27,7 +27,7 @@ class SFTPTrigger(BaseTrigger):
                 For example, *.txt : Matches any file on the path ending in .txt
 
     :param sftp_conn_id: SFTP connection ID to be used for connecting to SFTP server
-    :param poll_interval: How often, in seconds, to check for the existence of the file on the SFTP server
+    :param poke_interval: How often, in seconds, to check for the existence of the file on the SFTP server
     """
 
     def __init__(
@@ -35,13 +35,13 @@ class SFTPTrigger(BaseTrigger):
         path: str,
         file_pattern: str = "",
         sftp_conn_id: str = "sftp_default",
-        poll_interval: float = 5,
+        poke_interval: float = 5,
     ) -> None:
         super().__init__()
         self.path = path
         self.file_pattern = file_pattern
         self.sftp_conn_id = sftp_conn_id
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes SFTPTrigger arguments and classpath"""
@@ -51,7 +51,7 @@ class SFTPTrigger(BaseTrigger):
                 "path": self.path,
                 "file_pattern": self.file_pattern,
                 "sftp_conn_id": self.sftp_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -66,7 +66,7 @@ class SFTPTrigger(BaseTrigger):
                 await hook.get_file_by_pattern(path=self.path, fnmatch_pattern=self.file_pattern)
                 yield TriggerEvent(True)
             except AirflowException:
-                await asyncio.sleep(self.poll_interval)
+                await asyncio.sleep(self.poke_interval)
 
     def _get_async_hook(self) -> SFTPHookAsync:
         return SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)

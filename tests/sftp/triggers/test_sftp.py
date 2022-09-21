@@ -12,5 +12,5 @@ def test_sftp_trigger_serialization():
         "path": "test/path/",
         "file_pattern": "my_test_file",
         "sftp_conn_id": "sftp_default",
-        "poll_interval": 5.0,
+        "poke_interval": 5.0,
     }
