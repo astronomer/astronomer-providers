@@ -22,6 +22,7 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
     :param tcp_keep_alive_count: The TCP Keep Alive count parameter (corresponds to ``socket.TCP_KEEPCNT``)
     :param tcp_keep_alive_interval: The TCP Keep Alive interval parameter (corresponds to
         ``socket.TCP_KEEPINTVL``)
+    :param poke_interval: Time in seconds that the job should wait in between each tries
     """
 
     def execute(self, context: Context) -> None:
