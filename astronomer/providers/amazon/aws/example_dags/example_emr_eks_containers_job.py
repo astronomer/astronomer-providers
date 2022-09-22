@@ -1,11 +1,9 @@
-import logging
 import os
 from datetime import datetime, timedelta
-from typing import Any
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.operators.emr import EmrEksCreateClusterOperator
 
 from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
@@ -38,27 +36,6 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
-
-
-def create_emr_virtual_cluster_func(task_instance: Any) -> None:
-    """Create EMR virtual cluster in container"""
-    import boto3
-    from botocore.exceptions import ClientError
-
-    client = boto3.client("emr-containers")
-    try:
-        response = client.create_virtual_cluster(
-            name=VIRTUAL_CLUSTER_NAME,
-            containerProvider={
-                "id": EKS_CLUSTER_NAME,
-                "type": "EKS",
-                "info": {"eksInfo": {"namespace": EKS_NAMESPACE}},
-            },
-        )
-        task_instance.xcom_push(key="virtual_cluster_id", value=response["id"])
-    except ClientError as error:
-        logging.exception("Error while creating EMR virtual cluster")
-        raise error
 
 
 # [START howto_operator_emr_eks_config]
@@ -122,15 +99,15 @@ with DAG(
         f"sh $AIRFLOW_HOME/dags/example_create_eks_kube_namespace_with_role.sh ",
     )
 
-    # Task to create EMR virtual cluster
-    create_emr_virtual_cluster = PythonOperator(
-        task_id="create_emr_virtual_cluster",
-        python_callable=create_emr_virtual_cluster_func,
+    create_emr_virtual_cluster = EmrEksCreateClusterOperator(
+        task_id="create_emr_eks_cluster",
+        virtual_cluster_name=VIRTUAL_CLUSTER_NAME,
+        eks_cluster_name=EKS_CLUSTER_NAME,
+        eks_namespace=EKS_NAMESPACE,
     )
 
-    VIRTUAL_CLUSTER_ID = (
-        "{{ task_instance.xcom_pull(task_ids='create_emr_virtual_cluster', " "key='virtual_cluster_id') }}"
-    )
+    VIRTUAL_CLUSTER_ID = str(create_emr_virtual_cluster.output)
+
     # [START howto_operator_run_emr_container_job]
     run_emr_container_job = EmrContainerOperatorAsync(
         task_id="run_emr_container_job",
