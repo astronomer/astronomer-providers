@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -24,7 +25,15 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         poll_interval: float = 5,
         **kwargs: Any,
     ):
-        self.poll_interval = poll_interval
+        # TODO: Remove once deprecated
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
@@ -36,7 +45,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
                 aws_conn_id=self.aws_conn_id,
                 cluster_identifier=self.cluster_identifier,
                 target_status=self.target_status,
-                polling_period_seconds=self.poll_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

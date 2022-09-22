@@ -254,7 +254,7 @@ def test_redshift_cluster_sensor_trigger_serialization():
         aws_conn_id="test_redshift_conn_id",
         cluster_identifier="mock_cluster_identifier",
         target_status="available",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poke_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
     assert (
@@ -265,7 +265,7 @@ def test_redshift_cluster_sensor_trigger_serialization():
         "aws_conn_id": "test_redshift_conn_id",
         "cluster_identifier": "mock_cluster_identifier",
         "target_status": "available",
-        "polling_period_seconds": POLLING_PERIOD_SECONDS,
+        "poke_interval": POLLING_PERIOD_SECONDS,
     }
 
 
@@ -287,7 +287,7 @@ async def test_redshift_cluster_sensor_trigger_success(mock_cluster_status, expe
         aws_conn_id="test_redshift_conn_id",
         cluster_identifier="mock_cluster_identifier",
         target_status="available",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poke_interval=POLLING_PERIOD_SECONDS,
     )
 
     generator = trigger.run()
@@ -311,7 +311,7 @@ async def test_redshift_cluster_sensor_trigger_resuming_status(mock_cluster_stat
         aws_conn_id="test_redshift_conn_id",
         cluster_identifier="mock_cluster_identifier",
         target_status="available",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poke_interval=POLLING_PERIOD_SECONDS,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
@@ -333,7 +333,7 @@ async def test_redshift_cluster_sensor_trigger_exception(mock_cluster_status):
         aws_conn_id="test_redshift_conn_id",
         cluster_identifier="mock_cluster_identifier",
         target_status="available",
-        polling_period_seconds=POLLING_PERIOD_SECONDS,
+        poke_interval=POLLING_PERIOD_SECONDS,
     )
 
     task = [i async for i in trigger.run()]

@@ -118,6 +118,19 @@ def test_gcs_object_with_prefix_existence_sensor_async_execute_complete():
     mock_log_info.assert_called_with("Sensor checks existence of objects: %s, %s", TEST_BUCKET, TEST_OBJECT)
 
 
+def test_poll_interval_deprecation_warning_prefix_existence():
+    """Test DeprecationWarning for GCSObjectsWithPrefixExistenceSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
+    with pytest.warns(expected_warning=DeprecationWarning):
+        GCSObjectsWithPrefixExistenceSensorAsync(
+            task_id="task-id",
+            bucket=TEST_BUCKET,
+            prefix=TEST_OBJECT,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
+            polling_interval=5.0,
+        )
+
+
 def test_gcs_upload_session_complete_sensor_async():
     """
     Asserts that a task is deferred and a GCSUploadSessionTrigger will be fired
@@ -163,6 +176,21 @@ def test_gcs_upload_session_complete_sensor_async_execute_complete():
     assert task.execute_complete(context=None, event={"status": "success", "message": "success"})
 
 
+def test_poll_interval_deprecation_warning_gcs_upload_session():
+    """Test DeprecationWarning for GCSUploadSessionCompleteSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
+    with pytest.warns(expected_warning=DeprecationWarning):
+        GCSUploadSessionCompleteSensorAsync(
+            task_id="task-id",
+            bucket=TEST_BUCKET,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
+            prefix=TEST_OBJECT,
+            inactivity_period=TEST_INACTIVITY_PERIOD,
+            min_objects=TEST_MIN_OBJECTS,
+            polling_interval=5.0,
+        )
+
+
 def test_gcs_object_update_sensor_async(context):
     """
     Asserts that a task is deferred and a GCSBlobTrigger will be fired
@@ -206,3 +234,16 @@ def test_gcs_object_update_sensor_async_execute_complete():
     mock_log_info.assert_called_with(
         "Sensor checks update time for object %s in bucket : %s", TEST_OBJECT, TEST_BUCKET
     )
+
+
+def test_poll_interval_deprecation_warning():
+    """Test DeprecationWarning for GCSObjectUpdateSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
+    with pytest.warns(expected_warning=DeprecationWarning):
+        GCSObjectUpdateSensorAsync(
+            task_id="task-id",
+            bucket=TEST_BUCKET,
+            object=TEST_OBJECT,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
+            polling_interval=5.0,
+        )

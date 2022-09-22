@@ -726,7 +726,7 @@ def test_big_query_table_existence_trigger_serialization():
         "project_id": TEST_GCP_PROJECT_ID,
         "table_id": TEST_TABLE_ID,
         "gcp_conn_id": TEST_GCP_CONN_ID,
-        "poll_interval": POLLING_PERIOD_SECONDS,
+        "poke_interval": POLLING_PERIOD_SECONDS,
         "hook_params": TEST_HOOK_PARAMS,
     }
 

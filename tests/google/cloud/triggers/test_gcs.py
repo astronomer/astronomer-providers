@@ -45,7 +45,7 @@ def test_gcs_blob_trigger_serialization():
     assert kwargs == {
         "bucket": TEST_BUCKET,
         "object_name": TEST_OBJECT,
-        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "poke_interval": TEST_POLLING_INTERVAL,
         "google_cloud_conn_id": TEST_GCP_CONN_ID,
         "hook_params": TEST_HOOK_PARAMS,
     }
@@ -105,7 +105,7 @@ async def test_gcs_blob_trigger_exception(mock_object_exists):
     trigger = GCSBlobTrigger(
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
@@ -136,7 +136,7 @@ async def test_object_exists(exists, response):
     trigger = GCSBlobTrigger(
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
@@ -162,7 +162,7 @@ def test_gcs_prefix_blob_trigger_serialization():
     assert kwargs == {
         "bucket": TEST_BUCKET,
         "prefix": TEST_PREFIX,
-        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "poke_interval": TEST_POLLING_INTERVAL,
         "google_cloud_conn_id": TEST_GCP_CONN_ID,
         "hook_params": TEST_HOOK_PARAMS,
     }
@@ -202,7 +202,7 @@ async def test_gcs_prefix_blob_trigger_exception(mock_list_blobs_with_prefixs):
     trigger = GCSPrefixBlobTrigger(
         bucket=TEST_BUCKET,
         prefix=TEST_PREFIX,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
@@ -249,7 +249,7 @@ async def test_list_blobs_with_prefix():
     trigger = GCSPrefixBlobTrigger(
         bucket=TEST_BUCKET,
         prefix=TEST_PREFIX,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
@@ -279,7 +279,7 @@ def test_gcs_upload_session_trigger_serialization():
     assert kwargs == {
         "bucket": TEST_BUCKET,
         "prefix": TEST_PREFIX,
-        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "poke_interval": TEST_POLLING_INTERVAL,
         "google_cloud_conn_id": TEST_GCP_CONN_ID,
         "hook_params": TEST_HOOK_PARAMS,
         "inactivity_period": TEST_INACTIVITY_PERIOD,
@@ -487,7 +487,7 @@ def test_gcs_blob_update_trigger_serialization():
         "bucket": TEST_BUCKET,
         "object_name": TEST_OBJECT,
         "ts": TEST_TS_OBJECT,
-        "polling_period_seconds": TEST_POLLING_INTERVAL,
+        "poke_interval": TEST_POLLING_INTERVAL,
         "google_cloud_conn_id": TEST_GCP_CONN_ID,
         "hook_params": TEST_HOOK_PARAMS,
     }
@@ -596,7 +596,7 @@ async def test_is_blob_updated_after(blob_object_update_datetime, ts_object, exp
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
         ts=ts_object,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )
@@ -629,7 +629,7 @@ async def test_is_blob_updated_after_with_none(blob_object, expected_response):
         bucket=TEST_BUCKET,
         object_name=TEST_OBJECT,
         ts=TEST_TS_OBJECT,
-        polling_period_seconds=TEST_POLLING_INTERVAL,
+        poke_interval=TEST_POLLING_INTERVAL,
         google_cloud_conn_id=TEST_GCP_CONN_ID,
         hook_params=TEST_HOOK_PARAMS,
     )

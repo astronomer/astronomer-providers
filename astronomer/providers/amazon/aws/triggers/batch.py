@@ -117,7 +117,7 @@ class BatchSensorTrigger(BaseTrigger):
         credential boto3 strategy will be used
     :param region_name: AWS region name to use
         Override the region_name in connection (if provided)
-    :param poll_interval: polling period in seconds to check for the status of the job
+    :param poke_interval: polling period in seconds to check for the status of the job
     """
 
     def __init__(
@@ -125,13 +125,13 @@ class BatchSensorTrigger(BaseTrigger):
         job_id: str,
         region_name: Optional[str],
         aws_conn_id: Optional[str] = "aws_default",
-        poll_interval: float = 5,
+        poke_interval: float = 5,
     ):
         super().__init__()
         self.job_id = job_id
         self.aws_conn_id = aws_conn_id
         self.region_name = region_name
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes BatchSensorTrigger arguments and classpath."""
@@ -141,7 +141,7 @@ class BatchSensorTrigger(BaseTrigger):
                 "job_id": self.job_id,
                 "aws_conn_id": self.aws_conn_id,
                 "region_name": self.region_name,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -163,6 +163,6 @@ class BatchSensorTrigger(BaseTrigger):
                 if state == BatchClientHookAsync.FAILURE_STATE:
                     error_message = f"{self.job_id} failed"
                     yield TriggerEvent({"status": "error", "message": error_message})
-                await asyncio.sleep(self.poll_interval)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})

@@ -15,7 +15,7 @@ TEST_DATA_STORAGE_CONTAINER_NAME = "test-container-providers-team"
 TEST_DATA_STORAGE_BLOB_PREFIX = TEST_DATA_STORAGE_BLOB_NAME[:10]
 
 TEST_WASB_CONN_ID = "wasb_default"
-POLL_INTERVAL = 5.0
+POKE_INTERVAL = 5.0
 
 
 def test_wasb_blob_sensor_trigger_serialization():
@@ -27,7 +27,7 @@ def test_wasb_blob_sensor_trigger_serialization():
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.microsoft.azure.triggers.wasb.WasbBlobSensorTrigger"
@@ -35,7 +35,7 @@ def test_wasb_blob_sensor_trigger_serialization():
         "container_name": TEST_DATA_STORAGE_CONTAINER_NAME,
         "blob_name": TEST_DATA_STORAGE_BLOB_NAME,
         "wasb_conn_id": TEST_WASB_CONN_ID,
-        "poll_interval": POLL_INTERVAL,
+        "poke_interval": POKE_INTERVAL,
         "public_read": False,
     }
 
@@ -58,7 +58,7 @@ async def test_wasb_blob_sensor_trigger_running(mock_check_for_blob, blob_exists
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     task = asyncio.create_task(trigger.run().__anext__())
 
@@ -76,7 +76,7 @@ async def test_wasb_blob_sensor_trigger_success(mock_check_for_blob):
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
@@ -100,18 +100,18 @@ async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob, ca
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     with mock.patch.object(trigger.log, "info"):
         task = asyncio.create_task(trigger.run().__anext__())
 
-    await asyncio.sleep(POLL_INTERVAL + 0.5)
+    await asyncio.sleep(POKE_INTERVAL + 0.5)
 
     if not task.done():
         message = (
             f"Blob {TEST_DATA_STORAGE_BLOB_NAME} not available yet in container {TEST_DATA_STORAGE_CONTAINER_NAME}."
-            f" Sleeping for {POLL_INTERVAL} seconds"
+            f" Sleeping for {POKE_INTERVAL} seconds"
         )
         assert message in caplog.text
     asyncio.get_event_loop().stop()
@@ -127,7 +127,7 @@ async def test_wasb_blob_sensor_trigger_trigger_exception(mock_check_for_blob):
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         blob_name=TEST_DATA_STORAGE_BLOB_NAME,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     task = [i async for i in trigger.run()]
@@ -144,7 +144,7 @@ def test_wasb_prefix_sensor_trigger_serialization():
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.microsoft.azure.triggers.wasb.WasbPrefixSensorTrigger"
@@ -154,7 +154,7 @@ def test_wasb_prefix_sensor_trigger_serialization():
         "include": None,
         "delimiter": "/",
         "wasb_conn_id": TEST_WASB_CONN_ID,
-        "poll_interval": POLL_INTERVAL,
+        "poke_interval": POKE_INTERVAL,
         "public_read": False,
     }
 
@@ -177,7 +177,7 @@ async def test_wasb_prefix_sensor_trigger_running(mock_check_for_prefix, prefix_
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     task = asyncio.create_task(trigger.run().__anext__())
 
@@ -195,7 +195,7 @@ async def test_wasb_prefix_sensor_trigger_success(mock_check_for_prefix):
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     task = asyncio.create_task(trigger.run().__anext__())
@@ -219,18 +219,18 @@ async def test_wasb_prefix_sensor_trigger_waiting_for_blob(mock_check_for_prefix
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     with mock.patch.object(trigger.log, "info") as mock_log_info:
         task = asyncio.create_task(trigger.run().__anext__())
 
-    await asyncio.sleep(POLL_INTERVAL + 0.5)
+    await asyncio.sleep(POKE_INTERVAL + 0.5)
 
     if not task.done():
         message = (
             f"Prefix {TEST_DATA_STORAGE_BLOB_PREFIX} not available yet in container "
-            f"{TEST_DATA_STORAGE_CONTAINER_NAME}. Sleeping for {POLL_INTERVAL} seconds"
+            f"{TEST_DATA_STORAGE_CONTAINER_NAME}. Sleeping for {POKE_INTERVAL} seconds"
         )
         mock_log_info.assert_called_once_with(message)
     asyncio.get_event_loop().stop()
@@ -246,7 +246,7 @@ async def test_wasb_prefix_sensor_trigger_trigger_exception(mock_check_for_prefi
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME,
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
         wasb_conn_id=TEST_WASB_CONN_ID,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
 
     task = [i async for i in trigger.run()]

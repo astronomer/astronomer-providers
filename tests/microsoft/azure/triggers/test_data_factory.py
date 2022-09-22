@@ -15,7 +15,7 @@ DATAFACTORY_NAME = "ADFProvidersTeamDataFactory"
 TASK_ID = "test_adf_pipeline_run_status_sensor"
 AZURE_DATA_FACTORY_CONN_ID = "azure_data_factory_default"
 RUN_ID = "7f8c6c72-c093-11ec-a83d-0242ac120007"
-POLL_INTERVAL = 5
+POKE_INTERVAL = 5
 AZ_PIPELINE_RUN_ID = "123"
 AZ_RESOURCE_GROUP_NAME = "test-rg"
 AZ_FACTORY_NAME = "test-factory"
@@ -33,7 +33,7 @@ def test_adf_pipeline_run_status_sensors_trigger_serialization():
         azure_data_factory_conn_id=AZURE_DATA_FACTORY_CONN_ID,
         resource_group_name=RESOURCE_GROUP_NAME,
         factory_name=DATAFACTORY_NAME,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert (
@@ -45,7 +45,7 @@ def test_adf_pipeline_run_status_sensors_trigger_serialization():
         "azure_data_factory_conn_id": AZURE_DATA_FACTORY_CONN_ID,
         "resource_group_name": RESOURCE_GROUP_NAME,
         "factory_name": DATAFACTORY_NAME,
-        "poll_interval": POLL_INTERVAL,
+        "poke_interval": POKE_INTERVAL,
     }
 
 
@@ -70,7 +70,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_run(mock_data_factory, mo
         azure_data_factory_conn_id=AZURE_DATA_FACTORY_CONN_ID,
         resource_group_name=RESOURCE_GROUP_NAME,
         factory_name=DATAFACTORY_NAME,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)
@@ -96,7 +96,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_completed(mock_data_facto
         azure_data_factory_conn_id=AZURE_DATA_FACTORY_CONN_ID,
         resource_group_name=RESOURCE_GROUP_NAME,
         factory_name=DATAFACTORY_NAME,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -125,7 +125,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_failure_status(
         azure_data_factory_conn_id=AZURE_DATA_FACTORY_CONN_ID,
         resource_group_name=RESOURCE_GROUP_NAME,
         factory_name=DATAFACTORY_NAME,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     generator = trigger.run()
     actual = await generator.asend(None)
@@ -144,7 +144,7 @@ async def test_adf_pipeline_run_status_sensors_trigger_exception(mock_data_facto
         azure_data_factory_conn_id=AZURE_DATA_FACTORY_CONN_ID,
         resource_group_name=RESOURCE_GROUP_NAME,
         factory_name=DATAFACTORY_NAME,
-        poll_interval=POLL_INTERVAL,
+        poke_interval=POKE_INTERVAL,
     )
     task = [i async for i in trigger.run()]
     assert len(task) == 1

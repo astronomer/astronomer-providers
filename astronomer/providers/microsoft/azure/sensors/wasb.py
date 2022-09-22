@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
@@ -37,10 +38,18 @@ class WasbBlobSensorAsync(WasbBlobSensor):
     ):
         self.container_name = container_name
         self.blob_name = blob_name
+        # TODO: Remove once deprecated
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(container_name=container_name, blob_name=blob_name, **kwargs)
         self.wasb_conn_id = wasb_conn_id
         self.public_read = public_read
-        self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
@@ -51,7 +60,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
                 blob_name=self.blob_name,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poll_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
@@ -97,6 +106,15 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
         poll_interval: float = 5.0,
         **kwargs: Any,
     ):
+        # TODO: Remove once deprecated
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(container_name=container_name, prefix=prefix, **kwargs)
         self.container_name = container_name
         self.prefix = prefix
@@ -104,7 +122,6 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
         self.delimiter = delimiter
         self.wasb_conn_id = wasb_conn_id
         self.public_read = public_read
-        self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
@@ -117,7 +134,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
                 delimiter=self.delimiter,
                 wasb_conn_id=self.wasb_conn_id,
                 public_read=self.public_read,
-                poll_interval=self.poll_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )
