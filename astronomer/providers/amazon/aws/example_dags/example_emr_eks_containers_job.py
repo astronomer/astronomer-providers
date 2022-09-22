@@ -123,7 +123,7 @@ with DAG(
     # [START howto_sensor_emr_job_container_async]
     emr_job_container_sensor = EmrContainerSensorAsync(
         task_id="emr_job_container_sensor",
-        job_id=run_emr_container_job.output,
+        job_id=str(run_emr_container_job.output),
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         poll_interval=5,
         aws_conn_id=AWS_CONN_ID,
