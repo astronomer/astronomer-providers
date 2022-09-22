@@ -22,7 +22,7 @@ class S3XComBackend(BaseXCom):
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
-        """Convert to string and upload to GCS"""
+        """Convert to string and upload to S3"""
         key_str = S3XComBackend.PREFIX + str(uuid.uuid4())
         hook = S3Hook(aws_conn_id=S3XComBackend.AWS_CONN_ID)
         if isinstance(value, list):

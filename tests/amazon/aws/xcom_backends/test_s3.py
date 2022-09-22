@@ -25,7 +25,7 @@ def test_custom_xcom_s3_serialize(mock_write):
 )
 @mock.patch("uuid.uuid4")
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
-def test_custom_xcom_gcs_write_and_upload(mock_upload, mock_uuid, job_id):
+def test_custom_xcom_s3_write_and_upload(mock_upload, mock_uuid, job_id):
     """
     Asserts that custom xcom is upload and returns key
     """
@@ -39,7 +39,7 @@ def test_custom_xcom_gcs_write_and_upload(mock_upload, mock_uuid, job_id):
     ["s3_xcom__1234", "1234"],
 )
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
-def test_custom_xcom_gcs_deserialize(mock_download, job_id):
+def test_custom_xcom_s3_deserialize(mock_download, job_id):
     """
     Asserts that custom xcom is deserialized and check for data
     """
@@ -49,7 +49,7 @@ def test_custom_xcom_gcs_deserialize(mock_download, job_id):
     assert result == job_id
 
 
-def test_custom_xcom_gcs_orm_deserialize_value():
+def test_custom_xcom_s3_orm_deserialize_value():
     """
     Asserts that custom xcom has called the orm deserialized
     value method and check for data.
