@@ -106,7 +106,7 @@ with DAG(
         eks_namespace=EKS_NAMESPACE,
     )
 
-    VIRTUAL_CLUSTER_ID = str(create_emr_virtual_cluster.output)
+    VIRTUAL_CLUSTER_ID = create_emr_virtual_cluster.output
 
     # [START howto_operator_run_emr_container_job]
     run_emr_container_job = EmrContainerOperatorAsync(
