@@ -34,7 +34,7 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
                 data=self.request_params,
                 headers=self.headers,
                 extra_options=self.extra_options,
-                poll_interval=self.poll_interval,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

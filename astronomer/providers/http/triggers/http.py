@@ -95,7 +95,7 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
                 "headers": self.headers,
                 "extra_options": self.extra_options,
                 "http_conn_id": self.http_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -119,7 +119,8 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
                 if resp_json["state"] in State.finished:
                     yield TriggerEvent(resp_json)
                 else:
-                    await asyncio.sleep(self.poll_interval)
+                    await asyncio.sleep(self.poke_interval)
             except AirflowException as exc:
                 if str(exc).startswith("404"):
-                    await asyncio.sleep(self.poll_interval)
+                    await asyncio.sleep(self.poke_interval)
+                yield TriggerEvent({"state": "error", "message": str(exc)})

@@ -4,6 +4,7 @@ from datetime import timedelta
 import requests
 from airflow import DAG
 from airflow.hooks.base import BaseHook
+from airflow.operators.python import PythonOperator
 from airflow.utils.log.secrets_masker import mask_secret
 from airflow.utils.timezone import datetime
 
@@ -19,9 +20,14 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+HEADERS = {
+    "cache-control": "no-cache",
+    "content-type": "application/json",
+    "accept": "application/json",
+}
 
 
-def astro_access_token():
+def astro_access_token() -> None:
     """Get the access_token by making post request with client_id"""
     conn = BaseHook.get_connection(DEPLOYMENT_CONN_ID)
     _json = {
@@ -36,7 +42,7 @@ def astro_access_token():
     )
     masked_access_token = token_resp.json()["access_token"]
     mask_secret(masked_access_token)
-    return {"Authorization": "Bearer " + masked_access_token}
+    HEADERS.update({"Authorization": "Bearer " + masked_access_token})
 
 
 with DAG(
@@ -47,6 +53,11 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "http"],
 ) as dag:
+    # Task to Generate headers access token
+    generate_header_access_token = PythonOperator(
+        task_id="generate_header_access_token",
+        python_callable=astro_access_token,
+    )
 
     # [START howto_sensor_external_deployment_task_async]
     external_deployment_task = ExternalDeploymentTaskSensorAsync(
@@ -54,14 +65,9 @@ with DAG(
         http_conn_id=DEPLOYMENT_CONN_ID,
         endpoint="/api/v1/dags/1234/dagRuns/123/taskInstances/finish",
         request_params={},
-        headers={
-            "cache-control": "no-cache",
-            "content-type": "application/json",
-            "accept": "application/json",
-            "Authorization": "Bearer ",
-        },
+        headers=HEADERS,
         poke_interval=5,
     )
     # [END howto_sensor_external_deployment_task_async]
 
-    external_deployment_task
+    generate_header_access_token >> external_deployment_task

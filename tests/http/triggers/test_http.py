@@ -54,7 +54,7 @@ def test_deployment_task_trigger_serialization():
         "extra_options": {},
         "headers": {"Content-Type": "application/json"},
         "http_conn_id": "http_default",
-        "poll_interval": 5.0,
+        "poke_interval": 5.0,
     }
 
 
@@ -80,7 +80,7 @@ async def test_deployment_task_run_trigger(mock_run):
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
-async def test_deployment_task_exception(mock_run):
+async def test_deployment_task_exception_404(mock_run):
     """Test ExternalDeploymentTaskTrigger is triggered and in exception state."""
     mock.AsyncMock(HttpHookAsync)
     mock_run.side_effect = AirflowException("404 test error")
@@ -96,6 +96,23 @@ async def test_deployment_task_exception(mock_run):
     # TriggerEvent was not returned
     assert task.done() is False
     asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
+async def test_deployment_task_exception(mock_run):
+    """Test ExternalDeploymentTaskTrigger is triggered and in exception state."""
+    mock.AsyncMock(HttpHookAsync)
+    mock_run.side_effect = AirflowException("Test exception")
+    trigger = ExternalDeploymentTaskTrigger(
+        endpoint="test-endpoint",
+        http_conn_id="http_default",
+        method="GET",
+        headers={"Content-Type": "application/json"},
+    )
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"state": "error", "message": "Test exception"}) == actual
 
 
 @pytest.mark.asyncio
