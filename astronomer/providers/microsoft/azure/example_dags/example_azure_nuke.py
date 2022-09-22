@@ -7,6 +7,7 @@ from airflow.operators.dummy import DummyOperator
 
 CLIENT_ID = os.getenv("CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
+TENANT_ID = os.getenv("TENANT_ID", "")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 default_args = {
@@ -16,7 +17,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="example_aws_nuke",
+    dag_id="example_azure_nuke",
     start_date=datetime(2022, 1, 1),
     schedule_interval="30 20 * * *",
     catchup=False,
@@ -26,16 +27,17 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
-    set_aws_config = BashOperator(
+    setup_azure_keys = BashOperator(
         task_id="setup_azure_keys",
-        bash_command=f"export AZURE_CLIENT_ID={CLIENT_ID}; " f"export AZURE_CLIENT_ID={CLIENT_SECRET}; ",
+        bash_command=f"export AZURE_CLIENT_ID={CLIENT_ID}; " f"export AZURE_CLIENT_SECRET={CLIENT_SECRET}; ",
     )
 
     execute_aws_nuke = BashOperator(
         task_id="execute_aws_nuke",
-        bash_command="azure-nuke nuke /usr/local/airflow/dags/azure-nuke-config.yaml --profile default --force --no-dry-run; ",  # noqa: E501
+        bash_command=f"azure-nuke nuke --tenant-id={TENANT_ID} "
+        f"--config=/usr/local/airflow/dags/azure-nuke-config.yaml; ",
     )
 
     end = DummyOperator(task_id="end")
 
-    start >> execute_aws_nuke >> end
+    start >> setup_azure_keys >> execute_aws_nuke >> end
