@@ -2,8 +2,10 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
+from typing import cast
 
 from airflow import DAG
+from airflow.models.xcom_arg import XComArg
 from airflow.operators.python import PythonOperator
 
 from astronomer.providers.microsoft.azure.operators.data_factory import (
@@ -202,7 +204,7 @@ with DAG(
     # [START howto_sensor_pipeline_run_sensor_async]
     pipeline_run_sensor_async = AzureDataFactoryPipelineRunStatusSensorAsync(
         task_id="pipeline_run_sensor_async",
-        run_id=run_pipeline_wait.output["run_id"],
+        run_id=cast(str, XComArg(run_pipeline_wait, key="run_id")),
     )
     # [END howto_sensor_pipeline_run_sensor_async]
 

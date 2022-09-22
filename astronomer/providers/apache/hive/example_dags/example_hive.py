@@ -371,7 +371,7 @@ with DAG(
     # [START howto_operator_emr_terminate_job_flow]
     remove_cluster = EmrTerminateJobFlowOperator(
         task_id="remove_cluster",
-        job_flow_id=cluster_creator.output,
+        job_flow_id=str(cluster_creator.output),
         trigger_rule="all_done",
     )
     # [END howto_operator_emr_terminate_job_flow]
