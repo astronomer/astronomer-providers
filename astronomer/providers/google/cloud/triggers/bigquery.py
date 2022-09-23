@@ -434,7 +434,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
     :param table_id: The table ID of the requested table.
     :param gcp_conn_id: Reference to google cloud connection id
     :param hook_params: params for hook
-    :param poll_interval: polling period in seconds to check for the status
+    :param poke_interval: polling period in seconds to check for the status
     """
 
     def __init__(
@@ -444,13 +444,13 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         table_id: str,
         gcp_conn_id: str,
         hook_params: Dict[str, Any],
-        poll_interval: float = 4.0,
+        poke_interval: float = 4.0,
     ):
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id
         self.gcp_conn_id: str = gcp_conn_id
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
         self.hook_params = hook_params
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -462,7 +462,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
                 "project_id": self.project_id,
                 "table_id": self.table_id,
                 "gcp_conn_id": self.gcp_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
                 "hook_params": self.hook_params,
             },
         )
@@ -481,7 +481,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
                 if response:
                     yield TriggerEvent({"status": "success", "message": "success"})
                     return
-                await asyncio.sleep(self.poll_interval)
+                await asyncio.sleep(self.poke_interval)
             except Exception as e:
                 self.log.exception("Exception occurred while checking for Table existence")
                 yield TriggerEvent({"status": "error", "message": str(e)})

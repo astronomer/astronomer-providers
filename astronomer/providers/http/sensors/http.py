@@ -1,3 +1,4 @@
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -65,7 +66,15 @@ class HttpSensorAsync(HttpSensor):
         **kwargs: Any,
     ) -> None:
         self.endpoint = endpoint
-        self.poll_interval = poll_interval
+        # TODO: Remove once deprecated
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super().__init__(endpoint=endpoint, **kwargs)
         try:
             # for apache-airflow-providers-http>=4.0.0
@@ -101,7 +110,7 @@ class HttpSensorAsync(HttpSensor):
                     data=self.request_params,
                     headers=self.headers,
                     extra_options=self.extra_options,
-                    poll_interval=self.poll_interval,
+                    poke_interval=self.poke_interval,
                 ),
                 method_name="execute_complete",
             )
