@@ -16,15 +16,6 @@ class SFTPSensorAsync(SFTPSensor):
                  Authentication method used in the SFTP connection must have access to this path
     :param file_pattern: Pattern to be used for matching against the list of files at the path above.
                  Uses the fnmatch module from std library to perform the matching.
-
-                Pattern | Meaning
-                --------+---------
-                *       | Matches everything # noqa: RST213
-                ?       | Matches any single character
-                [seq]   | Matches any character in seq
-                [!seq]  | Matches any character not in seq
-
-                For example, *.txt : Matches any file on the path ending in .txt
     """
 
     def __init__(self, *, path: str, file_pattern: str = "", **kwargs: Any) -> None:

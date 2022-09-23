@@ -17,15 +17,6 @@ class SFTPTrigger(BaseTrigger):
     :param file_pattern: Pattern to be used for matching against the list of files at the path above.
                 Uses the fnmatch module from std library to perform the matching.
 
-                Pattern | Meaning
-                --------+---------
-                *       | Matches everything # noqa: RST213
-                ?       | Matches any single character
-                [seq]   | Matches any character in seq
-                [!seq]  | Matches any character not in seq
-
-                For example, *.txt : Matches any file on the path ending in .txt
-
     :param sftp_conn_id: SFTP connection ID to be used for connecting to SFTP server
     :param poke_interval: How often, in seconds, to check for the existence of the file on the SFTP server
     """

@@ -15,6 +15,7 @@ Async Provider Example DAG's
     HTTP <http/index>
     Microsoft <microsoft/index>
     Snowflake <snowflake/index>
+    SFTP <sftp/index>
 
 
 * `Amazon AWS <amazon/index.html>`_
@@ -27,3 +28,4 @@ Async Provider Example DAG's
 * `HTTP <http/index>`_
 * `Microsoft <microsoft/index>`_
 * `Snowflake <snowflake/index>`_
+* `SFTP <sftp/index>`_
