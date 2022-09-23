@@ -7,8 +7,12 @@ from astronomer.providers.utils.typing_compat import Context
 
 class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
     """
-    External deployment task sensor Make API call and poll for the response state of the deployment.
-    Inherits from HttpSensorAsync which
+    External deployment task sensor Make HTTP call and poll for the response state of externally
+    deployed DAG task to complete. Inherits from HttpSensorAsync, the host should be external deployment url, header
+    with access token
+
+    .. seealso::
+        - `Retrieve an access token and Deployment URL <https://docs.astronomer.io/astro/airflow-api#step-1-retrieve-an-access-token-and-deployment-url.>`_
 
     :param http_conn_id: The Connection ID to run the sensor against
     :param method: The HTTP request method to use
@@ -23,13 +27,14 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
     :param tcp_keep_alive_interval: The TCP Keep Alive interval parameter (corresponds to
         ``socket.TCP_KEEPINTVL``)
     :param poke_interval: Time in seconds that the job should wait in between each tries
-    """
+    """  # noqa
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
         self.defer(
             timeout=self.execution_timeout,
             trigger=ExternalDeploymentTaskTrigger(
+                http_conn_id=self.http_conn_id,
                 method=self.hook.method,
                 endpoint=self.endpoint,
                 data=self.request_params,
