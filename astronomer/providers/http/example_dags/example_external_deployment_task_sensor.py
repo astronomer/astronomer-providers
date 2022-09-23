@@ -46,7 +46,7 @@ def astro_access_token() -> None:
 
 
 with DAG(
-    dag_id="example_async_http_sensor",
+    dag_id="example_async_deployment_task_sensor",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
