@@ -124,6 +124,12 @@ repos:
         files: ^setup.cfg$|^docs/conf.py$
         pass_filenames: false
         entry: .circleci/scripts/pre_commit_sync_version_docs.py
+      - id: sync-version-desc-setup.cfg-package
+        name: Sync "version" & "description" of the package in setup.cfg and astronomer/providers/package.py
+        language: python
+        files: ^setup.cfg$|^astronomer/providers/package.py$
+        pass_filenames: false
+        entry: .circleci/scripts/pre_commit_sync_version_desc_package.py
       - id: changelog-update
         name: Verify changelog is updated when releasing a new version
         language: python
