@@ -80,3 +80,47 @@ class HttpTrigger(BaseTrigger):
             method=self.method,
             http_conn_id=self.http_conn_id,
         )
+
+
+class ExternalDeploymentTaskTrigger(HttpTrigger):
+    """ExternalDeploymentTaskTrigger Inherits from HttpTrigger and make Async http call to get the deployment state"""
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes ExternalDeploymentTaskTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.http.triggers.http.ExternalDeploymentTaskTrigger",
+            {
+                "endpoint": self.endpoint,
+                "data": self.data,
+                "headers": self.headers,
+                "extra_options": self.extra_options,
+                "http_conn_id": self.http_conn_id,
+                "poke_interval": self.poke_interval,
+            },
+        )
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """
+        Makes a series of asynchronous http calls via an http hook poll for state of the job
+        run until it reaches a failure state or success state. It yields a Trigger if response state is successful.
+        """
+        from airflow.utils.state import State
+
+        hook = self._get_async_hook()
+        while True:
+            try:
+                response = await hook.run(
+                    endpoint=self.endpoint,
+                    data=self.data,
+                    headers=self.headers,
+                    extra_options=self.extra_options,
+                )
+                resp_json = await response.json()
+                if resp_json["state"] in State.finished:
+                    yield TriggerEvent(resp_json)
+                else:
+                    await asyncio.sleep(self.poke_interval)
+            except AirflowException as exc:
+                if str(exc).startswith("404"):
+                    await asyncio.sleep(self.poke_interval)
+                yield TriggerEvent({"state": "error", "message": str(exc)})
