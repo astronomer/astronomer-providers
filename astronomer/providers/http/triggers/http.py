@@ -12,20 +12,14 @@ class HttpTrigger(BaseTrigger):
     A trigger that fires when the request to a URL returns a non-404 status code
 
     :param endpoint: The relative part of the full url
-    :type endpoint: str
     :param http_conn_id: The HTTP Connection ID to run the sensor against
-    :type http_conn_id: str
     :param method: The HTTP request method to use
-    :type method: str
     :param data: payload to be uploaded or aiohttp parameters
-    :type data: dict
     :param headers: The HTTP headers to be added to the GET request
     :type headers: a dictionary of string key/value pairs
     :param extra_options: Additional kwargs to pass when creating a request.
         For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
-    :type extra_options: dict
-    :param poll_interval: Time to sleep using asyncio
-    :type poll_interval: float
+    :param poke_interval: Time to sleep using asyncio
     """
 
     def __init__(
@@ -36,7 +30,7 @@ class HttpTrigger(BaseTrigger):
         data: Optional[Union[Dict[str, Any], str]] = None,
         headers: Optional[Dict[str, Any]] = None,
         extra_options: Optional[Dict[str, Any]] = None,
-        poll_interval: float = 5.0,
+        poke_interval: float = 5.0,
     ):
         super().__init__()
         self.endpoint = endpoint
@@ -45,7 +39,7 @@ class HttpTrigger(BaseTrigger):
         self.headers = headers
         self.extra_options = extra_options or {}
         self.http_conn_id = http_conn_id
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes HttpTrigger arguments and classpath."""
@@ -57,7 +51,7 @@ class HttpTrigger(BaseTrigger):
                 "headers": self.headers,
                 "extra_options": self.extra_options,
                 "http_conn_id": self.http_conn_id,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -79,10 +73,54 @@ class HttpTrigger(BaseTrigger):
                 yield TriggerEvent(True)
             except AirflowException as exc:
                 if str(exc).startswith("404"):
-                    await asyncio.sleep(self.poll_interval)
+                    await asyncio.sleep(self.poke_interval)
 
     def _get_async_hook(self) -> HttpHookAsync:
         return HttpHookAsync(
             method=self.method,
             http_conn_id=self.http_conn_id,
         )
+
+
+class ExternalDeploymentTaskTrigger(HttpTrigger):
+    """ExternalDeploymentTaskTrigger Inherits from HttpTrigger and make Async http call to get the deployment state"""
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes ExternalDeploymentTaskTrigger arguments and classpath."""
+        return (
+            "astronomer.providers.http.triggers.http.ExternalDeploymentTaskTrigger",
+            {
+                "endpoint": self.endpoint,
+                "data": self.data,
+                "headers": self.headers,
+                "extra_options": self.extra_options,
+                "http_conn_id": self.http_conn_id,
+                "poke_interval": self.poke_interval,
+            },
+        )
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """
+        Makes a series of asynchronous http calls via an http hook poll for state of the job
+        run until it reaches a failure state or success state. It yields a Trigger if response state is successful.
+        """
+        from airflow.utils.state import State
+
+        hook = self._get_async_hook()
+        while True:
+            try:
+                response = await hook.run(
+                    endpoint=self.endpoint,
+                    data=self.data,
+                    headers=self.headers,
+                    extra_options=self.extra_options,
+                )
+                resp_json = await response.json()
+                if resp_json["state"] in State.finished:
+                    yield TriggerEvent(resp_json)
+                else:
+                    await asyncio.sleep(self.poke_interval)
+            except AirflowException as exc:
+                if str(exc).startswith("404"):
+                    await asyncio.sleep(self.poke_interval)
+                yield TriggerEvent({"state": "error", "message": str(exc)})

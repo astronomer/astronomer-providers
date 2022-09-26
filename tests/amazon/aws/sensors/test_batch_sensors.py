@@ -64,3 +64,16 @@ def test_batch_sensor_async_execute_complete(caplog, event):
         assert task.execute_complete(context=None, event=event) is None
 
     mock_log_info.assert_called_with(event["message"])
+
+
+def test_poll_interval_deprecation_warning():
+    """Test DeprecationWarning for BatchSensorAsync by setting param poll_interval"""
+    # TODO: Remove once deprecated
+    with pytest.warns(expected_warning=DeprecationWarning):
+        BatchSensorAsync(
+            task_id="task",
+            job_id=JOB_ID,
+            aws_conn_id=AWS_CONN_ID,
+            region_name=REGION_NAME,
+            poll_interval=5.0,
+        )

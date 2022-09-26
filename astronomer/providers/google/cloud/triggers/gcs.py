@@ -17,21 +17,21 @@ class GCSBlobTrigger(BaseTrigger):
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param google_cloud_conn_id: reference to the Google Connection
-    :param polling_period_seconds: polling period in seconds to check for file/folder
+    :param poke_interval: polling period in seconds to check for file/folder
     """
 
     def __init__(
         self,
         bucket: str,
         object_name: str,
-        polling_period_seconds: float,
+        poke_interval: float,
         google_cloud_conn_id: str,
         hook_params: Dict[str, Any],
     ):
         super().__init__()
         self.bucket = bucket
         self.object_name = object_name
-        self.polling_period_seconds = polling_period_seconds
+        self.poke_interval = poke_interval
         self.google_cloud_conn_id: str = google_cloud_conn_id
         self.hook_params = hook_params
 
@@ -42,7 +42,7 @@ class GCSBlobTrigger(BaseTrigger):
             {
                 "bucket": self.bucket,
                 "object_name": self.object_name,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poke_interval": self.poke_interval,
                 "google_cloud_conn_id": self.google_cloud_conn_id,
                 "hook_params": self.hook_params,
             },
@@ -58,7 +58,7 @@ class GCSBlobTrigger(BaseTrigger):
                 )
                 if res == "success":
                     yield TriggerEvent({"status": "success", "message": res})
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
@@ -93,21 +93,21 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param prefix: The prefix of the blob_names to match in the Google cloud storage bucket
     :param google_cloud_conn_id: reference to the Google Connection
-    :param polling_period_seconds: polling period in seconds to check
+    :param poke_interval: polling period in seconds to check
     """
 
     def __init__(
         self,
         bucket: str,
         prefix: str,
-        polling_period_seconds: float,
+        poke_interval: float,
         google_cloud_conn_id: str,
         hook_params: Dict[str, Any],
     ):
         super().__init__(
             bucket=bucket,
             object_name=prefix,
-            polling_period_seconds=polling_period_seconds,
+            poke_interval=poke_interval,
             google_cloud_conn_id=google_cloud_conn_id,
             hook_params=hook_params,
         )
@@ -120,7 +120,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             {
                 "bucket": self.bucket,
                 "prefix": self.prefix,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poke_interval": self.poke_interval,
                 "google_cloud_conn_id": self.google_cloud_conn_id,
                 "hook_params": self.hook_params,
             },
@@ -138,7 +138,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
                     yield TriggerEvent(
                         {"status": "success", "message": "Successfully completed", "matches": res}
                     )
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
@@ -168,7 +168,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         expected.
     :param prefix: The name of the prefix to check in the Google cloud
         storage bucket.
-    :param polling_period_seconds: polling period in seconds to check
+    :param poke_interval: polling period in seconds to check
     :param inactivity_period: The total seconds of inactivity to designate
         an upload session is over. Note, this mechanism is not real time and
         this operator may not return until a interval after this period
@@ -187,7 +187,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         self,
         bucket: str,
         prefix: str,
-        polling_period_seconds: float,
+        poke_interval: float,
         google_cloud_conn_id: str,
         hook_params: Dict[str, Any],
         inactivity_period: float = 60 * 60,
@@ -198,7 +198,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         super().__init__(
             bucket=bucket,
             prefix=prefix,
-            polling_period_seconds=polling_period_seconds,
+            poke_interval=poke_interval,
             google_cloud_conn_id=google_cloud_conn_id,
             hook_params=hook_params,
         )
@@ -216,7 +216,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
             {
                 "bucket": self.bucket,
                 "prefix": self.prefix,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poke_interval": self.poke_interval,
                 "google_cloud_conn_id": self.google_cloud_conn_id,
                 "hook_params": self.hook_params,
                 "inactivity_period": self.inactivity_period,
@@ -242,7 +242,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
                     yield TriggerEvent(res)
                 elif res["status"] == "error":
                     yield TriggerEvent(res)
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
@@ -324,7 +324,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
     :param bucket: google cloud storage bucket name cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param ts: datetime object
-    :param polling_period_seconds: polling period in seconds to check for file/folder
+    :param poke_interval: polling period in seconds to check for file/folder
     :param google_cloud_conn_id: reference to the Google Connection
     :param hook_params: DIct object has delegate_to and impersonation_chain
     """
@@ -334,7 +334,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         bucket: str,
         object_name: str,
         ts: datetime,
-        polling_period_seconds: float,
+        poke_interval: float,
         google_cloud_conn_id: str,
         hook_params: Dict[str, Any],
     ):
@@ -342,7 +342,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         self.bucket = bucket
         self.object_name = object_name
         self.ts = ts
-        self.polling_period_seconds = polling_period_seconds
+        self.poke_interval = poke_interval
         self.google_cloud_conn_id: str = google_cloud_conn_id
         self.hook_params = hook_params
 
@@ -354,7 +354,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
                 "bucket": self.bucket,
                 "object_name": self.object_name,
                 "ts": self.ts,
-                "polling_period_seconds": self.polling_period_seconds,
+                "poke_interval": self.poke_interval,
                 "google_cloud_conn_id": self.google_cloud_conn_id,
                 "hook_params": self.hook_params,
             },
@@ -370,7 +370,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
                 )
                 if status:
                     yield TriggerEvent(res)
-                await asyncio.sleep(self.polling_period_seconds)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 

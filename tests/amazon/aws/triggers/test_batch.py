@@ -13,7 +13,7 @@ JOB_NAME = "51455483-c62c-48ac-9b88-53a6a725baa3"
 JOB_ID = "8ba9d676-4108-4474-9dca-8bbac1da9b19"
 MAX_RETRIES = 2
 STATUS_RETRIES = 3
-POLLING_PERIOD_SECONDS = 5
+POKE_INTERVAL = 5
 AWS_CONN_ID = "airflow_test"
 REGION_NAME = "eu-west-1"
 
@@ -193,7 +193,7 @@ def test_batch_sensor_trigger_serialization():
         job_id=JOB_ID,
         region_name=REGION_NAME,
         aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poke_interval=POKE_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.amazon.aws.triggers.batch.BatchSensorTrigger"
@@ -201,7 +201,7 @@ def test_batch_sensor_trigger_serialization():
         "job_id": JOB_ID,
         "region_name": "eu-west-1",
         "aws_conn_id": "airflow_test",
-        "poll_interval": POLLING_PERIOD_SECONDS,
+        "poke_interval": POKE_INTERVAL,
     }
 
 
@@ -214,7 +214,7 @@ async def test_batch_sensor_trigger_run(mock_response):
         job_id=JOB_ID,
         region_name=REGION_NAME,
         aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLLING_PERIOD_SECONDS,
+        poke_interval=POKE_INTERVAL,
     )
     task = asyncio.create_task(trigger.run().__anext__())
     await asyncio.sleep(0.5)

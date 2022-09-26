@@ -1,4 +1,5 @@
 """This module contains Google Big Query sensors."""
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -45,7 +46,15 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.polling_interval = polling_interval
+        # TODO: Remove once deprecated
+        if polling_interval:
+            self.poke_interval = polling_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.gcp_conn_id = gcp_conn_id
 
     def execute(self, context: Context) -> None:
@@ -56,7 +65,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
                 dataset_id=self.dataset_id,
                 table_id=self.table_id,
                 project_id=self.project_id,
-                poll_interval=self.polling_interval,
+                poke_interval=self.poke_interval,
                 gcp_conn_id=self.gcp_conn_id,
                 hook_params={
                     "delegate_to": self.delegate_to,

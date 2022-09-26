@@ -19,7 +19,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
 
     :param run_id: The pipeline run identifier.
     :param azure_data_factory_conn_id: The connection identifier for connecting to Azure Data Factory.
-    :param poll_interval:  polling period in seconds to check for the status
+    :param poke_interval:  polling period in seconds to check for the status
     :param resource_group_name: The resource group name.
     :param factory_name: The data factory name.
     """
@@ -28,7 +28,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
         self,
         run_id: str,
         azure_data_factory_conn_id: str,
-        poll_interval: float,
+        poke_interval: float,
         resource_group_name: Optional[str] = None,
         factory_name: Optional[str] = None,
     ):
@@ -37,7 +37,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
         self.azure_data_factory_conn_id = azure_data_factory_conn_id
         self.resource_group_name = resource_group_name
         self.factory_name = factory_name
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes ADFPipelineRunStatusSensorTrigger arguments and classpath."""
@@ -48,7 +48,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
                 "azure_data_factory_conn_id": self.azure_data_factory_conn_id,
                 "resource_group_name": self.resource_group_name,
                 "factory_name": self.factory_name,
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -72,7 +72,7 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
                 elif pipeline_status == AzureDataFactoryPipelineRunStatus.SUCCEEDED:
                     msg = f"Pipeline run {self.run_id} has been Succeeded."
                     yield TriggerEvent({"status": "success", "message": msg})
-                await asyncio.sleep(self.poll_interval)
+                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
