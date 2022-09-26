@@ -1,6 +1,8 @@
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
 from airflow.providers.sftp.sensors.sftp import SFTPSensor
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
@@ -16,15 +18,25 @@ class SFTPSensorAsync(SFTPSensor):
                  Authentication method used in the SFTP connection must have access to this path
     :param file_pattern: Pattern to be used for matching against the list of files at the path above.
                  Uses the fnmatch module from std library to perform the matching.
+    :param timeout: How long, in seconds, the sensor waits for successful before timing out
     """
 
-    def __init__(self, *, path: str, file_pattern: str = "", **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        path: str,
+        file_pattern: str = "",
+        timeout: Optional[float] = None,
+        **kwargs: Any,
+    ) -> None:
 
         self.path = path
         self.file_pattern = file_pattern
+        if timeout is None:
+            timeout = conf.getfloat("sensors", "default_timeout")
 
-        super().__init__(path=path, file_pattern=file_pattern, **kwargs)
-        self.hook = SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)
+        super().__init__(path=path, file_pattern=file_pattern, timeout=timeout, **kwargs)
+        self.hook = SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)  # type: ignore[assignment]
 
     def execute(self, context: Context) -> None:
         """
@@ -48,5 +60,12 @@ class SFTPSensorAsync(SFTPSensor):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        self.log.info("%s completed successfully.", self.task_id)
-        return None
+        if "status" in event and event["status"] == "error":
+            raise AirflowException(event["message"])
+
+        if "status" in event and event["status"] == "success":
+            self.log.info("%s completed successfully.", self.task_id)
+            self.log.info(event["message"])
+            return None
+
+        raise AirflowException("No event received in trigger callback")

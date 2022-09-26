@@ -52,12 +52,22 @@ class SFTPTrigger(BaseTrigger):
         file matching file pattern exists at the specified path, otherwise it throws an exception.
         """
         hook = self._get_async_hook()
+        exc = None
+
         while True:
             try:
-                await hook.get_file_by_pattern(path=self.path, fnmatch_pattern=self.file_pattern)
-                yield TriggerEvent(True)
+                file_returned_by_hook = await hook.get_file_by_pattern(
+                    path=self.path, fnmatch_pattern=self.file_pattern
+                )
+                yield TriggerEvent({"status": "success", "message": f"Sensed file: {file_returned_by_hook}"})
             except AirflowException:
                 await asyncio.sleep(self.poke_interval)
+            except Exception as e:
+                exc = e
+                # Break loop to avoid infinite retries on terminal failure
+                break
+
+        yield TriggerEvent({"status": "error", "message": exc})
 
     def _get_async_hook(self) -> SFTPHookAsync:
         return SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)

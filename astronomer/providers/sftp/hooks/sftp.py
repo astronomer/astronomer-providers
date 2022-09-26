@@ -56,9 +56,9 @@ class SFTPHookAsync(BaseHook):
         The following parameters are provided either in the extra json object in
         the SFTP connection definition
 
-        key_file
-        known_hosts
-        passphrase
+        - key_file
+        - known_hosts
+        - passphrase
         """
         if self.sftp_conn_id is not None:
             conn = await sync_to_async(self.get_connection)(self.sftp_conn_id)
@@ -106,7 +106,7 @@ class SFTPHookAsync(BaseHook):
             files = await sftp_client.listdir(path)
             return sorted(files)
         except asyncssh.SFTPNoSuchFile:
-            raise AirflowException(f"No files at path {path} found — Deferring")
+            return None
 
     async def get_file_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> str:
         """
