@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from airflow.exceptions import AirflowException
@@ -26,7 +26,52 @@ class MockSSHClient:
         return MockSFTPClient()
 
 
+class MockAirflowConnection:
+    def __init__(self):
+        self.host = "localhost"
+        self.port = 22
+        self.login = "username"
+        self.password = "password"
+        self.extra = """
+        {
+            "key_file": "~/keys/my_key",
+            "known_hosts": "None",
+            "passphrase": "mypassphrase"
+        }
+        """
+        self.extra_dejson = {"key_file": "~/keys/my_key", "known_hosts": "None", "passphrase": "mypassphrase"}
+
+    def extra_dejson(self):
+        return self.extra
+
+
 class TestSFTPHookAsync:
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @pytest.mark.asyncio
+    async def test_extra_dejson_fields_for_connection_building(self, mock_get_connection, mock_connect):
+        """
+        Assert that connection details passed through the extra field in the Airflow connection
+        are properly passed when creating SFTP connection
+        """
+
+        mock_get_connection.return_value = MockAirflowConnection()
+
+        hook = SFTPHookAsync()
+        await hook._get_conn()
+
+        expected_connection_details = {
+            "host": "localhost",
+            "port": 22,
+            "username": "username",
+            "password": "password",
+            "client_keys": "~/keys/my_key",
+            "known_hosts": None,
+            "passphrase": "mypassphrase",
+        }
+
+        mock_connect.assert_called_with(**expected_connection_details)
+
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
     async def test_list_directory_path_does_not_exist(self, mock_hook_get_conn):
