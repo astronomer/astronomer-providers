@@ -38,3 +38,16 @@ class TestSFTPSensorAsync:
         with pytest.raises(AirflowException) as exc:
             task.execute_complete(context, {"status": "error", "message": expected_message})
             assert exc.message == expected_message
+
+    def test_sftp_execute_complete_invalid(self, context):
+        """
+        Asserts that execute_complete raises an exception if the
+        TriggerEvent does not contain a status
+        """
+
+        task = SFTPSensorAsync(task_id="run_now", path="/test/path/", file_pattern="test_file")
+        expected_message = "No event received in trigger callback"
+
+        with pytest.raises(AirflowException) as exc:
+            task.execute_complete(context)
+            assert exc.message == expected_message

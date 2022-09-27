@@ -60,12 +60,13 @@ class SFTPSensorAsync(SFTPSensor):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if "status" in event and event["status"] == "error":
-            raise AirflowException(event["message"])
+        if event is not None:
+            if "status" in event and event["status"] == "error":
+                raise AirflowException(event["message"])
 
-        if "status" in event and event["status"] == "success":
-            self.log.info("%s completed successfully.", self.task_id)
-            self.log.info(event["message"])
-            return None
+            if "status" in event and event["status"] == "success":
+                self.log.info("%s completed successfully.", self.task_id)
+                self.log.info(event["message"])
+                return None
 
         raise AirflowException("No event received in trigger callback")

@@ -27,7 +27,7 @@ class MockSSHClient:
 
 
 class MockAirflowConnection:
-    def __init__(self):
+    def __init__(self, known_hosts="~/.ssh/known_hosts"):
         self.host = "localhost"
         self.port = 22
         self.login = "username"
@@ -35,17 +35,49 @@ class MockAirflowConnection:
         self.extra = """
         {
             "key_file": "~/keys/my_key",
-            "known_hosts": "None",
+            "known_hosts": "unused",
             "passphrase": "mypassphrase"
         }
         """
-        self.extra_dejson = {"key_file": "~/keys/my_key", "known_hosts": "None", "passphrase": "mypassphrase"}
+        self.extra_dejson = {
+            "key_file": "~/keys/my_key",
+            "known_hosts": known_hosts,
+            "passphrase": "mypassphrase",
+        }
 
     def extra_dejson(self):
         return self.extra
 
 
 class TestSFTPHookAsync:
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @pytest.mark.asyncio
+    async def test_extra_dejson_fields_for_connection_building_known_hosts_none(
+        self, mock_get_connection, mock_connect
+    ):
+        """
+        Assert that connection details passed through the extra field in the Airflow connection
+        are properly passed when creating SFTP connection
+        """
+
+        mock_get_connection.return_value = MockAirflowConnection(known_hosts="None")
+
+        hook = SFTPHookAsync()
+        await hook._get_conn()
+
+        expected_connection_details = {
+            "host": "localhost",
+            "port": 22,
+            "username": "username",
+            "password": "password",
+            "client_keys": "~/keys/my_key",
+            "known_hosts": None,
+            "passphrase": "mypassphrase",
+        }
+
+        mock_connect.assert_called_with(**expected_connection_details)
+
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
     @pytest.mark.asyncio
@@ -66,7 +98,7 @@ class TestSFTPHookAsync:
             "username": "username",
             "password": "password",
             "client_keys": "~/keys/my_key",
-            "known_hosts": None,
+            "known_hosts": "~/.ssh/known_hosts",
             "passphrase": "mypassphrase",
         }
 
