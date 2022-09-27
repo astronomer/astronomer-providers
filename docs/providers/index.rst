@@ -22,10 +22,10 @@ Async Provider Example DAG's
 * `Apache <apache/index.html>`_
 * `CNCF <cncf/index.html>`_
 * `Core <core/index.html>`_
-* `Databricks <databricks/index>`_
-* `dbt <dbt/index>`_
-* `Google <google/index>`_
-* `HTTP <http/index>`_
-* `Microsoft <microsoft/index>`_
-* `Snowflake <snowflake/index>`_
-* `SFTP <sftp/index>`_
+* `Databricks <databricks/index.html>`_
+* `dbt <dbt/index.html>`_
+* `Google <google/index.html>`_
+* `HTTP <http/index.html>`_
+* `Microsoft <microsoft/index.html>`_
+* `Snowflake <snowflake/index.html>`_
+* `SFTP <sftp/index.html>`_

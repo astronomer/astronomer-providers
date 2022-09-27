@@ -1,5 +1,5 @@
 from fnmatch import fnmatch
-from typing import List
+from typing import List, Optional
 
 import asyncssh
 from airflow.exceptions import AirflowException
@@ -98,7 +98,7 @@ class SFTPHookAsync(BaseHook):
 
             return ssh_client
 
-    async def list_directory(self, path: str = "") -> List[str]:
+    async def list_directory(self, path: str = "") -> Optional[List[str]]:
         """Returns a list of files on the SFTP server at the provided path"""
         ssh_conn = await self._get_conn()
         sftp_client = await ssh_conn.start_sftp_client()
