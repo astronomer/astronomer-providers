@@ -111,7 +111,7 @@ with DAG(
     # [START howto_operator_run_emr_container_job]
     run_emr_container_job = EmrContainerOperatorAsync(
         task_id="run_emr_container_job",
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        virtual_cluster_id=str(VIRTUAL_CLUSTER_ID),
         execution_role_arn=JOB_ROLE_ARN,
         release_label="emr-6.2.0-latest",
         job_driver=JOB_DRIVER_ARG,
@@ -123,8 +123,8 @@ with DAG(
     # [START howto_sensor_emr_job_container_async]
     emr_job_container_sensor = EmrContainerSensorAsync(
         task_id="emr_job_container_sensor",
-        job_id=run_emr_container_job.output,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=str(run_emr_container_job.output),
+        virtual_cluster_id=str(VIRTUAL_CLUSTER_ID),
         poll_interval=5,
         aws_conn_id=AWS_CONN_ID,
     )
