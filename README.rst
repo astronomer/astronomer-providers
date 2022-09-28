@@ -103,6 +103,10 @@ Extras
      - ``pip install 'astronomer-providers[openlineage]'``
      - Openlineage
 
+   * - ``sftp``
+     - ``pip install 'astronomer-providers[sftp]'``
+     - Sftp
+
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
      - Snowflake
