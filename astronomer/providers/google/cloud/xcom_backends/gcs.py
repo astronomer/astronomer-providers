@@ -1,9 +1,11 @@
 import json
 import os
+import pickle  # nosec
 import uuid
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
+from airflow.configuration import conf
 from airflow.models.xcom import BaseXCom
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
@@ -11,31 +13,33 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 class GCSXComBackend(BaseXCom):
     """
     Custom XCom persistence class extends base to support various datatypes.
-    Add the below line in the environment
-    AIRFLOW__CORE__XCOM_BACKEND=
-    astronomer.providers.google.cloud.xcom_backends.gcs.GCSXComBackend
+    To use this XCom Backend, add the environment variable `AIRFLOW__CORE__XCOM_BACKEND`
+    to your environment and set it to
+    `astronomer.providers.google.cloud.xcom_backends.gcs.GCSXComBackend`
     """
 
-    PREFIX = os.getenv("PREFIX", "GCSXCOM_")
+    PREFIX = os.getenv("PREFIX", "gcs_xcom_")
     GCP_CONN_ID = os.getenv("CONNECTION_NAME", "google_cloud_default")
-    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "some_bucket_name")
+    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "rajath_test_xcom")
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
         """Convert to string and upload to GCS"""
         key_str = GCSXComBackend.PREFIX + str(uuid.uuid4())
         hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
-        if isinstance(value, list):
+        if conf.getboolean("core", "enable_xcom_pickling"):
+            value = pickle.dumps(value)
+        elif isinstance(value, list):
             value = str(value)
-        elif isinstance(value, dict):
-            value = json.dumps(value)
         elif isinstance(value, pd.DataFrame):
             value = value.to_json()
+        else:
+            value = json.dumps(value)
         hook.upload(GCSXComBackend.BUCKET_NAME, key_str, data=value)
         return key_str
 
     @staticmethod
-    def read_value(filename: str) -> Union[str, bytes]:
+    def read_value(filename: str) -> str:
         """Download the file from GCS"""
         # Here we download the file from GCS
         hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
@@ -52,10 +56,14 @@ class GCSXComBackend(BaseXCom):
     def deserialize_value(result: Any) -> Any:
         """Custom XCOM for GCS to deserialize the data"""
         result = BaseXCom.deserialize_value(result)
-        # Check if result is string and has the configured XCom prefix
         if isinstance(result, str) and result.startswith(GCSXComBackend.PREFIX):
-            return GCSXComBackend.read_value(result)
-        return result
+            value = GCSXComBackend.read_value(result)
+        if conf.getboolean("core", "enable_xcom_pickling"):
+            try:
+                return pickle.loads(value)  # nosec
+            except pickle.UnpicklingError:
+                return json.loads(value.decode("UTF-8"))
+        return value
 
     def orm_deserialize_value(self) -> str:
         """
