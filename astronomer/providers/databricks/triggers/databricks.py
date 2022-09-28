@@ -91,7 +91,7 @@ class DatabricksTrigger(BaseTrigger):
                                     if task.get("state", {}).get("result_state", "") == "FAILED":
                                         task_run_id = task["run_id"]
                             if task_run_id is not None:
-                                run_output = hook.get_run_output(task_run_id)
+                                run_output = await hook.get_run_output_response(task_run_id)
                                 if "error" in run_output:
                                     notebook_error = run_output["error"]
                                 else:

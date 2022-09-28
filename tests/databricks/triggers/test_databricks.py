@@ -238,7 +238,7 @@ async def test_databricks_trigger_terminated(mock_run_response, mock_run_state):
     ],
 )
 @mock.patch("airflow.providers.databricks.hooks.databricks.RunState")
-@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_output")
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_output_response")
 @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_response")
 async def test_databricks_trigger_terminal_status_failed(
     mock_run_response_func, mock_get_run_output, mock_run_state, mock_run_response, mock_get_output_response

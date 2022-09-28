@@ -144,11 +144,11 @@ async def test_get_run_response(mock_do_api_async, mock_response):
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
-async def test_get_run_output(mock_do_api_async):
+async def test_get_run_output_response(mock_do_api_async):
     """Test get_run_output method by mocking _do_api_call_async and the response of get-output API"""
     hook = DatabricksHookAsync()
     mock_do_api_async.return_value = MOCK_GET_OUTPUT_RESPONSE
-    run_output = await hook.get_run_output(RUN_ID)
+    run_output = await hook.get_run_output_response(RUN_ID)
     assert run_output == MOCK_GET_OUTPUT_RESPONSE
 
 

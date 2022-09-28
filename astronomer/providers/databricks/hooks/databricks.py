@@ -60,7 +60,7 @@ class DatabricksHookAsync(DatabricksHook):
         response = await self._do_api_call_async(GET_RUN_ENDPOINT, json)
         return response
 
-    async def get_run_output(self, task_run_id: str):
+    async def get_run_output_response(self, task_run_id: str) -> Dict[str, Any]:
         """
         Retrieves run output of the run.
 
