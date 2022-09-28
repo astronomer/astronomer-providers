@@ -67,7 +67,7 @@ class DatabricksHookAsync(DatabricksHook):
         :param task_run_id: id of the run
         """
         json = {"run_id": task_run_id}
-        run_output = self._do_api_call_async(OUTPUT_RUNS_JOB_ENDPOINT, json)
+        run_output = await self._do_api_call_async(OUTPUT_RUNS_JOB_ENDPOINT, json)
         return run_output
 
     async def _do_api_call_async(
