@@ -31,12 +31,12 @@ def test_custom_xcom_gcs_write_and_upload(mock_upload, mock_uuid, job_id):
     """
     mock_uuid.return_value = "12345667890"
     result = GCSXComBackend.write_and_upload_value(job_id)
-    assert result == "GCSXCOM_" + "12345667890"
+    assert result == "gcs_xcom_" + "12345667890"
 
 
 @pytest.mark.parametrize(
     "job_id",
-    ["GCSXCOM_1234", "1234"],
+    ["gcs_xcom_1234"],
 )
 @mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.download")
 def test_custom_xcom_gcs_deserialize(mock_download, job_id):
@@ -55,4 +55,4 @@ def test_custom_xcom_gcs_orm_deserialize_value():
     value method and check for data.
     """
     result = GCSXComBackend().orm_deserialize_value()
-    assert result == "XCOM is uploaded into GCS bucket: some_bucket_name"
+    assert result == "XCOM is uploaded into GCS bucket: airflow_xcom_backend_default_bucket"

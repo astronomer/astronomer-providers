@@ -20,7 +20,7 @@ class GCSXComBackend(BaseXCom):
 
     PREFIX = os.getenv("PREFIX", "gcs_xcom_")
     GCP_CONN_ID = os.getenv("CONNECTION_NAME", "google_cloud_default")
-    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "rajath_test_xcom")
+    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
@@ -58,12 +58,12 @@ class GCSXComBackend(BaseXCom):
         result = BaseXCom.deserialize_value(result)
         if isinstance(result, str) and result.startswith(GCSXComBackend.PREFIX):
             value = GCSXComBackend.read_value(result)
-        if conf.getboolean("core", "enable_xcom_pickling"):
-            try:
-                return pickle.loads(value)  # nosec
-            except pickle.UnpicklingError:
-                return json.loads(value.decode("UTF-8"))
-        return value
+            if conf.getboolean("core", "enable_xcom_pickling"):
+                try:
+                    return pickle.loads(value)  # nosec
+                except pickle.UnpicklingError:
+                    return json.loads(value.decode("UTF-8"))
+            return value
 
     def orm_deserialize_value(self) -> str:
         """
