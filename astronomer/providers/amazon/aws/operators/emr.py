@@ -27,8 +27,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
     :param max_tries: Deprecated - use max_polling_attempts instead.
     :param max_polling_attempts: Maximum number of times to wait for the job run to finish.
         Defaults to None, which will poll until the job is *not* in a pending, submitted, or running state.
-    :param tags: The tags assigned to job runs.
-        Defaults to None
+    :param tags: The tags assigned to job runs. Defaults to None
     """
 
     def execute(self, context: Context) -> None:
@@ -48,7 +47,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
         except AttributeError:  # pragma: no cover
             # for apache-airflow-providers-amazon>=6.0.0
             # max_tries is deprecated so instead of max_tries using self.max_polling_attempts
-            polling_attempts = self.max_polling_attempts  # type: ignore[attr-defined]
+            polling_attempts = self.max_polling_attempts
 
         self.defer(
             timeout=self.execution_timeout,
