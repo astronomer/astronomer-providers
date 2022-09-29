@@ -29,9 +29,16 @@ class DataprocHookAsync(GoogleBaseHook):
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
         client_options, region = self._get_client_options_and_region(region=region, location=location)
-        return ClusterControllerAsyncClient(
-            credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
-        )
+        try:
+            # for apache-airflow-providers-google<8.4.0
+            return ClusterControllerAsyncClient(
+                credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            )
+        except AttributeError:
+            # for apache-airflow-providers-google>=8.4.0
+            return ClusterControllerAsyncClient(
+                credentials=self.get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            )
 
     def get_job_client(
         self, region: Optional[str] = None, location: Optional[str] = None
@@ -43,9 +50,14 @@ class DataprocHookAsync(GoogleBaseHook):
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
         client_options, region = self._get_client_options_and_region(region=region, location=location)
-        return JobControllerAsyncClient(
-            credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
-        )
+        try:
+            return JobControllerAsyncClient(
+                credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            )
+        except AttributeError:
+            return JobControllerAsyncClient(
+                credentials=self.get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            )
 
     async def get_cluster(
         self,
