@@ -31,11 +31,11 @@ This release adds the following 2 new async sensors/operators:
 Bug Fixes
 """""""""
 
-- Use poke_interval instead of poll_interval for all async sensor
+- Use `poke_interval` instead of `poll_interval` for all async sensor
   (`#640 <https://github.com/astronomer/astronomer-providers/pull/640>`_)
-- Fix gcp_dataproc DAG failing in new apache-airflow-providers-google 8.4.0rc1
+- Make Dataproc operator compatible with `apache-airflow-providers-google>=8.4.0`
   (`#680 <https://github.com/astronomer/astronomer-providers/pull/680>`_)
-- Fix emr_eks_pi_job DAG failing in new apache-airflow-providers-amazon 6.0.0rc1
+- Make EMR EKS operator compatible with `apache-airflow-providers-amazon>=6.0.0`
   (`#682 <https://github.com/astronomer/astronomer-providers/pull/682>`_)
 
 
