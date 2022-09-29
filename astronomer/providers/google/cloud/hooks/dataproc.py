@@ -29,8 +29,16 @@ class DataprocHookAsync(GoogleBaseHook):
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
         client_options, region = self._get_client_options_and_region(region=region, location=location)
+        try:
+            # for apache-airflow-providers-google<8.4.0
+            credentials = self._get_credentials()
+        except AttributeError:  # pragma: no cover
+            # for apache-airflow-providers-google>=8.4.0
+            credentials = self.get_credentials()  # type: ignore[attr-defined]
         return ClusterControllerAsyncClient(
-            credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            credentials=credentials,
+            client_info=CLIENT_INFO,
+            client_options=client_options,
         )
 
     def get_job_client(
@@ -43,8 +51,16 @@ class DataprocHookAsync(GoogleBaseHook):
         :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request.
         """
         client_options, region = self._get_client_options_and_region(region=region, location=location)
+        try:
+            # for apache-airflow-providers-google<8.4.0
+            credentials = self._get_credentials()
+        except AttributeError:  # pragma: no cover
+            # for apache-airflow-providers-google>=8.4.0
+            credentials = self.get_credentials()  # type: ignore[attr-defined]
         return JobControllerAsyncClient(
-            credentials=self._get_credentials(), client_info=CLIENT_INFO, client_options=client_options
+            credentials=credentials,
+            client_info=CLIENT_INFO,
+            client_options=client_options,
         )
 
     async def get_cluster(
