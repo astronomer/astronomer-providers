@@ -1,6 +1,44 @@
 Changelog
 =========
 
+1.10.0 (2022-09-29)
+------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 2 new async sensors/operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator/Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``ExternalDeploymentTaskSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.http.sensors.external_deployment_task import ExternalDeploymentTaskSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/http/example_dags/example_external_deployment_task_sensor.py>`__
+
+   * - ``SFTPSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.sftp.sensors.sftp import SFTPSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/sftp/example_dags/example_sftp.py>`__
+
+Bug Fixes
+"""""""""
+
+- Use poke_interval instead of poll_interval for all async sensor
+  (`#640 <https://github.com/astronomer/astronomer-providers/pull/640>`_)
+- Fix gcp_dataproc DAG failing in new apache-airflow-providers-google 8.4.0rc1
+  (`#680 <https://github.com/astronomer/astronomer-providers/pull/680>`_)
+- Fix emr_eks_pi_job DAG failing in new apache-airflow-providers-amazon 6.0.0rc1
+  (`#682 <https://github.com/astronomer/astronomer-providers/pull/682>`_)
+
+
 1.9.0 (2022-09-13)
 ------------------
 
