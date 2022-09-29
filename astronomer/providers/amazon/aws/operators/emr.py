@@ -43,12 +43,12 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             client_request_token=self.client_request_token,
         )
         try:
-            # for apache-airflow-providers-amazon>=3.0.0
-            polling_attempts = self.max_tries
+            # for apache-airflow-providers-amazon<6.0.0
+            polling_attempts = self.max_tries  # type: ignore[attr-defined]
         except AttributeError:  # pragma: no cover
             # for apache-airflow-providers-amazon>=6.0.0
             # max_tries is deprecated so instead of max_tries using self.max_polling_attempts
-            polling_attempts = self.max_polling_attempts  # pragma: no cover
+            polling_attempts = self.max_polling_attempts  # type: ignore[attr-defined]
 
         self.defer(
             timeout=self.execution_timeout,
