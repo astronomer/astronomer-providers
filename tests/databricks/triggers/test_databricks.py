@@ -18,34 +18,33 @@ MOCK_RUN_RESPONSE_IN_ERROR_1 = {
     "state": {
         "life_cycle_state": "TERMINATED",
         "result_state": "FAILED",
-        "state_message": "failed with error",
-        "tasks": [
-            {
-                "run_id": 2112892,
-                "state": {
-                    "life_cycle_state": "INTERNAL_ERROR",
-                    "result_state": "FAILED",
-                    "user_cancelled_or_timedout": False,
-                },
-            }
-        ],
-    }
+        "state_message": "Test error",
+    },
+    "tasks": [
+        {
+            "run_id": 2112892,
+            "state": {
+                "life_cycle_state": "INTERNAL_ERROR",
+                "result_state": "FAILED",
+                "user_cancelled_or_timedout": False,
+            },
+        }
+    ],
 }
 MOCK_RUN_RESPONSE_IN_ERROR_2 = {
     "state": {
         "life_cycle_state": "TERMINATED",
         "result_state": "FAILED",
-        "state_message": "failed with error",
-        "tasks": [],
-    }
+        "state_message": "Test error",
+    },
 }
 MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_1 = {
-    "error": "ZeroDivisionError: integer division or modulo by zero",
+    "error": "Test error",
     "metadata": {
         "state": {
             "life_cycle_state": "TERMINATED",
             "result_state": "FAILED",
-            "state_message": "failed with error",
+            "state_message": "Test error",
         },
         "tasks": [
             {
@@ -54,7 +53,7 @@ MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_1 = {
                     "life_cycle_state": "INTERNAL_ERROR",
                     "result_state": "FAILED",
                     "user_cancelled_or_timedout": False,
-                    "state_message": "failed with error",
+                    "state_message": "Test error",
                 },
                 "run_page_url": "https://my-workspace.cloud.databricks.com/#job/39832/run/20",
             }
@@ -66,7 +65,7 @@ MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_2 = {
         "state": {
             "life_cycle_state": "TERMINATED",
             "result_state": "FAILED",
-            "state_message": "failed with error",
+            "state_message": "Test error",
         },
         "tasks": [
             {
@@ -75,7 +74,7 @@ MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_2 = {
                     "life_cycle_state": "INTERNAL_ERROR",
                     "result_state": "FAILED",
                     "user_cancelled_or_timedout": False,
-                    "state_message": "failed with error",
+                    "state_message": "Test error",
                 },
                 "run_page_url": "https://my-workspace.cloud.databricks.com/#job/39832/run/20",
             }
@@ -234,6 +233,7 @@ async def test_databricks_trigger_terminated(mock_run_response, mock_run_state):
     "mock_run_response, mock_get_output_response",
     [
         (MOCK_RUN_RESPONSE_IN_ERROR_1, MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_1),
+        (MOCK_RUN_RESPONSE_IN_ERROR_1, MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_2),
         (MOCK_RUN_RESPONSE_IN_ERROR_2, MOCK_RUN_GET_OUTPUT_RESPONSE_IN_ERROR_2),
     ],
 )
@@ -266,8 +266,8 @@ async def test_databricks_trigger_terminal_status_failed(
             {
                 "status": "error",
                 "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
-                " 'result_state': 'FAILED', 'state_message': 'failed with error'}"
-                " and with the error failed with error",
+                " 'result_state': 'FAILED', 'state_message': 'Test error'}"
+                " and with the error Test error",
             }
         )
         == actual
