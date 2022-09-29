@@ -8,6 +8,7 @@ from airflow import __version__
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
     GET_RUN_ENDPOINT,
+    OUTPUT_RUNS_JOB_ENDPOINT,
     DatabricksHook,
     RunState,
 )
@@ -39,8 +40,7 @@ class DatabricksHookAsync(DatabricksHook):
         :param run_id: id of the run
         :return: state of the run
         """
-        json = {"run_id": run_id}
-        response = await self._do_api_call_async(GET_RUN_ENDPOINT, json)
+        response = await self.get_run_response(run_id)
         state = response["state"]
         life_cycle_state = state["life_cycle_state"]
         # result_state may not be in the state if not terminal
@@ -49,6 +49,26 @@ class DatabricksHookAsync(DatabricksHook):
         self.log.info("Getting run state. ")
 
         return RunState(life_cycle_state, result_state, state_message)
+
+    async def get_run_response(self, run_id: str) -> Dict[str, Any]:
+        """
+        Makes Async API call to get the run state info.
+
+        :param run_id: id of the run
+        """
+        json = {"run_id": run_id}
+        response = await self._do_api_call_async(GET_RUN_ENDPOINT, json)
+        return response
+
+    async def get_run_output_response(self, task_run_id: str) -> Dict[str, Any]:
+        """
+        Retrieves run output of the run.
+
+        :param task_run_id: id of the run
+        """
+        json = {"run_id": task_run_id}
+        run_output = await self._do_api_call_async(OUTPUT_RUNS_JOB_ENDPOINT, json)
+        return run_output
 
     async def _do_api_call_async(
         self, endpoint_info: Tuple[str, str], json: Dict[str, Any]

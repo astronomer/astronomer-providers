@@ -20,6 +20,44 @@ LOGIN = "login"
 PASSWORD = "password"
 TOKEN = "token"
 api_version = "2.0"
+MOCK_GET_OUTPUT_RESPONSE = {
+    "metadata": {
+        "job_id": 11223344,
+        "run_id": 455644833,
+        "number_in_job": 455644833,
+        "state": {
+            "life_cycle_state": "TERMINATED",
+            "result_state": "FAILED",
+            "state_message": "failed with error",
+        },
+        "tasks": [
+            {
+                "run_id": 2112892,
+                "task_key": "Orders_Ingest",
+                "description": "Ingests order data",
+                "job_cluster_key": "auto_scaling_cluster",
+                "spark_jar_task": {"main_class_name": "com.databricks.OrdersIngest", "run_as_repl": True},
+                "libraries": [{"jar": "dbfs:/mnt/databricks/OrderIngest.jar"}],
+                "state": {
+                    "life_cycle_state": "INTERNAL_ERROR",
+                    "result_state": "FAILED",
+                    "user_cancelled_or_timedout": False,
+                },
+                "run_page_url": "https://my-workspace.cloud.databricks.com/#job/39832/run/20",
+                "start_time": 1629989929660,
+                "setup_duration": 0,
+                "execution_duration": 0,
+                "cleanup_duration": 0,
+                "end_time": 1629989930171,
+                "cluster_instance": {
+                    "cluster_id": "0923-164208-meows279",
+                    "spark_context_id": "4348585301701786933",
+                },
+                "attempt_number": 0,
+            }
+        ],
+    }
+}
 
 # For provider version > 2.0.2 GET_RUN_ENDPOINT and SUBMIT_RUN_ENDPOINT points to api/2.1 instead of api/2.0
 if version.parse(provider_version) > version.parse("2.0.2"):
@@ -28,7 +66,8 @@ if version.parse(provider_version) > version.parse("2.0.2"):
 
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
-async def test_databricks_hook_get_run_state(mocked_response):
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_response")
+async def test_databricks_hook_get_run_state(mock_run_response, mocked_response):
     """
     Asserts that a run state is returned as expected while a Databricks run
     is in a PENDING state (i.e. "RUNNING") and after it reaches a TERMINATED
@@ -36,7 +75,7 @@ async def test_databricks_hook_get_run_state(mocked_response):
     """
     hook = DatabricksHookAsync()
     # Mock response while job is running
-    mocked_response.return_value = {
+    mock_run_response.return_value = {
         "state": {
             "life_cycle_state": "RUNNING",
             "result_state": "",
@@ -51,7 +90,7 @@ async def test_databricks_hook_get_run_state(mocked_response):
     assert run_state_running.state_message == "In run"
 
     # Mock response after job is complete
-    mocked_response.return_value = {
+    mock_run_response.return_value = {
         "state": {
             "life_cycle_state": "TERMINATED",
             "result_state": "SUCCESS",
@@ -64,6 +103,53 @@ async def test_databricks_hook_get_run_state(mocked_response):
     assert run_state_complete.life_cycle_state == "TERMINATED"
     assert run_state_complete.result_state == "SUCCESS"
     assert run_state_complete.state_message == ""
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_response",
+    [
+        (
+            {
+                "state": {
+                    "life_cycle_state": "RUNNING",
+                    "result_state": "",
+                    "state_message": "In run",
+                    "user_cancelled_or_timedout": "False",
+                }
+            }
+        ),
+        (
+            {
+                "state": {
+                    "life_cycle_state": "TERMINATED",
+                    "result_state": "SUCCESS",
+                    "state_message": "",
+                    "user_cancelled_or_timedout": "False",
+                }
+            }
+        ),
+    ],
+)
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
+async def test_get_run_response(mock_do_api_async, mock_response):
+    """
+    Test get_run_response function by mocking the _do_api_call_async response and the response date from the API.
+    """
+    hook = DatabricksHookAsync()
+    mock_do_api_async.return_value = mock_response
+    run_state_response = await hook.get_run_response(RUN_ID)
+    assert run_state_response == mock_response
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync._do_api_call_async")
+async def test_get_run_output_response(mock_do_api_async):
+    """Test get_run_output_response method by mocking _do_api_call_async and the response of get-output API"""
+    hook = DatabricksHookAsync()
+    mock_do_api_async.return_value = MOCK_GET_OUTPUT_RESPONSE
+    run_output = await hook.get_run_output_response(RUN_ID)
+    assert run_output == MOCK_GET_OUTPUT_RESPONSE
 
 
 @pytest.mark.asyncio
