@@ -11,7 +11,7 @@ from google.cloud.dataproc_v1 import (
 from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 
 
-@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook.get_credentials")
+@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook._get_credentials")
 def test_get_cluster_client(mock_get_credentials):
     """assert that get_cluster_client return ClusterControllerAsyncClient"""
     mock_get_credentials.return_value = ga_credentials.AnonymousCredentials()
@@ -19,7 +19,7 @@ def test_get_cluster_client(mock_get_credentials):
     assert isinstance(hook.get_cluster_client(location="us-west"), ClusterControllerAsyncClient)
 
 
-@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook.get_credentials")
+@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook._get_credentials")
 def test_get_job_client(mock_get_credentials):
     """assert that get_job_client return JobControllerAsyncClient"""
     mock_get_credentials.return_value = ga_credentials.AnonymousCredentials()
@@ -28,7 +28,7 @@ def test_get_job_client(mock_get_credentials):
 
 
 @pytest.mark.asyncio
-@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook.get_credentials")
+@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook._get_credentials")
 @mock.patch("google.cloud.dataproc_v1.ClusterControllerAsyncClient.get_cluster")
 async def test_get_cluster(mock_get_cluster, mock_get_cluster_client):
     """assert that get_cluster called with correct param"""
@@ -46,7 +46,7 @@ async def test_get_cluster(mock_get_cluster, mock_get_cluster_client):
 
 
 @pytest.mark.asyncio
-@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook.get_credentials")
+@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook._get_credentials")
 @mock.patch("google.cloud.dataproc_v1.JobControllerAsyncClient.get_job")
 async def test_get_job(mock_get_job, mock_get_cred):
     """Test to get the job from Google cloud dataproc"""

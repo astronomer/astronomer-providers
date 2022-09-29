@@ -269,9 +269,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(  # type: ignore[override]
-        self, context: Context, event: Optional[Dict[str, str]] = None
-    ) -> str:
+    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
