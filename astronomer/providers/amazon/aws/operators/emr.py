@@ -24,8 +24,10 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
         If no token is provided, a UUIDv4 token will be generated for you.
     :param aws_conn_id: The Airflow connection used for AWS credentials.
     :param poll_interval: Time (in seconds) to wait between two consecutive calls to check query status on EMR
-    :param max_tries: Maximum number of times to wait for the job run to finish.
+    :param max_tries: Deprecated - use max_polling_attempts instead.
+    :param max_polling_attempts: Maximum number of times to wait for the job run to finish.
         Defaults to None, which will poll until the job is *not* in a pending, submitted, or running state.
+    :param tags: The tags assigned to job runs. Defaults to None
     """
 
     def execute(self, context: Context) -> None:
@@ -39,6 +41,13 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             configuration_overrides=self.configuration_overrides,
             client_request_token=self.client_request_token,
         )
+        try:
+            # for apache-airflow-providers-amazon<6.0.0
+            polling_attempts = self.max_tries
+        except AttributeError:  # pragma: no cover
+            # for apache-airflow-providers-amazon>=6.0.0
+            # max_tries is deprecated so instead of max_tries using self.max_polling_attempts
+            polling_attempts = self.max_polling_attempts  # type: ignore[attr-defined]
 
         self.defer(
             timeout=self.execution_timeout,
@@ -47,7 +56,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
                 job_id=job_id,
                 aws_conn_id=self.aws_conn_id,
                 poll_interval=self.poll_interval,
-                max_tries=self.max_tries,
+                max_tries=polling_attempts,
             ),
             method_name="execute_complete",
         )
