@@ -74,15 +74,25 @@ run-local-lineage-server: ## Run flask based local Lineage server
 	FLASK_APP=dev/local_flask_lineage_server.py flask run --host 0.0.0.0 --port 5050
 
 test-rc-deps: ## Test providers RC by building an image with given dependencies and running the master DAG
+	git checkout main && git pull origin main
+	$(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
+	echo "Current timestamp is" $(current_timestamp)
+	$(eval branch_name := "rc-test-$(current_timestamp)")
+	git checkout -b $(branch_name)
+	echo "Updating setup.cfg with RC provider packages"
 	python3 dev/scripts/replace_dependencies.py '$(RC_PROVIDER_PACKAGES)'
+	echo "Building and deploying image to Astro Cloud"
 	cd ".circleci/integration-tests/" && \
 	 bash script.sh 'astro-cloud' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
 	$(eval current_timestamp := $(shell date))
 	echo "Current timestamp is" $(current_timestamp)
-	echo "Sleeping for 900 seconds (15 mins) allowing the deployed image to be updated across all Airflow components.."
-	sleep 900
+	echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."
+	sleep 1800
 	python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
-	git checkout setup.cfg
+	git add setup.cfg
+	git commit -m "Update setup.cfg to use RC provider packages"
+	git push origin $(branch_name)
+	gh pr create --base "main" --title "Test RC provider packages" --fill
 
 shell:  ## Runs a shell within a container (Allows interactive session)
 	docker compose -f dev/docker-compose.yaml run --rm airflow-scheduler bash
