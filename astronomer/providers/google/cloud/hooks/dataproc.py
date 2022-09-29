@@ -37,8 +37,10 @@ class DataprocHookAsync(GoogleBaseHook):
         except AttributeError:
             # for apache-airflow-providers-google>=8.4.0
             return ClusterControllerAsyncClient(
-                credentials=self.get_credentials(), client_info=CLIENT_INFO, client_options=client_options
-            )  # type: ignore[attr-defined]
+                credentials=self.get_credentials(),  # type: ignore[attr-defined]
+                client_info=CLIENT_INFO,
+                client_options=client_options,
+            )
 
     def get_job_client(
         self, region: Optional[str] = None, location: Optional[str] = None
@@ -56,8 +58,10 @@ class DataprocHookAsync(GoogleBaseHook):
             )
         except AttributeError:
             return JobControllerAsyncClient(
-                credentials=self.get_credentials(), client_info=CLIENT_INFO, client_options=client_options
-            )  # type: ignore[attr-defined]
+                credentials=self.get_credentials(),  # type: ignore[attr-defined]
+                client_info=CLIENT_INFO,
+                client_options=client_options,
+            )
 
     async def get_cluster(
         self,
