@@ -31,18 +31,15 @@ class DataprocHookAsync(GoogleBaseHook):
         client_options, region = self._get_client_options_and_region(region=region, location=location)
         try:
             # for apache-airflow-providers-google<8.4.0
-            return ClusterControllerAsyncClient(
-                credentials=self._get_credentials(),
-                client_info=CLIENT_INFO,
-                client_options=client_options,
-            )
+            credentials = self._get_credentials()
         except AttributeError:  # pragma: no cover
             # for apache-airflow-providers-google>=8.4.0
-            return ClusterControllerAsyncClient(
-                credentials=self.get_credentials(),  # type: ignore[attr-defined]
-                client_info=CLIENT_INFO,
-                client_options=client_options,
-            )
+            credentials = self.get_credentials()  # type: ignore[attr-defined]
+        return ClusterControllerAsyncClient(
+            credentials=credentials,
+            client_info=CLIENT_INFO,
+            client_options=client_options,
+        )
 
     def get_job_client(
         self, region: Optional[str] = None, location: Optional[str] = None
@@ -55,17 +52,16 @@ class DataprocHookAsync(GoogleBaseHook):
         """
         client_options, region = self._get_client_options_and_region(region=region, location=location)
         try:
-            return JobControllerAsyncClient(
-                credentials=self._get_credentials(),
-                client_info=CLIENT_INFO,
-                client_options=client_options,
-            )
+            # for apache-airflow-providers-google<8.4.0
+            credentials = self._get_credentials()
         except AttributeError:  # pragma: no cover
-            return JobControllerAsyncClient(
-                credentials=self.get_credentials(),  # type: ignore[attr-defined]
-                client_info=CLIENT_INFO,
-                client_options=client_options,
-            )
+            # for apache-airflow-providers-google>=8.4.0
+            credentials = self.get_credentials()  # type: ignore[attr-defined]
+        return JobControllerAsyncClient(
+            credentials=credentials,
+            client_info=CLIENT_INFO,
+            client_options=client_options,
+        )
 
     async def get_cluster(
         self,
