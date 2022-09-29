@@ -19,6 +19,7 @@ def test_get_cluster_client(mock_get_credentials):
     assert isinstance(hook.get_cluster_client(location="us-west"), ClusterControllerAsyncClient)
 
 
+@mock.patch("airflow.providers.google.common.hooks.base_google.GoogleBaseHook.get_credentials")
 def test_get_job_client(mock_get_credentials):
     """assert that get_job_client return JobControllerAsyncClient"""
     mock_get_credentials.return_value = ga_credentials.AnonymousCredentials()
