@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.10.0 (2022-09-29)
+1.10.0 (2022-09-30)
 -------------------
 
 New Operators
@@ -19,8 +19,8 @@ This release adds the following 2 new async sensors/operators:
    * - ``ExternalDeploymentTaskSensorAsync``
      - .. code-block:: python
 
-        from astronomer.providers.http.sensors.external_deployment_task import ExternalDeploymentTaskSensorAsync
-     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/http/example_dags/example_external_deployment_task_sensor.py>`__
+        from astronomer.providers.core.sensors.external_task import ExternalDeploymentTaskSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/core/example_dags/example_external_deployment_task_sensor.py>`__
 
    * - ``SFTPSensorAsync``
      - .. code-block:: python
@@ -31,12 +31,16 @@ This release adds the following 2 new async sensors/operators:
 Bug Fixes
 """""""""
 
-- Use `poke_interval` instead of `poll_interval` for all async sensor
-  (`#640 <https://github.com/astronomer/astronomer-providers/pull/640>`_)
-- Make Dataproc operator compatible with `apache-airflow-providers-google>=8.4.0`
+- Make Dataproc operator compatible with ``apache-airflow-providers-google>=8.4.0``
   (`#680 <https://github.com/astronomer/astronomer-providers/pull/680>`_)
-- Make EMR EKS operator compatible with `apache-airflow-providers-amazon>=6.0.0`
+- Make EMR EKS operator compatible with ``apache-airflow-providers-amazon>=6.0.0``
   (`#682 <https://github.com/astronomer/astronomer-providers/pull/682>`_)
+
+Deprecation
+"""""""""""
+
+- Deprecate ``poll_interval`` and use ``poke_interval`` for all async sensors
+  (`#640 <https://github.com/astronomer/astronomer-providers/pull/640>`_)
 
 
 1.9.0 (2022-09-13)
