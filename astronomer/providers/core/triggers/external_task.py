@@ -156,7 +156,7 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serializes ExternalDeploymentTaskTrigger arguments and classpath."""
         return (
-            "astronomer.providers.http.triggers.http.ExternalDeploymentTaskTrigger",
+            "astronomer.providers.core.triggers.external_task.ExternalDeploymentTaskTrigger",
             {
                 "endpoint": self.endpoint,
                 "data": self.data,
