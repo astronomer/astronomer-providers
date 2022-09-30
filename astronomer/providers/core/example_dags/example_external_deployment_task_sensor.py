@@ -9,7 +9,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.log.secrets_masker import mask_secret
 from airflow.utils.timezone import datetime
 
-from astronomer.providers.http.sensors.external_deployment_task import (
+from astronomer.providers.core.sensors.external_task import (
     ExternalDeploymentTaskSensorAsync,
 )
 
