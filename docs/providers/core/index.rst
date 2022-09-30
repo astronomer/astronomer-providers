@@ -5,9 +5,9 @@ Core Example DAG
   :hidden:
   :maxdepth: 2
 
-    External Task Sensor <sensors/external_task>
+    External Task Sensors <sensors/external_task>
     Filesystem Sensor <sensors/filesystem>
 
 
-* `External Tas Sensor <sensors/external_task.html>`_
+* `External Task Sensor <sensors/external_task.html>`_
 * `Filesystem Sensor <sensors/filesystem.html>`_
