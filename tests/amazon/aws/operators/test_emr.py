@@ -35,58 +35,45 @@ CONFIGURATION_OVERRIDES_ARG = {
     },
 }
 
-
-@pytest.fixture
-def context():
-    """
-    Creates an empty context.
-    """
-    context = {}
-    yield context
-
-
-def _emr_emr_container_operator_init():
-    """Return an instance of EmrContainerOperatorAsync operator"""
-    return EmrContainerOperatorAsync(
-        task_id="start_job",
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        execution_role_arn=JOB_ROLE_ARN,
-        release_label="emr-6.3.0-latest",
-        job_driver=JOB_DRIVER_ARG,
-        configuration_overrides=CONFIGURATION_OVERRIDES_ARG,
-        name="pi.py",
-    )
+EMR_OPERATOR = EmrContainerOperatorAsync(
+    task_id="start_job",
+    virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+    execution_role_arn=JOB_ROLE_ARN,
+    release_label="emr-6.3.0-latest",
+    job_driver=JOB_DRIVER_ARG,
+    configuration_overrides=CONFIGURATION_OVERRIDES_ARG,
+    name="pi.py",
+)
 
 
-@mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
-def test_emr_container_operator_async(check_job_status):
-    """Assert EmrContainerOperatorAsync defer"""
-    check_job_status.return_value = JOB_ID
-    with pytest.raises(TaskDeferred) as exc:
-        _emr_emr_container_operator_init().execute(context)
+class TestEmrContainerOperatorAsync:
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
+    def test_emr_container_operator_async(self, check_job_status, context):
+        """Assert EmrContainerOperatorAsync defer"""
+        check_job_status.return_value = JOB_ID
+        with pytest.raises(TaskDeferred) as exc:
+            EMR_OPERATOR.execute(context)
 
-    assert isinstance(
-        exc.value.trigger, EmrContainerOperatorTrigger
-    ), "Trigger is not a EmrContainerOperatorTrigger"
+        assert isinstance(
+            exc.value.trigger, EmrContainerOperatorTrigger
+        ), "Trigger is not a EmrContainerOperatorTrigger"
 
-
-@mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
-def test_emr_container_operator_execute_complete_success(check_job_status):
-    """Assert execute_complete succeed"""
-    check_job_status.return_value = JOB_ID
-    assert (
-        _emr_emr_container_operator_init().execute_complete(
-            context=None, event={"status": "success", "message": "Job completed", "job_id": JOB_ID}
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
+    def test_execute_complete_success_task(self, check_job_status):
+        """Assert execute_complete succeed"""
+        check_job_status.return_value = JOB_ID
+        assert (
+            EMR_OPERATOR.execute_complete(
+                context=None, event={"status": "success", "message": "Job completed", "job_id": JOB_ID}
+            )
+            == JOB_ID
         )
-        == JOB_ID
-    )
 
-
-@mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
-def test_emr_container_operator_execute_complete_fail(check_job_status):
-    """Assert execute_complete throw AirflowException"""
-    check_job_status.return_value = JOB_ID
-    with pytest.raises(AirflowException):
-        _emr_emr_container_operator_init().execute_complete(
-            context=None, event={"status": "error", "message": "test failure message"}
-        )
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
+    def test_execute_complete_fail_task(self, check_job_status):
+        """Assert execute_complete throw AirflowException"""
+        check_job_status.return_value = JOB_ID
+        with pytest.raises(AirflowException):
+            EMR_OPERATOR.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
