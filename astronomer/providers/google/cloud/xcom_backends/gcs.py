@@ -21,6 +21,7 @@ class GCSXComBackend(BaseXCom):
     PREFIX = os.getenv("PREFIX", "gcs_xcom_")
     GCP_CONN_ID = os.getenv("CONNECTION_NAME", "google_cloud_default")
     BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
+    PANDAS_DATAFRAME = "dataframe"
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
@@ -29,17 +30,16 @@ class GCSXComBackend(BaseXCom):
         hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
         if conf.getboolean("core", "enable_xcom_pickling"):
             value = pickle.dumps(value)
-        elif isinstance(value, list):
-            value = str(value)
         elif isinstance(value, pd.DataFrame):
             value = value.to_json()
+            key_str = key_str + "_" + GCSXComBackend.PANDAS_DATAFRAME
         else:
             value = json.dumps(value)
         hook.upload(GCSXComBackend.BUCKET_NAME, key_str, data=value)
         return key_str
 
     @staticmethod
-    def read_value(filename: str) -> str:
+    def read_value(filename: str) -> bytes:
         """Download the file from GCS"""
         # Here we download the file from GCS
         hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
@@ -59,11 +59,10 @@ class GCSXComBackend(BaseXCom):
         if isinstance(result, str) and result.startswith(GCSXComBackend.PREFIX):
             value = GCSXComBackend.read_value(result)
             if conf.getboolean("core", "enable_xcom_pickling"):
-                try:
-                    return pickle.loads(value)  # nosec
-                except pickle.UnpicklingError:
-                    return json.loads(value.decode("UTF-8"))
-            return value
+                return pickle.loads(value)  # nosec
+            elif result.endswith(GCSXComBackend.PANDAS_DATAFRAME):
+                return pd.read_json(value)
+            return json.loads(value)
 
     def orm_deserialize_value(self) -> str:
         """

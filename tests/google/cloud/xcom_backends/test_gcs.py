@@ -21,7 +21,7 @@ def test_custom_xcom_gcs_serialize(mock_write):
 
 @pytest.mark.parametrize(
     "job_id",
-    ["1234567890", {"a": "b"}, ["123"], pd.DataFrame({"numbers": [1], "colors": ["red"]})],
+    ["1234567890", {"a": "b"}, ["123"]],
 )
 @mock.patch("uuid.uuid4")
 @mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.upload")
@@ -34,6 +34,17 @@ def test_custom_xcom_gcs_write_and_upload(mock_upload, mock_uuid, job_id):
     assert result == "gcs_xcom_" + "12345667890"
 
 
+@mock.patch("uuid.uuid4")
+@mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.upload")
+def test_custom_xcom_gcs_write_and_upload_pandas(mock_upload, mock_uuid):
+    """
+    Asserts that custom xcom is upload and returns key
+    """
+    mock_uuid.return_value = "12345667890"
+    result = GCSXComBackend.write_and_upload_value(pd.DataFrame({"numbers": [1], "colors": ["red"]}))
+    assert result == "gcs_xcom_" + "12345667890" + "_dataframe"
+
+
 @pytest.mark.parametrize(
     "job_id",
     ["gcs_xcom_1234"],
@@ -43,7 +54,7 @@ def test_custom_xcom_gcs_deserialize(mock_download, job_id):
     """
     Asserts that custom xcom is deserialized and check for data
     """
-    mock_download.return_value = job_id
+    mock_download.return_value = json.dumps(job_id).encode("UTF-8")
     real_job_id = BaseXCom(value=json.dumps(job_id).encode("UTF-8"))
     result = GCSXComBackend.deserialize_value(real_job_id)
     assert result == job_id
