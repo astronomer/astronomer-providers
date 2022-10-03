@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
+from airflow.providers.databricks.hooks.databricks import RunState
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
@@ -70,24 +71,40 @@ class DatabricksTrigger(BaseTrigger):
         hook = self._get_async_hook()
         while True:
             try:
-                run_state = await hook.get_run_state_async(self.run_id)
-                if run_state.is_terminal:
-                    if run_state.is_successful:
-                        yield TriggerEvent(
-                            {
-                                "status": "success",
-                                "job_id": self.job_id,
-                                "run_id": self.run_id,
-                                "run_page_url": self.run_page_url,
-                            }
-                        )
-                    else:
-                        error_message = f"{self.task_id} failed with terminal state: {run_state}"
-                        yield TriggerEvent({"status": "error", "message": str(error_message)})
-                else:
+                run_info = await hook.get_run_response(self.run_id)
+                run_state = RunState(**run_info["state"])
+                if not run_state.is_terminal:
                     self.log.info("%s in run state: %s", self.task_id, run_state)
                     self.log.info("Sleeping for %s seconds.", self.polling_period_seconds)
                     await asyncio.sleep(self.polling_period_seconds)
+                elif run_state.is_terminal and run_state.is_successful:
+                    yield TriggerEvent(
+                        {
+                            "status": "success",
+                            "job_id": self.job_id,
+                            "run_id": self.run_id,
+                            "run_page_url": self.run_page_url,
+                        }
+                    )
+                elif run_state.result_state == "FAILED":
+                    notebook_error = run_state.state_message
+                    tasks = run_info["tasks"] if "tasks" in run_info else []
+                    for task in tasks:
+                        if task.get("state", {}).get("result_state", "") == "FAILED":
+                            task_run_id = task["run_id"]
+                            run_output = await hook.get_run_output_response(task_run_id)
+                            notebook_error = run_output["error"] if "error" in run_output else notebook_error
+                    error_message = (
+                        f"{self.task_id} failed with terminal state: {run_state} "
+                        f"and with the error {notebook_error}"
+                    )
+                    yield TriggerEvent({"status": "error", "message": error_message})
+                else:
+                    error_message = (
+                        f"{self.task_id} failed with terminal state: {run_state} "
+                        f"and with the error {run_state.state_message}"
+                    )
+                    yield TriggerEvent({"status": "error", "message": error_message})
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
