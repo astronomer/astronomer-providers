@@ -123,7 +123,6 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
-                "delegate_to": self.delegate_to,
                 "impersonation_chain": self.impersonation_chain,
                 "poll_interval": self.poll_interval,
             },

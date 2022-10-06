@@ -196,7 +196,6 @@ def test_bigquery_check_op_trigger_serialization():
         TEST_GCP_PROJECT_ID,
         TEST_DATASET_ID,
         TEST_TABLE_ID,
-        TEST_DELEGATE_TO,
         TEST_IMPERSONATION_CHAIN,
         POLLING_PERIOD_SECONDS,
     )
@@ -208,7 +207,6 @@ def test_bigquery_check_op_trigger_serialization():
         "dataset_id": TEST_DATASET_ID,
         "project_id": TEST_GCP_PROJECT_ID,
         "table_id": TEST_TABLE_ID,
-        "delegate_to": TEST_DELEGATE_TO,
         "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "poll_interval": POLLING_PERIOD_SECONDS,
     }

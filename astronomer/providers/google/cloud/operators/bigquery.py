@@ -164,7 +164,6 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     def execute(self, context: Context) -> None:  # noqa: D102
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
             impersonation_chain=self.impersonation_chain,
         )
         job = self._submit_job(hook, job_id="")
@@ -175,7 +174,6 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
                 conn_id=self.gcp_conn_id,
                 job_id=job.job_id,
                 project_id=hook.project_id,
-                delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
             ),
             method_name="execute_complete",
