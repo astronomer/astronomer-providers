@@ -1,5 +1,14 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
+from typing import (
+    Any,
+    AsyncIterator,
+    Dict,
+    Optional,
+    Sequence,
+    SupportsAbs,
+    Tuple,
+    Union,
+)
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
@@ -20,6 +29,9 @@ class BigQueryInsertJobTrigger(BaseTrigger):
     :param project_id: Google Cloud Project where the job is running
     :param dataset_id: The dataset ID of the requested table. (templated)
     :param table_id: The table ID of the requested table. (templated)
+    :param delegate_to: This performs a task on one host with reference to other hosts.
+    :param impersonation_chain: This is the optional service account to impersonate using short term
+        credentials.
     :param poll_interval: polling period in seconds to check for the status
     """
 
@@ -30,6 +42,8 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         project_id: Optional[str],
         dataset_id: Optional[str] = None,
         table_id: Optional[str] = None,
+        delegate_to: Optional[str] = None,
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         poll_interval: float = 4.0,
     ):
         super().__init__()
@@ -40,6 +54,8 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id
+        self.delegate_to = delegate_to
+        self.impersonation_chain = impersonation_chain
         self.poll_interval = poll_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -52,6 +68,8 @@ class BigQueryInsertJobTrigger(BaseTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
+                "delegate_to": self.delegate_to,
+                "impersonation_chain": self.impersonation_chain,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -85,7 +103,11 @@ class BigQueryInsertJobTrigger(BaseTrigger):
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
     def _get_async_hook(self) -> BigQueryHookAsync:
-        return BigQueryHookAsync(gcp_conn_id=self.conn_id)
+        return BigQueryHookAsync(
+            gcp_conn_id=self.conn_id,
+            delegate_to=self.delegate_to,
+            impersonation_chain=self.impersonation_chain,
+        )
 
 
 class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
@@ -101,6 +123,8 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
+                "delegate_to": self.delegate_to,
+                "impersonation_chain": self.impersonation_chain,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -160,6 +184,8 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
                 "dataset_id": self.dataset_id,
                 "project_id": self.project_id,
                 "table_id": self.table_id,
+                "delegate_to": self.delegate_to,
+                "impersonation_chain": self.impersonation_chain,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -213,6 +239,8 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
     :param ratio_formula: ration formula
     :param ignore_zero: boolean value to consider zero or not
     :param table_id: The table ID of the requested table. (templated)
+    :param impersonation_chain: This is the optional service account to impersonate using short term
+        credentials.
     :param poll_interval: polling period in seconds to check for the status
     """
 
@@ -230,6 +258,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         ignore_zero: bool = True,
         dataset_id: Optional[str] = None,
         table_id: Optional[str] = None,
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         poll_interval: float = 4.0,
     ):
         super().__init__(
@@ -238,6 +267,7 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
             project_id=project_id,
             dataset_id=dataset_id,
             table_id=table_id,
+            impersonation_chain=impersonation_chain,
             poll_interval=poll_interval,
         )
         self.conn_id = conn_id
@@ -353,6 +383,8 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
     :param tolerance: certain metrics for tolerance
     :param dataset_id: The dataset ID of the requested table. (templated)
     :param table_id: The table ID of the requested table. (templated)
+    :param impersonation_chain: This is the optional service account to impersonate using short term
+        credentials.
     :param poll_interval: polling period in seconds to check for the status
     """
 
@@ -366,6 +398,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         tolerance: Any = None,
         dataset_id: Optional[str] = None,
         table_id: Optional[str] = None,
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         poll_interval: float = 4.0,
     ):
         super().__init__(
@@ -374,6 +407,7 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
             project_id=project_id,
             dataset_id=dataset_id,
             table_id=table_id,
+            impersonation_chain=impersonation_chain,
             poll_interval=poll_interval,
         )
         self.sql = sql
@@ -468,7 +502,7 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         )
 
     def _get_async_hook(self) -> BigQueryTableHookAsync:
-        return BigQueryTableHookAsync(gcp_conn_id=self.gcp_conn_id)
+        return BigQueryTableHookAsync(gcp_conn_id=self.gcp_conn_id, **self.hook_params)
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Will run until the table exists in the Google Big Query."""

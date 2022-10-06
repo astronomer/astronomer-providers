@@ -24,6 +24,7 @@ TEST_REGION = "us-central1"
 TEST_ZONE = "us-central1-a"
 TEST_JOB_ID = "test-job"
 TEST_POLLING_INTERVAL = 3.0
+TEST_IMPERSONATION_CHAIN = None
 
 
 def test_dataproc_submit_trigger_serialization():
@@ -36,6 +37,7 @@ def test_dataproc_submit_trigger_serialization():
         dataproc_job_id=TEST_JOB_ID,
         project_id=TEST_PROJECT_ID,
         region=TEST_REGION,
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
         polling_interval=TEST_POLLING_INTERVAL,
     )
     classpath, kwargs = trigger.serialize()
@@ -46,6 +48,7 @@ def test_dataproc_submit_trigger_serialization():
         "region": TEST_REGION,
         "polling_interval": TEST_POLLING_INTERVAL,
         "gcp_conn_id": TEST_GCP_CONN_ID,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
     }
 
 
@@ -66,6 +69,7 @@ async def test_dataproc_submit_return_success_and_failure(mock_get_job_status, s
         dataproc_job_id=TEST_JOB_ID,
         project_id=TEST_PROJECT_ID,
         region=TEST_REGION,
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
         polling_interval=TEST_POLLING_INTERVAL,
     )
     generator = trigger.run()
@@ -162,6 +166,7 @@ def test_dataproc_create_cluster_trigger_serialization():
         polling_interval=TEST_POLLING_INTERVAL,
         end_time=100,
         metadata=(),
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.google.cloud.triggers.dataproc.DataprocCreateClusterTrigger"
@@ -171,6 +176,7 @@ def test_dataproc_create_cluster_trigger_serialization():
         "cluster_name": "test_cluster",
         "gcp_conn_id": TEST_GCP_CONN_ID,
         "polling_interval": TEST_POLLING_INTERVAL,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "delete_on_error": True,
         "labels": None,
         "cluster_config": None,
@@ -460,6 +466,7 @@ def test_dataproc_delete_cluster_trigger_serialization():
         cluster_name="test_cluster",
         gcp_conn_id=TEST_GCP_CONN_ID,
         polling_interval=TEST_POLLING_INTERVAL,
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
         end_time=100,
         metadata=(),
     )
@@ -471,6 +478,7 @@ def test_dataproc_delete_cluster_trigger_serialization():
         "cluster_name": "test_cluster",
         "gcp_conn_id": TEST_GCP_CONN_ID,
         "polling_interval": TEST_POLLING_INTERVAL,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "end_time": 100,
         "metadata": (),
     }
