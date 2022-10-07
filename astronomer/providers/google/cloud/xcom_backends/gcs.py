@@ -18,8 +18,8 @@ class GCSXComBackend(BaseXCom):
     `astronomer.providers.google.cloud.xcom_backends.gcs.GCSXComBackend`
     """
 
-    PREFIX = os.getenv("PREFIX", "gcs_xcom_")
-    GCP_CONN_ID = os.getenv("CONNECTION_NAME", "google_cloud_default")
+    PREFIX = os.getenv("XCOM_BACKEND_PREFIX", "gcs_xcom_")
+    GCP_CONN_ID = os.getenv("XCOM_BACKEND_CONNECTION_NAME", "google_cloud_default")
     BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
     PANDAS_DATAFRAME = "dataframe"
 
