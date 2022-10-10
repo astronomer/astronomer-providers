@@ -31,10 +31,10 @@ class DataprocHookAsync(GoogleBaseHook):
         client_options, region = self._get_client_options_and_region(region=region, location=location)
         try:
             # for apache-airflow-providers-google<8.4.0
-            credentials = self._get_credentials()
+            credentials = self._get_credentials()  # type: ignore[attr-defined]
         except AttributeError:  # pragma: no cover
             # for apache-airflow-providers-google>=8.4.0
-            credentials = self.get_credentials()  # type: ignore[attr-defined]
+            credentials = self.get_credentials()
         return ClusterControllerAsyncClient(
             credentials=credentials,
             client_info=CLIENT_INFO,
@@ -53,10 +53,10 @@ class DataprocHookAsync(GoogleBaseHook):
         client_options, region = self._get_client_options_and_region(region=region, location=location)
         try:
             # for apache-airflow-providers-google<8.4.0
-            credentials = self._get_credentials()
+            credentials = self._get_credentials()  # type: ignore[attr-defined]
         except AttributeError:  # pragma: no cover
             # for apache-airflow-providers-google>=8.4.0
-            credentials = self.get_credentials()  # type: ignore[attr-defined]
+            credentials = self.get_credentials()
         return JobControllerAsyncClient(
             credentials=credentials,
             client_info=CLIENT_INFO,

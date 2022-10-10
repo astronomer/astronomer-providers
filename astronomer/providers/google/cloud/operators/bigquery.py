@@ -237,7 +237,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         account from the list granting this role to the originating account (templated).
     """
 
-    def _submit_job(
+    def _submit_job(  # type: ignore[override]
         self,
         hook: BigQueryHook,
         job_id: str,
@@ -265,7 +265,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
         return query
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]  # noqa: D102
+    def execute(self, context: Context) -> None:  # noqa: D102
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
 
