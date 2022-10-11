@@ -2,6 +2,7 @@ import json
 import os
 import pickle  # nosec
 import uuid
+from datetime import date, datetime
 from typing import Any
 
 import pandas as pd
@@ -22,6 +23,7 @@ class GCSXComBackend(BaseXCom):
     GCP_CONN_ID = os.getenv("XCOM_BACKEND_CONNECTION_NAME", "google_cloud_default")
     BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
     PANDAS_DATAFRAME = "dataframe"
+    DATETIME_OBJECT = "datetime"
 
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
@@ -33,6 +35,9 @@ class GCSXComBackend(BaseXCom):
         elif isinstance(value, pd.DataFrame):
             value = value.to_json()
             key_str = key_str + "_" + GCSXComBackend.PANDAS_DATAFRAME
+        elif isinstance(value, date):
+            key_str = key_str + "_" + GCSXComBackend.DATETIME_OBJECT
+            value = value.isoformat()
         else:
             value = json.dumps(value)
         hook.upload(GCSXComBackend.BUCKET_NAME, key_str, data=value)
@@ -62,6 +67,8 @@ class GCSXComBackend(BaseXCom):
                 return pickle.loads(value)  # nosec
             elif result.endswith(GCSXComBackend.PANDAS_DATAFRAME):
                 return pd.read_json(value)
+            elif result.endswith(GCSXComBackend.DATETIME_OBJECT):
+                return datetime.fromisoformat(value)
             return json.loads(value)
 
     def orm_deserialize_value(self) -> str:
