@@ -1,3 +1,4 @@
+import time
 from typing import Any, Dict
 
 from airflow import AirflowException
@@ -69,11 +70,15 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker transform Job creation failed: {response}")
+        end_time = None
+        if self.max_ingestion_time is not None:
+            end_time: float = time.time() + self.max_ingestion_time
         else:
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=SagemakerTransformTrigger(
                     poll_interval=self.check_interval,
+                    end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
                     job_name=self.config["TransformJobName"],
                 ),
