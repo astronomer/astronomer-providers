@@ -59,8 +59,6 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
             raise AirflowException(f"Sagemaker Processing Job creation failed: {response}")
         if self.max_ingestion_time is not None:
             end_time: float = time.time() + self.max_ingestion_time
-        else:
-            end_time = False
 
         self.defer(
             timeout=self.execution_timeout,

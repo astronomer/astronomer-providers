@@ -14,7 +14,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
     :param job_name: name of the job to check status
     :param poll_interval:  polling period in seconds to check for the status
     :param aws_conn_id: AWS connection ID for sagemaker
-    :param max_ingestion_time: the maximum ingestion time in seconds. Any
+    :param end_time: the end time in seconds. Any
             SageMaker jobs that run longer than this will fail.
     """
 
@@ -25,7 +25,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
         self,
         job_name: str,
         poll_interval: float,
-        end_time: float,
+        end_time: float | None,
         aws_conn_id: str = "aws_default",
     ):
         super().__init__()
@@ -51,10 +51,16 @@ class SagemakerProcessingTrigger(BaseTrigger):
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
         """
+        run_with_time_limit = False
         hook = self._get_async_hook()
-        while self.end_time > time.time():
+        if self.end_time is not None:
+            run_with_time_limit = True
+        while True:
             try:
-                response = await hook.describe_processing_job(self.job_name)
+                # check if time limit is set and timeout has happened or not
+                if run_with_time_limit and time.time() > self.end_time:
+                    yield TriggerEvent({"status": "error", "message": "Timeout"})
+                response = await hook.describe_processing_job_async(self.job_name)
                 status = response["ProcessingJobStatus"]
                 if status in self.failed_states:
                     error_message = f"SageMaker job failed because {response['FailureReason']}"
@@ -67,7 +73,6 @@ class SagemakerProcessingTrigger(BaseTrigger):
                     yield TriggerEvent({"status": "success", "message": response})
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
-        yield TriggerEvent({"status": "error", "message": "Timeout"})
 
     def _get_async_hook(self) -> SageMakerHookAsync:
         return SageMakerHookAsync(aws_conn_id=self.aws_conn_id)

@@ -1,6 +1,6 @@
 from typing import Dict, List, Union
 
-from aiohttp import ClientError
+from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
@@ -16,7 +16,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
 
     def __init__(self, *args, **kwargs):
         kwargs["client_type"] = "sagemaker"
-        super().__init__(client_type="sagemaker", *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.s3_hook = S3HookAsync(aws_conn_id=self.aws_conn_id)
 
     async def describe_transform_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
