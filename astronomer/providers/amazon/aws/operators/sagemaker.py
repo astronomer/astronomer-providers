@@ -70,10 +70,10 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker transform Job creation failed: {response}")
-        end_time = None
-        if self.max_ingestion_time is not None:
-            end_time: float = time.time() + self.max_ingestion_time
         else:
+            end_time = None
+            if self.max_ingestion_time is not None:
+                end_time: float = time.time() + self.max_ingestion_time
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=SagemakerTransformTrigger(

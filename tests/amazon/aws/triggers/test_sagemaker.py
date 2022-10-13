@@ -1,4 +1,5 @@
 import asyncio
+import time
 from unittest import mock
 
 import pytest
@@ -11,14 +12,11 @@ from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTransfor
 class TestSagemakerTransformTrigger:
     TEST_JOB_NAME = "test_job_name"
     POLL_INTERVAL = 5
-    END_TIME = 100
+    END_TIME = time.time() + 60 * 60 * 24 * 7
     AWS_CONN_ID = "aws_test"
 
     def test_sagemaker_transform_trigger_serialization(self):
-        """
-        Asserts that the SagemakerTransformTrigger correctly serializes its arguments
-        and classpath.
-        """
+        """Asserts that the SagemakerTransformTrigger correctly serializes its arguments and classpath."""
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
@@ -39,9 +37,7 @@ class TestSagemakerTransformTrigger:
         SageMakerHookAsync, "describe_transform_job_async", return_value={"TransformJobStatus": "Success"}
     )
     async def test_sagemaker_transform_trigger_success(self, mock_transform_job):
-        """
-        Test if the task is run is in SagemakerTransformTrigger successfully.
-        """
+        """Test the Trigger run method by mocking the response successfully."""
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
@@ -50,18 +46,16 @@ class TestSagemakerTransformTrigger:
         )
         generator = trigger.run()
         actual = await generator.asend(None)
-        assert TriggerEvent({"status": "success", "message": {"TransformJobStatus": "Success"}}) == actual
+        assert actual == TriggerEvent({"status": "success", "message": "SageMaker Job completed"})
 
     @pytest.mark.asyncio
     @mock.patch.object(
         SageMakerHookAsync,
         "describe_transform_job_async",
-        return_value={"TransformJobStatus": "Failed", "FailureReason": "Failed"},
+        return_value={"TransformJobStatus": "Failed", "FailureReason": "Test Reason"},
     )
     async def test_sagemaker_transform_trigger_failed(self, mock_transform_job):
-        """
-        Test that SagemakerTransformTrigger fires the correct event in case of a failure.
-        """
+        """Test that SagemakerTransformTrigger fires the correct event in case of a failure."""
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
@@ -70,14 +64,16 @@ class TestSagemakerTransformTrigger:
         )
         generator = trigger.run()
         actual = await generator.asend(None)
-        assert TriggerEvent({"status": "error", "message": "SageMaker job failed because Failed"}) == actual
+        assert actual == TriggerEvent(
+            {"status": "error", "message": "SageMaker job failed because Test Reason"}
+        )
 
     @pytest.mark.asyncio
     @mock.patch.object(
         SageMakerHookAsync, "describe_transform_job_async", return_value={"TransformJobStatus": "InProgress"}
     )
     async def test_sagemaker_transform_trigger_pending(self, mock_transform_job):
-        """Test if the task is run is in trigger successfully."""
+        """Test trigger run method iin pending state by mocking the response."""
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
@@ -94,11 +90,11 @@ class TestSagemakerTransformTrigger:
     @pytest.mark.asyncio
     @mock.patch.object(SageMakerHookAsync, "describe_transform_job_async")
     async def test_sagemaker_transform_trigger_timeout(self, mock_transform_job):
-        """Test if the task is timeout properly."""
+        """Test Trigger run method with if the task is timeout properly. by passing the end_time param"""
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
-            end_time=self.END_TIME,
+            end_time=100,
             aws_conn_id=self.AWS_CONN_ID,
         )
         generator = trigger.run()
@@ -110,7 +106,10 @@ class TestSagemakerTransformTrigger:
         SageMakerHookAsync, "describe_transform_job_async", side_effect=Exception("test exception")
     )
     async def test_sagemaker_transform_trigger_exception(self, mock_transform_job):
-        """Test if the task is run is in case of exception."""
+        """
+        Test sagemaker transform trigger with mocked exception as side effect
+        of describe_transform_job_async function response.
+        """
         trigger = SagemakerTransformTrigger(
             job_name=self.TEST_JOB_NAME,
             poll_interval=self.POLL_INTERVAL,
