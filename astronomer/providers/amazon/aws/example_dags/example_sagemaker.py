@@ -40,10 +40,7 @@ from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerTrainingOperator,
     SageMakerTuningOperator,
 )
-from airflow.providers.amazon.aws.sensors.sagemaker import (
-    SageMakerTrainingSensor,
-    SageMakerTuningSensor,
-)
+from airflow.providers.amazon.aws.sensors.sagemaker import SageMakerTuningSensor
 from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.operators.sagemaker import (
@@ -426,21 +423,14 @@ with DAG(
     )
     # [END howto_operator_sagemaker_processing]
 
-    # [START howto_operator_sagemaker_training]
+    # [START howto_operator_sagemaker_training_async]
     train_model = SageMakerTrainingOperator(
         task_id="train_model",
         config=test_setup["training_config"],
         # Waits by default, setting as False to demonstrate the Sensor below.
         wait_for_completion=False,
     )
-    # [END howto_operator_sagemaker_training]
-
-    # [START howto_sensor_sagemaker_training]
-    await_training = SageMakerTrainingSensor(
-        task_id="await_training",
-        job_name=test_setup["training_job_name"],
-    )
-    # [END howto_sensor_sagemaker_training]
+    # [END howto_operator_sagemaker_training_async]
 
     # [START howto_operator_sagemaker_model]
     create_model = SageMakerModelOperator(
@@ -465,14 +455,14 @@ with DAG(
     )
     # [END howto_sensor_sagemaker_tuning]
 
-    # [START howto_operator_sagemaker_transform]
+    # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
         config=test_setup["transform_config"],
         # Waits by default, setting as False to demonstrate the Sensor below.
         wait_for_completion=False,
     )
-    # [END howto_operator_sagemaker_transform]
+    # [END howto_operator_sagemaker_transform_async]
 
     # [START howto_operator_sagemaker_delete_model]
     delete_model = SageMakerDeleteModelOperator(
@@ -498,7 +488,6 @@ with DAG(
         # TEST BODY
         preprocess_raw_data,
         train_model,
-        await_training,
         create_model,
         tune_model,
         await_tune,

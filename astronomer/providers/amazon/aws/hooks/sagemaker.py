@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Any, Dict
 
 from aiohttp import ClientError
 
@@ -14,12 +14,12 @@ class SageMakerHookAsync(AwsBaseHookAsync):
     are passed down to the underlying AwsBaseHookAsync.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         kwargs["client_type"] = "sagemaker"
         super().__init__(*args, **kwargs)
         self.s3_hook = S3HookAsync(aws_conn_id=self.aws_conn_id)
 
-    async def describe_transform_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
+    async def describe_transform_job_async(self, job_name: str) -> Dict[str, Any]:
         """
         Return the transform job info associated with the name
 
@@ -27,12 +27,12 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_transform_job(TransformJobName=job_name)
+                response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
                 return response
             except ClientError as e:
                 raise e
 
-    async def describe_processing_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
+    async def describe_processing_job_async(self, job_name: str) -> Dict[str, Any]:
         """
         Return the processing job info associated with the name
 
@@ -40,12 +40,12 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_processing_job(ProcessingJobName=job_name)
+                response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
                 return response
             except ClientError as e:
                 raise e
 
-    async def describe_training_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
+    async def describe_training_job_async(self, job_name: str) -> Dict[str, Any]:
         """
         Return the training job info associated with the name
 
@@ -53,7 +53,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_training_job(TrainingJobName=job_name)
+                response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
                 return response
             except ClientError as e:
                 raise e
