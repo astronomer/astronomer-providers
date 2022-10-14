@@ -116,7 +116,10 @@ SAMPLE_SIZE = DATASET.count("\n") - 1
 
 
 def _create_ecr_repository(repo_name: str) -> str:
-    return boto3.client("ecr").create_repository(repositoryName=repo_name)["repository"]["repositoryUri"]
+    repositoryUri: str = boto3.client("ecr").create_repository(repositoryName=repo_name)["repository"][
+        "repositoryUri"
+    ]
+    return repositoryUri
 
 
 def _build_and_upload_docker_image(preprocess_script: str, repository_uri: str) -> None:
@@ -170,7 +173,7 @@ def _build_and_upload_docker_image(preprocess_script: str, repository_uri: str) 
 
 
 @task
-def set_up(env_id: str, knn_image_uri: str, role_arn: str):
+def set_up(env_id: str, knn_image_uri: str, role_arn: str) -> None:
     """Setting the details required for the ecr instance and sagemaker"""
     bucket_name = f"{env_id}-sagemaker-example"
     ecr_repository_name = f"{env_id}-repo"
@@ -257,7 +260,7 @@ def set_up(env_id: str, knn_image_uri: str, role_arn: str):
         "InputDataConfig": [
             {
                 "ChannelName": "train",
-                **training_data_source,
+                **training_data_source,  # type: ignore[arg-type]
             }
         ],
         "OutputDataConfig": {"S3OutputPath": f"s3://{bucket_name}/{training_output_s3_key}/"},
@@ -314,11 +317,11 @@ def set_up(env_id: str, knn_image_uri: str, role_arn: str):
             "InputDataConfig": [
                 {
                     "ChannelName": "train",
-                    **training_data_source,
+                    **training_data_source,  # type: ignore[arg-type]
                 },
                 {
                     "ChannelName": "test",
-                    **training_data_source,
+                    **training_data_source,  # type: ignore[arg-type]
                 },
             ],
             "OutputDataConfig": {"S3OutputPath": f"s3://{bucket_name}/{training_output_s3_key}"},
