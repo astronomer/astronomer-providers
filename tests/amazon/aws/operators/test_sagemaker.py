@@ -42,7 +42,7 @@ class TestSagemakerTransformOperatorAsync:
     )
     @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
     @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async(self, mock_hook, mock_processing, context):
+    def test_sagemaker_transform_op_async(self, mock_hook, mock_transform_job, context):
         """Assert SageMakerTransformOperatorAsync deferred properly"""
         task = SageMakerTransformOperatorAsync(
             config=TRANSFORM_CONFIG,
@@ -58,13 +58,13 @@ class TestSagemakerTransformOperatorAsync:
 
     @mock.patch.object(
         SageMakerHook,
-        "create_processing_job",
+        "create_transform_job",
         return_value={"TransformJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 404}},
     )
     @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
     @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async_execute_failure(self, mock_hook, mock_processing_job, context):
-        """Tests that an AirflowException is raised in case of error event from create_processing_job"""
+    def test_sagemaker_transform_op_async_execute_failure(self, mock_hook, mock_transform_job, context):
+        """Tests that an AirflowException is raised in case of error event from create_transform_job"""
         task = SageMakerTransformOperatorAsync(
             config=TRANSFORM_CONFIG,
             task_id=self.TASK_ID,
