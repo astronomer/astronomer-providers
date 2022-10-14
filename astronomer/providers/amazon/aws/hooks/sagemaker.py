@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from botocore.exceptions import ClientError
 
@@ -14,7 +14,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
     are passed down to the underlying AwsBaseHookAsync.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         kwargs["client_type"] = "sagemaker"
         super().__init__(*args, **kwargs)
         self.s3_hook = S3HookAsync(aws_conn_id=self.aws_conn_id)
@@ -27,7 +27,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_transform_job(TransformJobName=job_name)
+                response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
                 return response
             except ClientError as e:
                 raise e
@@ -40,7 +40,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_processing_job(ProcessingJobName=job_name)
+                response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
                 return response
             except ClientError as e:
                 raise e
@@ -53,7 +53,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_training_job(TrainingJobName=job_name)
+                response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
                 return response
             except ClientError as e:
                 raise e

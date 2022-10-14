@@ -1,5 +1,5 @@
 import time
-from typing import Any
+from typing import Any, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.sagemaker import SageMakerProcessingOperator
@@ -12,7 +12,7 @@ from astronomer.providers.utils.typing_compat import Context
 
 class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
     """
-    Use Amazon SageMaker Processing to analyze data and evaluate machine learning
+    SageMakerProcessingOperatorAsync is used to analyze data and evaluate machine learning
     models on Amazon SageMake. With Processing, you can use a simplified, managed
     experience on SageMaker to run your data processing workloads, such as feature
     engineering, data validation, model evaluation, and model interpretation.
@@ -58,9 +58,9 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker Processing Job creation failed: {response}")
         else:
-            end_time = None
+            end_time: Optional[float] = None
             if self.max_ingestion_time is not None:
-                end_time: float = time.time() + self.max_ingestion_time
+                end_time = time.time() + self.max_ingestion_time
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=SagemakerProcessingTrigger(

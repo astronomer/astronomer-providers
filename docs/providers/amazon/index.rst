@@ -13,6 +13,7 @@ AWS Example DAG
     Batch Operator <aws/operators/emr>
     Batch Operator <aws/operators/redshift_cluster>
     Batch Operator <aws/operators/redshift_sql>
+    Sagemaker Operator <aws/operators/sagemaker>
 
 
 * `Batch Sensor <aws/sensors/batch.html>`_
