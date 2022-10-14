@@ -115,11 +115,11 @@ SAMPLE_SIZE = DATASET.count("\n") - 1
 # """
 
 
-def _create_ecr_repository(repo_name):
+def _create_ecr_repository(repo_name: str) -> str:
     return boto3.client("ecr").create_repository(repositoryName=repo_name)["repository"]["repositoryUri"]
 
 
-def _build_and_upload_docker_image(preprocess_script, repository_uri):
+def _build_and_upload_docker_image(preprocess_script: str, repository_uri: str) -> None:
     """
     We need a Docker image with the following requirements:
       - Has numpy, pandas, requests, and boto3 installed
@@ -170,7 +170,7 @@ def _build_and_upload_docker_image(preprocess_script, repository_uri):
 
 
 @task
-def set_up(env_id, knn_image_uri, role_arn):
+def set_up(env_id: str, knn_image_uri: str, role_arn: str):
     """Setting the details required for the ecr instance and sagemaker"""
     bucket_name = f"{env_id}-sagemaker-example"
     ecr_repository_name = f"{env_id}-repo"
@@ -368,7 +368,7 @@ def set_up(env_id, knn_image_uri, role_arn):
 
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
-def delete_ecr_repository(repository_name):
+def delete_ecr_repository(repository_name: str) -> None:
     """Delete the ECR instance with name which is created for running the sagemaker models"""
     client = boto3.client("ecr")
 
