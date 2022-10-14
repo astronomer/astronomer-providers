@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -25,7 +25,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
         self,
         job_name: str,
         poll_interval: float,
-        end_time: float | None,
+        end_time: Optional[float],
         aws_conn_id: str = "aws_default",
     ):
         super().__init__()
@@ -51,14 +51,11 @@ class SagemakerProcessingTrigger(BaseTrigger):
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
         """
-        run_with_time_limit = False
         hook = self._get_async_hook()
-        if self.end_time is not None:
-            run_with_time_limit = True
         while True:
             try:
                 # check if time limit is set and timeout has happened or not
-                if run_with_time_limit and time.time() > self.end_time:
+                if self.end_time and time.time() > self.end_time:
                     yield TriggerEvent({"status": "error", "message": "Timeout"})
                 response = await hook.describe_processing_job_async(self.job_name)
                 status = response["ProcessingJobStatus"]

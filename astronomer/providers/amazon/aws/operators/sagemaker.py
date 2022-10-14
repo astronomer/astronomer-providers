@@ -23,7 +23,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
 
     :param config: The configuration necessary to start a processing job (templated).
         For details of the configuration parameter see
-        :ref:`SageMaker.Client.create_processing_job`
+        :ref:``SageMaker.Client.create_processing_job``
     :param aws_conn_id: The AWS connection ID to use.
     :param wait_for_completion: Even if wait is set to False, in async we will defer and
         the operation waits to check the status of the processing job.
@@ -57,19 +57,20 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker Processing Job creation failed: {response}")
-        if self.max_ingestion_time is not None:
-            end_time: float = time.time() + self.max_ingestion_time
-
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=SagemakerProcessingTrigger(
-                poll_interval=self.check_interval,
-                aws_conn_id=self.aws_conn_id,
-                job_name=self.config["ProcessingJobName"],
-                end_time=end_time,
-            ),
-            method_name="execute_complete",
-        )
+        else:
+            end_time = None
+            if self.max_ingestion_time is not None:
+                end_time: float = time.time() + self.max_ingestion_time
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=SagemakerProcessingTrigger(
+                    poll_interval=self.check_interval,
+                    aws_conn_id=self.aws_conn_id,
+                    job_name=self.config["ProcessingJobName"],
+                    end_time=end_time,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Any = None) -> Any:
         """
