@@ -14,7 +14,18 @@ from astronomer.providers.amazon.aws.triggers.sagemaker import (
     SagemakerTransformTrigger,
 )
 
-TRANSFORM_CONFIG: dict = {
+CREATE_TRANSFORM_PARAMS: dict = {
+    "TransformJobName": "job_name",
+    "ModelName": "model_name",
+    "MaxConcurrentTransforms": "12",
+    "MaxPayloadInMB": "6",
+    "BatchStrategy": "MultiRecord",
+    "TransformInput": {"DataSource": {"S3DataSource": {"S3DataType": "S3Prefix", "S3Uri": "s3_uri"}}},
+    "TransformOutput": {"S3OutputPath": "output_path"},
+    "TransformResources": {"InstanceType": "ml.m4.xlarge", "InstanceCount": "3"},
+}
+
+CREATE_TRANSFORM_PARAMS: dict = {
     "TransformJobName": "test_transform_job_name",
     "TransformInput": {
         "DataSource": {
@@ -33,6 +44,14 @@ TRANSFORM_CONFIG: dict = {
     },
     "ModelName": "model_name",
 }
+
+CREATE_MODEL_PARAMS: dict = {
+    "ModelName": "model_name",
+    "PrimaryContainer": {"Image": "test_image", "ModelDataUrl": "output_path"},
+    "ExecutionRoleArn": "arn:aws:iam:role/test-role",
+}
+
+CONFIG: dict = {"Model": CREATE_MODEL_PARAMS, "Transform": CREATE_TRANSFORM_PARAMS}
 
 TRAINING_CONFIG = {
     "AlgorithmSpecification": {
@@ -73,7 +92,7 @@ class TestSagemakerTransformOperatorAsync:
     def test_sagemaker_transform_op_async(self, mock_hook, mock_transform_job, context):
         """Assert SageMakerTransformOperatorAsync deferred properly"""
         task = SageMakerTransformOperatorAsync(
-            config=TRANSFORM_CONFIG,
+            config=CONFIG,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
@@ -94,7 +113,7 @@ class TestSagemakerTransformOperatorAsync:
     def test_sagemaker_transform_op_async_execute_failure(self, mock_hook, mock_transform_job, context):
         """Tests that an AirflowException is raised in case of error event from create_transform_job"""
         task = SageMakerTransformOperatorAsync(
-            config=TRANSFORM_CONFIG,
+            config=CONFIG,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
         )
@@ -108,7 +127,7 @@ class TestSagemakerTransformOperatorAsync:
     def test_sagemaker_transform_op_async_execute_complete_failure(self, mock_event):
         """Tests that an AirflowException is raised in case of error event"""
         task = SageMakerTransformOperatorAsync(
-            config=TRANSFORM_CONFIG,
+            config=CONFIG,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
         )
@@ -122,7 +141,7 @@ class TestSagemakerTransformOperatorAsync:
     def test_sagemaker_transform_op_async_execute_complete(self, mock_event):
         """Asserts that logging occurs as expected"""
         task = SageMakerTransformOperatorAsync(
-            config=TRANSFORM_CONFIG,
+            config=CONFIG,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
         )

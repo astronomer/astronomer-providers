@@ -85,7 +85,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
                     poll_interval=self.check_interval,
                     end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
-                    job_name=self.config["TransformJobName"],
+                    job_name=transform_config["TransformJobName"],
                 ),
                 method_name="execute_complete",
             )

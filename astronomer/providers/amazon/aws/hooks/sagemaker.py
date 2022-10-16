@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from aiohttp import ClientError
+from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
