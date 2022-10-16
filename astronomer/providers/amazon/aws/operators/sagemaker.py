@@ -159,3 +159,13 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
                 ),
                 method_name="execute_complete",
             )
+
+    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> None:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        if event["status"] == "error":
+            raise AirflowException(event["message"])
+        self.log.info(event["message"])

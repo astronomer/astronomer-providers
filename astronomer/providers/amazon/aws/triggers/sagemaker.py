@@ -104,7 +104,7 @@ class SagemakerTrainingTrigger(SagemakerTransformTrigger):
                 if self.end_time and time.time() > self.end_time:
                     yield TriggerEvent({"status": "error", "message": "Timeout"})
                 response = await hook.describe_training_job_async(self.job_name)
-                status = response["TransformJobStatus"]
+                status = response["TrainingJobStatus"]
                 if status in self.non_terminal_states:
                     await asyncio.sleep(self.poll_interval)
                 elif status in self.failed_states:
