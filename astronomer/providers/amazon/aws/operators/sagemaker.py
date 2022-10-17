@@ -79,7 +79,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=SagemakerTrigger(
-                    poll_interval=self.check_interval,
+                    poke_interval=self.check_interval,
                     end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
                     job_name=transform_config["TransformJobName"],
@@ -151,7 +151,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
             self.defer(
                 timeout=self.execution_timeout,
                 trigger=SagemakerTrigger(
-                    poll_interval=self.check_interval,
+                    poke_interval=self.check_interval,
                     end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
                     job_name=self.config["TrainingJobName"],

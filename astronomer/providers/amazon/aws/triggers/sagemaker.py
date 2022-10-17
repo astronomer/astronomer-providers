@@ -15,7 +15,7 @@ class SagemakerTrigger(BaseTrigger):
     :param job_name: name of the job to check status
     :param job_type: Type of the sagemaker job whether it is Transform or Training
     :param response_key: The key which needs to be look in the response.
-    :param poll_interval:  polling period in seconds to check for the status
+    :param poke_interval:  polling period in seconds to check for the status
     :param end_time: Time in seconds to wait for a job run to reach a terminal status.
     :param aws_conn_id: AWS connection ID for sagemaker
     """
@@ -28,7 +28,7 @@ class SagemakerTrigger(BaseTrigger):
         job_name: str,
         job_type: str,
         response_key: str,
-        poll_interval: float,
+        poke_interval: float,
         end_time: Optional[float] = None,
         aws_conn_id: str = "aws_default",
     ):
@@ -36,7 +36,7 @@ class SagemakerTrigger(BaseTrigger):
         self.job_name = job_name
         self.job_type = job_type
         self.response_key = response_key
-        self.poll_interval = poll_interval
+        self.poke_interval = poke_interval
         self.end_time = end_time
         self.aws_conn_id = aws_conn_id
 
@@ -45,7 +45,7 @@ class SagemakerTrigger(BaseTrigger):
         return (
             "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerTrigger",
             {
-                "poll_interval": self.poll_interval,
+                "poke_interval": self.poke_interval,
                 "aws_conn_id": self.aws_conn_id,
                 "end_time": self.end_time,
                 "job_name": self.job_name,
@@ -67,7 +67,7 @@ class SagemakerTrigger(BaseTrigger):
                 response = await self.get_job_status(hook, self.job_name, self.job_type)
                 status = response[self.response_key]
                 if status in self.non_terminal_states:
-                    await asyncio.sleep(self.poll_interval)
+                    await asyncio.sleep(self.poke_interval)
                 elif status in self.failed_states:
                     error_message = f"SageMaker job failed because {response['FailureReason']}"
                     yield TriggerEvent({"status": "error", "message": error_message})
@@ -90,50 +90,3 @@ class SagemakerTrigger(BaseTrigger):
         elif job_type == "Training":
             response = await hook.describe_training_job_async(job_name)
         return response
-
-
-class SagemakerTrainingWithLogTrigger(BaseTrigger):
-    """
-    SagemakerTrainingTrigger is fired as deferred class with params to run the task in triggerer.
-
-    :param job_name: name of the job to check status
-    :param poll_interval:  polling period in seconds to check for the status
-    :param end_time: Time in seconds to wait for a job run to reach a terminal status.
-    :param aws_conn_id: AWS connection ID for sagemaker
-    """
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes SagemakerTrainingTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerTrainingTrigger",
-            {
-                "poll_interval": self.poll_interval,
-                "aws_conn_id": self.aws_conn_id,
-                "end_time": self.end_time,
-                "job_name": self.job_name,
-                "status": self.status,
-                "instance_count": self.instance_count,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """
-        Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
-        Trigger returns a failure event if any error and success in state return the success event.
-        """
-        hook = self._get_async_hook()
-        while True:
-            try:
-                if self.end_time and time.time() > self.end_time:
-                    yield TriggerEvent({"status": "error", "message": "Timeout"})
-                response = await hook.describe_training_job_async(self.job_name)
-                status = response["TrainingJobStatus"]
-                if status in self.non_terminal_states:
-                    await asyncio.sleep(self.poll_interval)
-                elif status in self.failed_states:
-                    error_message = f"SageMaker job failed because {response['FailureReason']}"
-                    yield TriggerEvent({"status": "error", "message": error_message})
-                else:
-                    yield TriggerEvent({"status": "success", "message": "SageMaker Job completed"})
-            except Exception as e:
-                yield TriggerEvent({"status": "error", "message": str(e)})

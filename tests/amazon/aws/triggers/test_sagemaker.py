@@ -11,7 +11,7 @@ from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTrigger
 
 class TestSagemakerTrigger:
     TEST_JOB_NAME = "test_job_name"
-    POLL_INTERVAL = 5
+    POKE_INTERVAL = 5
     END_TIME = time.time() + 60 * 60 * 24 * 7
     AWS_CONN_ID = "aws_test"
 
@@ -29,7 +29,7 @@ class TestSagemakerTrigger:
         """
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type=mock_job_type,
@@ -39,7 +39,7 @@ class TestSagemakerTrigger:
         assert classpath == "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerTrigger"
         assert kwargs == {
             "job_name": self.TEST_JOB_NAME,
-            "poll_interval": self.POLL_INTERVAL,
+            "poke_interval": self.POKE_INTERVAL,
             "end_time": self.END_TIME,
             "aws_conn_id": self.AWS_CONN_ID,
             "job_type": mock_job_type,
@@ -84,7 +84,7 @@ class TestSagemakerTrigger:
         mock_job.return_value = mock_response
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type=mock_job_type,
@@ -108,7 +108,7 @@ class TestSagemakerTrigger:
         mock_job.return_value = mock_response
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type=mock_job_type,
@@ -137,7 +137,7 @@ class TestSagemakerTrigger:
         mock_job.return_value = mock_response
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=100,
             aws_conn_id=self.AWS_CONN_ID,
             job_type=mock_job_type,
@@ -163,7 +163,7 @@ class TestSagemakerTrigger:
         mock_job.side_effect = Exception("test exception")
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type=mock_job_type,
@@ -180,7 +180,7 @@ class TestSagemakerTrigger:
     async def test_transform_get_job_status(self, mock_job):
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type="Transform",
@@ -196,7 +196,7 @@ class TestSagemakerTrigger:
     async def test_training_get_job_status(self, mock_job):
         trigger = SagemakerTrigger(
             job_name=self.TEST_JOB_NAME,
-            poll_interval=self.POLL_INTERVAL,
+            poke_interval=self.POKE_INTERVAL,
             end_time=self.END_TIME,
             aws_conn_id=self.AWS_CONN_ID,
             job_type="Training",
