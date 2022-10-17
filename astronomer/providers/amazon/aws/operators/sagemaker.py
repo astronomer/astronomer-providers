@@ -7,10 +7,7 @@ from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerTransformOperator,
 )
 
-from astronomer.providers.amazon.aws.triggers.sagemaker import (
-    SagemakerTrainingTrigger,
-    SagemakerTransformTrigger,
-)
+from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTrigger
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -81,11 +78,13 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
                 end_time = time.time() + self.max_ingestion_time
             self.defer(
                 timeout=self.execution_timeout,
-                trigger=SagemakerTransformTrigger(
+                trigger=SagemakerTrigger(
                     poll_interval=self.check_interval,
                     end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
                     job_name=transform_config["TransformJobName"],
+                    job_type="Transform",
+                    response_key="TransformJobStatus",
                 ),
                 method_name="execute_complete",
             )
@@ -138,7 +137,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         self.log.info("Creating SageMaker training job %s.", self.config["TrainingJobName"])
         response = self.hook.create_training_job(
             self.config,
-            wait_for_completion=self.wait_for_completion,
+            wait_for_completion=False,
             print_log=self.print_log,
             check_interval=self.check_interval,
             max_ingestion_time=self.max_ingestion_time,
@@ -151,11 +150,13 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
                 end_time = time.time() + self.max_ingestion_time
             self.defer(
                 timeout=self.execution_timeout,
-                trigger=SagemakerTrainingTrigger(
+                trigger=SagemakerTrigger(
                     poll_interval=self.check_interval,
                     end_time=end_time,
                     aws_conn_id=self.aws_conn_id,
                     job_name=self.config["TrainingJobName"],
+                    job_type="Training",
+                    response_key="TrainingJobStatus",
                 ),
                 method_name="execute_complete",
             )

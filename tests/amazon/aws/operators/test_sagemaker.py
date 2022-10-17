@@ -9,10 +9,7 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerTrainingOperatorAsync,
     SageMakerTransformOperatorAsync,
 )
-from astronomer.providers.amazon.aws.triggers.sagemaker import (
-    SagemakerTrainingTrigger,
-    SagemakerTransformTrigger,
-)
+from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTrigger
 
 CREATE_TRANSFORM_PARAMS: dict = {
     "TransformJobName": "job_name",
@@ -99,9 +96,7 @@ class TestSagemakerTransformOperatorAsync:
         )
         with pytest.raises(TaskDeferred) as exc:
             task.execute(context)
-        assert isinstance(
-            exc.value.trigger, SagemakerTransformTrigger
-        ), "Trigger is not a SagemakerTransformTrigger"
+        assert isinstance(exc.value.trigger, SagemakerTrigger), "Trigger is not a SagemakerTrigger"
 
     @mock.patch.object(
         SageMakerHook,
@@ -175,9 +170,7 @@ class TestSagemakerTrainingOperatorAsync:
         )
         with pytest.raises(TaskDeferred) as exc:
             task.execute(None)
-        assert isinstance(
-            exc.value.trigger, SagemakerTrainingTrigger
-        ), "Trigger is not a SagemakerTrainingTrigger"
+        assert isinstance(exc.value.trigger, SagemakerTrigger), "Trigger is not a SagemakerTrigger"
 
     @mock.patch.object(
         SageMakerHook,
