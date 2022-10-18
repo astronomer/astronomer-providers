@@ -2,12 +2,18 @@ import time
 from typing import Any, Dict, Optional
 
 from airflow import AirflowException
+from airflow.providers.amazon.aws.hooks.sagemaker import (
+    secondary_training_status_message,
+)
 from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerTrainingOperator,
     SageMakerTransformOperator,
 )
 
-from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTrigger
+from astronomer.providers.amazon.aws.triggers.sagemaker import (
+    SagemakerTrainingWithLogTrigger,
+    SagemakerTrigger,
+)
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -148,18 +154,36 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
             end_time: Optional[float] = None
             if self.max_ingestion_time is not None:
                 end_time = time.time() + self.max_ingestion_time
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=SagemakerTrigger(
-                    poke_interval=self.check_interval,
-                    end_time=end_time,
-                    aws_conn_id=self.aws_conn_id,
-                    job_name=self.config["TrainingJobName"],
-                    job_type="Training",
-                    response_key="TrainingJobStatus",
-                ),
-                method_name="execute_complete",
-            )
+            if self.print_log:
+                description = self.hook.describe_training_job(self.config["TrainingJobName"])
+                self.log.info(secondary_training_status_message(description, None))
+                instance_count = description["ResourceConfig"]["InstanceCount"]
+                status = description["TrainingJobStatus"]
+                self.defer(
+                    timeout=self.execution_timeout,
+                    trigger=SagemakerTrainingWithLogTrigger(
+                        poke_interval=self.check_interval,
+                        end_time=end_time,
+                        aws_conn_id=self.aws_conn_id,
+                        job_name=self.config["TrainingJobName"],
+                        instance_count=int(instance_count),
+                        status=status,
+                    ),
+                    method_name="execute_complete",
+                )
+            else:
+                self.defer(
+                    timeout=self.execution_timeout,
+                    trigger=SagemakerTrigger(
+                        poke_interval=self.check_interval,
+                        end_time=end_time,
+                        aws_conn_id=self.aws_conn_id,
+                        job_name=self.config["TrainingJobName"],
+                        job_type="Training",
+                        response_key="TrainingJobStatus",
+                    ),
+                    method_name="execute_complete",
+                )
 
     def execute_complete(self, context: "Context", event: Dict[str, Any]) -> None:
         """
@@ -167,6 +191,6 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
+        if event and event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
