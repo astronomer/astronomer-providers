@@ -20,7 +20,7 @@ def serialize(result: Dict[str, Any]) -> str:
 class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
     """
     SageMakerProcessingOperatorAsync is used to analyze data and evaluate machine learning
-    models on Amazon SageMake. With Processing, you can use a simplified, managed
+    models on Amazon SageMaker. With SageMakerProcessingOperatorAsync, you can use a simplified, managed
     experience on SageMaker to run your data processing workloads, such as feature
     engineering, data validation, model evaluation, and model interpretation.
 

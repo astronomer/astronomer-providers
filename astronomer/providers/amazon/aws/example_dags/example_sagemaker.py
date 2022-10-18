@@ -100,7 +100,7 @@ def set_up(role_arn: str) -> None:
 
 
 with DAG(
-    dag_id="example_sagemaker_rajath",
+    dag_id="example_sagemaker",
     start_date=datetime(2021, 8, 13),
     schedule_interval=None,
     catchup=False,
@@ -136,7 +136,7 @@ with DAG(
         task_id="preprocess_raw_data",
         config=test_setup["processing_config"],
     )
-    # [[END howto_operator_sagemaker_processing_async]
+    # [END howto_operator_sagemaker_processing_async]
 
     delete_bucket = S3DeleteBucketOperator(
         task_id="delete_bucket",

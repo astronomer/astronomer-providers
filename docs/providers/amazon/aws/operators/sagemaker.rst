@@ -2,7 +2,7 @@ Sagemaker Operator Async
 """"""""""""""""""""""""
 
 
-SageMakerProcessingOperatorAsync Starts a processing job and poll for the status asynchronously.
+SageMakerProcessingOperatorAsync starts a processing job on AWS Sagemaker and polls for the status asynchronously.
 A processing job is used to analyze data and to run your data processing workloads, such as feature
 engineering, data validation, model evaluation, and model interpretation
 :class:`~astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync`.
