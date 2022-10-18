@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Union
 
-from botocore.exceptions import ClientError
-
 from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
 
@@ -26,11 +24,8 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the transform job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
+            return response
 
     async def describe_processing_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
         """
@@ -39,11 +34,8 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the processing job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
+            return response
 
     async def describe_training_job_async(self, job_name: str) -> Dict[str, Union[str, List[str]]]:
         """
@@ -52,8 +44,5 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the training job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
+            return response

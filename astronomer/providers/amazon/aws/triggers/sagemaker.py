@@ -18,8 +18,8 @@ class SagemakerProcessingTrigger(BaseTrigger):
             SageMaker jobs that run longer than this will fail.
     """
 
-    non_terminal_states = {"InProgress", "Stopping"}
-    failed_states = {"Failed"}
+    NON_TERMINAL_STATES = ("InProgress", "Stopping")
+    TERMINAL_STATE = ["Failed"]
 
     def __init__(
         self,
@@ -59,14 +59,13 @@ class SagemakerProcessingTrigger(BaseTrigger):
                     yield TriggerEvent({"status": "error", "message": "Timeout"})
                 response = await hook.describe_processing_job_async(self.job_name)
                 status = response["ProcessingJobStatus"]
-                if status in self.failed_states:
+                if status in self.TERMINAL_STATE:
                     error_message = f"SageMaker job failed because {response['FailureReason']}"
                     yield TriggerEvent({"status": "error", "message": error_message})
-                elif status in self.non_terminal_states:
+                elif status in self.NON_TERMINAL_STATES:
                     self.log.info("Job still running current status is %s", status)
                     await asyncio.sleep(self.poll_interval)
                 else:
-                    self.log.info("SageMaker Job completed")
                     yield TriggerEvent({"status": "success", "message": response})
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
