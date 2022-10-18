@@ -11,9 +11,100 @@ from astronomer.providers.google.cloud.hooks.bigquery import (
 )
 
 
-class BigQueryInsertJobTrigger(BaseTrigger):
+class PongTrigger(BaseTrigger):
+    """Trigger to implement a "ping-pong" effect."""
+
+    poll_interval: float
+
+    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+        """Override to implement polling.
+
+        This should implement only *one* polling round; the triggerer acts as
+        a loop to call this repeatedly. Do not catch exceptions in this
+        function; they are caught by the caller to emit an error event.
+
+        :return: A two-tuple representing the status, and additional payload to
+            include in the pong message. The status should be either "success",
+            "pending", or "error"; any other values would be coerced in to
+            "error" in the pong message.
+        """
+        raise NotImplementedError
+
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+        """Gets current job execution status and yields a TriggerEvent"""
+        await asyncio.sleep(self.poll_interval)
+
+        try:
+            response, payload = await self.poll_process()
+        except Exception as e:
+            self.log.exception("Exception occurred while checking for query completion")
+            yield TriggerEvent({"status": "error", "message": str(e)})
+            return
+
+        if response == "success":
+            self.log.debug("Response from hook: %s", response)
+            yield TriggerEvent({"status": "success", **payload})
+        elif response == "pending":
+            self.log.debug("Query is still running... sleeping for %s seconds.", self.poll_interval)
+            yield TriggerEvent({"status": "pending", **payload})
+        else:
+            self.log.error("Unknown response from hook: %s", response)
+            yield TriggerEvent({"status": "error", "message": f"Unknown response: {response!r}", **payload})
+
+
+class BigQueryTrigger(PongTrigger):
+    """BigQueryTrigger run on the trigger worker to perform an operation.
+
+    :param conn_id: Reference to google cloud connection id
+    :param job_id:  The ID of the job. It will be suffixed with hash of job configuration
+    :param project_id: Google Cloud Project where the job is running
+    :param dataset_id: The dataset ID of the requested table. (templated)
+    :param table_id: The table ID of the requested table. (templated)
+    :param poll_interval: polling period in seconds to check for the status
     """
-    BigQueryInsertJobTrigger run on the trigger worker to perform insert operation
+
+    serialize_fields = ["conn_id", "job_id", "dataset_id", "project_id", "table_id", "poll_interval"]
+
+    def __init__(
+        self,
+        *,
+        conn_id: str,
+        job_id: Optional[str],
+        project_id: Optional[str],
+        dataset_id: Optional[str] = None,
+        table_id: Optional[str] = None,
+        poll_interval: float = 4.0,
+    ) -> None:
+        super().__init__()
+        self.log.info("Using connection %r.", conn_id)
+        self.conn_id = conn_id
+        self.job_id = job_id
+        self._job_conn = None
+        self.dataset_id = dataset_id
+        self.project_id = project_id
+        self.table_id = table_id
+        self.poll_interval = poll_interval
+
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes trigger arguments and classpath."""
+        return (
+            f"{self.__module__}.{self.__class__.__name__}",
+            {f: getattr(self, f) for f in self.serialize_fields},
+        )
+
+    def _get_async_hook(self) -> BigQueryHookAsync:
+        return BigQueryHookAsync(gcp_conn_id=self.conn_id)
+
+    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+        """Poll the Big Query job."""
+        hook = self._get_async_hook()
+        resp = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+        return resp, {"job_id": self.job_id, "poll_interval": self.poll_interval}
+
+
+class BigQueryLegacyTrigger(BaseTrigger):
+    """
+    BigQueryLegacyTrigger run on the trigger worker to perform insert operation
 
     :param conn_id: Reference to google cloud connection id
     :param job_id:  The ID of the job. It will be suffixed with hash of job configuration
@@ -42,53 +133,11 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         self.table_id = table_id
         self.poll_interval = poll_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryInsertJobTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger",
-            {
-                "conn_id": self.conn_id,
-                "job_id": self.job_id,
-                "dataset_id": self.dataset_id,
-                "project_id": self.project_id,
-                "table_id": self.table_id,
-                "poll_interval": self.poll_interval,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Gets current job execution status and yields a TriggerEvent"""
-        hook = self._get_async_hook()
-        while True:
-            try:
-                # Poll for job execution status
-                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
-                self.log.debug("Response from hook: %s", response_from_hook)
-
-                if response_from_hook == "success":
-                    yield TriggerEvent(
-                        {
-                            "job_id": self.job_id,
-                            "status": "success",
-                            "message": "Job completed",
-                        }
-                    )
-                elif response_from_hook == "pending":
-                    self.log.info("Query is still running...")
-                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
-                    await asyncio.sleep(self.poll_interval)
-                else:
-                    yield TriggerEvent({"status": "error", "message": response_from_hook})
-
-            except Exception as e:
-                self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e)})
-
     def _get_async_hook(self) -> BigQueryHookAsync:
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
 
 
-class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryCheckTrigger(BigQueryLegacyTrigger):
     """BigQueryCheckTrigger run on the trigger worker"""
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -147,11 +196,11 @@ class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
 
-class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
-    """BigQueryGetDataTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class"""
+class BigQueryGetDataTrigger(BigQueryLegacyTrigger):
+    """BigQueryGetDataTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class"""
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryInsertJobTrigger arguments and classpath."""
+        """Serializes BigQueryLegacyTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
             {
@@ -196,9 +245,9 @@ class BigQueryGetDataTrigger(BigQueryInsertJobTrigger):
                 return
 
 
-class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):
     """
-    BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
+    BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class
 
     :param conn_id: Reference to google cloud connection id
     :param first_job_id:  The ID of the job 1 performed
@@ -341,9 +390,9 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
                 return
 
 
-class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
+class BigQueryValueCheckTrigger(BigQueryLegacyTrigger):
     """
-    BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
+    BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class
 
     :param conn_id: Reference to google cloud connection id
     :param sql: the sql to be executed

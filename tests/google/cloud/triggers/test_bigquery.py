@@ -13,9 +13,9 @@ from astronomer.providers.google.cloud.hooks.bigquery import BigQueryTableHookAs
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
-    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryTableExistenceTrigger,
+    BigQueryTrigger,
     BigQueryValueCheckTrigger,
 )
 
@@ -41,22 +41,24 @@ TEST_IGNORE_ZERO = True
 TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_HOOK_PARAMS = {}
 
+BIG_QUERY_TRIGGER_LOGGER = "astronomer.providers.google.cloud.triggers.bigquery.BigQueryTrigger"
 
-def test_bigquery_insert_job_op_trigger_serialization():
+
+def test_bigquery_trigger_serialization():
     """
-    Asserts that the BigQueryInsertJobTrigger correctly serializes its arguments
+    Asserts that the BigQueryTrigger correctly serializes its arguments
     and classpath.
     """
-    trigger = BigQueryInsertJobTrigger(
-        TEST_CONN_ID,
-        TEST_JOB_ID,
-        TEST_GCP_PROJECT_ID,
-        TEST_DATASET_ID,
-        TEST_TABLE_ID,
-        POLLING_PERIOD_SECONDS,
+    trigger = BigQueryTrigger(
+        conn_id=TEST_CONN_ID,
+        job_id=TEST_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger"
+    assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryTrigger"
     assert kwargs == {
         "conn_id": TEST_CONN_ID,
         "job_id": TEST_JOB_ID,
@@ -67,31 +69,90 @@ def test_bigquery_insert_job_op_trigger_serialization():
     }
 
 
+@pytest.mark.parametrize(
+    "status, event_data, log_record",
+    [
+        pytest.param(
+            "pending",
+            {"status": "pending", "job_id": TEST_JOB_ID, "poll_interval": 0.0},
+            (BIG_QUERY_TRIGGER_LOGGER, logging.DEBUG, "Query is still running... sleeping for 0.0 seconds."),
+            id="pending",
+        ),
+        pytest.param(
+            "success",
+            {"status": "success", "job_id": TEST_JOB_ID, "poll_interval": 0.0},
+            (BIG_QUERY_TRIGGER_LOGGER, logging.DEBUG, "Response from hook: success"),
+            id="success",
+        ),
+        pytest.param(
+            "???",
+            {
+                "status": "error",
+                "message": "Unknown response: '???'",
+                "job_id": TEST_JOB_ID,
+                "poll_interval": 0.0,
+            },
+            (BIG_QUERY_TRIGGER_LOGGER, logging.ERROR, "Unknown response from hook: ???"),
+            id="error-unknown",
+        ),
+    ],
+    ids=["pending", "success", "error"],
+)
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
-async def test_bigquery_insert_job_op_trigger_success(mock_job_status):
+async def test_bigquery_op_trigger_lifetime(mock_job_status, caplog, status, event_data, log_record):
     """
-    Tests the BigQueryInsertJobTrigger only fires once the query execution reaches a successful state.
+    Tests BigQueryTrigger fires during a BigQuery process's lifetime.
     """
-    mock_job_status.return_value = "success"
+    caplog.set_level(logging.DEBUG, logger=BIG_QUERY_TRIGGER_LOGGER)
+    mock_job_status.return_value = status
 
-    trigger = BigQueryInsertJobTrigger(
-        TEST_CONN_ID,
-        TEST_JOB_ID,
-        TEST_GCP_PROJECT_ID,
-        TEST_DATASET_ID,
-        TEST_TABLE_ID,
-        POLLING_PERIOD_SECONDS,
+    trigger = BigQueryTrigger(
+        conn_id=TEST_CONN_ID,
+        job_id=TEST_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=0.0,
     )
 
     generator = trigger.run()
     actual = await generator.asend(None)
-    assert TriggerEvent({"status": "success", "message": "Job completed", "job_id": TEST_JOB_ID}) == actual
+    assert TriggerEvent(event_data) == actual
+    assert log_record in caplog.record_tuples
+
+
+@pytest.mark.asyncio
+@mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
+async def test_bigquery_op_trigger_error(mock_job_status, caplog):
+    """
+    Tests BigQueryTrigger fires if the BigQuery process errors.
+    """
+    caplog.set_level(logging.DEBUG, logger=BIG_QUERY_TRIGGER_LOGGER)
+    mock_job_status.side_effect = Exception("I failed!")
+
+    trigger = BigQueryTrigger(
+        conn_id=TEST_CONN_ID,
+        job_id=TEST_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        poll_interval=0.0,
+    )
+
+    generator = trigger.run()
+    actual = await generator.asend(None)
+    assert TriggerEvent({"status": "error", "message": "I failed!"}) == actual
+    assert (
+        BIG_QUERY_TRIGGER_LOGGER,
+        logging.ERROR,
+        "Exception occurred while checking for query completion",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
+    [BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
@@ -127,7 +188,7 @@ async def test_bigquery_op_trigger_running(mock_job_status, caplog, trigger_clas
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
+    [BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")
@@ -154,7 +215,7 @@ async def test_bigquery_op_trigger_terminated(mock_job_status, trigger_class):
 
 @pytest.mark.parametrize(
     "trigger_class",
-    [BigQueryInsertJobTrigger, BigQueryGetDataTrigger, BigQueryCheckTrigger],
+    [BigQueryGetDataTrigger, BigQueryCheckTrigger],
 )
 @pytest.mark.asyncio
 @mock.patch("astronomer.providers.google.cloud.hooks.bigquery.BigQueryHookAsync.get_job_status")

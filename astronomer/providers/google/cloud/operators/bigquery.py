@@ -1,5 +1,5 @@
 """This module contains Google BigQueryAsync providers."""
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Type
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -16,8 +16,8 @@ from google.api_core.exceptions import Conflict
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
-    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
+    BigQueryTrigger,
     BigQueryValueCheckTrigger,
 )
 from astronomer.providers.utils.typing_compat import Context
@@ -25,7 +25,60 @@ from astronomer.providers.utils.typing_compat import Context
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 
 
-class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
+class PingPongError(AirflowException):
+    """Error raised when ping-pong ends with an error."""
+
+    def __init__(self, event: Dict[str, Any]) -> None:
+        super().__init__(event["message"])
+        self.event = event
+
+
+class BigQueryPingPongOperator(BaseOperator):
+    """Base class for Big Query async operators that implements ping-pong."""
+
+    trigger_class: Type[BigQueryTrigger]
+    gcp_conn_id: str
+    job_id: Optional[str]
+    project_id: Optional[str]
+
+    def start_ping_pong(self) -> None:
+        """Start doing ping-pong with the triggerer."""
+        self._call_defer()
+
+    def end_ping_pong(self, event: Dict[str, Any]) -> None:
+        """Hook called after ping-pong has finished successfully."""
+
+    def _call_defer(self) -> None:
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=self.trigger_class(
+                conn_id=self.gcp_conn_id,
+                job_id=self.job_id,
+                project_id=self.project_id,
+            ),
+            method_name="execution_progress",
+        )
+
+    def execution_progress(self, context: Context, event: Dict[str, Any]) -> None:
+        """Callback to report progress on the job.
+
+        This checks the status reported by the trigger event, and:
+
+        * Raise an error if the job errored.
+        * Return immediately if the status is reported as success.
+        * Defer the worker again, asking the triggerer to report again later.
+        """
+        if event["status"] == "success":
+            self.log.info("%s completed with response: %s", self.task_id, event["message"])
+            self.end_ping_pong(event)
+        elif event["status"] == "pending":
+            self.log.info("Query is still running... sleeping for %s seconds.", event["poll_interval"])
+            self._call_defer()
+        else:
+            raise PingPongError(event)
+
+
+class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BigQueryPingPongOperator):
     """
     Starts a BigQuery job asynchronously, and returns job id.
     This operator works in the following way:
@@ -71,6 +124,8 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
     """
 
+    trigger_class = BigQueryTrigger
+
     def execute(self, context: Context) -> None:  # noqa: D102
         hook = BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
@@ -108,29 +163,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
         self.job_id = job.job_id
         context["ti"].xcom_push(key="job_id", value=self.job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryInsertJobTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                project_id=self.project_id,
-            ),
-            method_name="execute_complete",
-        )
-
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-        self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["message"],
-        )
+        self.start_ping_pong()
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):

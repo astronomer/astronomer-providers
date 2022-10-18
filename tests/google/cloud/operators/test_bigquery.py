@@ -20,8 +20,8 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
-    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
+    BigQueryTrigger,
     BigQueryValueCheckTrigger,
 )
 
@@ -69,9 +69,7 @@ def test_bigquery_insert_job_operator_async(mock_hook):
     with pytest.raises(TaskDeferred) as exc:
         op.execute(create_context(op))
 
-    assert isinstance(
-        exc.value.trigger, BigQueryInsertJobTrigger
-    ), "Trigger is not a BigQueryInsertJobTrigger"
+    assert isinstance(exc.value.trigger, BigQueryTrigger), "Trigger is not a BigQueryTrigger"
 
 
 def test_bigquery_insert_job_operator_execute_failure(context):
