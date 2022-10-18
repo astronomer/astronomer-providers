@@ -1,13 +1,20 @@
+import json
 import time
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.operators.sagemaker import SageMakerProcessingOperator
+from airflow.utils.json import AirflowJsonEncoder
 
 from astronomer.providers.amazon.aws.triggers.sagemaker import (
     SagemakerProcessingTrigger,
 )
 from astronomer.providers.utils.typing_compat import Context
+
+
+def serialize(result: Dict[str, Any]) -> str:
+    """Serialize any objects coming from Sagemaker API response to json string"""
+    return json.loads(json.dumps(result, cls=AirflowJsonEncoder))  # type: ignore[no-any-return]
 
 
 class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
@@ -72,7 +79,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Any = None) -> Any:
+    def execute_complete(self, context: Context, event: Any = None) -> Dict[str, Any]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -80,7 +87,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         """
         if event and event["status"] == "success":
             self.log.info("%s completed successfully.", self.task_id)
-            return event["message"]
+            return {"Processing": serialize(event["message"])}
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
         raise AirflowException("No event received in trigger callback")
