@@ -22,7 +22,7 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerTransformOperatorAsync,
 )
 
-ENV_ID_KEY = os.getenv("ENV_ID_KEY", "")
+ENV_ID_KEY = os.getenv("ENV_ID_KEY", "local-airflow-test-sagemaker")
 ROLE_ARN_KEY = os.getenv("ROLE_ARN_KEY", "")
 KNN_IMAGE_URI_KEY = os.getenv("KNN_IMAGE_URI_KEY", "")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
@@ -47,7 +47,7 @@ def set_up(env_id: str, knn_image_uri: str, role_arn: str) -> None:
     bucket_name = f"{env_id}-sagemaker-example"
     ecr_repository_name = f"{env_id}-repo"
     model_name = f"{env_id}-KNN-model"
-    training_job_name = f"{env_id}-train-{uuid.uuid1()}"
+    training_job_name = f"{env_id}-train-{str(uuid.uuid4())[:8]}"
     transform_job_name = f"{env_id}-transform"
     tuning_job_name = f"{env_id}-tune"
 

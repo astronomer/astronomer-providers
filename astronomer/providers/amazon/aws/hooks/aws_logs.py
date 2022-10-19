@@ -48,7 +48,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
                     return {}
                 raise error
 
-    async def get_log_events(
+    async def get_log_events_async(
         self,
         log_group: str,
         log_stream_name: str,
@@ -101,4 +101,4 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
                 if next_token != response["nextForwardToken"]:
                     next_token = response["nextForwardToken"]
                 else:
-                    return
+                    return  # pragma: no cover

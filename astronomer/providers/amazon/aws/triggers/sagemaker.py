@@ -21,8 +21,8 @@ class SagemakerTrigger(BaseTrigger):
     :param aws_conn_id: AWS connection ID for sagemaker
     """
 
-    non_terminal_states = {"InProgress", "Stopping", "Stopped"}
-    failed_states = {"Failed"}
+    NON_TERMINAL_STATES = ("InProgress", "Stopping", "Stopped")
+    TERMINAL_STATE = ("Failed",)
 
     def __init__(
         self,
@@ -67,9 +67,9 @@ class SagemakerTrigger(BaseTrigger):
                     yield TriggerEvent({"status": "error", "message": "Timeout"})
                 response = await self.get_job_status(hook, self.job_name, self.job_type)
                 status = response[self.response_key]
-                if status in self.non_terminal_states:
+                if status in self.NON_TERMINAL_STATES:
                     await asyncio.sleep(self.poke_interval)
-                elif status in self.failed_states:
+                elif status in self.TERMINAL_STATE:
                     error_message = f"SageMaker job failed because {response['FailureReason']}"
                     yield TriggerEvent({"status": "error", "message": error_message})
                 else:
@@ -105,8 +105,8 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
     :param aws_conn_id: AWS connection ID for sagemaker
     """
 
-    non_terminal_states = {"InProgress", "Stopping", "Stopped"}
-    failed_states = {"Failed"}
+    NON_TERMINAL_STATES = ("InProgress", "Stopping", "Stopped")
+    TERMINAL_STATE = ("Failed",)
 
     def __init__(
         self,
@@ -150,7 +150,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         stream_names: List[str] = []  # The list of log streams
         positions: Dict[str, Any] = {}  # The current position in each stream, map of stream name -> position
 
-        job_already_completed = self.status not in self.non_terminal_states
+        job_already_completed = self.status not in self.NON_TERMINAL_STATES
 
         state = LogState.TAILING if not job_already_completed else LogState.COMPLETE
         last_describe_job_call = time.time()
@@ -173,9 +173,9 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                     last_describe_job_call,
                 )
                 status = last_description["TrainingJobStatus"]
-                if status in self.non_terminal_states:
+                if status in self.NON_TERMINAL_STATES:
                     await asyncio.sleep(self.poke_interval)
-                elif status in self.failed_states:
+                elif status in self.TERMINAL_STATE:
                     reason = last_description.get("FailureReason", "(No reason provided)")
                     error_message = f"SageMaker job failed because {reason}"
                     yield TriggerEvent({"status": "error", "message": error_message})

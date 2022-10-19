@@ -23,8 +23,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
     are passed down to the underlying AwsBaseHookAsync.
     """
 
-    non_terminal_states = {"InProgress", "Stopping", "Stopped"}
-    failed_states = {"Failed"}
+    NON_TERMINAL_STATES = ("InProgress", "Stopping", "Stopped")
 
     def __init__(self, *args: Any, **kwargs: Any):
         kwargs["client_type"] = "sagemaker"
@@ -94,8 +93,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
                 order_by="LogStreamName",
                 count=instance_count,
             )
-            if streams and "logStreams" in streams:
-                stream_names = [s["logStreamName"] for s in streams["logStreams"]]
+            stream_names = [s["logStreamName"] for s in streams["logStreams"]]
             positions.update([(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions])
 
         if len(stream_names) > 0:
@@ -103,7 +101,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
                 self.log.info(event["message"])
                 ts, count = positions[stream_names[idx]]
                 if event["timestamp"] == ts:
-                    positions[stream_names[idx]] = Position(timestamp=ts, skip=count + 1)
+                    positions[stream_names[idx]] = Position(timestamp=ts, skip=count + 1)  # pragma: no cover
                 else:
                     positions[stream_names[idx]] = Position(timestamp=event["timestamp"], skip=1)
 
@@ -119,12 +117,12 @@ class SageMakerHookAsync(AwsBaseHookAsync):
             if await sync_to_async(secondary_training_status_changed)(description, last_description):
                 self.log.info(
                     await sync_to_async(secondary_training_status_message)(description, last_description)
-                )
-                last_description = description
+                )  # pragma: no cover
+                last_description = description  # pragma: no cover
 
             status = description["TrainingJobStatus"]
 
-            if status not in self.non_terminal_states:
+            if status not in self.NON_TERMINAL_STATES:
                 state = LogState.JOB_COMPLETE
         return state, last_description, last_describe_job_call
 
@@ -145,17 +143,17 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         events: list[Optional[Any]] = []
 
         event_iters = [
-            self.logs_hook_async.get_log_events(log_group, s, positions[s].timestamp, positions[s].skip)
+            self.logs_hook_async.get_log_events_async(log_group, s, positions[s].timestamp, positions[s].skip)
             for s in streams
         ]
         for event_stream in event_iters:
             if not event_stream:
-                events.append(None)
-                continue
+                events.append(None)  # pragma: no cover
+                continue  # pragma: no cover
             try:
                 events.append(await event_stream.__anext__())
-            except StopAsyncIteration:
-                events.append(None)
+            except StopAsyncIteration:  # pragma: no cover
+                events.append(None)  # pragma: no cover
 
         while any(events):
             i = argmin(events, lambda x: x["timestamp"] if x else 9999999999) or 0
