@@ -99,7 +99,7 @@ def set_up(role_arn: str) -> None:
 
 
 with DAG(
-    dag_id="example_sagemaker",
+    dag_id="example_async_sagemaker",
     start_date=datetime(2021, 8, 13),
     schedule_interval=None,
     catchup=False,
