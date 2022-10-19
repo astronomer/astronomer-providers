@@ -1,6 +1,8 @@
 import asyncio
 from typing import Any, AsyncGenerator, Dict, Optional
 
+from botocore.exceptions import ClientError
+
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
 
 
@@ -39,10 +41,11 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
                     limit=count,
                 )
                 return response
-            except client.exceptions.ResourceNotFoundException:
+            except ClientError as error:
                 # On the very first training job run on an account, there's no log group until
                 # the container starts logging, so ignore any errors thrown about that
-                pass
+                if error.response["Error"]["Code"] == "ResourceNotFoundException":
+                    return {}
 
     async def get_log_events(
         self,
@@ -51,7 +54,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
         start_time: int = 0,
         skip: int = 0,
         start_from_head: bool = True,
-    ) -> AsyncGenerator:
+    ) -> AsyncGenerator[Any, Dict[str, Any]]:
         """
         A generator for log items in a single stream. This will yield all the
         items that are available at the current moment.
@@ -63,11 +66,6 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
             This is for when there are multiple entries at the same timestamp.
         :param start_from_head: whether to start from the beginning (True) of the log or
             at the end of the log (False).
-        :rtype: dict
-        :return: | A CloudWatch log event with the following key-value pairs:
-                 |   'timestamp' (int): The time in milliseconds of the event.
-                 |   'message' (str): The log event data.
-                 |   'ingestionTime' (int): The time in milliseconds the event was ingested.
         """
         next_token = None
         while True:

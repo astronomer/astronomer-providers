@@ -152,14 +152,10 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
 
         job_already_completed = self.status not in self.non_terminal_states
 
-        print("job_already_completed ", job_already_completed)
         state = LogState.TAILING if not job_already_completed else LogState.COMPLETE
-        print("state 11111 ", state)
         last_describe_job_call = time.time()
         while True:
-            print("999999999")
             try:
-                print("8888888")
                 if self.end_time and time.time() > self.end_time:
                     yield TriggerEvent(
                         {
@@ -167,7 +163,6 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                             "message": f"SageMaker job took more than {self.end_time} seconds",
                         }
                     )
-                    print("999999 8888888")
                 state, last_description, last_describe_job_call = await hook.describe_training_job_with_log(
                     self.job_name,
                     positions,
@@ -177,12 +172,8 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                     last_description,
                     last_describe_job_call,
                 )
-                print("777777777")
                 status = last_description["TrainingJobStatus"]
-                print("status=========", status)
-                print("status in self.non_terminal_states ", status in self.non_terminal_states)
                 if status in self.non_terminal_states:
-                    print("88888888 -------->")
                     await asyncio.sleep(self.poke_interval)
                 elif status in self.failed_states:
                     reason = last_description.get("FailureReason", "(No reason provided)")

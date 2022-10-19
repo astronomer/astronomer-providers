@@ -87,7 +87,6 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         log_group = "/aws/sagemaker/TrainingJobs"
 
-        print("insidei 11111109999")
         if len(stream_names) < instance_count:
             streams = await self.logs_hook_async.describe_log_streams_async(
                 log_group=log_group,
@@ -95,7 +94,8 @@ class SageMakerHookAsync(AwsBaseHookAsync):
                 order_by="LogStreamName",
                 count=instance_count,
             )
-            stream_names = [s["logStreamName"] for s in streams["logStreams"]]
+            if streams and "logStreams" in streams:
+                stream_names = [s["logStreamName"] for s in streams["logStreams"]]
             positions.update([(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions])
 
         if len(stream_names) > 0:
@@ -130,7 +130,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
 
     async def get_multi_stream(
         self, log_group: str, streams: List[str], positions: Dict[str, Any]
-    ) -> AsyncGenerator:
+    ) -> AsyncGenerator[Any, Tuple[int, Optional[Any]]]:
         """
         Iterate over the available events coming from a set of log streams in a single log group
         interleaving the events from each stream so they're yielded in timestamp order.

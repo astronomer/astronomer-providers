@@ -11,7 +11,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_processing_job(self, mock_client):
         """Test sagemaker async hook function to describe the processing job using Aiobotocore lib"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_processing_job.return_value = {
             "test": "response"
         }
@@ -23,7 +22,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_processing_job_exception(self, mock_client):
         """Assert describe_processing_job method throw exception"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_processing_job.side_effect = ClientError(
             {
                 "Error": {
@@ -48,7 +46,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_transform_job(self, mock_client):
         """Test sagemaker async hook function to describe the transform job using Aiobotocore lib"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_transform_job.return_value = {
             "test": "response"
         }
@@ -60,7 +57,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_transform_job_exception(self, mock_client):
         """Assert describe_transform_job method throw exception"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_transform_job.side_effect = ClientError(
             {
                 "Error": {
@@ -85,7 +81,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_training_job(self, mock_client):
         """Test sagemaker async hook function to describe the training job using Aiobotocore lib"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_training_job.return_value = {
             "test": "response"
         }
@@ -97,7 +92,6 @@ class TestSagemakerHookAsync:
     @mock.patch("astronomer.providers.amazon.aws.hooks.sagemaker.SageMakerHookAsync.get_client_async")
     async def test_sagemaker_training_job_exception(self, mock_client):
         """Assert describe_training_job method throw exception"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_training_job.side_effect = ClientError(
             {
                 "Error": {

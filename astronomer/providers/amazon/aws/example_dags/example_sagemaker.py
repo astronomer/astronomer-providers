@@ -140,7 +140,7 @@ def set_up(env_id: str, knn_image_uri: str, role_arn: str) -> None:
 
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
-def delete_logs(env_id) -> None:
+def delete_logs(env_id: str) -> None:
     """Delete the cloud watch log based on the log group name"""
     generated_logs = [
         # Format: ('log group name', 'log stream prefix')
@@ -185,7 +185,7 @@ with DAG(
         role_arn=ROLE_ARN_KEY,
     )
 
-    # [START howto_operator_sagemaker_training]
+    # [START howto_operator_sagemaker_training_async]
     train_model = SageMakerTrainingOperatorAsync(
         task_id="train_model",
         print_log=False,
@@ -193,7 +193,7 @@ with DAG(
         # Waits by default, setting as False to demonstrate the Sensor below.
         wait_for_completion=False,
     )
-    # [END howto_operator_sagemaker_training]
+    # [END howto_operator_sagemaker_training_async]
 
     # # [START howto_operator_sagemaker_model]
     create_model = SageMakerModelOperator(
@@ -202,14 +202,14 @@ with DAG(
     )
     # [END howto_operator_sagemaker_model]
 
-    # [START howto_operator_sagemaker_transform]
+    # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
         config=test_setup["transform_config"],
         # Waits by default, setting as False to demonstrate the Sensor below.
         wait_for_completion=False,
     )
-    # [END howto_operator_sagemaker_transform]
+    # [END howto_operator_sagemaker_transform_async]
 
     # # [START howto_operator_sagemaker_delete_model]
     delete_model = SageMakerDeleteModelOperator(

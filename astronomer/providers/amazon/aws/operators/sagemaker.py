@@ -19,7 +19,7 @@ from astronomer.providers.utils.typing_compat import Context
 
 class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
     """
-    SageMakerTransformOperatorAsync Starts a transform job and poll for the status asynchronously.
+    SageMakerTransformOperatorAsync starts a transform job and polls for the status asynchronously.
     A transform job uses a trained model to get inferences on a dataset and saves these results to an Amazon
     S3 location that you specify.
 
@@ -61,7 +61,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
     def execute(self, context: Context) -> None:  # type: ignore[override]
         """
         Creates transform job via sync hook `create_transform_job` and pass the
-        control to trigger and polls for the statis of the transform job in async
+        control to trigger and polls for the status of the transform job in async
         """
         self.preprocess_config()
         model_config = self.config.get("Model")
@@ -108,7 +108,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
 
 class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
     """
-    SageMakerTrainingOperatorAsync Starts a model training job and poll for the status asynchronously.
+    SageMakerTrainingOperatorAsync starts a model training job and polls for the status asynchronously.
     After training completes, Amazon SageMaker saves the resulting model artifacts to an Amazon S3 location
     that you specify.
 
@@ -135,7 +135,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
     def execute(self, context: Context) -> None:  # type: ignore[override]
         """
         Creates SageMaker training job via sync hook `create_training_job` and pass the
-        control to trigger and polls for the statis of the transform job in async
+        control to trigger and polls for the status of the training job in async
         """
         self.preprocess_config()
         if self.check_if_job_exists:

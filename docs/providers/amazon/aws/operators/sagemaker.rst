@@ -2,7 +2,7 @@ Sagemaker Operator Async
 """""""""""""""""""""""""
 
 
-SageMakerTransformOperatorAsync Starts a transform job and poll for the status asynchronously. A transform job uses a
+SageMakerTransformOperatorAsync starts a transform job and polls for the status asynchronously. A transform job uses a
 trained model to get inferences on a dataset and saves these results to an Amazon S3 location that you specify.
 :class:`~astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync`.
 
@@ -13,7 +13,7 @@ trained model to get inferences on a dataset and saves these results to an Amazo
     :end-before: [END howto_operator_sagemaker_transform_async]
 
 
-SageMakerTrainingOperatorAsync Starts a model training job and poll for the status asynchronously.
+SageMakerTrainingOperatorAsync starts a model training job and polls for the status asynchronously.
 After training completes, Amazon SageMaker saves the resulting model artifacts
 to an Amazon S3 location that you specify.
 :class:`~astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync`.
