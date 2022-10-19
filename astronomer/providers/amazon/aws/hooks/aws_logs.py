@@ -46,6 +46,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
                 # the container starts logging, so ignore any errors thrown about that
                 if error.response["Error"]["Code"] == "ResourceNotFoundException":
                     return {}
+                raise error
 
     async def get_log_events(
         self,

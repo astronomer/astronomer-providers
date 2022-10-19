@@ -101,7 +101,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
+        if event and event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
 
