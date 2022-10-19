@@ -300,6 +300,37 @@ class TestSagemakerTrainingWithLogTrigger:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "mock_response",
+        [(LogState.TAILING, {"TrainingJobStatus": "InProgress"}, time.time())],
+    )
+    @mock.patch.object(
+        SageMakerHookAsync, "describe_training_job_async", return_value={"TrainingJobStatus": "InProgress"}
+    )
+    @mock.patch(
+        "astronomer.providers.amazon.aws.triggers.sagemaker.SageMakerHookAsync.describe_training_job_with_log"
+    )
+    async def test_sagemaker_training_trigger_pending(
+        self, mock_job, mock_describe_training_job, mock_response
+    ):
+        """Test SagemakerTrigger run method in pending state by mocking the response and job_type, response_key."""
+        mock_job.return_value = mock_response
+        trigger = SagemakerTrainingWithLogTrigger(
+            job_name=self.TEST_JOB_NAME,
+            poke_interval=self.POKE_INTERVAL,
+            end_time=self.END_TIME,
+            aws_conn_id=self.AWS_CONN_ID,
+            status=self.STATUS,
+            instance_count=self.INSTANCE_COUNT,
+        )
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
+
+        # TriggerEvent was not returned
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_response",
         [((LogState.TAILING, {"TrainingJobStatus": "InProgress"}, time.time()),)],
     )
     @mock.patch.object(
