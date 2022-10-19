@@ -7,7 +7,7 @@ A processing job is used to analyze data and to run your data processing workloa
 engineering, data validation, model evaluation, and model interpretation
 :class:`~astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync`.
 
-.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_sagemaker.py
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_sagemaker_train_transform.py
     :language: python
     :dedent: 4
     :start-after: [START howto_operator_sagemaker_processing_async]
@@ -17,7 +17,7 @@ SageMakerTransformOperatorAsync starts a transform job and polls for the status 
 trained model to get inferences on a dataset and saves these results to an Amazon S3 location that you specify.
 :class:`~astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync`.
 
-.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_sagemaker.py
+.. exampleinclude:: /../astronomer/providers/amazon/aws/example_dags/example_sagemaker_train_transform.py
     :language: python
     :dedent: 4
     :start-after: [START howto_operator_sagemaker_transform_async]
