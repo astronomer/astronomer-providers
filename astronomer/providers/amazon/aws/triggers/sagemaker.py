@@ -19,7 +19,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
     """
 
     NON_TERMINAL_STATES = ("InProgress", "Stopping")
-    TERMINAL_STATE = ["Failed"]
+    TERMINAL_STATE = ("Failed",)
 
     def __init__(
         self,
