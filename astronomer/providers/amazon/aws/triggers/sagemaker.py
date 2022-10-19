@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 from airflow.providers.amazon.aws.hooks.sagemaker import LogState
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -98,8 +98,8 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
     SagemakerTrainingWithLogTrigger is fired as deferred class with params to run the task in triggerer.
 
     :param job_name: name of the job to check status
-    :param job_type: Type of the sagemaker job whether it is Transform or Training
-    :param response_key: The key which needs to be look in the response.
+    :param instance_count: count of the instance created for running the training job
+    :param status: The status of the training job created.
     :param poke_interval:  polling period in seconds to check for the status
     :param end_time: Time in seconds to wait for a job run to reach a terminal status.
     :param aws_conn_id: AWS connection ID for sagemaker
@@ -147,15 +147,19 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         hook = self._get_async_hook()
 
         last_description = await hook.describe_training_job_async(self.job_name)
-        stream_names: list = []  # The list of log streams
-        positions: dict = {}  # The current position in each stream, map of stream name -> position
+        stream_names: List[str] = []  # The list of log streams
+        positions: Dict[str, Any] = {}  # The current position in each stream, map of stream name -> position
 
         job_already_completed = self.status not in self.non_terminal_states
 
+        print("job_already_completed ", job_already_completed)
         state = LogState.TAILING if not job_already_completed else LogState.COMPLETE
+        print("state 11111 ", state)
         last_describe_job_call = time.time()
         while True:
+            print("999999999")
             try:
+                print("8888888")
                 if self.end_time and time.time() > self.end_time:
                     yield TriggerEvent(
                         {
@@ -163,6 +167,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                             "message": f"SageMaker job took more than {self.end_time} seconds",
                         }
                     )
+                    print("999999 8888888")
                 state, last_description, last_describe_job_call = await hook.describe_training_job_with_log(
                     self.job_name,
                     positions,
@@ -172,8 +177,12 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                     last_description,
                     last_describe_job_call,
                 )
+                print("777777777")
                 status = last_description["TrainingJobStatus"]
+                print("status=========", status)
+                print("status in self.non_terminal_states ", status in self.non_terminal_states)
                 if status in self.non_terminal_states:
+                    print("88888888 -------->")
                     await asyncio.sleep(self.poke_interval)
                 elif status in self.failed_states:
                     reason = last_description.get("FailureReason", "(No reason provided)")

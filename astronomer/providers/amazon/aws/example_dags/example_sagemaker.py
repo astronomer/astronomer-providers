@@ -87,7 +87,7 @@ def set_up(env_id: str, knn_image_uri: str, role_arn: str) -> None:
         "InputDataConfig": [
             {
                 "ChannelName": "train",
-                **training_data_source,
+                **training_data_source,  # type: ignore[arg-type]
             }
         ],
         "OutputDataConfig": {"S3OutputPath": f"s3://{bucket_name}/{training_output_s3_key}/"},

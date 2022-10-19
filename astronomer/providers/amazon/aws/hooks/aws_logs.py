@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Generator, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from astronomer.providers.amazon.aws.hooks.base_aws_async import AwsBaseHookAsync
 
@@ -16,7 +16,9 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
         kwargs["client_type"] = "logs"
         super().__init__(*args, **kwargs)
 
-    async def describe_log_streams_async(self, log_group: str, stream_prefix: str, order_by: str, count: int):
+    async def describe_log_streams_async(
+        self, log_group: str, stream_prefix: str, order_by: str, count: int
+    ) -> Dict[str, Any]:
         """
         Async function to get the Lists the log streams for the specified log group.
         You can list all the log streams or filter the results by prefix. You can also control
@@ -30,7 +32,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
         """
         async with await self.get_client_async() as client:
             try:
-                response = await client.describe_log_streams(
+                response: Dict[str, Any] = await client.describe_log_streams(
                     logGroupName=log_group,
                     logStreamNamePrefix=stream_prefix,
                     orderBy=order_by,
@@ -49,7 +51,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
         start_time: int = 0,
         skip: int = 0,
         start_from_head: bool = True,
-    ) -> Generator:
+    ) -> AsyncGenerator:
         """
         A generator for log items in a single stream. This will yield all the
         items that are available at the current moment.

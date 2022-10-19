@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, Generator, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 from airflow.providers.amazon.aws.hooks.sagemaker import (
     LogState,
@@ -9,7 +9,6 @@ from airflow.providers.amazon.aws.hooks.sagemaker import (
     secondary_training_status_message,
 )
 from asgiref.sync import sync_to_async
-from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.aws_logs import AwsLogsHookAsync
 from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
@@ -40,11 +39,8 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the transform job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_transform_job(TransformJobName=job_name)
+            return response
 
     async def describe_processing_job_async(self, job_name: str) -> Dict[str, Any]:
         """
@@ -53,11 +49,8 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the processing job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_processing_job(ProcessingJobName=job_name)
+            return response
 
     async def describe_training_job_async(self, job_name: str) -> Dict[str, Any]:
         """
@@ -66,22 +59,19 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         :param job_name: the name of the training job
         """
         async with await self.get_client_async() as client:
-            try:
-                response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
-                return response
-            except ClientError as e:
-                raise e
+            response: Dict[str, Any] = await client.describe_training_job(TrainingJobName=job_name)
+            return response
 
     async def describe_training_job_with_log(
         self,
         job_name: str,
         positions: Dict[str, Any],
-        stream_names: list,
+        stream_names: List[str],
         instance_count: int,
         state: int,
-        last_description: dict,
+        last_description: Dict[str, Any],
         last_describe_job_call: float,
-    ):
+    ) -> Tuple[int, Dict[str, Any], float]:
         """
         Return the training job info associated with job_name and print CloudWatch logs
 
@@ -97,6 +87,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         """
         log_group = "/aws/sagemaker/TrainingJobs"
 
+        print("insidei 11111109999")
         if len(stream_names) < instance_count:
             streams = await self.logs_hook_async.describe_log_streams_async(
                 log_group=log_group,
@@ -137,7 +128,9 @@ class SageMakerHookAsync(AwsBaseHookAsync):
                 state = LogState.JOB_COMPLETE
         return state, last_description, last_describe_job_call
 
-    async def get_multi_stream(self, log_group: str, streams: list, positions=None) -> Generator:
+    async def get_multi_stream(
+        self, log_group: str, streams: List[str], positions: Dict[str, Any]
+    ) -> AsyncGenerator:
         """
         Iterate over the available events coming from a set of log streams in a single log group
         interleaving the events from each stream so they're yielded in timestamp order.

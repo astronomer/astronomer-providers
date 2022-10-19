@@ -9,7 +9,10 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerTrainingOperatorAsync,
     SageMakerTransformOperatorAsync,
 )
-from astronomer.providers.amazon.aws.triggers.sagemaker import SagemakerTrigger
+from astronomer.providers.amazon.aws.triggers.sagemaker import (
+    SagemakerTrainingWithLogTrigger,
+    SagemakerTrigger,
+)
 
 CREATE_TRANSFORM_PARAMS: dict = {
     "TransformJobName": "job_name",
@@ -150,12 +153,26 @@ class TestSagemakerTrainingOperatorAsync:
     CHECK_INTERVAL = 5
     MAX_INGESTION_TIME = 60 * 60 * 24 * 7
 
+    @pytest.mark.parametrize(
+        "mock_print_log_attr,mock_trigger_class, mock_trigger_name",
+        [
+            (True, SagemakerTrainingWithLogTrigger, "SagemakerTrainingWithLogTrigger"),
+            (False, SagemakerTrigger, "SagemakerTrigger"),
+        ],
+    )
     @mock.patch.object(SageMakerHook, "get_conn")
     @mock.patch.object(SageMakerHook, "create_training_job")
     @mock.patch.object(sagemaker, "serialize", return_value="")
     @mock.patch.object(SageMakerHook, "list_training_jobs", return_value=[])
     def test_sagemaker_training_op_async(
-        self, mock_training_job, mock_serialize, mock_create_training_job, mock_client
+        self,
+        mock_training_job,
+        mock_serialize,
+        mock_create_training_job,
+        mock_client,
+        mock_print_log_attr,
+        mock_trigger_class,
+        mock_trigger_name,
     ):
         """Assert SageMakerTrainingOperatorAsync deferred properly"""
         mock_create_training_job.return_value = {
@@ -165,12 +182,13 @@ class TestSagemakerTrainingOperatorAsync:
         task = SageMakerTrainingOperatorAsync(
             config=TRAINING_CONFIG,
             task_id=self.TASK_ID,
+            print_log=mock_print_log_attr,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
         with pytest.raises(TaskDeferred) as exc:
             task.execute(None)
-        assert isinstance(exc.value.trigger, SagemakerTrigger), "Trigger is not a SagemakerTrigger"
+        assert isinstance(exc.value.trigger, mock_trigger_class), f"Trigger is not a {mock_trigger_name}"
 
     @mock.patch.object(
         SageMakerHook,
