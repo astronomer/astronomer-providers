@@ -20,7 +20,7 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerProcessingOperatorAsync,
 )
 
-ROLE_ARN_KEY = os.getenv("ROLE_ARN_KEY", "")
+ROLE_ARN_KEY = os.getenv("SAGEMAKER_ROLE_ARN_KEY", "")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
