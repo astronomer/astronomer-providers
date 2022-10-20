@@ -140,7 +140,7 @@ class SagemakerTrigger(BaseTrigger):
                     error_message = f"SageMaker job failed because {response['FailureReason']}"
                     yield TriggerEvent({"status": "error", "message": error_message})
                 else:
-                    yield TriggerEvent({"status": "success", "message": "SageMaker Job completed"})
+                    yield TriggerEvent({"status": "success", "message": response})
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
@@ -251,7 +251,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
                         last_description["TrainingEndTime"] - last_description["TrainingStartTime"]
                     ) * self.instance_count
                     self.log.info("Billable seconds: %d", int(billable_time.total_seconds()) + 1)
-                    yield TriggerEvent({"status": "success", "message": "SageMaker Job completed"})
+                    yield TriggerEvent({"status": "success", "message": last_description})
             except Exception as e:
                 yield TriggerEvent({"status": "error", "message": str(e)})
 

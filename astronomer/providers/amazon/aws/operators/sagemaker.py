@@ -180,15 +180,18 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event and event["status"] == "success":
+            self.log.info("%s completed successfully.", self.task_id)
+            return {"Processing": serialize(event["message"])}
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
-        self.log.info(event["message"])
+        raise AirflowException("No event received in trigger callback")
 
 
 class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
@@ -270,12 +273,15 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
                     method_name="execute_complete",
                 )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
+        if event and event["status"] == "success":
+            self.log.info("%s completed successfully.", self.task_id)
+            return {"Processing": serialize(event["message"])}
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
-        self.log.info(event["message"])
+        raise AirflowException("No event received in trigger callback")

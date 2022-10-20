@@ -257,7 +257,7 @@ class TestSagemakerTransformOperatorAsync:
 
     @pytest.mark.parametrize(
         "mock_event",
-        [{"status": "error", "message": "test failure message"}],
+        [{"status": "error", "message": "test failure message"}, None],
     )
     def test_sagemaker_transform_op_async_execute_complete_failure(self, mock_event):
         """Tests that an AirflowException is raised in case of error event"""
@@ -282,7 +282,7 @@ class TestSagemakerTransformOperatorAsync:
         )
         with mock.patch.object(task.log, "info") as mock_log_info:
             task.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("Job completed")
+        mock_log_info.assert_called_with("%s completed successfully.", "test_sagemaker_transform_operator")
 
 
 class TestSagemakerTrainingOperatorAsync:
@@ -346,7 +346,7 @@ class TestSagemakerTrainingOperatorAsync:
 
     @pytest.mark.parametrize(
         "mock_event",
-        [{"status": "error", "message": "test failure message"}],
+        [{"status": "error", "message": "test failure message"}, None],
     )
     def test_sagemaker_training_op_async_execute_complete_failure(self, mock_event):
         """Tests that an AirflowException is raised in case of error event"""
@@ -373,4 +373,4 @@ class TestSagemakerTrainingOperatorAsync:
         )
         with mock.patch.object(task.log, "info") as mock_log_info:
             task.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("Job completed")
+        mock_log_info.assert_called_with("%s completed successfully.", self.TASK_ID)

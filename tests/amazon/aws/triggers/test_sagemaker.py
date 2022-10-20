@@ -14,6 +14,12 @@ from astronomer.providers.amazon.aws.triggers.sagemaker import (
     SagemakerTrigger,
 )
 
+SUCCESS_RESPONSE = {
+    "TrainingJobStatus": "Success",
+    "TrainingEndTime": datetime(2015, 1, 1),
+    "TrainingStartTime": datetime(2015, 1, 1),
+}
+
 
 class TestSagemakerProcessingTrigger:
     TEST_JOB_NAME = "test_job_name"
@@ -176,7 +182,7 @@ class TestSagemakerTrigger:
                 "Transform",
                 "TransformJobStatus",
                 {"TransformJobStatus": "Success"},
-                {"status": "success", "message": "SageMaker Job completed"},
+                {"status": "success", "message": {"TransformJobStatus": "Success"}},
             ),
             (
                 "Transform",
@@ -188,7 +194,7 @@ class TestSagemakerTrigger:
                 "Training",
                 "TrainingJobStatus",
                 {"TrainingJobStatus": "Success"},
-                {"status": "success", "message": "SageMaker Job completed"},
+                {"status": "success", "message": {"TrainingJobStatus": "Success"}},
             ),
             (
                 "Training",
@@ -369,14 +375,10 @@ class TestSagemakerTrainingWithLogTrigger:
             (
                 (
                     LogState.COMPLETE,
-                    {
-                        "TrainingJobStatus": "Success",
-                        "TrainingEndTime": datetime(2015, 1, 1),
-                        "TrainingStartTime": datetime(2015, 1, 1),
-                    },
+                    SUCCESS_RESPONSE,
                     time.time(),
                 ),
-                {"status": "success", "message": "SageMaker Job completed"},
+                {"status": "success", "message": SUCCESS_RESPONSE},
             ),
             (
                 (
