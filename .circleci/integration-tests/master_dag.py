@@ -112,7 +112,6 @@ with DAG(
         {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
         {"batch_dag": "example_async_batch"},
         {"sagemaker_dag": "example_async_sagemaker"},
-        {"sagemaker_dag_train_transform": "example_async_sagemaker_train_transform"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
