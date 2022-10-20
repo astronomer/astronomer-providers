@@ -13,6 +13,36 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 class GCSXComBackend(BaseXCom):
     """
+    The GCS custom xcom backend is an xcom custom backend wrapper that handles serialization and deserialization
+    of common data types. This overrides the ``TaskInstance.XCom`` object with this wrapper.
+    """
+
+    @staticmethod
+    def serialize_value(value: Any) -> Any:  # type: ignore[override]
+        """Custom XCOM for GCS to serialize the data"""
+        value = _GCSXComBackend().write_and_upload_value(value)
+        return BaseXCom.serialize_value(value)
+
+    @staticmethod
+    def deserialize_value(result: Any) -> Any:
+        """Custom XCOM for GCS to deserialize the data"""
+        result = BaseXCom.deserialize_value(result)
+        if isinstance(result, str) and result.startswith(_GCSXComBackend.PREFIX):
+            result = _GCSXComBackend.download_and_read_value(result)
+        return result
+
+    def orm_deserialize_value(self) -> str:
+        """
+        Deserialize amethod which is used to reconstruct ORM XCom object.
+        This method should be overridden in custom XCom backends to avoid
+        unnecessary request or other resource consuming operations when
+        creating XCom ORM model.
+        """
+        return f"XCOM is uploaded into GCS bucket: {_GCSXComBackend.BUCKET_NAME}"
+
+
+class _GCSXComBackend:
+    """
     Custom XCom persistence class extends base to support various datatypes.
     To use this XCom Backend, add the environment variable `AIRFLOW__CORE__XCOM_BACKEND`
     to your environment and set it to
@@ -28,54 +58,31 @@ class GCSXComBackend(BaseXCom):
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
         """Convert to string and upload to GCS"""
-        key_str = GCSXComBackend.PREFIX + str(uuid.uuid4())
-        hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
+        key_str = _GCSXComBackend.PREFIX + str(uuid.uuid4())
+        hook = GCSHook(gcp_conn_id=_GCSXComBackend.GCP_CONN_ID)
         if conf.getboolean("core", "enable_xcom_pickling"):
             value = pickle.dumps(value)
         elif isinstance(value, pd.DataFrame):
             value = value.to_json()
-            key_str = key_str + "_" + GCSXComBackend.PANDAS_DATAFRAME
+            key_str = key_str + "_" + _GCSXComBackend.PANDAS_DATAFRAME
         elif isinstance(value, date):
-            key_str = key_str + "_" + GCSXComBackend.DATETIME_OBJECT
+            key_str = key_str + "_" + _GCSXComBackend.DATETIME_OBJECT
             value = value.isoformat()
         else:
             value = json.dumps(value)
-        hook.upload(GCSXComBackend.BUCKET_NAME, key_str, data=value)
+        hook.upload(_GCSXComBackend.BUCKET_NAME, key_str, data=value)
         return key_str
 
     @staticmethod
-    def read_value(filename: str) -> bytes:
+    def download_and_read_value(filename: str) -> Any:
         """Download the file from GCS"""
         # Here we download the file from GCS
-        hook = GCSHook(gcp_conn_id=GCSXComBackend.GCP_CONN_ID)
-        data = hook.download(GCSXComBackend.BUCKET_NAME, filename)
-        return data
-
-    @staticmethod
-    def serialize_value(value: Any) -> Any:  # type: ignore[override]
-        """Custom XCOM for GCS to serialize the data"""
-        value = GCSXComBackend.write_and_upload_value(value)
-        return BaseXCom.serialize_value(value)
-
-    @staticmethod
-    def deserialize_value(result: Any) -> Any:
-        """Custom XCOM for GCS to deserialize the data"""
-        result = BaseXCom.deserialize_value(result)
-        if isinstance(result, str) and result.startswith(GCSXComBackend.PREFIX):
-            value = GCSXComBackend.read_value(result)
-            if conf.getboolean("core", "enable_xcom_pickling"):
-                return pickle.loads(value)  # nosec
-            elif result.endswith(GCSXComBackend.PANDAS_DATAFRAME):
-                return pd.read_json(value)
-            elif result.endswith(GCSXComBackend.DATETIME_OBJECT):
-                return datetime.fromisoformat(value)
-            return json.loads(value)
-
-    def orm_deserialize_value(self) -> str:
-        """
-        Deserialize amethod which is used to reconstruct ORM XCom object.
-        This method should be overridden in custom XCom backends to avoid
-        unnecessary request or other resource consuming operations when
-        creating XCom ORM model.
-        """
-        return f"XCOM is uploaded into GCS bucket: {GCSXComBackend.BUCKET_NAME}"
+        hook = GCSHook(gcp_conn_id=_GCSXComBackend.GCP_CONN_ID)
+        data = hook.download(_GCSXComBackend.BUCKET_NAME, filename)
+        if conf.getboolean("core", "enable_xcom_pickling"):
+            return pickle.loads(data)  # nosec
+        elif filename.endswith(_GCSXComBackend.PANDAS_DATAFRAME):
+            return pd.read_json(data)
+        elif filename.endswith(_GCSXComBackend.DATETIME_OBJECT):
+            return datetime.fromisoformat(data)  # type: ignore[arg-type]
+        return json.loads(data)
