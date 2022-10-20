@@ -58,15 +58,15 @@ class _GCSXComBackend:
     @staticmethod
     def write_and_upload_value(value: Any) -> str:
         """Convert to string and upload to GCS"""
-        key_str = _GCSXComBackend.PREFIX + str(uuid.uuid4())
+        key_str = f"{_GCSXComBackend.PREFIX}{uuid.uuid4()}"
         hook = GCSHook(gcp_conn_id=_GCSXComBackend.GCP_CONN_ID)
         if conf.getboolean("core", "enable_xcom_pickling"):
             value = pickle.dumps(value)
         elif isinstance(value, pd.DataFrame):
             value = value.to_json()
-            key_str = key_str + "_" + _GCSXComBackend.PANDAS_DATAFRAME
+            key_str = f"{key_str}_{_GCSXComBackend.PANDAS_DATAFRAME}"
         elif isinstance(value, date):
-            key_str = key_str + "_" + _GCSXComBackend.DATETIME_OBJECT
+            key_str = f"{key_str}_{_GCSXComBackend.DATETIME_OBJECT}"
             value = value.isoformat()
         else:
             value = json.dumps(value)
