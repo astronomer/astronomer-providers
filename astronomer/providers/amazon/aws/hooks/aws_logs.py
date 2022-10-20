@@ -20,9 +20,9 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
 
     async def describe_log_streams_async(
         self, log_group: str, stream_prefix: str, order_by: str, count: int
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         """
-        Async function to get the Lists the log streams for the specified log group.
+        Async function to get the list of log streams for the specified log group.
         You can list all the log streams or filter the results by prefix. You can also control
         how the results are ordered.
 
@@ -45,7 +45,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
                 # On the very first training job run on an account, there's no log group until
                 # the container starts logging, so ignore any errors thrown about that
                 if error.response["Error"]["Code"] == "ResourceNotFoundException":
-                    return {}
+                    return None
                 raise error
 
     async def get_log_events_async(

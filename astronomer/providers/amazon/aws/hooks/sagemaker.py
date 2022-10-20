@@ -93,7 +93,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
                 order_by="LogStreamName",
                 count=instance_count,
             )
-            stream_names = [s["logStreamName"] for s in streams["logStreams"]]
+            stream_names = [s["logStreamName"] for s in streams["logStreams"]] if streams else []
             positions.update([(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions])
 
         if len(stream_names) > 0:

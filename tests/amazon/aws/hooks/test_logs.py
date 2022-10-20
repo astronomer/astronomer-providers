@@ -47,7 +47,7 @@ class TestAwsLogsHookAsync:
         response = await hook.describe_log_streams_async(
             "/aws/sagemaker/TrainingJobs", "test_job/", "LogStreamName", 1
         )
-        assert response == {}
+        assert response is None
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.amazon.aws.hooks.aws_logs.AwsLogsHookAsync.get_client_async")

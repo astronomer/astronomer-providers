@@ -229,7 +229,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         response = self.hook.create_training_job(
             self.config,
             wait_for_completion=False,
-            print_log=self.print_log,
+            print_log=False,
             check_interval=self.check_interval,
             max_ingestion_time=self.max_ingestion_time,
         )

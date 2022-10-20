@@ -59,7 +59,7 @@ TRAIN_DATASET = """
 def set_up(role_arn: str) -> None:
     """Setting the details required for the ecr instance and sagemaker"""
     bucket_name = f"amazon-sagemaker-example-{str(uuid.uuid4())}"
-    ecr_repository_name = f"{ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/providers_repo"
+    ecr_repository_name = f"{ACCOUNT_ID}.dkr.ecr.{AWS_DEFAULT_REGION}.amazonaws.com/providers_repo"
     processing_job_name = f"{str(uuid.uuid4())}"
     processing_local_input_path = "/opt/ml/processing/input"
     processing_local_output_path = "/opt/ml/processing/output"
@@ -280,12 +280,10 @@ with DAG(
         task_id="train_model",
         print_log=False,
         config=test_setup["training_config"],
-        # Waits by default, setting as False to demonstrate the Sensor below.
-        wait_for_completion=False,
     )
     # [END howto_operator_sagemaker_training_async]
 
-    # # [START howto_operator_sagemaker_model]
+    # [START howto_operator_sagemaker_model]
     create_model = SageMakerModelOperator(
         task_id="create_model",
         config=test_setup["model_config"],
@@ -296,8 +294,6 @@ with DAG(
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
         config=test_setup["transform_config"],
-        # Waits by default, setting as False to demonstrate the Sensor below.
-        wait_for_completion=False,
     )
     # [END howto_operator_sagemaker_transform_async]
 
