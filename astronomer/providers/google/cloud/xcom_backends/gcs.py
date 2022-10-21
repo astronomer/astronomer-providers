@@ -1,3 +1,4 @@
+import gzip
 import json
 import os
 import pickle  # nosec
@@ -52,7 +53,7 @@ class _GCSXComBackend:
     PREFIX = os.getenv("XCOM_BACKEND_PREFIX", "gcs_xcom_")
     GCP_CONN_ID = os.getenv("XCOM_BACKEND_CONNECTION_NAME", "google_cloud_default")
     BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
-    UPLOAD_CONTENT_AS_GZIP = os.getenv("XCOM_BACKEND_UPLOAD_CONTENT", False)
+    UPLOAD_CONTENT_AS_GZIP = os.getenv("XCOM_BACKEND_UPLOAD_CONTENT_AS_GZIP", False)
     PANDAS_DATAFRAME = "dataframe"
     DATETIME_OBJECT = "datetime"
 
@@ -84,10 +85,13 @@ class _GCSXComBackend:
         # Here we download the file from GCS
         hook = GCSHook(gcp_conn_id=_GCSXComBackend.GCP_CONN_ID)
         data = hook.download(bucket_name=_GCSXComBackend.BUCKET_NAME, object_name=filename)
+        if filename.endswith(".gz"):
+            data = gzip.decompress(data)
+            filename = filename.replace(".gz", "")
         if conf.getboolean("core", "enable_xcom_pickling"):
             return pickle.loads(data)  # nosec
         elif filename.endswith(_GCSXComBackend.PANDAS_DATAFRAME):
             return pd.read_json(data)
         elif filename.endswith(_GCSXComBackend.DATETIME_OBJECT):
-            return datetime.fromisoformat(data)  # type: ignore[arg-type]
+            return datetime.fromisoformat(str(data))
         return json.loads(data)

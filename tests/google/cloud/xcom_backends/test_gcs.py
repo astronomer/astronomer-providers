@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import json
 import os
 import pickle  # nosec
@@ -130,7 +131,7 @@ def test_custom_xcom_gcs_write_and_upload_as_gzip(mock_upload, mock_uuid, job_id
     """
     mock_uuid.return_value = "12345667890"
     _GCSXComBackend.UPLOAD_CONTENT_AS_GZIP = mock.patch.dict(
-        os.environ, {"XCOM_BACKEND_UPLOAD_CONTENT": True}, clear=True
+        os.environ, {"XCOM_BACKEND_UPLOAD_CONTENT_AS_GZIP": True}, clear=True
     )
     result = _GCSXComBackend().write_and_upload_value(job_id)
     assert result == "gcs_xcom_" + "12345667890.gz"
@@ -193,6 +194,34 @@ def test_custom_xcom_gcs_deserialize_pickle(mock_download, job_id):
     mock_download.return_value = pickle.dumps(job_id)
     result = _GCSXComBackend.download_and_read_value(job_id)
     assert result == job_id
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234"],
+)
+@mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.download")
+def test_custom_xcom_gcs_deserialize_bytes(mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_download.return_value = b'{ "Class": "Email addresses"}'
+    result = _GCSXComBackend.download_and_read_value(job_id)
+    assert result == {"Class": "Email addresses"}
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234.gz"],
+)
+@mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.download")
+def test_custom_xcom_gcs_deserialize_gzip(mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_download.return_value = gzip.compress(b'{"Class": "Email addresses"}')
+    result = _GCSXComBackend.download_and_read_value(job_id)
+    assert result == {"Class": "Email addresses"}
 
 
 def test_custom_xcom_gcs_orm_deserialize_value():
