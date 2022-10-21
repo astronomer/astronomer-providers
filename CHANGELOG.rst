@@ -1,6 +1,41 @@
 Changelog
 =========
 
+1.11.0 (2022-10-21)
+-------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 3 new async operators:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator Class
+     - Import Path
+     - Example DAG
+
+   * - ``SageMakerProcessingOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.sagemaker import SageMakerProcessingOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_sagemaker.py>`__
+
+   * - ``SageMakerTrainingOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.sagemaker import SageMakerTrainingOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_sagemaker.py>`__
+
+   * - ``SageMakerTransformOperatorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.amazon.aws.operators.sagemaker import SageMakerTransformOperatorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/amazon/aws/example_dags/example_sagemaker.py>`__
+
+
+
 1.10.0 (2022-09-30)
 -------------------
 
