@@ -52,6 +52,7 @@ class _GCSXComBackend:
     PREFIX = os.getenv("XCOM_BACKEND_PREFIX", "gcs_xcom_")
     GCP_CONN_ID = os.getenv("XCOM_BACKEND_CONNECTION_NAME", "google_cloud_default")
     BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
+    UPLOAD_CONTENT_AS_GZIP = os.getenv("XCOM_BACKEND_UPLOAD_CONTENT", False)
     PANDAS_DATAFRAME = "dataframe"
     DATETIME_OBJECT = "datetime"
 
@@ -70,7 +71,11 @@ class _GCSXComBackend:
             value = value.isoformat()
         else:
             value = json.dumps(value)
-        hook.upload(_GCSXComBackend.BUCKET_NAME, key_str, data=value)
+        if _GCSXComBackend.UPLOAD_CONTENT_AS_GZIP:
+            key_str = f"{key_str}.gz"
+            hook.upload(bucket_name=_GCSXComBackend.BUCKET_NAME, object_name=key_str, data=value, gzip=True)
+        else:
+            hook.upload(bucket_name=_GCSXComBackend.BUCKET_NAME, object_name=key_str, data=value)
         return key_str
 
     @staticmethod
@@ -78,7 +83,7 @@ class _GCSXComBackend:
         """Download the file from GCS"""
         # Here we download the file from GCS
         hook = GCSHook(gcp_conn_id=_GCSXComBackend.GCP_CONN_ID)
-        data = hook.download(_GCSXComBackend.BUCKET_NAME, filename)
+        data = hook.download(bucket_name=_GCSXComBackend.BUCKET_NAME, object_name=filename)
         if conf.getboolean("core", "enable_xcom_pickling"):
             return pickle.loads(data)  # nosec
         elif filename.endswith(_GCSXComBackend.PANDAS_DATAFRAME):

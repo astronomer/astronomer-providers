@@ -120,6 +120,24 @@ def test_custom_xcom_gcs_write_and_upload_datetime(mock_upload, mock_uuid):
 
 @pytest.mark.parametrize(
     "job_id",
+    ["1234567890", {"a": "b"}, ["123"]],
+)
+@mock.patch("uuid.uuid4")
+@mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.upload")
+def test_custom_xcom_gcs_write_and_upload_as_gzip(mock_upload, mock_uuid, job_id):
+    """
+    Asserts that custom xcom is upload and returns key
+    """
+    mock_uuid.return_value = "12345667890"
+    _GCSXComBackend.UPLOAD_CONTENT_AS_GZIP = mock.patch.dict(
+        os.environ, {"XCOM_BACKEND_UPLOAD_CONTENT": True}, clear=True
+    )
+    result = _GCSXComBackend().write_and_upload_value(job_id)
+    assert result == "gcs_xcom_" + "12345667890.gz"
+
+
+@pytest.mark.parametrize(
+    "job_id",
     ["gcs_xcom_1234"],
 )
 @mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.download")
