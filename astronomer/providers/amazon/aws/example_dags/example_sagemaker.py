@@ -16,7 +16,6 @@ from airflow.providers.amazon.aws.operators.s3 import (
 )
 from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerDeleteModelOperator,
-    SageMakerModelOperator,
 )
 from airflow.utils.trigger_rule import TriggerRule
 
@@ -167,23 +166,26 @@ def set_up(role_arn: str) -> None:
     }
 
     transform_config = {
-        "TransformJobName": transform_job_name,
-        "TransformInput": {
-            "DataSource": {
-                "S3DataSource": {
-                    "S3DataType": "S3Prefix",
-                    "S3Uri": f"s3://{bucket_name}/{transform_data_csv}",
-                }
+        "Transform": {
+            "TransformJobName": transform_job_name,
+            "TransformInput": {
+                "DataSource": {
+                    "S3DataSource": {
+                        "S3DataType": "S3Prefix",
+                        "S3Uri": f"s3://{bucket_name}/{transform_data_csv}",
+                    }
+                },
+                "SplitType": "Line",
+                "ContentType": "text/csv",
             },
-            "SplitType": "Line",
-            "ContentType": "text/csv",
+            "TransformOutput": {"S3OutputPath": f"s3://{bucket_name}/{prediction_output_s3_key}"},
+            "TransformResources": {
+                "InstanceCount": 1,
+                "InstanceType": "ml.m5.large",
+            },
+            "ModelName": model_name,
         },
-        "TransformOutput": {"S3OutputPath": f"s3://{bucket_name}/{prediction_output_s3_key}"},
-        "TransformResources": {
-            "InstanceCount": 1,
-            "InstanceType": "ml.m5.large",
-        },
-        "ModelName": model_name,
+        "Model": model_config,
     }
 
     ti = get_current_context()["ti"]
@@ -279,11 +281,6 @@ with DAG(
     )
     # [END howto_operator_sagemaker_training_async]
 
-    create_model = SageMakerModelOperator(
-        task_id="create_model",
-        config=test_setup["model_config"],
-    )
-
     # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
@@ -315,7 +312,6 @@ with DAG(
         # TEST BODY
         preprocess_raw_data,
         train_model,
-        create_model,
         test_model,
         # TEST TEARDOWN
         delete_model,
