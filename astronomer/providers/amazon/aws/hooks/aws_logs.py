@@ -28,7 +28,7 @@ class AwsLogsHookAsync(AwsBaseHookAsync):
 
         :param log_group: The name of the log group.
         :param stream_prefix: The prefix to match.
-        :param order_by: f the value is LogStreamName , the results are ordered by log stream name.
+        :param order_by: If the value is LogStreamName , the results are ordered by log stream name.
          If the value is LastEventTime , the results are ordered by the event time. The default value is LogStreamName.
         :param count: The maximum number of items returned
         """

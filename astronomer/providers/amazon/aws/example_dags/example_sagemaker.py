@@ -4,7 +4,6 @@ import os
 import uuid
 from datetime import datetime
 
-import boto3
 from airflow import DAG
 from airflow.decorators import task
 from airflow.models.baseoperator import chain
@@ -20,7 +19,6 @@ from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerModelOperator,
 )
 from airflow.utils.trigger_rule import TriggerRule
-from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerProcessingOperatorAsync,
@@ -71,7 +69,6 @@ def set_up(role_arn: str) -> None:
     train_data_csv = "train-processed-input-data/train.csv"
     training_output_s3_key = "train-processed-output"
 
-    # model
     model_name = "provider-KNN-model"
 
     # Transform configs
@@ -212,13 +209,12 @@ def delete_logs() -> None:
         "/aws/sagemaker/TrainingJobs",
         "/aws/sagemaker/TransformJobs",
     ]
+    import boto3
+
     client = boto3.client("logs")
     for group in generated_logs:
-        try:
-            if client.describe_log_streams(logGroupName=group)["logStreams"]:
-                client.delete_log_group(logGroupName=group)
-        except ClientError as e:
-            raise e
+        if client.describe_log_streams(logGroupName=group)["logStreams"]:
+            client.delete_log_group(logGroupName=group)
 
 
 with DAG(
@@ -283,12 +279,10 @@ with DAG(
     )
     # [END howto_operator_sagemaker_training_async]
 
-    # [START howto_operator_sagemaker_model]
     create_model = SageMakerModelOperator(
         task_id="create_model",
         config=test_setup["model_config"],
     )
-    # [END howto_operator_sagemaker_model]
 
     # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
@@ -297,13 +291,11 @@ with DAG(
     )
     # [END howto_operator_sagemaker_transform_async]
 
-    # # [START howto_operator_sagemaker_delete_model]
     delete_model = SageMakerDeleteModelOperator(
         task_id="delete_model",
         config={"ModelName": test_setup["model_name"]},
         trigger_rule=TriggerRule.ALL_DONE,
     )
-    # [END howto_operator_sagemaker_delete_model]
 
     delete_bucket = S3DeleteBucketOperator(
         task_id="delete_bucket",
@@ -322,7 +314,6 @@ with DAG(
         upload_transform_dataset,
         # TEST BODY
         preprocess_raw_data,
-        # Model Train, Creation, Test
         train_model,
         create_model,
         test_model,
