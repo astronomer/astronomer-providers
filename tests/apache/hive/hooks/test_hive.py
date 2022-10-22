@@ -11,7 +11,10 @@ TEST_TABLE = "test_table"
 TEST_SCHEMA = "test_schema"
 TEST_POLLING_INTERVAL = 5
 TEST_PARTITION = "state='FL'"
-TEST_METASTORE_CONN_ID = "test_conn_id"
+TEST_METASTORE_CONN_ID = "metastore_default"
+TEST_CONN_TYPE = "metastore"
+TEST_PORT = 10000
+TEST_HOST = "localhost"
 
 
 class TestHiveCliHookAsync:
@@ -23,10 +26,10 @@ class TestHiveCliHookAsync:
         mock_get_connect.return_value = mock.AsyncMock(HiveServer2Connection)
         mock_get_conf.return_value = "kerberos"
         mock_get_connection.return_value = models.Connection(
-            conn_id="metastore_default",
-            conn_type="metastore",
-            port=10000,
-            host="localhost",
+            conn_id=TEST_METASTORE_CONN_ID,
+            conn_type=TEST_CONN_TYPE,
+            port=TEST_PORT,
+            host=TEST_HOST,
         )
         hook = HiveCliHookAsync(TEST_METASTORE_CONN_ID)
         result = hook.get_hive_client()
@@ -38,10 +41,10 @@ class TestHiveCliHookAsync:
         """Checks the connection to hive client"""
         mock_get_connect.return_value = mock.AsyncMock(HiveServer2Connection)
         mock_get_connection.return_value = models.Connection(
-            conn_id="metastore_default",
-            conn_type="metastore",
-            port=10000,
-            host="localhost",
+            conn_id=TEST_METASTORE_CONN_ID,
+            conn_type=TEST_CONN_TYPE,
+            port=TEST_PORT,
+            host=TEST_HOST,
         )
         hook = HiveCliHookAsync(TEST_METASTORE_CONN_ID)
         result = hook.get_hive_client()
