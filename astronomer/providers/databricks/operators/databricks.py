@@ -17,7 +17,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
     Submits a Spark job run to Databricks using the
     `api/2.1/jobs/runs/submit
     <https://docs.databricks.com/dev-tools/api/latest/jobs.html#operation/JobsRunsSubmit>`_
-    API endpoint. Using DatabricksHook it makes two non-async API calls to
+    API endpoint. Using DatabricksHook, it makes two non-async API calls to
     submit the run, and retrieve the run page URL. By getting the job id from the response, polls for the status
     in the Databricks trigger, and defer execution as expected.
 
