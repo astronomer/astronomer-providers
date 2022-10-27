@@ -1,6 +1,16 @@
 Changelog
 =========
 
+1.11.1 (2022-10-27)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Fix AWS session token to be consider while AWS secrete and access key is passed via the connection UI field
+  (`#730 <https://github.com/astronomer/astronomer-providers/pull/730>`_)
+
+
 1.11.0 (2022-10-21)
 -------------------
 
