@@ -68,7 +68,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         if "aws_session_token" in extra_config:
             self.log.info(
                 "session token retrieved from extra, please note you are responsible for renewing these.",
-            )  # pragma: no cover
+            )
             aws_session_token = extra_config.get("aws_session_token")
 
         async_connection = get_session()
