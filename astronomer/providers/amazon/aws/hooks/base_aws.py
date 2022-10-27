@@ -65,6 +65,12 @@ class AwsBaseHookAsync(AwsBaseHook):
             self.log.info("Retrieving region_name from Connection.extra_config['region_name']")
             region_name = extra_config["region_name"]  # pragma: no cover
 
+        if "aws_session_token" in extra_config:
+            self.log.info(
+                "session token retrieved from extra, please note you are responsible for renewing these.",
+            )  # pragma: no cover
+            aws_session_token = extra_config.get("aws_session_token")
+
         async_connection = get_session()
         return async_connection.create_client(
             service_name=self.client_type,
