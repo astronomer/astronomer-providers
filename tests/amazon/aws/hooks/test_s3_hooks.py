@@ -32,9 +32,7 @@ async def test_aws_base_hook_async_get_client_async_with_get_connection(mock_con
 @mock.patch("astronomer.providers.amazon.aws.hooks.base_aws.AwsBaseHookAsync.get_connection")
 @pytest.mark.asyncio
 async def test_aws_base_hook_async_get_client_async_with_aws_secrets(mock_get_connection):
-    mock_conn = Connection(
-        extra=json.dumps({"aws_access_key_id": "", "aws_secret_access_key": "", "aws_session_token": ""})
-    )
+    mock_conn = Connection(extra=json.dumps({"aws_access_key_id": "", "aws_secret_access_key": ""}))
     mock_get_connection.return_value = mock_conn
 
     aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3")
