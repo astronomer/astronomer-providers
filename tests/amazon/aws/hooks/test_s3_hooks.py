@@ -41,6 +41,20 @@ async def test_aws_base_hook_async_get_client_async_with_aws_secrets(mock_get_co
     assert isinstance(response, ClientCreatorContext)
 
 
+@mock.patch("astronomer.providers.amazon.aws.hooks.base_aws.AwsBaseHookAsync.get_connection")
+@pytest.mark.asyncio
+async def test_aws_base_hook_async_get_client_async_with_aws_session(mock_get_connection):
+    mock_conn = Connection(
+        login="test", password="", extra=json.dumps({"region_name": "", "aws_session_token": ""})
+    )
+    mock_get_connection.return_value = mock_conn
+
+    aws_base_hook_async_obj = AwsBaseHookAsync(client_type="S3", resource_type="S3", region_name=None)
+    response = await aws_base_hook_async_obj.get_client_async()
+
+    assert isinstance(response, ClientCreatorContext)
+
+
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 @pytest.mark.asyncio
 async def test_s3_key_hook_get_file_metadata(mock_client):
