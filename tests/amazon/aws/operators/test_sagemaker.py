@@ -273,13 +273,15 @@ class TestSagemakerTransformOperatorAsync:
         "mock_event",
         [{"status": "success", "message": "Job completed"}],
     )
-    def test_sagemaker_transform_op_async_execute_complete(self, mock_event):
+    @mock.patch.object(SageMakerHook, "describe_model")
+    def test_sagemaker_transform_op_async_execute_complete(self, mock_model_output, mock_event):
         """Asserts that logging occurs as expected"""
         task = SageMakerTransformOperatorAsync(
             config=CONFIG,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
         )
+        mock_model_output.return_value = {"test": "test"}
         with mock.patch.object(task.log, "info") as mock_log_info:
             task.execute_complete(context=None, event=mock_event)
         mock_log_info.assert_called_with("%s completed successfully.", "test_sagemaker_transform_operator")

@@ -188,7 +188,11 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         """
         if event and event["status"] == "success":
             self.log.info("%s completed successfully.", self.task_id)
-            return {"Processing": serialize(event["message"])}
+            transform_config = self.config.get("Transform", self.config)
+            return {
+                "Model": serialize(self.hook.describe_model(transform_config["ModelName"])),
+                "Transform": serialize(event["message"]),
+            }
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
         raise AirflowException("No event received in trigger callback")
@@ -281,7 +285,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         """
         if event and event["status"] == "success":
             self.log.info("%s completed successfully.", self.task_id)
-            return {"Processing": serialize(event["message"])}
+            return {"Training": serialize(event["message"])}
         if event and event["status"] == "error":
             raise AirflowException(event["message"])
         raise AirflowException("No event received in trigger callback")

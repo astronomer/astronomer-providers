@@ -7,7 +7,6 @@ from datetime import datetime
 from airflow import DAG
 from airflow.decorators import task
 from airflow.models.baseoperator import chain
-from airflow.operators.bash import BashOperator
 from airflow.operators.python import get_current_context
 from airflow.providers.amazon.aws.operators.s3 import (
     S3CreateBucketOperator,
@@ -25,10 +24,8 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerTransformOperatorAsync,
 )
 
-ROLE_ARN_KEY = os.getenv("SAGEMAKER_ROLE_ARN_KEY", "")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+ROLE_ARN_KEY = os.getenv("SAGEMAKER_ROLE_ARN_KEY", "")
 ACCOUNT_ID = os.getenv("AWS_ACCOUNT_ID", "")
 KNN_IMAGE_URI_KEY = os.getenv("KNN_IMAGE_URI_KEY", "")
 
@@ -227,13 +224,6 @@ with DAG(
     tags=["example", "sagemaker", "async", "AWS"],
 ) as dag:
 
-    setup_aws_config = BashOperator(
-        task_id="setup_aws_config",
-        bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
-        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
-        f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
-    )
-
     test_setup = set_up(
         role_arn=ROLE_ARN_KEY,
     )
@@ -303,7 +293,6 @@ with DAG(
 
     chain(
         # TEST SETUP
-        setup_aws_config,
         test_setup,
         create_bucket,
         upload_dataset,
