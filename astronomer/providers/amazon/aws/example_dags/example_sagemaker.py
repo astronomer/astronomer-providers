@@ -41,7 +41,7 @@ AWS_SAGEMAKER_CREDS = {
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
     "region_name": AWS_DEFAULT_REGION,
 }
-SAGEMAKER_CONN_ID = os.getenv("SAGEMAKER_CONN_ID", "aws_sagemaker_default")
+SAGEMAKER_CONN_ID = os.getenv("SAGEMAKER_CONN_ID", "aws_sagemaker_async_conn")
 
 DATASET = """
         9.0,0.38310254472482347,0.37403058828333824,0.3701814549305645,0.07801528813477883,0.0501548182716372,-0.09208298947092397,0.2957496481406288,0.0,1.0,0.0
@@ -249,7 +249,7 @@ def get_aws_sagemaker_session(task_instance: "TaskInstance") -> None:
 
     client = boto3.client("sts", **AWS_SAGEMAKER_CREDS)
     try:
-        response = client.get_session_token(DurationSeconds=10800)
+        response = client.get_session_token(DurationSeconds=1800)
         task_instance.xcom_push(
             key="sagemaker_credentials",
             value=json.loads(json.dumps(response["Credentials"], cls=AirflowJsonEncoder)),
@@ -266,8 +266,6 @@ def setup_sagemaker_connection_details(task_instance: "TaskInstance") -> None:
     creds_details = task_instance.xcom_pull(
         key="sagemaker_credentials", task_ids=["get_aws_sagemaker_session_details"]
     )[0]
-    print("creds_details ", creds_details)
-    print("creds_details type ", type(creds_details))
     conn = Connection(
         conn_id=SAGEMAKER_CONN_ID,
         conn_type="aws",
