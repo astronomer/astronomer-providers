@@ -1,6 +1,19 @@
 Changelog
 =========
 
+1.11.1 (2022-10-28)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Fix ``AwsBaseHookAsync`` to accept the AWS session token passed via ``extra_config`` in the airflow connection
+  (`#730 <https://github.com/astronomer/astronomer-providers/pull/730>`_)
+- Change return value of ``SageMakerTrainingOperatorAsync``  and ``SageMakerTransformOperatorAsync``
+  to be same as that of corresponding Sync operators
+  (`#737 <https://github.com/astronomer/astronomer-providers/pull/737>`_)
+
+
 1.11.0 (2022-10-21)
 -------------------
 
