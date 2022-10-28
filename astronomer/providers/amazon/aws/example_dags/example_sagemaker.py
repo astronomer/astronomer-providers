@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from airflow import DAG, settings
@@ -42,6 +42,7 @@ AWS_SAGEMAKER_CREDS = {
     "region_name": AWS_DEFAULT_REGION,
 }
 SAGEMAKER_CONN_ID = os.getenv("SAGEMAKER_CONN_ID", "aws_sagemaker_async_conn")
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 DATASET = """
         9.0,0.38310254472482347,0.37403058828333824,0.3701814549305645,0.07801528813477883,0.0501548182716372,-0.09208298947092397,0.2957496481406288,0.0,1.0,0.0
@@ -61,6 +62,13 @@ TRAIN_DATASET = """
                 2,5.1,3.5,1.4,0.2
                 0,4.9,2.5,4.5,1.7
                 """
+
+default_args = {
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
+    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
+    "aws_conn_id": SAGEMAKER_CONN_ID,
+}
 
 
 @task
@@ -295,6 +303,7 @@ with DAG(
     start_date=datetime(2021, 8, 13),
     schedule_interval=None,
     catchup=False,
+    default_args=default_args,
     tags=["example", "sagemaker", "async", "AWS"],
 ) as dag:
 
@@ -312,13 +321,11 @@ with DAG(
 
     create_bucket = S3CreateBucketOperator(
         task_id="create_bucket",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         bucket_name=test_setup["bucket_name"],
     )
 
     upload_dataset = S3CreateObjectOperator(
         task_id="upload_dataset",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         s3_bucket=test_setup["bucket_name"],
         s3_key=test_setup["raw_data_s3_key_input"],
         data=DATASET,
@@ -336,7 +343,6 @@ with DAG(
 
     upload_transform_dataset = S3CreateObjectOperator(
         task_id="upload_transform_dataset",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         s3_bucket=test_setup["bucket_name"],
         s3_key=test_setup["transform_data_csv"],
         data=TRANSFORM_DATASET,
@@ -345,7 +351,6 @@ with DAG(
     # [START howto_operator_sagemaker_processing_async]
     preprocess_raw_data = SageMakerProcessingOperatorAsync(
         task_id="preprocess_raw_data",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         config=test_setup["processing_config"],
     )
     # [END howto_operator_sagemaker_processing_async]
@@ -353,7 +358,6 @@ with DAG(
     # [START howto_operator_sagemaker_training_async]
     train_model = SageMakerTrainingOperatorAsync(
         task_id="train_model",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         print_log=False,
         config=test_setup["training_config"],
     )
@@ -362,21 +366,18 @@ with DAG(
     # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         config=test_setup["transform_config"],
     )
     # [END howto_operator_sagemaker_transform_async]
 
     delete_model = SageMakerDeleteModelOperator(
         task_id="delete_model",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         config={"ModelName": test_setup["model_name"]},
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
     delete_bucket = S3DeleteBucketOperator(
         task_id="delete_bucket",
-        aws_conn_id=SAGEMAKER_CONN_ID,
         trigger_rule=TriggerRule.ALL_DONE,
         bucket_name=test_setup["bucket_name"],
         force_delete=True,
