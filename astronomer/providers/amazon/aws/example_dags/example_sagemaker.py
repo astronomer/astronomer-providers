@@ -384,8 +384,8 @@ with DAG(
         force_delete=True,
     )
 
-    delete_logs = PythonOperator(
-        task_id="delete_logs", trigger_rule=TriggerRule.ALL_DONE, python_callable=delete_logs
+    delete_logs_step = PythonOperator(
+        task_id="delete_logs_step", trigger_rule=TriggerRule.ALL_DONE, python_callable=delete_logs
     )
 
     chain(
@@ -404,5 +404,5 @@ with DAG(
         # TEST TEARDOWN
         delete_model,
         delete_bucket,
-        delete_logs,
+        delete_logs_step,
     )
