@@ -321,11 +321,13 @@ with DAG(
 
     create_bucket = S3CreateBucketOperator(
         task_id="create_bucket",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         bucket_name=test_setup["bucket_name"],
     )
 
     upload_dataset = S3CreateObjectOperator(
         task_id="upload_dataset",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         s3_bucket=test_setup["bucket_name"],
         s3_key=test_setup["raw_data_s3_key_input"],
         data=DATASET,
@@ -343,6 +345,7 @@ with DAG(
 
     upload_transform_dataset = S3CreateObjectOperator(
         task_id="upload_transform_dataset",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         s3_bucket=test_setup["bucket_name"],
         s3_key=test_setup["transform_data_csv"],
         data=TRANSFORM_DATASET,
@@ -351,6 +354,7 @@ with DAG(
     # [START howto_operator_sagemaker_processing_async]
     preprocess_raw_data = SageMakerProcessingOperatorAsync(
         task_id="preprocess_raw_data",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         config=test_setup["processing_config"],
     )
     # [END howto_operator_sagemaker_processing_async]
@@ -358,6 +362,7 @@ with DAG(
     # [START howto_operator_sagemaker_training_async]
     train_model = SageMakerTrainingOperatorAsync(
         task_id="train_model",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         print_log=False,
         config=test_setup["training_config"],
     )
@@ -366,18 +371,21 @@ with DAG(
     # [START howto_operator_sagemaker_transform_async]
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         config=test_setup["transform_config"],
     )
     # [END howto_operator_sagemaker_transform_async]
 
     delete_model = SageMakerDeleteModelOperator(
         task_id="delete_model",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         config={"ModelName": test_setup["model_name"]},
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
     delete_bucket = S3DeleteBucketOperator(
         task_id="delete_bucket",
+        aws_conn_id=SAGEMAKER_CONN_ID,
         trigger_rule=TriggerRule.ALL_DONE,
         bucket_name=test_setup["bucket_name"],
         force_delete=True,
