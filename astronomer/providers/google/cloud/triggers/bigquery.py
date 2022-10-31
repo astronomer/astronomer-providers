@@ -99,7 +99,28 @@ class BigQueryTrigger(PongTrigger):
         """Poll the Big Query job."""
         hook = self._get_async_hook()
         resp = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
-        return resp, {"job_id": self.job_id, "poll_interval": self.poll_interval}
+        return resp, {
+            "job_id": self.job_id,
+            "project_id": self.project_id,
+            "poll_interval": self.poll_interval,
+        }
+
+
+class BigQueryCheckTrigger(BigQueryTrigger):
+    """BigQueryCheckTrigger run on the trigger worker"""
+
+    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+        """Poll the Big Query job."""
+        response, payload = await super().poll_process()
+        if response == "success":
+            hook = self._get_async_hook()
+            query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
+            records = hook.get_records(query_results)
+            if records:  # Extract only first record from the query results
+                payload["records"] = records[0]
+            else:  # If empty list, then no records are available
+                payload["records"] = None
+        return response, payload
 
 
 class BigQueryLegacyTrigger(BaseTrigger):
@@ -135,23 +156,6 @@ class BigQueryLegacyTrigger(BaseTrigger):
 
     def _get_async_hook(self) -> BigQueryHookAsync:
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
-
-
-class BigQueryCheckTrigger(BigQueryTrigger):
-    """BigQueryCheckTrigger run on the trigger worker"""
-
-    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
-        """Poll the Big Query job."""
-        response, payload = await super().poll_process()
-        if response == "success":
-            hook = self._get_async_hook()
-            query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-            records = hook.get_records(query_results)
-            if records:  # Extract only first record from the query results
-                payload["records"] = records[0]
-            else:  # If empty list, then no records are available
-                payload["records"] = None
-        return response, payload
 
 
 class BigQueryGetDataTrigger(BigQueryLegacyTrigger):

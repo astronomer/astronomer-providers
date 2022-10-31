@@ -103,13 +103,23 @@ def test_serialization(trigger, classpath, kwargs):
     [
         pytest.param(
             "pending",
-            {"status": "pending", "job_id": TEST_JOB_ID, "poll_interval": 0.0},
+            {
+                "status": "pending",
+                "job_id": TEST_JOB_ID,
+                "project_id": TEST_GCP_PROJECT_ID,
+                "poll_interval": 0.0,
+            },
             (BIG_QUERY_TRIGGER_LOGGER, logging.DEBUG, "Query is still running... sleeping for 0.0 seconds."),
             id="pending",
         ),
         pytest.param(
             "success",
-            {"status": "success", "job_id": TEST_JOB_ID, "poll_interval": 0.0},
+            {
+                "status": "success",
+                "job_id": TEST_JOB_ID,
+                "project_id": TEST_GCP_PROJECT_ID,
+                "poll_interval": 0.0,
+            },
             (BIG_QUERY_TRIGGER_LOGGER, logging.DEBUG, "Response from hook: success"),
             id="success",
         ),
@@ -119,6 +129,7 @@ def test_serialization(trigger, classpath, kwargs):
                 "status": "error",
                 "message": "Unknown response: '???'",
                 "job_id": TEST_JOB_ID,
+                "project_id": TEST_GCP_PROJECT_ID,
                 "poll_interval": 0.0,
             },
             (BIG_QUERY_TRIGGER_LOGGER, logging.ERROR, "Unknown response from hook: ???"),
@@ -327,7 +338,13 @@ async def test_bigquery_check_op_trigger_success(mock_job_output, mock_job_statu
     generator = trigger.run()
     actual = await generator.asend(None)
 
-    expected = {"status": "success", "records": records, "job_id": TEST_JOB_ID, "poll_interval": 0.0}
+    expected = {
+        "status": "success",
+        "records": records,
+        "job_id": TEST_JOB_ID,
+        "project_id": TEST_GCP_PROJECT_ID,
+        "poll_interval": 0.0,
+    }
     assert TriggerEvent(expected) == actual
 
 

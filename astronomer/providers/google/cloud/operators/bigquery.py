@@ -38,24 +38,18 @@ class BigQueryPingPongOperator(BaseOperator):
 
     trigger_class: Type[BigQueryTrigger]
     gcp_conn_id: str
-    job_id: Optional[str]
-    project_id: Optional[str]
 
-    def start_ping_pong(self) -> None:
+    def start_ping_pong(self, *, job_id: Optional[str], project_id: Optional[str]) -> None:
         """Start doing ping-pong with the triggerer."""
-        self._call_defer()
+        self._call_defer(job_id=job_id, project_id=project_id)
 
     def end_ping_pong(self, event: Dict[str, Any]) -> None:
         """Hook called after ping-pong has finished successfully."""
 
-    def _call_defer(self) -> None:
+    def _call_defer(self, *, job_id: Optional[str], project_id: Optional[str]) -> None:
         self.defer(
             timeout=self.execution_timeout,
-            trigger=self.trigger_class(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                project_id=self.project_id,
-            ),
+            trigger=self.trigger_class(conn_id=self.gcp_conn_id, job_id=job_id, project_id=project_id),
             method_name="execution_progress",
         )
 
@@ -73,7 +67,7 @@ class BigQueryPingPongOperator(BaseOperator):
             self.end_ping_pong(event)
         elif event["status"] == "pending":
             self.log.info("Query is still running... sleeping for %s seconds.", event["poll_interval"])
-            self._call_defer()
+            self._call_defer(job_id=event["job_id"], project_id=event["project_id"])
         else:
             raise PingPongError(event)
 
@@ -164,7 +158,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BigQueryPingPong
 
         self.job_id = job.job_id
         context["ti"].xcom_push(key="job_id", value=self.job_id)
-        self.start_ping_pong()
+        self.start_ping_pong(job_id=self.job_id, project_id=self.project_id)
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator):
@@ -175,16 +169,10 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator
 
     trigger_class = BigQueryCheckTrigger
 
-    def _submit_job(
-        self,
-        hook: BigQueryHook,
-        job_id: str,
-    ) -> BigQueryJob:
+    def _submit_job(self, hook: BigQueryHook, job_id: str) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Trigger."""
-        configuration = {"query": {"query": self.sql}}
-
         return hook.insert_job(
-            configuration=configuration,
+            configuration={"query": {"query": self.sql}},
             project_id=hook.project_id,
             location=self.location,
             job_id=job_id,
@@ -196,7 +184,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator
         hook = BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         job = self._submit_job(hook, job_id="")
         context["ti"].xcom_push(key="job_id", value=job.job_id)
-        self.start_ping_pong()
+        self.start_ping_pong(job_id=job.job_id, project_id=job.project)
 
     def end_ping_pong(self, event: Dict[str, Any]) -> None:
         """Handle records after query finishes successfully."""
