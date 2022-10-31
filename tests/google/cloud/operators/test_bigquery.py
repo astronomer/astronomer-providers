@@ -311,50 +311,56 @@ def test_bigquery_check_operator_execute_failure(context):
     )
 
     with pytest.raises(AirflowException):
-        operator.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+        operator.execution_progress(
+            context=None, event={"status": "error", "message": "test failure message"}
+        )
 
 
-def test_bigquery_check_op_execute_complete_with_no_records():
+def test_bigquery_check_op_end_ping_pong_with_no_records():
     """Asserts that exception is raised with correct expected exception message"""
 
     operator = BigQueryCheckOperatorAsync(
-        task_id="bq_check_operator_execute_complete", sql="SELECT * FROM any", location=TEST_DATASET_LOCATION
+        task_id="bq_check_operator_end_ping_pong",
+        sql="SELECT * FROM any",
+        location=TEST_DATASET_LOCATION,
     )
 
     with pytest.raises(AirflowException) as exc:
-        operator.execute_complete(context=None, event={"status": "success", "records": None})
+        operator.end_ping_pong({"status": "success", "records": None})
 
     expected_exception_msg = "The query returned None"
 
     assert str(exc.value) == expected_exception_msg
 
 
-def test_bigquery_check_op_execute_complete_with_non_boolean_records():
+def test_bigquery_check_op_end_ping_pong_with_non_boolean_records():
     """Executing a sql which returns a non-boolean value should raise exception"""
 
     test_sql = "SELECT * FROM any"
 
     operator = BigQueryCheckOperatorAsync(
-        task_id="bq_check_operator_execute_complete", sql=test_sql, location=TEST_DATASET_LOCATION
+        task_id="bq_check_operator_end_ping_pong", sql=test_sql, location=TEST_DATASET_LOCATION
     )
 
     expected_exception_msg = f"Test failed.\nQuery:\n{test_sql}\nResults:\n{[20, False]!s}"
 
     with pytest.raises(AirflowException) as exc:
-        operator.execute_complete(context=None, event={"status": "success", "records": [20, False]})
+        operator.end_ping_pong({"status": "success", "records": [20, False]})
 
     assert str(exc.value) == expected_exception_msg
 
 
-def test_bigquery_check_operator_execute_complete():
+def test_bigquery_check_operator_end_ping_pong():
     """Asserts that logging occurs as expected"""
 
     operator = BigQueryCheckOperatorAsync(
-        task_id="bq_check_operator_execute_complete", sql="SELECT * FROM any", location=TEST_DATASET_LOCATION
+        task_id="bq_check_operator_end_ping_pong",
+        sql="SELECT * FROM any",
+        location=TEST_DATASET_LOCATION,
     )
 
     with mock.patch.object(operator.log, "info") as mock_log_info:
-        operator.execute_complete(context=None, event={"status": "success", "records": [20]})
+        operator.end_ping_pong({"status": "success", "records": [20]})
     mock_log_info.assert_called_with("Success.")
 
 

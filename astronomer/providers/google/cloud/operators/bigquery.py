@@ -69,7 +69,7 @@ class BigQueryPingPongOperator(BaseOperator):
         * Defer the worker again, asking the triggerer to report again later.
         """
         if event["status"] == "success":
-            self.log.info("%s completed with response: %s", self.task_id, event["message"])
+            self.log.info("%s completed with response: %s", self.task_id, event.get("message", ""))
             self.end_ping_pong(event)
         elif event["status"] == "pending":
             self.log.info("Query is still running... sleeping for %s seconds.", event["poll_interval"])
@@ -126,7 +126,8 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BigQueryPingPong
 
     trigger_class = BigQueryTrigger
 
-    def execute(self, context: Context) -> None:  # noqa: D102
+    def execute(self, context: Context) -> None:
+        """Start query and the ping-pong process."""
         hook = BigQueryHook(gcp_conn_id=self.gcp_conn_id)
 
         self.hook = hook
@@ -166,11 +167,13 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BigQueryPingPong
         self.start_ping_pong()
 
 
-class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
+class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator):
     """
     BigQueryCheckOperatorAsync is asynchronous operator, submit the job and check
     for the status in async mode by using the job id
     """
+
+    trigger_class = BigQueryCheckTrigger
 
     def _submit_job(
         self,
@@ -188,31 +191,15 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             nowait=True,
         )
 
-    def execute(self, context: Context) -> None:  # noqa: D102
-        hook = BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-        )
+    def execute(self, context: Context) -> None:
+        """Start query and the ping-pong process."""
+        hook = BigQueryHook(gcp_conn_id=self.gcp_conn_id)
         job = self._submit_job(hook, job_id="")
         context["ti"].xcom_push(key="job_id", value=job.job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryCheckTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=job.job_id,
-                project_id=hook.project_id,
-            ),
-            method_name="execute_complete",
-        )
+        self.start_ping_pong()
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-
+    def end_ping_pong(self, event: Dict[str, Any]) -> None:
+        """Handle records after query finishes successfully."""
         records = event["records"]
         if not records:
             raise AirflowException("The query returned None")
