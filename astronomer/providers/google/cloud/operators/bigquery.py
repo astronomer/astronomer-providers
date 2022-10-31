@@ -14,7 +14,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryTrigger,
@@ -43,8 +42,9 @@ class BigQueryPingPongOperator(BaseOperator):
         """Start doing ping-pong with the triggerer."""
         self._call_defer(job_id=job_id, project_id=project_id)
 
-    def end_ping_pong(self, event: Dict[str, Any]) -> None:
+    def end_ping_pong(self, event: Dict[str, Any]) -> Any:
         """Hook called after ping-pong has finished successfully."""
+        return None
 
     def _call_defer(self, *, job_id: Optional[str], project_id: Optional[str]) -> None:
         self.defer(
@@ -53,7 +53,7 @@ class BigQueryPingPongOperator(BaseOperator):
             method_name="execution_progress",
         )
 
-    def execution_progress(self, context: Context, event: Dict[str, Any]) -> None:
+    def execution_progress(self, context: Context, event: Dict[str, Any]) -> Any:
         """Callback to report progress on the job.
 
         This checks the status reported by the trigger event, and:
@@ -64,10 +64,10 @@ class BigQueryPingPongOperator(BaseOperator):
         """
         if event["status"] == "success":
             self.log.info("%s completed with response: %s", self.task_id, event.get("message", ""))
-            self.end_ping_pong(event)
+            return self.end_ping_pong(event)
         elif event["status"] == "pending":
             self.log.info("Query is still running... sleeping for %s seconds.", event["poll_interval"])
-            self._call_defer(job_id=event["job_id"], project_id=event["project_id"])
+            return self._call_defer(job_id=event["job_id"], project_id=event["project_id"])
         else:
             raise PingPongError(event)
 
@@ -167,7 +167,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator
     for the status in async mode by using the job id
     """
 
-    trigger_class = BigQueryCheckTrigger
+    trigger_class = BigQueryGetDataTrigger
 
     def _submit_job(self, hook: BigQueryHook, job_id: str) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Trigger."""
@@ -186,18 +186,18 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator
         context["ti"].xcom_push(key="job_id", value=job.job_id)
         self.start_ping_pong(job_id=job.job_id, project_id=job.project)
 
-    def end_ping_pong(self, event: Dict[str, Any]) -> None:
+    def end_ping_pong(self, event: Dict[str, Any]) -> Any:
         """Handle records after query finishes successfully."""
         records = event["records"]
-        if not records:
+        if not records or not records[0]:
             raise AirflowException("The query returned None")
-        elif not all(bool(r) for r in records):
-            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records!s}")
+        elif not all(bool(r) for r in records[0]):
+            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records[0]!s}")
         self.log.info("Record: %s", event["records"])
         self.log.info("Success.")
 
 
-class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
+class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryPingPongOperator):
     """
     Fetches the data from a BigQuery table (alternatively fetch data for selected columns)
     and returns data in a python list. The number of elements in the returned list will
@@ -245,6 +245,8 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         account from the list granting this role to the originating account (templated).
     """
 
+    trigger_class = BigQueryGetDataTrigger
+
     def _submit_job(  # type: ignore[override]
         self,
         hook: BigQueryHook,
@@ -288,27 +290,10 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         job = self._submit_job(hook, job_id="", configuration=configuration)
         self.job_id = job.job_id
         context["ti"].xcom_push(key="job_id", value=self.job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryGetDataTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                dataset_id=self.dataset_id,
-                table_id=self.table_id,
-                project_id=hook.project_id,
-            ),
-            method_name="execute_complete",
-        )
+        self.start_ping_pong(job_id=job.job_id, project_id=job.project)
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-
+    def end_ping_pong(self, event: Dict[str, Any]) -> Any:
+        """Handle records after query finishes successfully."""
         self.log.info("Total extracted rows: %s", len(event["records"]))
         return event["records"]
 

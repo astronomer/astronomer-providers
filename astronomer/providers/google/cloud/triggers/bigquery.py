@@ -106,8 +106,8 @@ class BigQueryTrigger(PongTrigger):
         }
 
 
-class BigQueryCheckTrigger(BigQueryTrigger):
-    """BigQueryCheckTrigger run on the trigger worker"""
+class BigQueryGetDataTrigger(BigQueryTrigger):
+    """BigQueryGetDataTrigger run on the trigger worker"""
 
     async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
         """Poll the Big Query job."""
@@ -115,11 +115,7 @@ class BigQueryCheckTrigger(BigQueryTrigger):
         if response == "success":
             hook = self._get_async_hook()
             query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-            records = hook.get_records(query_results)
-            if records:  # Extract only first record from the query results
-                payload["records"] = records[0]
-            else:  # If empty list, then no records are available
-                payload["records"] = None
+            payload["records"] = hook.get_records(query_results)
         return response, payload
 
 
@@ -156,55 +152,6 @@ class BigQueryLegacyTrigger(BaseTrigger):
 
     def _get_async_hook(self) -> BigQueryHookAsync:
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
-
-
-class BigQueryGetDataTrigger(BigQueryLegacyTrigger):
-    """BigQueryGetDataTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class"""
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryLegacyTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryGetDataTrigger",
-            {
-                "conn_id": self.conn_id,
-                "job_id": self.job_id,
-                "dataset_id": self.dataset_id,
-                "project_id": self.project_id,
-                "table_id": self.table_id,
-                "poll_interval": self.poll_interval,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Gets current job execution status and yields a TriggerEvent with response data"""
-        hook = self._get_async_hook()
-        while True:
-            try:
-                # Poll for job execution status
-                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
-                if response_from_hook == "success":
-                    query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-                    records = hook.get_records(query_results)
-                    self.log.debug("Response from hook: %s", response_from_hook)
-                    yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "message": response_from_hook,
-                            "records": records,
-                        }
-                    )
-                    return
-                elif response_from_hook == "pending":
-                    self.log.info("Query is still running...")
-                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
-                    await asyncio.sleep(self.poll_interval)
-                else:
-                    yield TriggerEvent({"status": "error", "message": response_from_hook})
-                    return
-            except Exception as e:
-                self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e)})
-                return
 
 
 class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):

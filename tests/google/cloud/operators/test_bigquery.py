@@ -18,7 +18,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryTrigger,
@@ -282,7 +281,7 @@ def test_execute_force_rerun(mock_hook):
 @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
 def test_bigquery_check_operator_async(mock_hook):
     """
-    Asserts that a task is deferred and a BigQueryCheckTrigger will be fired
+    Asserts that a task is deferred and a BigQueryGetDataTrigger will be fired
     when the BigQueryCheckOperatorAsync is executed.
     """
     job_id = "123456"
@@ -300,7 +299,7 @@ def test_bigquery_check_operator_async(mock_hook):
     with pytest.raises(TaskDeferred) as exc:
         op.execute(create_context(op))
 
-    assert isinstance(exc.value.trigger, BigQueryCheckTrigger), "Trigger is not a BigQueryCheckTrigger"
+    assert isinstance(exc.value.trigger, BigQueryGetDataTrigger), "Trigger is not a BigQueryGetDataTrigger"
 
 
 def test_bigquery_check_operator_execute_failure(context):
@@ -345,7 +344,7 @@ def test_bigquery_check_op_end_ping_pong_with_non_boolean_records():
     expected_exception_msg = f"Test failed.\nQuery:\n{test_sql}\nResults:\n{[20, False]!s}"
 
     with pytest.raises(AirflowException) as exc:
-        operator.end_ping_pong({"status": "success", "records": [20, False]})
+        operator.end_ping_pong({"status": "success", "records": [[20, False]]})
 
     assert str(exc.value) == expected_exception_msg
 
@@ -360,7 +359,7 @@ def test_bigquery_check_operator_end_ping_pong():
     )
 
     with mock.patch.object(operator.log, "info") as mock_log_info:
-        operator.end_ping_pong({"status": "success", "records": [20]})
+        operator.end_ping_pong({"status": "success", "records": [[20]]})
     mock_log_info.assert_called_with("Success.")
 
 
