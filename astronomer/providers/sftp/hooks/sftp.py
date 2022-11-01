@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from fnmatch import fnmatch
 from typing import List, Optional
 
@@ -131,6 +131,7 @@ class SFTPHookAsync(BaseHook):
         """
         Makes SFTP async connection and looks for last modified time in the specific file
         path and returns last modification time for the file path.
+        
         :param path: full path to the remote file
         """
         ssh_conn = await self._get_conn()

@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import Any, AsyncIterator, Dict, Tuple
+from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -28,7 +28,7 @@ class SFTPTrigger(BaseTrigger):
         path: str,
         file_pattern: str = "",
         sftp_conn_id: str = "sftp_default",
-        newer_than: datetime = None,
+        newer_than: Optional[datetime] = None,
         poke_interval: float = 5,
     ) -> None:
         super().__init__()
@@ -53,8 +53,12 @@ class SFTPTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """
-        Makes a series of asynchronous calls to sftp servers via async sftp hook. It yields a Trigger if
-        file matching file pattern exists at the specified path, otherwise it throws an exception.
+        Makes a series of asynchronous calls to sftp servers via async sftp hook. It yields a Trigger
+
+        - If file matching file pattern exists at the specified path return it,
+        - If file pattern was not provided, it looks directly into the specific path which was provided.
+        - If newer then datetime was provided it looks for the file path last modified time and
+          check whether the last modified time is greater, if true return file if false it polls again.
         """
         hook = self._get_async_hook()
         exc = None

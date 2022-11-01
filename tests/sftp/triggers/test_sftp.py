@@ -50,8 +50,8 @@ class TestSFTPTrigger:
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_mod_time")
     async def test_sftp_success_without_file_pattern(self, mock_mod_time):
         """
-        Assert that a TriggerEvent with a success status is yielded if a file
-        matching without the pattern
+        Test SFTPTrigger run method by mocking the file path and without file pattern,
+        assert that a TriggerEvent with a success status is yielded.
         """
         mock_mod_time.return_value = "19700101053001"
 
@@ -68,8 +68,8 @@ class TestSFTPTrigger:
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_mod_time")
     async def test_sftp_success_with_newer_then(self, mock_mod_time):
         """
-        Assert that a TriggerEvent with a success status is yielded if a file
-        matching without the pattern
+        Test SFTPTrigger run method by mocking the file path, without file pattern, and with newer then datetime
+        assert that a TriggerEvent with a success status is yielded.
         """
         mock_mod_time.return_value = "19700101053001"
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -104,10 +104,11 @@ class TestSFTPTrigger:
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_mod_time")
-    async def test_sftp_success_with_newer_then_false(self, mock_mod_time):
+    async def test_sftp_with_newer_then_date_greater(self, mock_mod_time):
         """
-        Assert that a TriggerEvent with a success status is yielded if a file
-        matching without the pattern
+        Test the Trigger run method by passing full file path, without file pattern and along with newer then datetime.
+        mock the datetime as greater then the last modified date and make the trigger task in running
+        state and assert to success
         """
         today_time = time.time()
         mock_mod_time.return_value = datetime.date.fromtimestamp(today_time).strftime("%Y%m%d%H%M%S")
@@ -130,8 +131,7 @@ class TestSFTPTrigger:
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_file_by_pattern")
     async def test_sftp_trigger_run_trigger_failure_state(self, mock_get_file_by_pattern):
         """
-        Assert that a TriggerEvent with a failure status is yielded if an exception
-        other than an AirflowException is raised by the hook
+        Mock the hook to raise other than an AirflowException and assert that a TriggerEvent with a failure status
         """
         mock_get_file_by_pattern.side_effect = Exception("An unexpected exception")
 
