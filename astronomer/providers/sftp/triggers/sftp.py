@@ -70,8 +70,6 @@ class SFTPTrigger(BaseTrigger):
                 mod_time = await hook.get_mod_time(actual_file_to_check)
                 if _newer_than:
                     _mod_time = convert_to_utc(datetime.strptime(mod_time, "%Y%m%d%H%M%S"))
-                    print("_mod_time ", _mod_time)
-                    print("_newer_than ", _newer_than)
                     if _newer_than > _mod_time:
                         await asyncio.sleep(self.poke_interval)
                 yield TriggerEvent({"status": "success", "message": f"Sensed file: {actual_file_to_check}"})
