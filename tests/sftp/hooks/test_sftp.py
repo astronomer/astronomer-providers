@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -174,7 +175,8 @@ class TestSFTPHookAsync:
         mock_hook_get_conn.return_value.start_sftp_client.return_value = MockSFTPClient()
         hook = SFTPHookAsync()
         mod_time = await hook.get_mod_time("/path/exists/file")
-        assert mod_time == "20221101170606"
+        expected_value = datetime.datetime.fromtimestamp(1667302566).strftime("%Y%m%d%H%M%S")
+        assert mod_time == expected_value
 
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
