@@ -1,5 +1,14 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, SupportsAbs, Tuple, Union
+from typing import (
+    Any,
+    AsyncIterator,
+    Collection,
+    Dict,
+    Optional,
+    SupportsAbs,
+    Tuple,
+    Union,
+)
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
@@ -14,9 +23,17 @@ from astronomer.providers.google.cloud.hooks.bigquery import (
 class PongTrigger(BaseTrigger):
     """Trigger to implement a "ping-pong" effect."""
 
+    serialize_fields: Collection[str]
     poll_interval: float
 
-    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+        """Serializes trigger arguments and classpath."""
+        return (
+            f"{self.__module__}.{self.__class__.__name__}",
+            {f: getattr(self, f) for f in self.serialize_fields},
+        )
+
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
         """Override to implement polling.
 
         This should implement only *one* polling round; the triggerer acts as
@@ -34,22 +51,28 @@ class PongTrigger(BaseTrigger):
         """Gets current job execution status and yields a TriggerEvent"""
         await asyncio.sleep(self.poll_interval)
 
+        _, data = self.serialize()
         try:
-            response, payload = await self.poll_process()
+            response, result = await self.poll_process()
         except Exception as e:
             self.log.exception("Exception occurred while checking for query completion")
-            yield TriggerEvent({"status": "error", "message": str(e)})
+            yield TriggerEvent({"status": "error", "message": str(e), "trigger": data})
             return
 
         if response == "success":
-            self.log.debug("Response from hook: %s", response)
-            yield TriggerEvent({"status": "success", **payload})
+            self.log.debug("Poll response: %s", response)
+            yield TriggerEvent({"status": "success", "trigger": data, "result": result})
         elif response == "pending":
-            self.log.debug("Query is still running... sleeping for %s seconds.", self.poll_interval)
-            yield TriggerEvent({"status": "pending", **payload})
+            self.log.debug("Still pending... sleeping for %s seconds.", self.poll_interval)
+            yield TriggerEvent({"status": "pending", "trigger": data, "result": result})
+        elif response == "error":
+            self.log.error("Poll response: %s", response)
+            message = "Error response from hook"
+            yield TriggerEvent({"status": "error", "message": message, "trigger": data, "result": result})
         else:
-            self.log.error("Unknown response from hook: %s", response)
-            yield TriggerEvent({"status": "error", "message": f"Unknown response: {response!r}", **payload})
+            self.log.error("Unknown poll response: %s", response)
+            message = f"Unknown response from hook: {response}"
+            yield TriggerEvent({"status": "error", "message": message, "trigger": data, "result": result})
 
 
 class BigQueryTrigger(PongTrigger):
@@ -79,84 +102,41 @@ class BigQueryTrigger(PongTrigger):
         self.log.info("Using connection %r.", conn_id)
         self.conn_id = conn_id
         self.job_id = job_id
-        self._job_conn = None
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id
         self.poll_interval = poll_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes trigger arguments and classpath."""
-        return (
-            f"{self.__module__}.{self.__class__.__name__}",
-            {f: getattr(self, f) for f in self.serialize_fields},
-        )
-
     def _get_async_hook(self) -> BigQueryHookAsync:
         return BigQueryHookAsync(gcp_conn_id=self.conn_id)
 
-    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+
+class BigQueryInsertJobTrigger(BigQueryTrigger):
+    """BigQueryInsertJobTrigger run on the trigger worker"""
+
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
         """Poll the Big Query job."""
         hook = self._get_async_hook()
-        resp = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
-        return resp, {
-            "job_id": self.job_id,
-            "project_id": self.project_id,
-            "poll_interval": self.poll_interval,
-        }
+        response = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+        return response, None
 
 
 class BigQueryGetDataTrigger(BigQueryTrigger):
     """BigQueryGetDataTrigger run on the trigger worker"""
 
-    async def poll_process(self) -> Tuple[Optional[str], Dict[str, Any]]:
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
         """Poll the Big Query job."""
-        response, payload = await super().poll_process()
-        if response == "success":
-            hook = self._get_async_hook()
-            query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-            payload["records"] = hook.get_records(query_results)
-        return response, payload
+        hook = self._get_async_hook()
+        response = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+        if response != "success":
+            return response, None
+        query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
+        return "success", hook.get_records(query_results)
 
 
-class BigQueryLegacyTrigger(BaseTrigger):
+class BigQueryIntervalCheckTrigger(BigQueryTrigger):
     """
-    BigQueryLegacyTrigger run on the trigger worker to perform insert operation
-
-    :param conn_id: Reference to google cloud connection id
-    :param job_id:  The ID of the job. It will be suffixed with hash of job configuration
-    :param project_id: Google Cloud Project where the job is running
-    :param dataset_id: The dataset ID of the requested table. (templated)
-    :param table_id: The table ID of the requested table. (templated)
-    :param poll_interval: polling period in seconds to check for the status
-    """
-
-    def __init__(
-        self,
-        conn_id: str,
-        job_id: Optional[str],
-        project_id: Optional[str],
-        dataset_id: Optional[str] = None,
-        table_id: Optional[str] = None,
-        poll_interval: float = 4.0,
-    ):
-        super().__init__()
-        self.log.info("Using the connection  %s .", conn_id)
-        self.conn_id = conn_id
-        self.job_id = job_id
-        self._job_conn = None
-        self.dataset_id = dataset_id
-        self.project_id = project_id
-        self.table_id = table_id
-        self.poll_interval = poll_interval
-
-    def _get_async_hook(self) -> BigQueryHookAsync:
-        return BigQueryHookAsync(gcp_conn_id=self.conn_id)
-
-
-class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):
-    """
-    BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class
+    BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryTrigger.
 
     :param conn_id: Reference to google cloud connection id
     :param first_job_id:  The ID of the job 1 performed
@@ -174,8 +154,23 @@ class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):
     :param poll_interval: polling period in seconds to check for the status
     """
 
+    serialize_fields = [
+        "conn_id",
+        "first_job_id",
+        "second_job_id",
+        "project_id",
+        "table",
+        "metrics_thresholds",
+        "date_filter_column",
+        "days_back",
+        "ratio_formula",
+        "ignore_zero",
+        "poll_interval",
+    ]
+
     def __init__(
         self,
+        *,
         conn_id: str,
         first_job_id: str,
         second_job_id: str,
@@ -198,10 +193,8 @@ class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):
             table_id=table_id,
             poll_interval=poll_interval,
         )
-        self.conn_id = conn_id
         self.first_job_id = first_job_id
         self.second_job_id = second_job_id
-        self.project_id = project_id
         self.table = table
         self.metrics_thresholds = metrics_thresholds
         self.date_filter_column = date_filter_column
@@ -209,99 +202,63 @@ class BigQueryIntervalCheckTrigger(BigQueryLegacyTrigger):
         self.ratio_formula = ratio_formula
         self.ignore_zero = ignore_zero
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryCheckTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger",
-            {
-                "conn_id": self.conn_id,
-                "first_job_id": self.first_job_id,
-                "second_job_id": self.second_job_id,
-                "project_id": self.project_id,
-                "table": self.table,
-                "metrics_thresholds": self.metrics_thresholds,
-                "date_filter_column": self.date_filter_column,
-                "days_back": self.days_back,
-                "ratio_formula": self.ratio_formula,
-                "ignore_zero": self.ignore_zero,
-            },
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
+        """Poll the two jobs and combine their results."""
+        hook = self._get_async_hook()
+        first_job_response_from_hook = await hook.get_job_status(
+            job_id=self.first_job_id, project_id=self.project_id
+        )
+        second_job_response_from_hook = await hook.get_job_status(
+            job_id=self.second_job_id, project_id=self.project_id
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Gets current job execution status and yields a TriggerEvent"""
-        hook = self._get_async_hook()
-        while True:
-            try:
-                first_job_response_from_hook = await hook.get_job_status(
-                    job_id=self.first_job_id, project_id=self.project_id
-                )
-                second_job_response_from_hook = await hook.get_job_status(
-                    job_id=self.second_job_id, project_id=self.project_id
-                )
+        if first_job_response_from_hook == "success" and second_job_response_from_hook == "success":
+            first_query_results = await hook.get_job_output(
+                job_id=self.first_job_id, project_id=self.project_id
+            )
 
-                if first_job_response_from_hook == "success" and second_job_response_from_hook == "success":
-                    first_query_results = await hook.get_job_output(
-                        job_id=self.first_job_id, project_id=self.project_id
-                    )
+            second_query_results = await hook.get_job_output(
+                job_id=self.second_job_id, project_id=self.project_id
+            )
 
-                    second_query_results = await hook.get_job_output(
-                        job_id=self.second_job_id, project_id=self.project_id
-                    )
+            first_records = hook.get_records(first_query_results)
 
-                    first_records = hook.get_records(first_query_results)
+            second_records = hook.get_records(second_query_results)
 
-                    second_records = hook.get_records(second_query_results)
+            # If empty list, then no records are available
+            if not first_records:
+                first_job_row: Optional[str] = None
+            else:
+                # Extract only first record from the query results
+                first_job_row = first_records.pop(0)
 
-                    # If empty list, then no records are available
-                    if not first_records:
-                        first_job_row: Optional[str] = None
-                    else:
-                        # Extract only first record from the query results
-                        first_job_row = first_records.pop(0)
+            # If empty list, then no records are available
+            if not second_records:
+                second_job_row: Optional[str] = None
+            else:
+                # Extract only first record from the query results
+                second_job_row = second_records.pop(0)
 
-                    # If empty list, then no records are available
-                    if not second_records:
-                        second_job_row: Optional[str] = None
-                    else:
-                        # Extract only first record from the query results
-                        second_job_row = second_records.pop(0)
+            hook.interval_check(
+                first_job_row,
+                second_job_row,
+                self.metrics_thresholds,
+                self.ignore_zero,
+                self.ratio_formula,
+            )
 
-                    hook.interval_check(
-                        first_job_row,
-                        second_job_row,
-                        self.metrics_thresholds,
-                        self.ignore_zero,
-                        self.ratio_formula,
-                    )
+            return "success", [first_job_row, second_job_row]
+        elif first_job_response_from_hook == "pending" or second_job_response_from_hook == "pending":
+            self.log.info("Query is still running...")
+            self.log.info("Sleeping for %s seconds.", self.poll_interval)
+            return "pending", None
 
-                    yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "message": "Job completed",
-                            "first_row_data": first_job_row,
-                            "second_row_data": second_job_row,
-                        }
-                    )
-                    return
-                elif first_job_response_from_hook == "pending" or second_job_response_from_hook == "pending":
-                    self.log.info("Query is still running...")
-                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
-                    await asyncio.sleep(self.poll_interval)
-                else:
-                    yield TriggerEvent(
-                        {"status": "error", "message": second_job_response_from_hook, "data": None}
-                    )
-                    return
-
-            except Exception as e:
-                self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e)})
-                return
+        return "error", [first_job_response_from_hook, second_job_response_from_hook]
 
 
-class BigQueryValueCheckTrigger(BigQueryLegacyTrigger):
+class BigQueryValueCheckTrigger(BigQueryTrigger):
     """
-    BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryLegacyTrigger class
+    BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryTrigger.
 
     :param conn_id: Reference to google cloud connection id
     :param sql: the sql to be executed
@@ -314,8 +271,21 @@ class BigQueryValueCheckTrigger(BigQueryLegacyTrigger):
     :param poll_interval: polling period in seconds to check for the status
     """
 
+    serialize_fields = [
+        "conn_id",
+        "job_id",
+        "dataset_id",
+        "project_id",
+        "table_id",
+        "sql",
+        "pass_value",
+        "tolerance",
+        "poll_interval",
+    ]
+
     def __init__(
         self,
+        *,
         conn_id: str,
         sql: str,
         pass_value: Union[int, float, str],
@@ -338,52 +308,22 @@ class BigQueryValueCheckTrigger(BigQueryLegacyTrigger):
         self.pass_value = pass_value
         self.tolerance = tolerance
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryValueCheckTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger",
-            {
-                "conn_id": self.conn_id,
-                "pass_value": self.pass_value,
-                "job_id": self.job_id,
-                "dataset_id": self.dataset_id,
-                "project_id": self.project_id,
-                "sql": self.sql,
-                "table_id": self.table_id,
-                "tolerance": self.tolerance,
-                "poll_interval": self.poll_interval,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Gets current job execution status and yields a TriggerEvent"""
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
+        """Poll the Big Query job."""
         hook = self._get_async_hook()
-        while True:
+        response = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
+        if response == "success":
+            query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
             try:
-                # Poll for job execution status
-                response_from_hook = await hook.get_job_status(job_id=self.job_id, project_id=self.project_id)
-                if response_from_hook == "success":
-                    query_results = await hook.get_job_output(job_id=self.job_id, project_id=self.project_id)
-                    records = hook.get_records(query_results)
-                    records = records.pop(0) if records else None
-                    hook.value_check(self.sql, self.pass_value, records, self.tolerance)
-                    yield TriggerEvent({"status": "success", "message": "Job completed", "records": records})
-                    return
-                elif response_from_hook == "pending":
-                    self.log.info("Query is still running...")
-                    self.log.info("Sleeping for %s seconds.", self.poll_interval)
-                    await asyncio.sleep(self.poll_interval)
-                else:
-                    yield TriggerEvent({"status": "error", "message": response_from_hook, "records": None})
-                    return
-
-            except Exception as e:
-                self.log.exception("Exception occurred while checking for query completion")
-                yield TriggerEvent({"status": "error", "message": str(e)})
-                return
+                record = hook.get_records(query_results)[0]
+            except IndexError:
+                record = None
+            hook.value_check(self.sql, self.pass_value, record, self.tolerance)
+            return "success", record
+        return response, None
 
 
-class BigQueryTableExistenceTrigger(BaseTrigger):
+class BigQueryTableExistenceTrigger(PongTrigger):
     """
     Initialise the BigQuery Table Existence Trigger with needed parameters
 
@@ -395,59 +335,36 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
     :param poke_interval: polling period in seconds to check for the status
     """
 
+    serialize_fields = [
+        "conn_id",
+        "project_id",
+        "dataset_id",
+        "table_id",
+        "hook_params",
+        "poll_interval",
+    ]
+
     def __init__(
         self,
+        *,
+        conn_id: str,
         project_id: str,
         dataset_id: str,
         table_id: str,
-        gcp_conn_id: str,
         hook_params: Dict[str, Any],
-        poke_interval: float = 4.0,
+        poll_interval: float = 4.0,
     ):
+        self.conn_id = conn_id
         self.dataset_id = dataset_id
         self.project_id = project_id
         self.table_id = table_id
-        self.gcp_conn_id: str = gcp_conn_id
-        self.poke_interval = poke_interval
         self.hook_params = hook_params
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes BigQueryTableExistenceTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.google.cloud.triggers.bigquery.BigQueryTableExistenceTrigger",
-            {
-                "dataset_id": self.dataset_id,
-                "project_id": self.project_id,
-                "table_id": self.table_id,
-                "gcp_conn_id": self.gcp_conn_id,
-                "poke_interval": self.poke_interval,
-                "hook_params": self.hook_params,
-            },
-        )
+        self.poll_interval = poll_interval
 
     def _get_async_hook(self) -> BigQueryTableHookAsync:
-        return BigQueryTableHookAsync(gcp_conn_id=self.gcp_conn_id)
+        return BigQueryTableHookAsync(gcp_conn_id=self.conn_id)
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
-        """Will run until the table exists in the Google Big Query."""
-        while True:
-            try:
-                hook = self._get_async_hook()
-                response = await self._table_exists(
-                    hook=hook, dataset=self.dataset_id, table_id=self.table_id, project_id=self.project_id
-                )
-                if response:
-                    yield TriggerEvent({"status": "success", "message": "success"})
-                    return
-                await asyncio.sleep(self.poke_interval)
-            except Exception as e:
-                self.log.exception("Exception occurred while checking for Table existence")
-                yield TriggerEvent({"status": "error", "message": str(e)})
-                return
-
-    async def _table_exists(
-        self, hook: BigQueryTableHookAsync, dataset: str, table_id: str, project_id: str
-    ) -> bool:
+    async def _table_exists(self) -> bool:
         """
         Create client session and make call to BigQueryTableHookAsync and check for the table in Google Big Query.
 
@@ -460,12 +377,22 @@ class BigQueryTableExistenceTrigger(BaseTrigger):
         """
         async with ClientSession() as session:
             try:
-                client = await hook.get_table_client(
-                    dataset=dataset, table_id=table_id, project_id=project_id, session=session
+                client = await self._get_async_hook().get_table_client(
+                    dataset=self.dataset_id,
+                    table_id=self.table_id,
+                    project_id=self.project_id,
+                    session=session,
                 )
                 response = await client.get()
-                return True if response else False
+                return bool(response)
             except ClientResponseError as err:
                 if err.status == 404:
                     return False
-                raise err
+                raise
+
+    async def poll_process(self) -> Tuple[Optional[str], Any]:
+        """Poll the Big Query job."""
+        result = await self._table_exists()
+        if result:
+            return "success", None
+        return "pending", None

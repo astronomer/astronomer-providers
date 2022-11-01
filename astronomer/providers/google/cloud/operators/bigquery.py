@@ -1,5 +1,5 @@
 """This module contains Google BigQueryAsync providers."""
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Type
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -15,6 +15,7 @@ from google.api_core.exceptions import Conflict
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryGetDataTrigger,
+    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryTrigger,
     BigQueryValueCheckTrigger,
@@ -38,20 +39,16 @@ class BigQueryPingPongOperator(BaseOperator):
     trigger_class: Type[BigQueryTrigger]
     gcp_conn_id: str
 
-    def start_ping_pong(self, *, job_id: Optional[str], project_id: Optional[str]) -> None:
+    def start_ping_pong(self, **kwargs: Any) -> None:
         """Start doing ping-pong with the triggerer."""
-        self._call_defer(job_id=job_id, project_id=project_id)
+        self._call_defer(self.trigger_class(conn_id=self.gcp_conn_id, **kwargs))
 
     def end_ping_pong(self, event: Dict[str, Any]) -> Any:
         """Hook called after ping-pong has finished successfully."""
         return None
 
-    def _call_defer(self, *, job_id: Optional[str], project_id: Optional[str]) -> None:
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=self.trigger_class(conn_id=self.gcp_conn_id, job_id=job_id, project_id=project_id),
-            method_name="execution_progress",
-        )
+    def _call_defer(self, trigger: BigQueryTrigger) -> None:
+        self.defer(timeout=self.execution_timeout, trigger=trigger, method_name="execution_progress")
 
     def execution_progress(self, context: Context, event: Dict[str, Any]) -> Any:
         """Callback to report progress on the job.
@@ -63,11 +60,13 @@ class BigQueryPingPongOperator(BaseOperator):
         * Defer the worker again, asking the triggerer to report again later.
         """
         if event["status"] == "success":
-            self.log.info("%s completed with response: %s", self.task_id, event.get("message", ""))
+            self.log.info("%s completed", self.task_id)
             return self.end_ping_pong(event)
         elif event["status"] == "pending":
-            self.log.info("Query is still running... sleeping for %s seconds.", event["poll_interval"])
-            return self._call_defer(job_id=event["job_id"], project_id=event["project_id"])
+            poll_interval = event["metadata"]["poll_interval"]
+            self.log.info("Query is still running... sleeping for %s seconds.", poll_interval)
+            trigger = self.trigger_class(**event["trigger"])
+            return self._call_defer(trigger)
         else:
             raise PingPongError(event)
 
@@ -118,7 +117,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BigQueryPingPong
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
     """
 
-    trigger_class = BigQueryTrigger
+    trigger_class = BigQueryInsertJobTrigger
 
     def execute(self, context: Context) -> None:
         """Start query and the ping-pong process."""
@@ -188,12 +187,13 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator, BigQueryPingPongOperator
 
     def end_ping_pong(self, event: Dict[str, Any]) -> Any:
         """Handle records after query finishes successfully."""
-        records = event["records"]
+        records = event["result"]
         if not records or not records[0]:
             raise AirflowException("The query returned None")
-        elif not all(bool(r) for r in records[0]):
-            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records[0]!s}")
-        self.log.info("Record: %s", event["records"])
+        record = records[0]
+        if not all(record):
+            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{record!s}")
+        self.log.info("Record: %s", record)
         self.log.info("Success.")
 
 
@@ -294,11 +294,12 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator, BigQueryPingPongOper
 
     def end_ping_pong(self, event: Dict[str, Any]) -> Any:
         """Handle records after query finishes successfully."""
-        self.log.info("Total extracted rows: %s", len(event["records"]))
-        return event["records"]
+        records = event["result"]
+        self.log.info("Total extracted rows: %s", len(records))
+        return records
 
 
-class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
+class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator, BigQueryPingPongOperator):
     """
     Checks asynchronously that the values of metrics given as SQL expressions are within
     a certain tolerance of the ones from days_back before.
@@ -329,6 +330,8 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     :param labels: a dictionary containing labels for the table, passed to BigQuery
     """
 
+    trigger_class = BigQueryIntervalCheckTrigger
+
     def _submit_job(
         self,
         hook: BigQueryHook,
@@ -356,37 +359,22 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
         self.log.info("Executing SQL check: %s", self.sql2)
         job_2 = self._submit_job(hook, sql=self.sql2, job_id="")
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryIntervalCheckTrigger(
-                conn_id=self.gcp_conn_id,
-                first_job_id=job_1.job_id,
-                second_job_id=job_2.job_id,
-                project_id=hook.project_id,
-                table=self.table,
-                metrics_thresholds=self.metrics_thresholds,
-                date_filter_column=self.date_filter_column,
-                days_back=self.days_back,
-                ratio_formula=self.ratio_formula,
-                ignore_zero=self.ignore_zero,
-            ),
-            method_name="execute_complete",
+        self.start_ping_pong(
+            first_job_id=job_1.job_id,
+            second_job_id=job_2.job_id,
+            project_id=hook.project_id,
+            table=self.table,
+            metrics_thresholds=self.metrics_thresholds,
+            date_filter_column=self.date_filter_column,
+            days_back=self.days_back,
+            ratio_formula=self.ratio_formula,
+            ignore_zero=self.ignore_zero,
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-
-        self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["status"],
-        )
+    def end_ping_pong(self, event: Dict[str, Any]) -> Any:
+        """Handle records after query finishes successfully."""
+        first, second = event["result"]
+        self.log.info("%s completed with results %s and %s", self.task_id, first, second)
 
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
