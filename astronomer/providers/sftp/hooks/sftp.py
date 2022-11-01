@@ -6,6 +6,7 @@ import asyncssh
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
+from paramiko.sftp import SFTP_NO_SUCH_FILE
 
 
 class SFTPHookAsync(BaseHook):
@@ -129,15 +130,16 @@ class SFTPHookAsync(BaseHook):
 
     async def get_mod_time(self, path: str) -> str:
         """
-        Returns modification time.
-
+        Makes SFTP async connection and looks for last modified time in the specific file
+        path and returns last modification time for the file path.
         :param path: full path to the remote file
         """
         ssh_conn = await self._get_conn()
         sftp_client = await ssh_conn.start_sftp_client()
         try:
             ftp_mdtm = await sftp_client.stat(path)
-            mod_time = datetime.datetime.fromtimestamp(ftp_mdtm.mtime).strftime("%Y%m%d%H%M%S")
+            modified_time = ftp_mdtm.mtime
+            mod_time = datetime.fromtimestamp(modified_time).strftime("%Y%m%d%H%M%S")  # type: ignore[arg-type]
             self.log.info("Found File %s last modified: %s", str(path), str(mod_time))
             return mod_time
         except asyncssh.SFTPNoSuchFile:
