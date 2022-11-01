@@ -166,8 +166,8 @@ class TestSFTPHookAsync:
 
         assert str(exc.value) == "No files matching file pattern were found at /path/exists/ — Deferring"
 
-    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     async def test_get_mod_time(self, mock_hook_get_conn):
         """
         Assert that file attribute and return the modified time of the file

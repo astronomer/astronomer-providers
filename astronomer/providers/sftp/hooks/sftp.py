@@ -6,7 +6,6 @@ import asyncssh
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
-from paramiko.sftp import SFTP_NO_SUCH_FILE
 
 
 class SFTPHookAsync(BaseHook):
