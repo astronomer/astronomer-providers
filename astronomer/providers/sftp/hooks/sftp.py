@@ -1,3 +1,4 @@
+import datetime
 from fnmatch import fnmatch
 from typing import List, Optional
 
@@ -5,6 +6,7 @@ import asyncssh
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
+from paramiko.sftp import SFTP_NO_SUCH_FILE
 
 
 class SFTPHookAsync(BaseHook):
@@ -125,3 +127,20 @@ class SFTPHookAsync(BaseHook):
                 return file
 
         raise AirflowException(f"No files matching file pattern were found at {path} — Deferring")
+
+    async def get_mod_time(self, path: str) -> str:
+        """
+        Returns modification time.
+
+        :param path: full path to the remote file
+        """
+        try:
+            ssh_conn = await self._get_conn()
+            ftp_mdtm = await ssh_conn.stat(path).st_mtime
+            mod_time = datetime.datetime.fromtimestamp(ftp_mdtm).strftime("%Y%m%d%H%M%S")
+            self.log.info("Found File %s last modified: %s", str(path), str(mod_time))
+            return mod_time
+        except OSError as e:
+            if e.errno != SFTP_NO_SUCH_FILE:
+                raise e
+            raise AirflowException("No files matching")

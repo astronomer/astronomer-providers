@@ -1,8 +1,10 @@
 import asyncio
+from datetime import datetime
 from typing import Any, AsyncIterator, Dict, Tuple
 
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+from airflow.utils.timezone import convert_to_utc
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
@@ -26,12 +28,14 @@ class SFTPTrigger(BaseTrigger):
         path: str,
         file_pattern: str = "",
         sftp_conn_id: str = "sftp_default",
+        newer_than: datetime = None,
         poke_interval: float = 5,
     ) -> None:
         super().__init__()
         self.path = path
         self.file_pattern = file_pattern
         self.sftp_conn_id = sftp_conn_id
+        self.newer_than = newer_than
         self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -42,6 +46,7 @@ class SFTPTrigger(BaseTrigger):
                 "path": self.path,
                 "file_pattern": self.file_pattern,
                 "sftp_conn_id": self.sftp_conn_id,
+                "newer_than": self.newer_than,
                 "poke_interval": self.poke_interval,
             },
         )
@@ -53,13 +58,23 @@ class SFTPTrigger(BaseTrigger):
         """
         hook = self._get_async_hook()
         exc = None
-
+        _newer_than = convert_to_utc(self.newer_than) if self.newer_than else None
         while True:
             try:
-                file_returned_by_hook = await hook.get_file_by_pattern(
-                    path=self.path, fnmatch_pattern=self.file_pattern
-                )
-                yield TriggerEvent({"status": "success", "message": f"Sensed file: {file_returned_by_hook}"})
+                actual_file_to_check = self.path
+                if self.file_pattern:
+                    file_returned_by_hook = await hook.get_file_by_pattern(
+                        path=self.path, fnmatch_pattern=self.file_pattern
+                    )
+                    actual_file_to_check = file_returned_by_hook
+                mod_time = await hook.get_mod_time(actual_file_to_check)
+                if _newer_than:
+                    _mod_time = convert_to_utc(datetime.strptime(mod_time, "%Y%m%d%H%M%S"))
+                    print("_mod_time ", _mod_time)
+                    print("_newer_than ", _newer_than)
+                    if _newer_than > _mod_time:
+                        await asyncio.sleep(self.poke_interval)
+                yield TriggerEvent({"status": "success", "message": f"Sensed file: {actual_file_to_check}"})
             except AirflowException:
                 await asyncio.sleep(self.poke_interval)
             except Exception as e:
