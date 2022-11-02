@@ -248,9 +248,11 @@ def test_execute_query_exception(mock_conn, mock_params):
 
 
 @pytest.mark.parametrize(
-    "connection_details, expected_output",
+    "mock_login, mock_pwd, connection_details, expected_output",
     [
         (
+            "",
+            "",
             {
                 "aws_access_key_id": "",
                 "aws_secret_access_key": "",
@@ -269,6 +271,8 @@ def test_execute_query_exception(mock_conn, mock_params):
             },
         ),
         (
+            "",
+            "",
             {
                 "access_key_id": "",
                 "secret_access_key": "",
@@ -286,11 +290,29 @@ def test_execute_query_exception(mock_conn, mock_params):
                 "database": "",
             },
         ),
+        (
+            "test",
+            "test",
+            {
+                "db_user": "test_user",
+                "cluster_identifier": "",
+                "region": "",
+                "database": "",
+            },
+            {
+                "aws_access_key_id": "test",
+                "aws_secret_access_key": "test",
+                "db_user": "test_user",
+                "cluster_identifier": "",
+                "region_name": "",
+                "database": "",
+            },
+        ),
     ],
 )
 @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.get_connection")
-def test_get_conn_params(mock_get_connection, connection_details, expected_output):
-    mock_conn = Connection(extra=json.dumps(connection_details))
+def test_get_conn_params(mock_get_connection, mock_login, mock_pwd, connection_details, expected_output):
+    mock_conn = Connection(login=mock_login, password=mock_pwd, extra=json.dumps(connection_details))
     mock_get_connection.return_value = mock_conn
 
     hook = RedshiftDataHook(client_type="redshift-data")

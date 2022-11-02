@@ -77,6 +77,9 @@ class RedshiftDataHook(AwsBaseHook):
                 if "secret_access_key" in extra_config
                 else extra_config["aws_secret_access_key"]
             )
+        elif connection_object.login:
+            conn_params["aws_access_key_id"] = connection_object.login
+            conn_params["aws_secret_access_key"] = connection_object.password
         else:
             raise AirflowException("Required access_key_id, aws_secret_access_key")
 
