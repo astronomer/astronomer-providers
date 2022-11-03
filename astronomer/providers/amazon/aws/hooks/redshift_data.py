@@ -91,6 +91,12 @@ class RedshiftDataHook(AwsBaseHook):
         else:
             raise AirflowException("Required Region name is missing !")
 
+        if "aws_session_token" in extra_config:
+            self.log.info(
+                "session token retrieved from extra, please note you are responsible for renewing these.",
+            )
+            conn_params["aws_session_token"] = extra_config.get("aws_session_token")
+
         if "cluster_identifier" in extra_config:
             self.log.info("Retrieving cluster_identifier from Connection.extra_config['cluster_identifier']")
             conn_params["cluster_identifier"] = extra_config["cluster_identifier"]

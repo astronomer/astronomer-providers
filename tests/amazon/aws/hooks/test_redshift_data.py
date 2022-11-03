@@ -298,10 +298,12 @@ def test_execute_query_exception(mock_conn, mock_params):
                 "cluster_identifier": "",
                 "region": "",
                 "database": "",
+                "aws_session_token": "test",
             },
             {
                 "aws_access_key_id": "test",
                 "aws_secret_access_key": "test",
+                "aws_session_token": "test",
                 "db_user": "test_user",
                 "cluster_identifier": "",
                 "region_name": "",
