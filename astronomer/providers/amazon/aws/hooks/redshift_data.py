@@ -95,7 +95,7 @@ class RedshiftDataHook(AwsBaseHook):
             self.log.info(
                 "session token retrieved from extra, please note you are responsible for renewing these.",
             )
-            conn_params["aws_session_token"] = extra_config.get("aws_session_token")
+            conn_params["aws_session_token"] = extra_config["aws_session_token"]
 
         if "cluster_identifier" in extra_config:
             self.log.info("Retrieving cluster_identifier from Connection.extra_config['cluster_identifier']")
