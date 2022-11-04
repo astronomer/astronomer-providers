@@ -77,6 +77,9 @@ class RedshiftDataHook(AwsBaseHook):
                 if "secret_access_key" in extra_config
                 else extra_config["aws_secret_access_key"]
             )
+        elif connection_object.login:
+            conn_params["aws_access_key_id"] = connection_object.login
+            conn_params["aws_secret_access_key"] = connection_object.password
         else:
             raise AirflowException("Required access_key_id, aws_secret_access_key")
 
@@ -87,6 +90,12 @@ class RedshiftDataHook(AwsBaseHook):
             )
         else:
             raise AirflowException("Required Region name is missing !")
+
+        if "aws_session_token" in extra_config:
+            self.log.info(
+                "session token retrieved from extra, please note you are responsible for renewing these.",
+            )
+            conn_params["aws_session_token"] = extra_config["aws_session_token"]
 
         if "cluster_identifier" in extra_config:
             self.log.info("Retrieving cluster_identifier from Connection.extra_config['cluster_identifier']")
