@@ -19,6 +19,7 @@ class SFTPSensorAsync(SFTPSensor):
     :param file_pattern: Pattern to be used for matching against the list of files at the path above.
                  Uses the fnmatch module from std library to perform the matching.
     :param timeout: How long, in seconds, the sensor waits for successful before timing out
+    :param newer_than: DateTime for which the file or file path should be newer than, comparison is inclusive
     """
 
     def __init__(
@@ -50,6 +51,7 @@ class SFTPSensorAsync(SFTPSensor):
                 file_pattern=self.file_pattern,
                 sftp_conn_id=self.sftp_conn_id,
                 poke_interval=self.poke_interval,
+                newer_than=self.newer_than,
             ),
             method_name="execute_complete",
         )

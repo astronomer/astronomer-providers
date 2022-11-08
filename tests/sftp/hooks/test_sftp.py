@@ -1,8 +1,9 @@
+import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from airflow.exceptions import AirflowException
-from asyncssh import SFTPNoSuchFile
+from asyncssh import SFTPAttrs, SFTPNoSuchFile
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
@@ -16,6 +17,14 @@ class MockSFTPClient:
             raise SFTPNoSuchFile("File does not exist")
         else:
             return ["..", ".", "file"]
+
+    async def stat(self, path: str):
+        if path == "/path/does_not/exist/":
+            raise SFTPNoSuchFile("No files matching")
+        else:
+            sftp_obj = SFTPAttrs()
+            sftp_obj.mtime = 1667302566
+            return sftp_obj
 
 
 class MockSSHClient:
@@ -143,8 +152,8 @@ class TestSFTPHookAsync:
 
         assert file == "file"
 
-    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     async def test_get_file_by_pattern_with_no_match(self, mock_hook_get_conn):
         """
         Assert that AirflowException is raised when no files match file pattern on SFTP server
@@ -156,3 +165,27 @@ class TestSFTPHookAsync:
             await hook.get_file_by_pattern(path="/path/exists/", fnmatch_pattern="file_does_not_exist")
 
         assert str(exc.value) == "No files matching file pattern were found at /path/exists/ — Deferring"
+
+    @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    async def test_get_mod_time(self, mock_hook_get_conn):
+        """
+        Assert that file attribute and return the modified time of the file
+        """
+        mock_hook_get_conn.return_value.start_sftp_client.return_value = MockSFTPClient()
+        hook = SFTPHookAsync()
+        mod_time = await hook.get_mod_time("/path/exists/file")
+        expected_value = datetime.datetime.fromtimestamp(1667302566).strftime("%Y%m%d%H%M%S")
+        assert mod_time == expected_value
+
+    @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    async def test_get_mod_time_exception(self, mock_hook_get_conn):
+        """
+        Assert that get_mod_time raise exception when file does not exist
+        """
+        mock_hook_get_conn.return_value.start_sftp_client.return_value = MockSFTPClient()
+        hook = SFTPHookAsync()
+        with pytest.raises(AirflowException) as exc:
+            await hook.get_mod_time("/path/does_not/exist/")
+        assert str(exc.value) == "No files matching"
