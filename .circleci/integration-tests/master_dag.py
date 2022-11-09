@@ -197,6 +197,14 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*azure_trigger_tasks)
 
+    # SFTP
+    sftp_task_info = [
+        {"sftp_dag": "example_async_sftp_sensor"},
+    ]
+    sftp_trigger_tasks, ids = prepare_dag_dependency(sftp_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*sftp_trigger_tasks)
+
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -224,6 +232,7 @@ with DAG(
         livy_trigger_tasks[0],
         hive_trigger_tasks[0],
         azure_trigger_tasks[0],
+        sftp_trigger_tasks[0],
     ]
 
     last_task = [
@@ -240,6 +249,7 @@ with DAG(
         livy_trigger_tasks[-1],
         hive_trigger_tasks[-1],
         azure_trigger_tasks[-1],
+        sftp_trigger_tasks[-1],
     ]
 
     last_task >> end
