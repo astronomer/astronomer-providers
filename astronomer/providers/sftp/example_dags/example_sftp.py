@@ -29,6 +29,7 @@ PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
 PRIVATE_KEY = Variable.get("providers_team_keypair")
 INBOUND_SECURITY_GROUP = os.getenv("INBOUND_SECURITY_GROUP", "security-group")
 SFTP_SSH_PORT = int(os.getenv("SFTP_SSH_PORT", 22))
+SFTP_INSTANCE_TYPE = os.getenv("SFTP_INSTANCE_TYPE", "t2.micro")
 BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
 
 COMMAND_TO_CREATE_TABLE_DATA_FILE: List[str] = [
@@ -76,7 +77,7 @@ def create_sftp_airflow_connection(task_instance: Any) -> None:
 
     session.add(conn)
     session.commit()  # it will insert the connection object programmatically.
-    logging.info("Connection metastore_default is created")
+    logging.info("Connection sftp_default is created")
 
 
 def create_instance_with_security_group() -> None:
@@ -88,7 +89,7 @@ def create_instance_with_security_group() -> None:
         ImageId=AMI_ID,
         MinCount=1,
         MaxCount=1,
-        InstanceType="t2.micro",
+        InstanceType=SFTP_INSTANCE_TYPE,
         KeyName=PEM_FILENAME,
         SecurityGroups=[INBOUND_SECURITY_GROUP],
     )
@@ -98,7 +99,7 @@ def create_instance_with_security_group() -> None:
 
 
 def get_ec2_instance_details(task_instance: "TaskInstance") -> None:
-    """Bys using the instance id get the ec2 instance details"""
+    """Get the EC2 instance details by id retrieved from the Xcom"""
     import boto3
 
     client = boto3.client("ec2", **AWS_S3_CREDS)
