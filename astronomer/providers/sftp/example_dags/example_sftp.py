@@ -79,7 +79,7 @@ def create_sftp_airflow_connection(task_instance: Any) -> None:
     logging.info("Connection metastore_default is created")
 
 
-def create_ec2_instance() -> None:
+def create_instance_with_security_group() -> None:
     """Create ec2 instance"""
     import boto3
 
@@ -216,7 +216,9 @@ with DAG(
     tags=["example", "async", "sftp"],
 ) as dag:
 
-    create_ec2_instance = PythonOperator(task_id="create_ec2_instance", python_callable=create_ec2_instance)
+    create_ec2_instance = PythonOperator(
+        task_id="create_ec2_instance", python_callable=create_instance_with_security_group
+    )
 
     get_instance_details = PythonOperator(
         task_id="get_instance_details", python_callable=get_ec2_instance_details
