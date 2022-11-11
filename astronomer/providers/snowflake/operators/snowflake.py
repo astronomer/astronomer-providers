@@ -11,6 +11,7 @@ except ImportError:  # pragma: no cover
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[assignment] # noqa: E501 # pragma: no cover
+from airflow.providers.common.sql.hooks.sql import fetch_all_handler
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -22,6 +23,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     get_db_hook,
 )
 from astronomer.providers.utils.typing_compat import Context
+
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
@@ -169,7 +171,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
 
     def execute_complete(
         self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
-    ) -> None:
+    ) -> Optional[Any, List[Any]]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -183,9 +185,11 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
                 qids = typing.cast(List[str], event["query_ids"])
-                hook.check_query_output(qids)
+                handler = self.handler or fetch_all_handler
+                results = hook.check_query_output(qids, handler)
                 self.log.info("%s completed successfully.", self.task_id)
-                return None
+                if self.do_xcom_push:
+                    return results
         else:
             self.log.info("%s completed successfully.", self.task_id)
             return None

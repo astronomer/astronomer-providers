@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from airflow.providers.common.sql.hooks.sql import fetch_all_handler
 from snowflake.connector import ProgrammingError
 from snowflake.connector.constants import QueryStatus
 
@@ -116,19 +117,21 @@ class TestPytestSnowflakeHookAsync:
         }
 
     @pytest.mark.parametrize(
-        "query_ids",
+        "query_ids, mock_return_last, mock_handler",
         [
-            (["uuid", "uuid1"]),
+            (["uuid", "uuid1"], True, fetch_all_handler),
+            (["uuid", "uuid1"], False, fetch_all_handler),
+            (["uuid", "uuid1"], False, None),
         ],
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
-    def test_check_query_output_query_ids(self, mock_conn, query_ids):
+    def test_check_query_output_query_ids(self, mock_conn, query_ids, mock_return_last, mock_handler):
         """Test check_query_output by query id passed as params"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         cur = mock.MagicMock(rowcount=0)
         conn.cursor.return_value = cur
-        hook.check_query_output(query_ids=query_ids)
+        hook.check_query_output(query_ids=query_ids, handler=mock_handler, return_last=mock_return_last)
 
         cur.get_results_from_sfqid.assert_has_calls([mock.call(query_id) for query_id in query_ids])
         cur.close.assert_called()
