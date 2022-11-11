@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 from contextlib import closing
 from io import StringIO
-from typing import Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
@@ -81,15 +83,27 @@ class SnowflakeHookAsync(SnowflakeHook):
                 conn.commit()
         return self.query_ids
 
-    def check_query_output(self, query_ids: List[str]) -> None:
+    def check_query_output(
+        self, query_ids: List[str], handler: Callable | None = None, return_last: bool = True
+    ) -> Optional[Union[Any, List[Any]]]:
         """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor(DictCursor)) as cur:
+                results = []
                 for query_id in query_ids:
                     cur.get_results_from_sfqid(query_id)
-                    cur.fetchall()
+                    if handler is not None:
+                        result = handler(cur)
+                        results.append(result)
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
+
+        if handler is None:
+            return None
+        elif return_last:
+            return results[-1]
+        else:
+            return results
 
     async def get_query_status(
         self, query_ids: List[str], poll_interval: float
