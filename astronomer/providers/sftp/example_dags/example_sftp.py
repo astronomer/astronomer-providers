@@ -115,7 +115,7 @@ def get_instances_status(instance_id: str) -> str:
         InstanceIds=[instance_id],
     )
     instance_details = response["Reservations"][0]["Instances"][0]
-    instance_state = instance_details["State"]["Name"]
+    instance_state: str = instance_details["State"]["Name"]
     if instance_state == "running":
         ti = get_current_context()["ti"]
         ti.xcom_push(key=INSTANCE_SECURITY_GROUP, value=instance_details["SecurityGroups"][0]["GroupId"])
