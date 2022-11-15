@@ -59,7 +59,7 @@ def create_sftp_airflow_connection(task_instance: Any) -> None:
     conn = Connection(
         conn_id="sftp_default",
         conn_type="sftp",
-        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["get_instance_details"])[0],
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["create_ec2_instance"])[0],
         login="ubuntu",
         port=SFTP_SSH_PORT,
         extra=json.dumps(
@@ -111,25 +111,16 @@ def get_instances_status(instance_id: str) -> str:
     import boto3
 
     client = boto3.client("ec2", **AWS_S3_CREDS)
-    response = client.describe_instance_status(instance_id)
-    return response["InstanceStatuses"][0]["InstanceState"]["Name"]
-
-
-def get_ec2_instance_details(task_instance: "TaskInstance") -> None:
-    """Get the EC2 instance details by id retrieved from the Xcom"""
-    import boto3
-
-    client = boto3.client("ec2", **AWS_S3_CREDS)
-    ec2_instance_id_xcom = task_instance.xcom_pull(key=EC2_INSTANCE_ID_KEY, task_ids=["create_ec2_instance"])[
-        0
-    ]
     response = client.describe_instances(
-        InstanceIds=[ec2_instance_id_xcom],
+        InstanceIds=[instance_id],
     )
     instance_details = response["Reservations"][0]["Instances"][0]
-    ti = get_current_context()["ti"]
-    ti.xcom_push(key=INSTANCE_SECURITY_GROUP, value=instance_details["SecurityGroups"][0]["GroupId"])
-    ti.xcom_push(key=INSTANCE_PUBLIC_DNS_NAME_KEY, value=instance_details["PublicDnsName"])
+    instance_state = instance_details["State"]["Name"]
+    if instance_state == "running":
+        ti = get_current_context()["ti"]
+        ti.xcom_push(key=INSTANCE_SECURITY_GROUP, value=instance_details["SecurityGroups"][0]["GroupId"])
+        ti.xcom_push(key=INSTANCE_PUBLIC_DNS_NAME_KEY, value=instance_details["PublicDnsName"])
+    return instance_state
 
 
 def add_inbound_rule_for_security_group(task_instance: "TaskInstance") -> None:
@@ -146,9 +137,7 @@ def add_inbound_rule_for_security_group(task_instance: "TaskInstance") -> None:
     # Allow SSH traffic on port 22 and copy file to ec2 instance.
     try:
         client.authorize_security_group_ingress(
-            GroupId=task_instance.xcom_pull(key=INSTANCE_SECURITY_GROUP, task_ids=["get_instance_details"])[
-                0
-            ],
+            GroupId=task_instance.xcom_pull(key=INSTANCE_SECURITY_GROUP, task_ids=["create_ec2_instance"])[0],
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
@@ -182,6 +171,9 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     with open(f"/tmp/{PEM_FILENAME}.pem", "w+") as fh:
         fh.write(PRIVATE_KEY)
 
+    if os.path.exists(f"/usr/local/airflow/dags/{PEM_FILENAME}.pem"):
+        os.remove(f"/usr/local/airflow/dags/{PEM_FILENAME}.pem")
+
     shutil.copyfile(f"/tmp/{PEM_FILENAME}.pem", f"/usr/local/airflow/dags/{PEM_FILENAME}.pem")
 
     # write private key to file with 400 permissions
@@ -199,7 +191,7 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     # Connect/ssh to an instance
     instance_public_dns_name = task_instance.xcom_pull(
-        key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["get_instance_details"]
+        key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["create_ec2_instance"]
     )[0]
     client.connect(hostname=instance_public_dns_name, username=kwargs["username"], pkey=key)
 
@@ -240,9 +232,9 @@ with DAG(
         task_id="create_ec2_instance", python_callable=create_instance_with_security_group
     )
 
-    get_instance_details = PythonOperator(
-        task_id="get_instance_details", python_callable=get_ec2_instance_details
-    )
+    # get_instance_details = PythonOperator(
+    #     task_id="get_instance_details", python_callable=get_ec2_instance_details
+    # )
 
     get_and_add_ip_address_for_inbound_rules = PythonOperator(
         task_id="get_and_add_ip_address_for_inbound_rules",
@@ -290,7 +282,6 @@ with DAG(
 
     (
         create_ec2_instance
-        >> get_instance_details
         >> get_and_add_ip_address_for_inbound_rules
         >> ssh_and_copy_file
         >> create_sftp_default_airflow_connection
