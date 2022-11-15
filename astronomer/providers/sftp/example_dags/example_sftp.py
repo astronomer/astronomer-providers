@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, List
 
@@ -31,6 +32,10 @@ INBOUND_SECURITY_GROUP = os.getenv("INBOUND_SECURITY_GROUP", "security-group")
 SFTP_SSH_PORT = int(os.getenv("SFTP_SSH_PORT", 22))
 SFTP_INSTANCE_TYPE = os.getenv("SFTP_INSTANCE_TYPE", "t2.micro")
 BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
+EC2_INSTANCE_ID_KEY = "ec2_instance_id"
+INSTANCE_PUBLIC_DNS_NAME_KEY = "instance_public_dns_name"
+INSTANCE_SECURITY_GROUP = "instance_response_master_security_group"
+
 
 COMMAND_TO_CREATE_TABLE_DATA_FILE: List[str] = [
     "curl https://raw.githubusercontent.com/astronomer/astronomer-providers/\
@@ -54,7 +59,7 @@ def create_sftp_airflow_connection(task_instance: Any) -> None:
     conn = Connection(
         conn_id="sftp_default",
         conn_type="sftp",
-        host=task_instance.xcom_pull(key="instance_public_dns_name", task_ids=["get_instance_details"])[0],
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["get_instance_details"])[0],
         login="ubuntu",
         port=SFTP_SSH_PORT,
         extra=json.dumps(
@@ -95,7 +100,19 @@ def create_instance_with_security_group() -> None:
     )
     instance_id = instance[0].id
     ti = get_current_context()["ti"]
-    ti.xcom_push(key="ec2_instance_id", value=instance_id)
+    ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
+    while get_instances_status(instance_id) != "running":
+        logging.info("Waiting for Instance to be available in running state. Sleeping for 30 seconds.")
+        time.sleep(30)
+
+
+def get_instances_status(instance_id: str) -> str:
+    """Get the instance status by id"""
+    import boto3
+
+    client = boto3.client("ec2", **AWS_S3_CREDS)
+    response = client.describe_instance_status(instance_id)
+    return response["InstanceStatuses"][0]["InstanceState"]["Name"]
 
 
 def get_ec2_instance_details(task_instance: "TaskInstance") -> None:
@@ -103,16 +120,16 @@ def get_ec2_instance_details(task_instance: "TaskInstance") -> None:
     import boto3
 
     client = boto3.client("ec2", **AWS_S3_CREDS)
-    ec2_instance_id_xcom = task_instance.xcom_pull(key="ec2_instance_id", task_ids=["create_ec2_instance"])[0]
+    ec2_instance_id_xcom = task_instance.xcom_pull(key=EC2_INSTANCE_ID_KEY, task_ids=["create_ec2_instance"])[
+        0
+    ]
     response = client.describe_instances(
         InstanceIds=[ec2_instance_id_xcom],
     )
     instance_details = response["Reservations"][0]["Instances"][0]
     ti = get_current_context()["ti"]
-    ti.xcom_push(
-        key="instance_response_master_security_group", value=instance_details["SecurityGroups"][0]["GroupId"]
-    )
-    ti.xcom_push(key="instance_public_dns_name", value=instance_details["PublicDnsName"])
+    ti.xcom_push(key=INSTANCE_SECURITY_GROUP, value=instance_details["SecurityGroups"][0]["GroupId"])
+    ti.xcom_push(key=INSTANCE_PUBLIC_DNS_NAME_KEY, value=instance_details["PublicDnsName"])
 
 
 def add_inbound_rule_for_security_group(task_instance: "TaskInstance") -> None:
@@ -129,9 +146,9 @@ def add_inbound_rule_for_security_group(task_instance: "TaskInstance") -> None:
     # Allow SSH traffic on port 22 and copy file to ec2 instance.
     try:
         client.authorize_security_group_ingress(
-            GroupId=task_instance.xcom_pull(
-                key="instance_response_master_security_group", task_ids=["get_instance_details"]
-            )[0],
+            GroupId=task_instance.xcom_pull(key=INSTANCE_SECURITY_GROUP, task_ids=["get_instance_details"])[
+                0
+            ],
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
@@ -182,7 +199,7 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     # Connect/ssh to an instance
     instance_public_dns_name = task_instance.xcom_pull(
-        key="instance_public_dns_name", task_ids=["get_instance_details"]
+        key=INSTANCE_PUBLIC_DNS_NAME_KEY, task_ids=["get_instance_details"]
     )[0]
     client.connect(hostname=instance_public_dns_name, username=kwargs["username"], pkey=key)
 
@@ -200,7 +217,9 @@ def terminate_instance(task_instance: "TaskInstance") -> None:
     import boto3
 
     ec2 = boto3.client("ec2", **AWS_S3_CREDS)
-    ec2_instance_id_xcom = task_instance.xcom_pull(key="ec2_instance_id", task_ids=["create_ec2_instance"])[0]
+    ec2_instance_id_xcom = task_instance.xcom_pull(key=EC2_INSTANCE_ID_KEY, task_ids=["create_ec2_instance"])[
+        0
+    ]
     ec2.terminate_instances(
         InstanceIds=[
             ec2_instance_id_xcom,
