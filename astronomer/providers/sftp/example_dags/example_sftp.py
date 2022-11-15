@@ -232,10 +232,6 @@ with DAG(
         task_id="create_ec2_instance", python_callable=create_instance_with_security_group
     )
 
-    # get_instance_details = PythonOperator(
-    #     task_id="get_instance_details", python_callable=get_ec2_instance_details
-    # )
-
     get_and_add_ip_address_for_inbound_rules = PythonOperator(
         task_id="get_and_add_ip_address_for_inbound_rules",
         python_callable=add_inbound_rule_for_security_group,
