@@ -3,7 +3,13 @@ from datetime import timedelta
 from typing import Any, Dict, List, Optional, Union
 
 from airflow.exceptions import AirflowException
-from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+
+try:
+    from airflow.providers.snowflake.operators.snowflake import (
+        SnowflakeOperator as SyncOperator,
+    )
+except ImportError:
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SyncOperator
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -17,7 +23,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-class SnowflakeOperatorAsync(SnowflakeOperator):
+class SnowflakeOperatorAsync(SyncOperator):
     """
     - SnowflakeOperatorAsync uses the snowflake python connector ``execute_async`` method to submit a database command
       for asynchronous execution.
@@ -73,9 +79,43 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     :param poll_interval: the interval in seconds to poll the query
     """  # noqa
 
-    def __init__(self, *, poll_interval: int = 5, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        snowflake_conn_id: str = "snowflake_default",
+        warehouse: Optional[str] = None,
+        database: Optional[str] = None,
+        role: Optional[str] = None,
+        schema: Optional[str] = None,
+        authenticator: Optional[str] = None,
+        session_parameters: Optional[str] = None,
+        poll_interval: int = 5,
+        **kwargs: Any,
+    ) -> None:
         self.poll_interval = poll_interval
-        super().__init__(**kwargs)
+        self.snowflake_conn_id = snowflake_conn_id
+        self.warehouse = warehouse
+        self.database = database
+        self.role = role
+        self.schema = schema
+        self.authenticator = authenticator
+        self.session_parameters = session_parameters
+        if self.__class__.__base__.__name__ == "SnowflakeOperator":
+            # This condition will be removed once the SnowflakeOperator is removed from the OSS airflow
+            super().__init__(**kwargs)
+        else:
+            if any([warehouse, database, role, schema, authenticator, session_parameters]):
+                hook_params = kwargs.pop("hook_params", {})
+                kwargs["hook_params"] = {
+                    "warehouse": warehouse,
+                    "database": database,
+                    "role": role,
+                    "schema": schema,
+                    "authenticator": authenticator,
+                    "session_parameters": session_parameters,
+                    **hook_params,
+                }
+            super().__init__(conn=snowflake_conn_id, **kwargs)
 
     def get_db_hook(self) -> SnowflakeHookAsync:
         """Get the Snowflake Hook"""
@@ -147,7 +187,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             return None
 
 
-class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
+class SnowflakeSqlApiOperatorAsync(SyncOperator):
     """
     Implemented Async Snowflake SQL API Operator to support multiple SQL statements sequentially,
     which is the behavior of the SnowflakeOperator, the Snowflake SQL API allows submitting
@@ -215,6 +255,13 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
     def __init__(
         self,
         *,
+        snowflake_conn_id: str = "snowflake_default",
+        warehouse: Optional[str] = None,
+        database: Optional[str] = None,
+        role: Optional[str] = None,
+        schema: Optional[str] = None,
+        authenticator: Optional[str] = None,
+        session_parameters: Optional[str] = None,
         poll_interval: int = 5,
         statement_count: int = 0,
         token_life_time: timedelta = LIFETIME,
@@ -222,13 +269,40 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         bindings: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> None:
-        self.poll_interval = poll_interval
-        self.statement_count = statement_count
-        self.token_life_time = token_life_time
-        self.token_renewal_delta = token_renewal_delta
-        self.bindings = bindings
-        self.execute_async = False
-        super().__init__(**kwargs)
+        if self.__class__.__base__.__name__ == "SnowflakeOperator":
+            self.poll_interval = poll_interval
+            self.statement_count = statement_count
+            self.token_life_time = token_life_time
+            self.token_renewal_delta = token_renewal_delta
+            self.bindings = bindings
+            self.execute_async = False
+            super().__init__(**kwargs)
+        else:
+            if any([warehouse, database, role, schema, authenticator, session_parameters]):
+                hook_params = kwargs.pop("hook_params", {})
+                kwargs["hook_params"] = {
+                    "warehouse": warehouse,
+                    "database": database,
+                    "role": role,
+                    "schema": schema,
+                    "authenticator": authenticator,
+                    "session_parameters": session_parameters,
+                    **hook_params,
+                }
+            self.warehouse = warehouse
+            self.database = database
+            self.role = role
+            self.schema = schema
+            self.authenticator = authenticator
+            self.session_parameters = session_parameters
+            self.poll_interval = poll_interval
+            self.statement_count = statement_count
+            self.token_life_time = token_life_time
+            self.token_renewal_delta = token_renewal_delta
+            self.bindings = bindings
+            self.execute_async = False
+            self.snowflake_conn_id = snowflake_conn_id
+            super().__init__(conn=snowflake_conn_id, **kwargs)
 
     def execute(self, context: Context) -> None:
         """
