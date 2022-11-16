@@ -2,12 +2,18 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, _bq_cast
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from gcloud.aio.bigquery import Job, Table
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 from requests import Session
 
 from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookAsync
+
+try:
+    from airflow.providers.google.cloud.utils.bigquery import bq_cast
+except ImportError:
+    # For apache-airflow-providers-google < 8.5.0
+    from airflow.providers.google.cloud.hooks.bigquery import _bq_cast as bq_cast
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
@@ -73,7 +79,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             fields = query_results["schema"]["fields"]
             col_types = [field["type"] for field in fields]
             for dict_row in rows:
-                typed_row = [_bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
+                typed_row = [bq_cast(vs["v"], col_types[idx]) for idx, vs in enumerate(dict_row["f"])]
                 buffer.append(typed_row)
         return buffer
 
