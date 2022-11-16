@@ -13,7 +13,7 @@ try:
     from airflow.providers.google.cloud.utils.bigquery import bq_cast
 except ImportError:
     # For apache-airflow-providers-google < 8.5.0
-    from airflow.providers.google.cloud.utils.bigquery import _bq_cast as bq_cast
+    from airflow.providers.google.cloud.hooks.bigquery import _bq_cast as bq_cast
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
