@@ -3,12 +3,17 @@ from typing import Any, Dict, List, Optional, Union, cast
 from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.cloud.utils.bigquery import bq_cast
 from gcloud.aio.bigquery import Job, Table
 from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 from requests import Session
 
 from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookAsync
+
+try:
+    from airflow.providers.google.cloud.utils.bigquery import bq_cast
+except ImportError:
+    # For apache-airflow-providers-google < 8.5.0
+    from airflow.providers.google.cloud.utils.bigquery import _bq_cast as bq_cast
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
