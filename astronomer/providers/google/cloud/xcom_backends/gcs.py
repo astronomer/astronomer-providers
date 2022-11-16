@@ -21,7 +21,7 @@ class GCSXComBackend(BaseXCom):
     @staticmethod
     def serialize_value(value: Any) -> Any:  # type: ignore[override]
         """Custom XCOM for GCS to serialize the data"""
-        value = _GCSXComBackend().write_and_upload_value(value)
+        value = _GCSXComBackend.write_and_upload_value(value)
         return BaseXCom.serialize_value(value)
 
     @staticmethod
