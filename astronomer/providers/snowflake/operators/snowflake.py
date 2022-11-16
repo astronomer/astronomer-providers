@@ -5,11 +5,9 @@ from typing import Any, Dict, List, Optional, Union
 from airflow.exceptions import AirflowException
 
 try:
-    from airflow.providers.snowflake.operators.snowflake import (
-        SnowflakeOperator as SyncOperator,
-    )
+    from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 except ImportError:
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SyncOperator
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -23,7 +21,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-class SnowflakeOperatorAsync(SyncOperator):
+class SnowflakeOperatorAsync(SnowflakeOperator):
     """
     - SnowflakeOperatorAsync uses the snowflake python connector ``execute_async`` method to submit a database command
       for asynchronous execution.
@@ -88,7 +86,7 @@ class SnowflakeOperatorAsync(SyncOperator):
         role: Optional[str] = None,
         schema: Optional[str] = None,
         authenticator: Optional[str] = None,
-        session_parameters: Optional[str] = None,
+        session_parameters: Optional[Dict[str, Any]] = None,
         poll_interval: int = 5,
         **kwargs: Any,
     ) -> None:
@@ -187,7 +185,7 @@ class SnowflakeOperatorAsync(SyncOperator):
             return None
 
 
-class SnowflakeSqlApiOperatorAsync(SyncOperator):
+class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
     """
     Implemented Async Snowflake SQL API Operator to support multiple SQL statements sequentially,
     which is the behavior of the SnowflakeOperator, the Snowflake SQL API allows submitting
@@ -261,7 +259,7 @@ class SnowflakeSqlApiOperatorAsync(SyncOperator):
         role: Optional[str] = None,
         schema: Optional[str] = None,
         authenticator: Optional[str] = None,
-        session_parameters: Optional[str] = None,
+        session_parameters: Optional[Dict[str, Any]] = None,
         poll_interval: int = 5,
         statement_count: int = 0,
         token_life_time: timedelta = LIFETIME,

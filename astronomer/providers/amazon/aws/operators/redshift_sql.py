@@ -3,11 +3,9 @@ from typing import Any, cast
 from airflow.exceptions import AirflowException
 
 try:
-    from airflow.providers.amazon.aws.operators.redshift_sql import (
-        RedshiftSQLOperator as SyncRedshiftOperator,
-    )
+    from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 except ImportError:
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SyncRedshiftOperator
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator
 
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
@@ -15,7 +13,7 @@ from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTri
 from astronomer.providers.utils.typing_compat import Context
 
 
-class RedshiftSQLOperatorAsync(SyncRedshiftOperator):
+class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
     """
     Executes SQL Statements against an Amazon Redshift cluster"
 
@@ -37,9 +35,9 @@ class RedshiftSQLOperatorAsync(SyncRedshiftOperator):
     ) -> None:
         self.redshift_conn_id = redshift_conn_id
         self.poll_interval = poll_interval
-        try:
+        if self.__class__.__base__.__name__ == "RedshiftSQLOperator":
             super().__init__(**kwargs)
-        except AirflowException:
+        else:
             super().__init__(conn_id=redshift_conn_id, **kwargs)
 
     def execute(self, context: Context) -> None:
