@@ -24,9 +24,11 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
     def __init__(
         self,
         *,
+        redshift_conn_id: str = "redshift_default",
         poll_interval: float = 5,
         **kwargs: Any,
     ) -> None:
+        self.redshift_conn_id = redshift_conn_id
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 

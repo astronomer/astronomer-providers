@@ -73,8 +73,27 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     :param poll_interval: the interval in seconds to poll the query
     """  # noqa
 
-    def __init__(self, *, poll_interval: int = 5, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        snowflake_conn_id: str = "snowflake_default",
+        warehouse: Optional[str] = None,
+        database: Optional[str] = None,
+        role: Optional[str] = None,
+        schema: Optional[str] = None,
+        authenticator: Optional[str] = None,
+        session_parameters: Optional[Dict[str, Any]] = None,
+        poll_interval: int = 5,
+        **kwargs: Any,
+    ) -> None:
         self.poll_interval = poll_interval
+        self.snowflake_conn_id = snowflake_conn_id
+        self.warehouse = warehouse
+        self.database = database
+        self.role = role
+        self.schema = schema
+        self.authenticator = authenticator
+        self.session_parameters = session_parameters
         super().__init__(**kwargs)
 
     def get_db_hook(self) -> SnowflakeHookAsync:
@@ -215,6 +234,13 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
     def __init__(
         self,
         *,
+        snowflake_conn_id: str = "snowflake_default",
+        warehouse: Optional[str] = None,
+        database: Optional[str] = None,
+        role: Optional[str] = None,
+        schema: Optional[str] = None,
+        authenticator: Optional[str] = None,
+        session_parameters: Optional[Dict[str, Any]] = None,
         poll_interval: int = 5,
         statement_count: int = 0,
         token_life_time: timedelta = LIFETIME,
@@ -222,12 +248,20 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         bindings: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> None:
+
+        self.warehouse = warehouse
+        self.database = database
+        self.role = role
+        self.schema = schema
+        self.authenticator = authenticator
+        self.session_parameters = session_parameters
         self.poll_interval = poll_interval
         self.statement_count = statement_count
         self.token_life_time = token_life_time
         self.token_renewal_delta = token_renewal_delta
         self.bindings = bindings
         self.execute_async = False
+        self.snowflake_conn_id = snowflake_conn_id
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
