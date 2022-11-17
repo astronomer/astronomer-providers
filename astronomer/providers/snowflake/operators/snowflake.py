@@ -279,6 +279,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self.schema = schema
         self.authenticator = authenticator
         self.session_parameters = session_parameters
+        self.snowflake_conn_id = snowflake_conn_id
         self.poll_interval = poll_interval
         self.statement_count = statement_count
         self.token_life_time = token_life_time
