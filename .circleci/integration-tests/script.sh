@@ -79,7 +79,7 @@ for dag in $(find "${PROVIDER_PATH}" -type f -name 'example_*'); do cp "${dag}" 
 BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
 if [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
   IMAGE_NAME=${DOCKER_REGISTRY}/${ORGANIZATION_ID}/${DEPLOYMENT_ID}:ci-${BUILD_NUMBER}
-  docker build -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile.astro_cloud "${SCRIPT_PATH}"
+  docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile.astro_cloud "${SCRIPT_PATH}"
   docker login "${DOCKER_REGISTRY}" -u "${ASTRONOMER_KEY_ID}" -p "${ASTRONOMER_KEY_SECRET}"
   docker push "${IMAGE_NAME}"
 
