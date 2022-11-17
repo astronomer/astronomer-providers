@@ -291,7 +291,9 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
                     "session_parameters": session_parameters,
                     **hook_params,
                 }
-        super().__init__(**kwargs)
+            super().__init__(conn_id=snowflake_conn_id, **kwargs)
+        else:
+            super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
         """
