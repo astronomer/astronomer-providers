@@ -103,7 +103,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.snowflake_conn_id = snowflake_conn_id
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
             # It's better to do str check of the parent class name because currently SnowflakeOperator
-            # is deprecated and in future they may remove the SnowflakeOperator
+            # is deprecated and in future OSS SnowflakeOperator may be removed
             if any(
                 [warehouse, database, role, schema, authenticator, session_parameters]
             ):  # pragma: no cover
@@ -287,7 +287,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self.execute_async = False
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
             # It's better to do str check of the parent class name because currently SnowflakeOperator
-            # is deprecated and in future they may remove the SnowflakeOperator
+            # is deprecated and in future OSS SnowflakeOperator may be removed
             if any(
                 [warehouse, database, role, schema, authenticator, session_parameters]
             ):  # pragma: no cover

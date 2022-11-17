@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowException
 try:
     from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 except ImportError:  # pragma: no cover
-    # For apache-airflow-providers-snowflake > 6.0.0
+    # For apache-airflow-providers-amazon > 6.0.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator  # type: ignore[no-redef, attr-defined] # noqa: E501  # pragma: no cover
@@ -39,7 +39,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         self.poll_interval = poll_interval
         if self.__class__.__base__.__name__ == "RedshiftSQLOperator":
             # It's better to do str check of the parent class name because currently RedshiftSQLOperator
-            # is deprecated and in future they may remove the RedshiftSQLOperator
+            # is deprecated and in future OSS RedshiftSQLOperator may be removed
             super().__init__(**kwargs)
         else:
             super().__init__(conn_id=redshift_conn_id, **kwargs)  # pragma: no cover
