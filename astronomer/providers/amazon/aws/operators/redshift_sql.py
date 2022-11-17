@@ -4,9 +4,9 @@ from airflow.exceptions import AirflowException
 
 try:
     from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
-except ImportError:
+except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 6.0.0
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator  # type: ignore[no-redef, attr-defined] # noqa: E501
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator  # type: ignore[no-redef, attr-defined] # noqa: E501  # pragma: no cover
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
@@ -38,7 +38,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         if self.__class__.__base__.__name__ == "RedshiftSQLOperator":
             super().__init__(**kwargs)
         else:
-            super().__init__(conn_id=redshift_conn_id, **kwargs)
+            super().__init__(conn_id=redshift_conn_id, **kwargs)  # pragma: no cover
 
     def execute(self, context: Context) -> None:
         """

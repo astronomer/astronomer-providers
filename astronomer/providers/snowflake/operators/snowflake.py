@@ -6,9 +6,9 @@ from airflow.exceptions import AirflowException
 
 try:
     from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-except ImportError:
+except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 3.3.0
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[no-redef, attr-defined] # noqa: E501
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[no-redef, attr-defined] # noqa: E501 # pragma: no cover
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -100,8 +100,10 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.session_parameters = session_parameters
         self.snowflake_conn_id = snowflake_conn_id
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
-            if any([warehouse, database, role, schema, authenticator, session_parameters]):
-                hook_params = kwargs.pop("hook_params", {})
+            if any(
+                [warehouse, database, role, schema, authenticator, session_parameters]
+            ):  # pragma: no cover
+                hook_params = kwargs.pop("hook_params", {})  # pragma: no cover
                 kwargs["hook_params"] = {
                     "warehouse": warehouse,
                     "database": database,
@@ -110,8 +112,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
                     "authenticator": authenticator,
                     "session_parameters": session_parameters,
                     **hook_params,
-                }
-            super().__init__(conn_id=snowflake_conn_id, **kwargs)
+                }  # pragma: no cover
+            super().__init__(conn_id=snowflake_conn_id, **kwargs)  # pragma: no cover
         else:
             super().__init__(**kwargs)
 
@@ -280,8 +282,10 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self.bindings = bindings
         self.execute_async = False
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
-            if any([warehouse, database, role, schema, authenticator, session_parameters]):
-                hook_params = kwargs.pop("hook_params", {})
+            if any(
+                [warehouse, database, role, schema, authenticator, session_parameters]
+            ):  # pragma: no cover
+                hook_params = kwargs.pop("hook_params", {})  # pragma: no cover
                 kwargs["hook_params"] = {
                     "warehouse": warehouse,
                     "database": database,
@@ -291,7 +295,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
                     "session_parameters": session_parameters,
                     **hook_params,
                 }
-            super().__init__(conn_id=snowflake_conn_id, **kwargs)
+            super().__init__(conn_id=snowflake_conn_id, **kwargs)  # pragma: no cover
         else:
             super().__init__(**kwargs)
 
