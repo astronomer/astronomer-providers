@@ -8,6 +8,8 @@ try:
     from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 3.3.0
+    # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
+    # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[no-redef, attr-defined] # noqa: E501 # pragma: no cover
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -100,6 +102,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.session_parameters = session_parameters
         self.snowflake_conn_id = snowflake_conn_id
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
+            # It's better to do str check of the parent class name because currently SnowflakeOperator
+            # is deprecated and in future they may remove the SnowflakeOperator
             if any(
                 [warehouse, database, role, schema, authenticator, session_parameters]
             ):  # pragma: no cover
@@ -282,6 +286,8 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self.bindings = bindings
         self.execute_async = False
         if self.__class__.__base__.__name__ != "SnowflakeOperator":
+            # It's better to do str check of the parent class name because currently SnowflakeOperator
+            # is deprecated and in future they may remove the SnowflakeOperator
             if any(
                 [warehouse, database, role, schema, authenticator, session_parameters]
             ):  # pragma: no cover
