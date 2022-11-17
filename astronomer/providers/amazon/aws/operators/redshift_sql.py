@@ -5,8 +5,8 @@ from airflow.exceptions import AirflowException
 try:
     from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 except ImportError:
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator
-
+    # For apache-airflow-providers-snowflake > 6.0.0
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator  # type: ignore[no-redef, attr-defined] # noqa: E501
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger

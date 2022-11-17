@@ -7,7 +7,8 @@ from airflow.exceptions import AirflowException
 try:
     from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 except ImportError:
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator
+    # For apache-airflow-providers-snowflake > 3.3.0
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[no-redef, attr-defined] # noqa: E501
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
@@ -91,17 +92,14 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         **kwargs: Any,
     ) -> None:
         self.poll_interval = poll_interval
-        self.snowflake_conn_id = snowflake_conn_id
         self.warehouse = warehouse
         self.database = database
         self.role = role
         self.schema = schema
         self.authenticator = authenticator
         self.session_parameters = session_parameters
-        if self.__class__.__base__.__name__ == "SnowflakeOperator":
-            # This condition will be removed once the SnowflakeOperator is removed from the OSS airflow
-            super().__init__(**kwargs)
-        else:
+        self.snowflake_conn_id = snowflake_conn_id
+        if self.__class__.__base__.__name__ != "SnowflakeOperator":
             if any([warehouse, database, role, schema, authenticator, session_parameters]):
                 hook_params = kwargs.pop("hook_params", {})
                 kwargs["hook_params"] = {
@@ -113,7 +111,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
                     "session_parameters": session_parameters,
                     **hook_params,
                 }
-            super().__init__(conn=snowflake_conn_id, **kwargs)
+            super().__init__(conn_id=snowflake_conn_id, **kwargs)
+        else:
+            super().__init__(**kwargs)
 
     def get_db_hook(self) -> SnowflakeHookAsync:
         """Get the Snowflake Hook"""
@@ -267,15 +267,19 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         bindings: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> None:
-        if self.__class__.__base__.__name__ == "SnowflakeOperator":
-            self.poll_interval = poll_interval
-            self.statement_count = statement_count
-            self.token_life_time = token_life_time
-            self.token_renewal_delta = token_renewal_delta
-            self.bindings = bindings
-            self.execute_async = False
-            super().__init__(**kwargs)
-        else:
+        self.warehouse = warehouse
+        self.database = database
+        self.role = role
+        self.schema = schema
+        self.authenticator = authenticator
+        self.session_parameters = session_parameters
+        self.poll_interval = poll_interval
+        self.statement_count = statement_count
+        self.token_life_time = token_life_time
+        self.token_renewal_delta = token_renewal_delta
+        self.bindings = bindings
+        self.execute_async = False
+        if self.__class__.__base__.__name__ != "SnowflakeOperator":
             if any([warehouse, database, role, schema, authenticator, session_parameters]):
                 hook_params = kwargs.pop("hook_params", {})
                 kwargs["hook_params"] = {
@@ -287,20 +291,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
                     "session_parameters": session_parameters,
                     **hook_params,
                 }
-            self.warehouse = warehouse
-            self.database = database
-            self.role = role
-            self.schema = schema
-            self.authenticator = authenticator
-            self.session_parameters = session_parameters
-            self.poll_interval = poll_interval
-            self.statement_count = statement_count
-            self.token_life_time = token_life_time
-            self.token_renewal_delta = token_renewal_delta
-            self.bindings = bindings
-            self.execute_async = False
-            self.snowflake_conn_id = snowflake_conn_id
-            super().__init__(conn=snowflake_conn_id, **kwargs)
+        super().__init__(**kwargs)
 
     def execute(self, context: Context) -> None:
         """
