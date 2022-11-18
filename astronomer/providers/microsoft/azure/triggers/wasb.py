@@ -51,7 +51,7 @@ class WasbBlobSensorTrigger(BaseTrigger):
         blob_exists = False
         hook = WasbHookAsync(wasb_conn_id=self.wasb_conn_id, public_read=self.public_read)
         try:
-            async with hook.blob_service_client:
+            async with hook.blob_service_client:  # type: ignore[attr-defined]
                 while not blob_exists:
                     blob_exists = await hook.check_for_blob(
                         container_name=self.container_name,
@@ -126,7 +126,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
         prefix_exists = False
         hook = WasbHookAsync(wasb_conn_id=self.wasb_conn_id, public_read=self.public_read)
         try:
-            async with hook.blob_service_client:
+            async with hook.blob_service_client:  # type: ignore[attr-defined]
                 while not prefix_exists:
                     prefix_exists = await hook.check_for_prefix(
                         container_name=self.container_name,

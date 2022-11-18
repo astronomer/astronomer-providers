@@ -83,7 +83,9 @@ class WasbHookAsync(WasbHook):
         :param container_name: the name of the blob container
         :param blob_name: the name of the blob. This needs not be existing
         """
-        return self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        return self.blob_service_client.get_blob_client(
+            container=container_name, blob=blob_name
+        )  # type: ignore[return-value]
 
     async def check_for_blob(  # type: ignore[override]
         self, container_name: str, blob_name: str, **kwargs: Any
@@ -107,14 +109,14 @@ class WasbHookAsync(WasbHook):
 
         :param container_name: the name of the container
         """
-        return self.blob_service_client.get_container_client(container_name)
+        return self.blob_service_client.get_container_client(container_name)  # type: ignore[return-value]
 
     async def get_blobs_list(  # type: ignore[override]
         self,
         container_name: str,
         prefix: Optional[str] = None,
         include: Optional[List[str]] = None,
-        delimiter: Optional[str] = "/",
+        delimiter: str = "/",
         **kwargs: Any,
     ) -> List[BlobProperties]:
         """
@@ -135,7 +137,7 @@ class WasbHookAsync(WasbHook):
             blob_list.append(blob.name)
         return blob_list
 
-    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
+    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs: Any) -> bool:  # type: ignore[override] # noqa: E501
         """
         Check if a prefix exists on Azure Blob storage.
 
