@@ -83,7 +83,6 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     def __init__(
         self,
         *,
-        autocommit: bool = True,
         snowflake_conn_id: str = "snowflake_default",
         warehouse: Optional[str] = None,
         database: Optional[str] = None,
@@ -94,7 +93,6 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         poll_interval: int = 5,
         **kwargs: Any,
     ) -> None:
-        self.autocommit = autocommit
         self.poll_interval = poll_interval
         self.warehouse = warehouse
         self.database = database
@@ -152,7 +150,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL after adding query tag: %s", self.sql)
 
         hook = self.get_db_hook()
-        hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)  # type: ignore[arg-type]
+        hook.run(self.sql, parameters=self.parameters)  # type: ignore[arg-type]
         self.query_ids = hook.query_ids
 
         if self.do_xcom_push:
