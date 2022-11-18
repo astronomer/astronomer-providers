@@ -150,7 +150,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL after adding query tag: %s", self.sql)
 
         hook = self.get_db_hook()
-        hook.run(self.sql, autocommit=self.autocommit, parameters=self.parameters)  # type: ignore[arg-type]
+        hook.run(self.sql, parameters=self.parameters)  # type: ignore[arg-type]
         self.query_ids = hook.query_ids
 
         if self.do_xcom_push:
