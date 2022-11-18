@@ -83,6 +83,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
     def __init__(
         self,
         *,
+        autocommit: bool = True,
         snowflake_conn_id: str = "snowflake_default",
         warehouse: Optional[str] = None,
         database: Optional[str] = None,
@@ -93,6 +94,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         poll_interval: int = 5,
         **kwargs: Any,
     ) -> None:
+        self.autocommit = autocommit
         self.poll_interval = poll_interval
         self.warehouse = warehouse
         self.database = database
