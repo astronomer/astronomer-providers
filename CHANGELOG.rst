@@ -1,15 +1,15 @@
 Changelog
 =========
 
-1.11.2 (2022-11-17)
+1.11.2 (2022-11-18)
 -------------------
 
 Bug Fixes
 """""""""
 
-- Handle ``SFTPSensorAsync`` if file pattern is not passed.
+- Handle ``SFTPSensorAsync`` failure when file pattern is not passed.
   (`#744 <https://github.com/astronomer/astronomer-providers/pull/744>`_)
-- Fix ``RedshiftDataHook`` to accept access and secret keys from the connection object.
+- Fix ``RedshiftDataHook`` to accept AWS access and secret keys from the connection object.
   (`#746 <https://github.com/astronomer/astronomer-providers/pull/746>`_)
 - Make ``BigQueryHookAsync`` compatible with ``apache-airflow-providers-google>=8.5.0``.
   (`#751 <https://github.com/astronomer/astronomer-providers/pull/751>`_)
