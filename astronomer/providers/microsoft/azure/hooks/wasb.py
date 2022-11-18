@@ -114,7 +114,7 @@ class WasbHookAsync(WasbHook):
         container_name: str,
         prefix: Optional[str] = None,
         include: Optional[List[str]] = None,
-        delimiter: Optional[str] = "/",
+        delimiter: str = "/",
         **kwargs: Any,
     ) -> List[BlobProperties]:
         """
