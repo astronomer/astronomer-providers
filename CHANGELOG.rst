@@ -16,7 +16,7 @@ Bug Fixes
 - Make ``RedshiftSQLOperatorAsync`` compatible with ``apache-airflow-providers-amazon>=6.1.0``.
   (`#762 <https://github.com/astronomer/astronomer-providers/pull/762>`_)
 - Make ``SnowflakeOperatorAsync`` and ``SnowflakeSqlApiOperatorAsync`` compatible with ``apache-airflow-providers-snowflake>=4.0.0``.
-  (`#762 <https://github.com/astronomer/astronomer-providers/pull/762>`_)
+  (`#767 <https://github.com/astronomer/astronomer-providers/pull/767>`_)
 
 
 1.11.1 (2022-10-28)
