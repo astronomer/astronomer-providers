@@ -10,7 +10,7 @@ except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 3.3.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[no-redef, attr-defined] # noqa: E501 # pragma: no cover
+    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[assignment] # noqa: E501 # pragma: no cover
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
