@@ -25,9 +25,9 @@ class WasbHookAsync(WasbHook):
         super().__init__()
         self.conn_id = wasb_conn_id
         self.public_read = public_read
-        self.blob_service_client = self.get_conn()
+        self.blob_service_client = self.get_conn_async()
 
-    def get_conn(self) -> BlobServiceClient:
+    def get_conn_async(self) -> BlobServiceClient:
         """Returns the async BlobServiceClient object."""
         conn = self.get_connection(self.conn_id)
         extra = conn.extra_dejson or {}
@@ -83,7 +83,9 @@ class WasbHookAsync(WasbHook):
         :param container_name: the name of the blob container
         :param blob_name: the name of the blob. This needs not be existing
         """
-        return self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        return self.blob_service_client.get_blob_client(
+            container=container_name, blob=blob_name
+        )  # type: ignore[return-value]
 
     async def check_for_blob(  # type: ignore[override]
         self, container_name: str, blob_name: str, **kwargs: Any
@@ -107,7 +109,7 @@ class WasbHookAsync(WasbHook):
 
         :param container_name: the name of the container
         """
-        return self.blob_service_client.get_container_client(container_name)
+        return self.blob_service_client.get_container_client(container_name)  # type: ignore[return-value]
 
     async def get_blobs_list(  # type: ignore[override]
         self,
@@ -135,7 +137,7 @@ class WasbHookAsync(WasbHook):
             blob_list.append(blob.name)
         return blob_list
 
-    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
+    async def check_for_prefix_async(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
         """
         Check if a prefix exists on Azure Blob storage.
 
