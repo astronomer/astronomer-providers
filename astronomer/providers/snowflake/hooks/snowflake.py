@@ -41,7 +41,7 @@ class SnowflakeHookAsync(SnowflakeHook):
     def run(  # type: ignore[override]
         self,
         sql: Union[str, List[str]],
-        autocommit: bool = False,
+        autocommit: bool = True,
         parameters: Optional[dict] = None,  # type: ignore[type-arg]
     ) -> List[str]:
         """
