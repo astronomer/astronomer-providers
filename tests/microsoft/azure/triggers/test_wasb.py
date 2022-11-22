@@ -48,7 +48,7 @@ def test_wasb_blob_sensor_trigger_serialization():
         False,
     ],
 )
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob_async")
 async def test_wasb_blob_sensor_trigger_running(mock_check_for_blob, blob_exists):
     """
     Test if the task is run in trigger successfully.
@@ -68,7 +68,7 @@ async def test_wasb_blob_sensor_trigger_running(mock_check_for_blob, blob_exists
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob_async")
 async def test_wasb_blob_sensor_trigger_success(mock_check_for_blob):
     """Tests the success state for that the WasbBlobSensorTrigger."""
     mock_check_for_blob.return_value = True
@@ -91,7 +91,7 @@ async def test_wasb_blob_sensor_trigger_success(mock_check_for_blob):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob_async")
 async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob, caplog):
     """Tests the WasbBlobSensorTrigger sleeps waiting for the blob to arrive."""
     mock_check_for_blob.side_effect = [False, True]
@@ -118,7 +118,7 @@ async def test_wasb_blob_sensor_trigger_waiting_for_blob(mock_check_for_blob, ca
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_blob_async")
 async def test_wasb_blob_sensor_trigger_trigger_exception(mock_check_for_blob):
     """Tests the WasbBlobSensorTrigger yields an error event if there is an exception."""
     mock_check_for_blob.side_effect = Exception("Test exception")
@@ -167,7 +167,7 @@ def test_wasb_prefix_sensor_trigger_serialization():
         False,
     ],
 )
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix_async")
 async def test_wasb_prefix_sensor_trigger_running(mock_check_for_prefix, prefix_exists):
     """
     Test if the task is run in trigger successfully.
@@ -187,7 +187,7 @@ async def test_wasb_prefix_sensor_trigger_running(mock_check_for_prefix, prefix_
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix_async")
 async def test_wasb_prefix_sensor_trigger_success(mock_check_for_prefix):
     """Tests the success state for that the WasbPrefixSensorTrigger."""
     mock_check_for_prefix.return_value = True
@@ -210,7 +210,7 @@ async def test_wasb_prefix_sensor_trigger_success(mock_check_for_prefix):
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix_async")
 async def test_wasb_prefix_sensor_trigger_waiting_for_blob(mock_check_for_prefix):
     """Tests the WasbPrefixSensorTrigger sleeps waiting for the blob to arrive."""
     mock_check_for_prefix.side_effect = [False, True]
@@ -237,7 +237,7 @@ async def test_wasb_prefix_sensor_trigger_waiting_for_blob(mock_check_for_prefix
 
 
 @pytest.mark.asyncio
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix")
+@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.WasbHookAsync.check_for_prefix_async")
 async def test_wasb_prefix_sensor_trigger_trigger_exception(mock_check_for_prefix):
     """Tests the WasbPrefixSensorTrigger yields an error event if there is an exception."""
     mock_check_for_prefix.side_effect = Exception("Test exception")
