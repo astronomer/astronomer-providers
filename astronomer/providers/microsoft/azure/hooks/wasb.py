@@ -25,7 +25,7 @@ class WasbHookAsync(WasbHook):
         super().__init__()
         self.conn_id = wasb_conn_id
         self.public_read = public_read
-        self.blob_service_client = self.get_conn()
+        self.blob_service_client: BlobServiceClient = self.get_conn()
 
     def get_conn(self) -> BlobServiceClient:
         """Returns the async BlobServiceClient object."""
@@ -83,9 +83,7 @@ class WasbHookAsync(WasbHook):
         :param container_name: the name of the blob container
         :param blob_name: the name of the blob. This needs not be existing
         """
-        return self.blob_service_client.get_blob_client(
-            container=container_name, blob=blob_name
-        )  # type: ignore[return-value]
+        return self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
     async def check_for_blob(  # type: ignore[override]
         self, container_name: str, blob_name: str, **kwargs: Any
@@ -109,7 +107,7 @@ class WasbHookAsync(WasbHook):
 
         :param container_name: the name of the container
         """
-        return self.blob_service_client.get_container_client(container_name)  # type: ignore[return-value]
+        return self.blob_service_client.get_container_client(container_name)
 
     async def get_blobs_list(  # type: ignore[override]
         self,
