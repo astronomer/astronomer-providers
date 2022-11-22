@@ -22,7 +22,6 @@ class WasbHookAsync(WasbHook):
         wasb_conn_id: str = "wasb_default",
         public_read: bool = False,
     ) -> None:
-        super().__init__()
         self.conn_id = wasb_conn_id
         self.public_read = public_read
         self.blob_service_client: BlobServiceClient = self.get_conn()
@@ -85,9 +84,7 @@ class WasbHookAsync(WasbHook):
         """
         return self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
-    async def check_for_blob(  # type: ignore[override]
-        self, container_name: str, blob_name: str, **kwargs: Any
-    ) -> bool:
+    async def check_for_blob_async(self, container_name: str, blob_name: str, **kwargs: Any) -> bool:
         """
         Check if a blob exists on Azure Blob Storage.
 
@@ -109,7 +106,7 @@ class WasbHookAsync(WasbHook):
         """
         return self.blob_service_client.get_container_client(container_name)
 
-    async def get_blobs_list(  # type: ignore[override]
+    async def get_blobs_list_async(
         self,
         container_name: str,
         prefix: Optional[str] = None,
@@ -135,7 +132,7 @@ class WasbHookAsync(WasbHook):
             blob_list.append(blob.name)
         return blob_list
 
-    async def check_for_prefix(self, container_name: str, prefix: str, **kwargs: Any) -> bool:  # type: ignore[override] # noqa: E501
+    async def check_for_prefix_async(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
         """
         Check if a prefix exists on Azure Blob storage.
 
@@ -143,5 +140,5 @@ class WasbHookAsync(WasbHook):
         :param prefix: Prefix of the blob.
         :param kwargs: Optional keyword arguments for ``ContainerClient.walk_blobs``
         """
-        blobs = await self.get_blobs_list(container_name=container_name, prefix=prefix, **kwargs)
+        blobs = await self.get_blobs_list_async(container_name=container_name, prefix=prefix, **kwargs)
         return len(blobs) > 0
