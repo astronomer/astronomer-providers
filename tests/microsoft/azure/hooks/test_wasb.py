@@ -256,7 +256,7 @@ async def test_check_for_blob(mock_service_client, mock_blob_properties, expecte
     else:
         future.set_result(mock_blob_properties)
     mock_blob_client.return_value.get_blob_properties.return_value = future
-    response = await hook.check_for_blob(
+    response = await hook.check_for_blob_async(
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME, blob_name=TEST_DATA_STORAGE_CONTAINER_NAME
     )
     assert response == expected_result
@@ -282,7 +282,7 @@ async def test_check_for_prefix(mock_service_client, blobs, expected_result):
     mock_container_client = mock_service_client.return_value.get_container_client
 
     mock_container_client.return_value.walk_blobs.return_value = blobs
-    response = await hook.check_for_prefix(
+    response = await hook.check_for_prefix_async(
         container_name=TEST_DATA_STORAGE_CONTAINER_NAME, prefix=TEST_DATA_STORAGE_BLOB_PREFIX
     )
     assert response == expected_result
