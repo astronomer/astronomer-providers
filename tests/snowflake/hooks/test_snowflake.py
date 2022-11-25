@@ -4,7 +4,11 @@ import pytest
 from snowflake.connector import ProgrammingError
 from snowflake.connector.constants import QueryStatus
 
-from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
+from astronomer.providers.snowflake.hooks.snowflake import (
+    SnowflakeHookAsync,
+    fetch_all_snowflake_handler,
+    fetch_one_snowflake_handler,
+)
 
 POLL_INTERVAL = 1
 
@@ -116,19 +120,22 @@ class TestPytestSnowflakeHookAsync:
         }
 
     @pytest.mark.parametrize(
-        "query_ids",
+        "query_ids, handler, return_last",
         [
-            (["uuid", "uuid1"]),
+            (["uuid", "uuid1"], fetch_all_snowflake_handler, False),
+            (["uuid", "uuid1"], fetch_all_snowflake_handler, True),
+            (["uuid", "uuid1"], fetch_one_snowflake_handler, True),
+            (["uuid", "uuid1"], None, True),
         ],
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
-    def test_check_query_output_query_ids(self, mock_conn, query_ids):
+    def test_check_query_output_query_ids(self, mock_conn, query_ids, handler, return_last):
         """Test check_query_output by query id passed as params"""
         hook = SnowflakeHookAsync()
         conn = mock_conn.return_value
         cur = mock.MagicMock(rowcount=0)
         conn.cursor.return_value = cur
-        hook.check_query_output(query_ids=query_ids)
+        hook.check_query_output(query_ids=query_ids, handler=handler, return_last=return_last)
 
         cur.get_results_from_sfqid.assert_has_calls([mock.call(query_id) for query_id in query_ids])
         cur.close.assert_called()
