@@ -9,7 +9,18 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
 from snowflake.connector import DictCursor, ProgrammingError
 from snowflake.connector.constants import QueryStatus
+from snowflake.connector.cursor import SnowflakeCursor
 from snowflake.connector.util_text import split_statements
+
+
+def fetch_all_handler(cursor: SnowflakeCursor) -> list[tuple] | list[dict] | None:
+    """Handler for SnowflakeCursor to return results"""
+    return cursor.fetchall()
+
+
+def fetch_one_handler(cursor: SnowflakeCursor) -> dict | tuple | None:
+    """Handler for SnowflakeCursor to return results"""
+    return cursor.fetchone()
 
 
 class SnowflakeHookAsync(SnowflakeHook):
@@ -45,7 +56,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         sql: Union[str, List[str]],
         autocommit: bool = True,
         parameters: Optional[dict] = None,  # type: ignore[type-arg]
-    ) -> List[str]:
+    ) -> Any | list[Any] | None:
         """
         Runs a SQL command or a list of SQL commands.
 
@@ -85,9 +96,10 @@ class SnowflakeHookAsync(SnowflakeHook):
 
     def check_query_output(
         self, query_ids: List[str], handler: Callable | None = None, return_last: bool = True
-    ) -> Optional[Union[Any, List[Any]]]:
+    ) -> Any | list[Any] | None:
         """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
+            self.set_autocommit(conn, True)
             with closing(conn.cursor(DictCursor)) as cur:
                 results = []
                 for query_id in query_ids:
@@ -97,7 +109,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                         results.append(result)
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
-
+            conn.commit()
         if handler is None:
             return None
         elif return_last:
