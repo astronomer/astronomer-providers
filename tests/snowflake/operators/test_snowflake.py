@@ -211,6 +211,7 @@ def test_snowflake_sql_api_execute_complete_failure():
 @pytest.mark.parametrize(
     "mock_event",
     [
+        None,
         ({"status": "success", "statement_query_ids": ["uuid", "uuid"]}),
     ],
 )
