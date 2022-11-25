@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Union
@@ -11,6 +13,7 @@ except ImportError:  # pragma: no cover
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[assignment] # noqa: E501 # pragma: no cover
+
 from airflow.providers.common.sql.hooks.sql import fetch_all_handler
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -23,7 +26,6 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     get_db_hook,
 )
 from astronomer.providers.utils.typing_compat import Context
-
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
