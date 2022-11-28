@@ -47,6 +47,23 @@ async def test_s3_key_trigger_run(mock_client):
 
 
 @pytest.mark.asyncio
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.check_key")
+@mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+async def test_s3_key_trigger_pending(mock_client, mock_check_key):
+    """
+    Test if the task is run is in trigger successfully and set check_key to return false.
+    """
+    mock_check_key.return_value = False
+    trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket")
+    with mock_client:
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
+
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
+
+
+@pytest.mark.asyncio
 @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
 async def test_s3_key_trigger_run_exception(mock_client):
     """Test if the task is run is in case of exception."""
