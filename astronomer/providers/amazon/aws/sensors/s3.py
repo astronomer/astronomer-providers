@@ -87,6 +87,7 @@ class S3KeySensorAsync(BaseSensorOperator):
                 check_fn=self.check_fn,
                 aws_conn_id=self.aws_conn_id,
                 verify=self.verify,
+                poke_interval=self.poke_interval,
             ),
             method_name="execute_complete",
         )

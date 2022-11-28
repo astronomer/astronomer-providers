@@ -26,6 +26,7 @@ def test_s3_key_trigger_serialization():
         "aws_conn_id": "aws_default",
         "hook_params": {},
         "check_fn": None,
+        "poke_interval": 5.0,
     }
 
 
