@@ -118,13 +118,14 @@ def test_snowflake_async_execute_complete_failure():
 
 
 @pytest.mark.parametrize(
-    "mock_event",
+    "mock_event, mock_xcom_push",
     [
-        ({"status": "success", "query_ids": ["uuid", "uuid"]}),
+        ({"status": "success", "query_ids": ["uuid", "uuid"]}, True),
+        ({"status": "success", "query_ids": ["uuid", "uuid"]}, False),
     ],
 )
 @mock.patch(LONG_MOCK_PATH)
-def test_snowflake_async_execute_complete(mock_conn, mock_event):
+def test_snowflake_async_execute_complete(mock_conn, mock_event, mock_xcom_push):
     """Tests execute_complete assert with successful message"""
 
     args = {"owner": "airflow", "start_date": datetime.datetime(2017, 1, 1)}
@@ -133,6 +134,7 @@ def test_snowflake_async_execute_complete(mock_conn, mock_event):
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
         sql=TEST_SQL,
+        do_xcom_push=mock_xcom_push,
         dag=dag,
     )
 

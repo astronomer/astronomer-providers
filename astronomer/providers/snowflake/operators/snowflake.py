@@ -198,7 +198,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
                 self.log.info("%s completed successfully.", self.task_id)
                 if self.do_xcom_push:
                     return results
-                return None  # pragma: no cover
+                return None
         else:
             raise AirflowException("Did not receive valid event from the trigerrer")
 
