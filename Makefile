@@ -93,7 +93,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	git add setup.cfg
 	git commit -m "Update setup.cfg to use RC provider packages"
 	git push origin $(branch_name)
-	gh pr create --base "main" --title "Test RC provider packages" --fill
+	gh pr create --base "main" --title "[DO NOT MERGE] Test RC provider packages" --fill
 
 shell:  ## Runs a shell within a container (Allows interactive session)
 	docker compose -f dev/docker-compose.yaml run --rm airflow-scheduler bash
