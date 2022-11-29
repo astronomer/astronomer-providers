@@ -31,6 +31,7 @@ class S3KeyTrigger(BaseTrigger):
         wildcard_match: bool = False,
         check_fn: Optional[Callable[..., bool]] = None,
         aws_conn_id: str = "aws_default",
+        poke_interval: float = 5.0,
         **hook_params: Any,
     ):
         super().__init__()
@@ -40,6 +41,7 @@ class S3KeyTrigger(BaseTrigger):
         self.check_fn = check_fn
         self.aws_conn_id = aws_conn_id
         self.hook_params = hook_params
+        self.poke_interval = poke_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
         """Serialize S3KeyTrigger arguments and classpath."""
@@ -52,6 +54,7 @@ class S3KeyTrigger(BaseTrigger):
                 "check_fn": self.check_fn,
                 "aws_conn_id": self.aws_conn_id,
                 "hook_params": self.hook_params,
+                "poke_interval": self.poke_interval,
             },
         )
 
@@ -68,6 +71,7 @@ class S3KeyTrigger(BaseTrigger):
                             client, self.bucket_name, self.bucket_key, self.wildcard_match
                         )
                         yield TriggerEvent({"status": "success", "s3_objects": s3_objects})
+                    await asyncio.sleep(self.poke_interval)
 
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
