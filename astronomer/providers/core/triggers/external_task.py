@@ -56,7 +56,7 @@ class TaskStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:
         """
         Checks periodically in the database to see if the task exists, and has
         hit one of the states yet, or not.
@@ -123,7 +123,7 @@ class DagStateTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> typing.AsyncIterator["TriggerEvent"]:
         """
         Checks periodically in the database to see if the dag run exists, and has
         hit one of the states yet, or not.
@@ -167,7 +167,7 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a series of asynchronous http calls via an http hook poll for state of the job
         run until it reaches a failure state or success state. It yields a Trigger if response state is successful.

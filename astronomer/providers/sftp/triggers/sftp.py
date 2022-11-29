@@ -51,7 +51,7 @@ class SFTPTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a series of asynchronous calls to sftp servers via async sftp hook. It yields a Trigger
 

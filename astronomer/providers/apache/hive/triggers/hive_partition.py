@@ -46,7 +46,7 @@ class HivePartitionTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple loop until the relevant table partition is present in the table or wait for it."""
         try:
             hook = self._get_async_hook()

@@ -112,7 +112,7 @@ class WaitContainerTrigger(BaseTrigger):
                 return TriggerEvent({"status": "running", "last_log_time": self.last_log_time})
             await asyncio.sleep(self.poll_interval)
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]  # noqa: D102
+    async def run(self) -> AsyncIterator["TriggerEvent"]:  # noqa: D102
         self.log.debug("Checking pod %r in namespace %r.", self.pod_name, self.pod_namespace)
         try:
             hook = await self.get_hook()

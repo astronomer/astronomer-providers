@@ -96,7 +96,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Wait for pod to reach terminal state"""
         try:
             with GKEStartPodOperator.get_gke_config_file(

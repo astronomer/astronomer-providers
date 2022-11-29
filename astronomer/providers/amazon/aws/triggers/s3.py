@@ -55,7 +55,7 @@ class S3KeyTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
@@ -145,7 +145,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()

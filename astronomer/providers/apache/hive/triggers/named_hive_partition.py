@@ -39,7 +39,7 @@ class NamedHivePartitionTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Run until found all given partition in Hive."""
         try:
             hook = HiveCliHookAsync(metastore_conn_id=self.metastore_conn_id)

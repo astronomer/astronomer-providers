@@ -48,7 +48,7 @@ class DbtCloudRunJobTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make async connection to Dbt, polls for the pipeline run status"""
         hook = DbtCloudHookAsync(self.conn_id)
         try:

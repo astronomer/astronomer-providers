@@ -55,7 +55,7 @@ class HttpTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a series of asynchronous http calls via an http hook. It yields a Trigger if
         response is a 200 and run_state is successful, will retry the call up to the retry limit

@@ -47,7 +47,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
@@ -122,7 +122,7 @@ class SagemakerTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
@@ -206,7 +206,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.

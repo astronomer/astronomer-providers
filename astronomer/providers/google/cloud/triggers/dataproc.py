@@ -70,7 +70,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Check the status of cluster until reach the terminal state"""
         while self.end_time > time.time():
             try:
@@ -224,7 +224,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Wait until cluster is deleted completely"""
         hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
         while self.end_time > time.time():
@@ -290,7 +290,7 @@ class DataProcSubmitTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple loop until the job running on Google Cloud DataProc is completed or not"""
         try:
             hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)

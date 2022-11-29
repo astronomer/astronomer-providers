@@ -54,7 +54,7 @@ class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make async connection to EMR container, polls for the job state"""
         hook = EmrContainerHookAsync(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
         try:
@@ -105,7 +105,7 @@ class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Run until EMR container reaches the desire state"""
         hook = EmrContainerHookAsync(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
         try:
@@ -207,7 +207,7 @@ class EmrStepSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Run until AWS EMR cluster step reach target or failed state"""
         hook = EmrStepSensorHookAsync(
             aws_conn_id=self.aws_conn_id, job_flow_id=self.job_flow_id, step_id=self.step_id
@@ -269,7 +269,7 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make async connection to EMR container, polls for the target job state"""
         hook = EmrJobFlowHookAsync(aws_conn_id=self.aws_conn_id)
         try:
