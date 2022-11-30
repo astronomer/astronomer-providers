@@ -1,13 +1,28 @@
+from __future__ import annotations
+
 import asyncio
 from contextlib import closing
 from io import StringIO
-from typing import Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
 from snowflake.connector import DictCursor, ProgrammingError
 from snowflake.connector.constants import QueryStatus
+from snowflake.connector.cursor import SnowflakeCursor
 from snowflake.connector.util_text import split_statements
+
+
+def fetch_all_snowflake_handler(
+    cursor: SnowflakeCursor,
+) -> List[Tuple[Any, ...]] | List[Dict[str, Any]] | None:
+    """Handler for SnowflakeCursor to return results"""
+    return cursor.fetchall()
+
+
+def fetch_one_snowflake_handler(cursor: SnowflakeCursor) -> Dict[str, Any] | Tuple[Any, ...] | None:
+    """Handler for SnowflakeCursor to return results"""
+    return cursor.fetchone()
 
 
 class SnowflakeHookAsync(SnowflakeHook):
@@ -81,15 +96,28 @@ class SnowflakeHookAsync(SnowflakeHook):
                 conn.commit()
         return self.query_ids
 
-    def check_query_output(self, query_ids: List[str]) -> None:
+    def check_query_output(
+        self, query_ids: List[str], handler: Optional[Callable[[Any], Any]] = None, return_last: bool = True
+    ) -> Any | list[Any] | None:
         """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
+            self.set_autocommit(conn, True)
             with closing(conn.cursor(DictCursor)) as cur:
+                results = []
                 for query_id in query_ids:
                     cur.get_results_from_sfqid(query_id)
-                    cur.fetchall()
+                    if handler is not None:
+                        result = handler(cur)
+                        results.append(result)
                     self.log.info("Rows affected: %s", cur.rowcount)
                     self.log.info("Snowflake query id: %s", query_id)
+            conn.commit()
+        if handler is None:
+            return None
+        elif return_last:
+            return results[-1]
+        else:
+            return results
 
     async def get_query_status(
         self, query_ids: List[str], poll_interval: float

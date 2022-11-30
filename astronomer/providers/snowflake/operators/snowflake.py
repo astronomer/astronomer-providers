@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import typing
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from airflow.exceptions import AirflowException
 
@@ -12,7 +14,10 @@ except ImportError:  # pragma: no cover
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[assignment] # noqa: E501 # pragma: no cover
 
-from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
+from astronomer.providers.snowflake.hooks.snowflake import (
+    SnowflakeHookAsync,
+    fetch_all_snowflake_handler,
+)
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
     SnowflakeSqlApiHookAsync,
 )
@@ -77,6 +82,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         through native Okta.
     :param session_parameters: You can set session-level parameters at
         the time you connect to Snowflake
+    :param handler: (optional) the function that will be applied to the cursor (default: fetch_all_handler).
+    :param return_last: (optional) if return the result of only last statement (default: True).
     :param poll_interval: the interval in seconds to poll the query
     """  # noqa
 
@@ -91,6 +98,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         authenticator: Optional[str] = None,
         session_parameters: Optional[Dict[str, Any]] = None,
         poll_interval: int = 5,
+        handler: Callable[[Any], Any] = fetch_all_snowflake_handler,
+        return_last: bool = True,
         **kwargs: Any,
     ) -> None:
         self.poll_interval = poll_interval
@@ -120,6 +129,8 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             super().__init__(conn_id=snowflake_conn_id, **kwargs)  # pragma: no cover
         else:
             super().__init__(**kwargs)
+        self.handler = handler
+        self.return_last = return_last
 
     def get_db_hook(self) -> SnowflakeHookAsync:
         """Get the Snowflake Hook"""
@@ -169,7 +180,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
 
     def execute_complete(
         self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
-    ) -> None:
+    ) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -183,12 +194,12 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
                 qids = typing.cast(List[str], event["query_ids"])
-                hook.check_query_output(qids)
+                results = hook.check_query_output(qids, self.handler)
                 self.log.info("%s completed successfully.", self.task_id)
-                return None
+                if self.do_xcom_push:
+                    return results
         else:
-            self.log.info("%s completed successfully.", self.task_id)
-            return None
+            raise AirflowException("Did not receive valid event from the trigerrer")
 
 
 class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):

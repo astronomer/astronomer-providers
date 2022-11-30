@@ -118,14 +118,14 @@ def test_snowflake_async_execute_complete_failure():
 
 
 @pytest.mark.parametrize(
-    "mock_event",
+    "mock_event, mock_xcom_push",
     [
-        None,
-        ({"status": "success", "query_ids": ["uuid", "uuid"]}),
+        ({"status": "success", "query_ids": ["uuid", "uuid"]}, True),
+        ({"status": "success", "query_ids": ["uuid", "uuid"]}, False),
     ],
 )
 @mock.patch(LONG_MOCK_PATH)
-def test_snowflake_async_execute_complete(mock_conn, mock_event):
+def test_snowflake_async_execute_complete(mock_conn, mock_event, mock_xcom_push):
     """Tests execute_complete assert with successful message"""
 
     args = {"owner": "airflow", "start_date": datetime.datetime(2017, 1, 1)}
@@ -134,12 +134,27 @@ def test_snowflake_async_execute_complete(mock_conn, mock_event):
         task_id="execute_complete",
         snowflake_conn_id=CONN_ID,
         sql=TEST_SQL,
+        do_xcom_push=mock_xcom_push,
         dag=dag,
     )
 
     with mock.patch.object(operator.log, "info") as mock_log_info:
         operator.execute_complete(context=None, event=mock_event)
     mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
+
+
+@mock.patch(LONG_MOCK_PATH)
+def test_snowflake_sql_api_execute_complete_event_none(mock_conn):
+    """Tests execute_complete assert with successful message"""
+
+    operator = SnowflakeOperatorAsync(
+        task_id="execute_complete",
+        snowflake_conn_id=CONN_ID,
+        sql=TEST_SQL,
+    )
+
+    with pytest.raises(AirflowException):
+        operator.execute_complete(context=None, event=None)
 
 
 def test_get_db_hook():
