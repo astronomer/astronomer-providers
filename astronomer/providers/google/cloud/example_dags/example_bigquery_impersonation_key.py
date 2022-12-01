@@ -25,6 +25,7 @@ GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
 LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 IMPERSONATION_KEY = os.getenv("IMPERSONATION_KEY", "")
+DELEGATE_TO = os.getenv("DELEGATE_TO", "")
 
 
 TABLE_1 = "table1"
@@ -115,6 +116,7 @@ with DAG(
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
         impersonation_chain=IMPERSONATION_KEY,
+        delegate_to=DELEGATE_TO,
     )
     # [END howto_operator_bigquery_select_job_async]
 
