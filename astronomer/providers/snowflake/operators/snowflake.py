@@ -194,7 +194,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
                 qids = typing.cast(List[str], event["query_ids"])
-                results = hook.check_query_output(qids, self.handler)
+                results = hook.check_query_output(qids, self.handler, self.return_last)
                 self.log.info("%s completed successfully.", self.task_id)
                 if self.do_xcom_push:
                     return results

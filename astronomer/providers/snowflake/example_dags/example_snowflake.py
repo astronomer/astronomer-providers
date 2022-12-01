@@ -62,7 +62,12 @@ with DAG(
         sql=SQL_MULTIPLE_STMTS,
     )
 
+    snowflake_op_sql_select_stmts = SnowflakeOperatorAsync(
+        task_id="snowflake_op_sql_select_stmts", sql=SNOWFLAKE_SLACK_SQL, return_last=False
+    )
+
     (
         snowflake_op_sql_str
         >> [snowflake_op_with_params, snowflake_op_sql_list, snowflake_op_sql_multiple_stmts]
+        >> snowflake_op_sql_select_stmts
     )
