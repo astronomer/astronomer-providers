@@ -21,7 +21,7 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
 DATASET_NAME = os.getenv("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
-GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
+GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_impersonation")
 LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 IMPERSONATION_KEY = os.getenv("IMPERSONATION_KEY", "")
