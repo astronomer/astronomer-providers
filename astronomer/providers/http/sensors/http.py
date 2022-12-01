@@ -46,6 +46,7 @@ class HttpSensorAsync(HttpSensor):
         The callable takes the response object as the first positional argument
         and optionally any number of keyword arguments available in the context dictionary.
         It should return True for 'pass' and False otherwise.
+        Currently if this parameter is specified then sync version of the sensor will be used.
     :type response_check: A lambda or defined function.
     :param extra_options: Extra options for the 'requests' library, see the
         'requests' documentation (options to modify timeout, ssl, etc.)
@@ -100,6 +101,7 @@ class HttpSensorAsync(HttpSensor):
         # Maybe we set method_name as users function??? to run it again
         # and evaluate the response.
         if self.response_check:
+            self.log.warning("Since response_check param is passed, using the sync version of the sensor.")
             super().execute(context=context)
         else:
             self.defer(
