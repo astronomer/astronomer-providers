@@ -13,11 +13,11 @@ Feature
 Bug Fixes
 """""""""
 
-- Fix ``SnowflakeOperatorAsync`` to return XCom of results to be same as the Sync operators.
-  (`#714 <https://github.com/astronomer/astronomer-providers/issues/714>`_)
-- Add poke_interval to ``S3KeySensor/Trigger``.
+- Change return value of ``SnowflakeOperatorAsync`` to be same as the Sync operator.
+  (`#781 <https://github.com/astronomer/astronomer-providers/pull/781>`_)
+- Add poke_interval to ``S3KeySensorAsync``.
   (`#782 <https://github.com/astronomer/astronomer-providers/pull/782>`_)
-- Fix ``AwsBaseHookAsync`` on connection details to use ``AwsConnectionWrapper``.
+- Fix ``AwsBaseHookAsync`` to get connection details using ``AwsConnectionWrapper``.
   (`#758 <https://github.com/astronomer/astronomer-providers/pull/758>`_)
 - Remove mypy ignore specification in ``WasbHookAsync``.
   (`#777 <https://github.com/astronomer/astronomer-providers/pull/777>`_)
