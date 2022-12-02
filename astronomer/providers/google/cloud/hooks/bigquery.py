@@ -25,6 +25,9 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
 
     sync_hook_class = BigQueryHook
 
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+
     async def get_job_instance(
         self, project_id: Optional[str], job_id: Optional[str], session: ClientSession
     ) -> Job:

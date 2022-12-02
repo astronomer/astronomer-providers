@@ -22,6 +22,14 @@ class DataprocCreateClusterTrigger(BaseTrigger):
     :param end_time: Time in second left to check the cluster status
     :param metadata: Additional metadata that is provided to the method
     :param gcp_conn_id: The connection ID to use when fetching connection info.
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account.
     :param polling_interval: Time in seconds to sleep between checks of cluster status
     """
 
@@ -37,6 +45,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         cluster_config: Optional[Union[Dict[str, Any], clusters.Cluster]] = None,
         labels: Optional[Dict[str, str]] = None,
         gcp_conn_id: str = "google_cloud_default",
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
@@ -50,6 +59,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         self.cluster_config = cluster_config
         self.labels = labels
         self.gcp_conn_id = gcp_conn_id
+        self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -66,6 +76,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
                 "cluster_config": self.cluster_config,
                 "labels": self.labels,
                 "gcp_conn_id": self.gcp_conn_id,
+                "impersonation_chain": self.impersonation_chain,
                 "polling_interval": self.polling_interval,
             },
         )
@@ -122,7 +133,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         )
 
     def _delete_cluster(self) -> None:
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         hook.delete_cluster(
             project_id=self.project_id,
             region=self.region,
@@ -147,7 +158,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
                 raise e
 
     def _create_cluster(self) -> Any:
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         return hook.create_cluster(
             region=self.region,
             project_id=self.project_id,
@@ -158,7 +169,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         )
 
     async def _get_cluster(self) -> clusters.Cluster:
-        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         return await hook.get_cluster(
             region=self.region,  # type: ignore[arg-type]
             cluster_name=self.cluster_name,
@@ -167,7 +178,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         )
 
     def _diagnose_cluster(self) -> Any:
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         return hook.diagnose_cluster(
             project_id=self.project_id,
             region=self.region,
@@ -186,6 +197,14 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
     :param region: The Cloud Dataproc region in which to handle the request
     :param metadata: Additional metadata that is provided to the method
     :param gcp_conn_id: The connection ID to use when fetching connection info.
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account.
     :param polling_interval: Time in seconds to sleep between checks of cluster status
     """
 
@@ -197,6 +216,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
         region: Optional[str] = None,
         metadata: Sequence[Tuple[str, str]] = (),
         gcp_conn_id: str = "google_cloud_default",
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
@@ -207,6 +227,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
         self.region = region
         self.metadata = metadata
         self.gcp_conn_id = gcp_conn_id
+        self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -220,13 +241,14 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
                 "region": self.region,
                 "metadata": self.metadata,
                 "gcp_conn_id": self.gcp_conn_id,
+                "impersonation_chain": self.impersonation_chain,
                 "polling_interval": self.polling_interval,
             },
         )
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Wait until cluster is deleted completely"""
-        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         while self.end_time > time.time():
             try:
                 cluster = await hook.get_cluster(
@@ -259,6 +281,14 @@ class DataProcSubmitTrigger(BaseTrigger):
     :param location: (To be deprecated). The Cloud Dataproc region in which to handle the request. (templated)
     :param gcp_conn_id: The connection ID to use connecting to Google Cloud Platform.
     :param wait_timeout: How many seconds wait for job to be ready.
+    :param impersonation_chain: Optional service account to impersonate using short-term
+        credentials, or chained list of accounts required to get the access_token
+        of the last account in the list, which will be impersonated in the request.
+        If set as a string, the account must grant the originating account
+        the Service Account Token Creator IAM role.
+        If set as a sequence, the identities from the list must grant
+        Service Account Token Creator IAM role to the directly preceding identity, with first
+        account from the list granting this role to the originating account.
     """
 
     def __init__(
@@ -268,6 +298,7 @@ class DataProcSubmitTrigger(BaseTrigger):
         region: Optional[str] = None,
         project_id: Optional[str] = None,
         gcp_conn_id: str = "google_cloud_default",
+        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         polling_interval: float = 5.0,
     ) -> None:
         super().__init__()
@@ -275,6 +306,7 @@ class DataProcSubmitTrigger(BaseTrigger):
         self.gcp_conn_id = gcp_conn_id
         self.dataproc_job_id = dataproc_job_id
         self.region = region
+        self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
@@ -286,6 +318,7 @@ class DataProcSubmitTrigger(BaseTrigger):
                 "dataproc_job_id": self.dataproc_job_id,
                 "region": self.region,
                 "polling_interval": self.polling_interval,
+                "impersonation_chain": self.impersonation_chain,
                 "gcp_conn_id": self.gcp_conn_id,
             },
         )
@@ -293,7 +326,9 @@ class DataProcSubmitTrigger(BaseTrigger):
     async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
         """Simple loop until the job running on Google Cloud DataProc is completed or not"""
         try:
-            hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id)
+            hook = DataprocHookAsync(
+                gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain
+            )
             while True:
                 job_status = await self._get_job_status(hook)
                 if "status" in job_status and job_status["status"] == "success":

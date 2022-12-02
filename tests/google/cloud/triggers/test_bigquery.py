@@ -40,6 +40,8 @@ TEST_RATIO_FORMULA = "max_over_min"
 TEST_IGNORE_ZERO = True
 TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_HOOK_PARAMS = {}
+TEST_DELEGATE_TO = None
+TEST_IMPERSONATION_CHAIN = None
 
 
 def test_bigquery_insert_job_op_trigger_serialization():
@@ -53,6 +55,8 @@ def test_bigquery_insert_job_op_trigger_serialization():
         TEST_GCP_PROJECT_ID,
         TEST_DATASET_ID,
         TEST_TABLE_ID,
+        TEST_DELEGATE_TO,
+        TEST_IMPERSONATION_CHAIN,
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
@@ -63,6 +67,8 @@ def test_bigquery_insert_job_op_trigger_serialization():
         "project_id": TEST_GCP_PROJECT_ID,
         "dataset_id": TEST_DATASET_ID,
         "table_id": TEST_TABLE_ID,
+        "delegate_to": TEST_DELEGATE_TO,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "poll_interval": POLLING_PERIOD_SECONDS,
     }
 
@@ -185,12 +191,13 @@ def test_bigquery_check_op_trigger_serialization():
     and classpath.
     """
     trigger = BigQueryCheckTrigger(
-        TEST_CONN_ID,
-        TEST_JOB_ID,
-        TEST_GCP_PROJECT_ID,
-        TEST_DATASET_ID,
-        TEST_TABLE_ID,
-        POLLING_PERIOD_SECONDS,
+        conn_id=TEST_CONN_ID,
+        job_id=TEST_JOB_ID,
+        project_id=TEST_GCP_PROJECT_ID,
+        dataset_id=TEST_DATASET_ID,
+        table_id=TEST_TABLE_ID,
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
+        poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
     assert classpath == "astronomer.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger"
@@ -200,6 +207,7 @@ def test_bigquery_check_op_trigger_serialization():
         "dataset_id": TEST_DATASET_ID,
         "project_id": TEST_GCP_PROJECT_ID,
         "table_id": TEST_TABLE_ID,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "poll_interval": POLLING_PERIOD_SECONDS,
     }
 
@@ -297,6 +305,8 @@ def test_bigquery_get_data_trigger_serialization():
         project_id=TEST_GCP_PROJECT_ID,
         dataset_id=TEST_DATASET_ID,
         table_id=TEST_TABLE_ID,
+        delegate_to=TEST_DELEGATE_TO,
+        impersonation_chain=TEST_IMPERSONATION_CHAIN,
         poll_interval=POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()
@@ -307,6 +317,8 @@ def test_bigquery_get_data_trigger_serialization():
         "dataset_id": TEST_DATASET_ID,
         "project_id": TEST_GCP_PROJECT_ID,
         "table_id": TEST_TABLE_ID,
+        "delegate_to": TEST_DELEGATE_TO,
+        "impersonation_chain": TEST_IMPERSONATION_CHAIN,
         "poll_interval": POLLING_PERIOD_SECONDS,
     }
 
@@ -386,6 +398,7 @@ def test_bigquery_interval_check_trigger_serialization():
         TEST_IGNORE_ZERO,
         TEST_DATASET_ID,
         TEST_TABLE_ID,
+        TEST_IMPERSONATION_CHAIN,
         POLLING_PERIOD_SECONDS,
     )
     classpath, kwargs = trigger.serialize()

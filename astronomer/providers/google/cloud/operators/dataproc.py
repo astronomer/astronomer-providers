@@ -74,7 +74,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
 
     def execute(self, context: Context) -> None:  # type: ignore[override]
         """Call create cluster API and defer to DataprocCreateClusterTrigger to check the status"""
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id)
+        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         DataprocLink.persist(
             context=context, task_instance=self, url=DATAPROC_CLUSTER_LINK, resource=self.cluster_name
         )
@@ -108,6 +108,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
                 cluster_config=self.cluster_config,
                 labels=self.labels,
                 gcp_conn_id=self.gcp_conn_id,
+                impersonation_chain=self.impersonation_chain,
                 polling_interval=self.polling_interval,
             ),
             method_name="execute_complete",
@@ -185,6 +186,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
 
         self.defer(
             trigger=DataprocDeleteClusterTrigger(
+                gcp_conn_id=self.gcp_conn_id,
                 project_id=self.project_id,
                 region=self.region,
                 cluster_name=self.cluster_name,
@@ -192,6 +194,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
                 retry=self.retry,
                 end_time=end_time,
                 metadata=self.metadata,
+                impersonation_chain=self.impersonation_chain,
             ),
             method_name="execute_complete",
         )
@@ -265,6 +268,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
                 dataproc_job_id=job_id,
                 project_id=self.project_id,
                 region=self.region,
+                impersonation_chain=self.impersonation_chain,
             ),
             method_name="execute_complete",
         )
@@ -366,6 +370,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
                 end_time=end_time,
                 metadata=self.metadata,
                 gcp_conn_id=self.gcp_conn_id,
+                impersonation_chain=self.impersonation_chain,
                 polling_interval=self.polling_interval,
             ),
             method_name="execute_complete",
