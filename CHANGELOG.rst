@@ -13,14 +13,12 @@ Feature
 Bug Fixes
 """""""""
 
-- Change return value of ``SnowflakeOperatorAsync`` to be same as the Sync operator.
+- Change return value of ``SnowflakeOperatorAsync`` to be same as that of ``SnowflakeOperator``.
   (`#781 <https://github.com/astronomer/astronomer-providers/pull/781>`_)
 - Add poke_interval to ``S3KeySensorAsync``.
   (`#782 <https://github.com/astronomer/astronomer-providers/pull/782>`_)
-- Fix ``AwsBaseHookAsync`` to get connection details using ``AwsConnectionWrapper``.
+- Use ``AwsConnectionWrapper`` to get connection details to create AWS async client.
   (`#758 <https://github.com/astronomer/astronomer-providers/pull/758>`_)
-- Remove mypy ignore specification in ``WasbHookAsync``.
-  (`#777 <https://github.com/astronomer/astronomer-providers/pull/777>`_)
 - Fix ADF Sensor broken docs.
   (`#779 <https://github.com/astronomer/astronomer-providers/pull/779>`_)
 - Log warning message when ``response_check`` attribute is passed in ``HttpSensorAsync``.
