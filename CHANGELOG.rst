@@ -7,7 +7,7 @@ Changelog
 Feature
 """""""
 
-- Add custom XCom backends for GCS.
+- Add custom XCom backend for GCS.
   (`#681 <https://github.com/astronomer/astronomer-providers/pull/681>`_)
 
 Bug Fixes
@@ -21,9 +21,9 @@ Bug Fixes
   (`#758 <https://github.com/astronomer/astronomer-providers/pull/758>`_)
 - Remove mypy ignore specification in ``WasbHookAsync``.
   (`#777 <https://github.com/astronomer/astronomer-providers/pull/777>`_)
-- Fix ADF broken docs.
+- Fix ADF Sensor broken docs.
   (`#779 <https://github.com/astronomer/astronomer-providers/pull/779>`_)
-- Fix ``HttpSensorAsync`` docs.
+- Log warning message when ``response_check`` attribute is passed in ``HttpSensorAsync``.
   (`#780 <https://github.com/astronomer/astronomer-providers/pull/780>`_)
 
 
