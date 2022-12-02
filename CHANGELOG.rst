@@ -1,6 +1,32 @@
 Changelog
 =========
 
+1.12.0 (2022-12-02)
+-------------------
+
+Feature
+"""""""
+
+- Add custom XCom backends for GCS.
+  (`#681 <https://github.com/astronomer/astronomer-providers/pull/681>`_)
+
+Bug Fixes
+"""""""""
+
+- Fix ``SnowflakeOperatorAsync`` to return XCom of results to be same as the Sync operators.
+  (`#714 <https://github.com/astronomer/astronomer-providers/issues/714>`_)
+- Add poke_interval to ``S3KeySensor/Trigger``.
+  (`#782 <https://github.com/astronomer/astronomer-providers/pull/782>`_)
+- Fix ``AwsBaseHookAsync`` on connection details to use ``AwsConnectionWrapper``.
+  (`#758 <https://github.com/astronomer/astronomer-providers/pull/758>`_)
+- Remove mypy ignore specification in ``WasbHookAsync``.
+  (`#777 <https://github.com/astronomer/astronomer-providers/pull/777>`_)
+- Fix ADF broken docs.
+  (`#779 <https://github.com/astronomer/astronomer-providers/pull/779>`_)
+- Fix ``HttpSensorAsync`` docs.
+  (`#780 <https://github.com/astronomer/astronomer-providers/pull/780>`_)
+
+
 1.11.2 (2022-11-19)
 -------------------
 
