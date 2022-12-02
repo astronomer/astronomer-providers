@@ -1,6 +1,6 @@
 """
-Example Airflow DAG for Google BigQuery service.
-Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
+Example Airflow DAG which uses impersonation and delegate_to
+parameters for authenticating with Google BigQuery service
 """
 import os
 from datetime import datetime, timedelta
@@ -23,7 +23,7 @@ DATASET_NAME = os.getenv("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
 GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_impersonation")
 LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
-IMPERSONATION_KEY = os.getenv("IMPERSONATION_KEY", "")
+IMPERSONATION_CHAIN = os.getenv("IMPERSONATION_CHAIN", "")
 DELEGATE_TO = os.getenv("DELEGATE_TO", "")
 
 
@@ -51,7 +51,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="example_async_bigquery_impersonation",
+    dag_id="example_bigquery_impersonation",
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
@@ -64,7 +64,7 @@ with DAG(
         dataset_id=DATASET,
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
     )
 
     create_table_1 = BigQueryCreateEmptyTableOperator(
@@ -74,7 +74,7 @@ with DAG(
         schema_fields=SCHEMA,
         location=LOCATION,
         bigquery_conn_id=GCP_CONN_ID,
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
     )
 
     create_dataset >> create_table_1
@@ -85,7 +85,7 @@ with DAG(
         delete_contents=True,
         gcp_conn_id=GCP_CONN_ID,
         trigger_rule="all_done",
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
     )
 
     # [START howto_operator_bigquery_insert_job_async]
@@ -99,7 +99,7 @@ with DAG(
         },
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
     )
     # [END howto_operator_bigquery_insert_job_async]
 
@@ -114,7 +114,7 @@ with DAG(
         },
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
         delegate_to=DELEGATE_TO,
     )
     # [END howto_operator_bigquery_select_job_async]
@@ -126,7 +126,7 @@ with DAG(
         use_legacy_sql=False,
         location=LOCATION,
         gcp_conn_id=GCP_CONN_ID,
-        impersonation_chain=IMPERSONATION_KEY,
+        impersonation_chain=IMPERSONATION_CHAIN,
     )
     # [END howto_operator_bigquery_check_async]
 
