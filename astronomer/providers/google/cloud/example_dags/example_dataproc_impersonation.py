@@ -136,6 +136,7 @@ with models.DAG(
 
     # [START howto_operator_dataproc_update_cluster_async]
     update_cluster = DataprocUpdateClusterOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="update_cluster",
         cluster_name=CLUSTER_NAME,
         cluster=CLUSTER_UPDATE,

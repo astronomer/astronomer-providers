@@ -186,6 +186,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
 
         self.defer(
             trigger=DataprocDeleteClusterTrigger(
+                gcp_conn_id=self.gcp_conn_id,
                 project_id=self.project_id,
                 region=self.region,
                 cluster_name=self.cluster_name,
