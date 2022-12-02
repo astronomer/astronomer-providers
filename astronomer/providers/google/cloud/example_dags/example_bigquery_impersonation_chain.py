@@ -20,7 +20,7 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
 DATASET_NAME = os.getenv("GCP_BIGQUERY_DATASET_NAME", "astro_dataset")
-GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_impersonation")
+GCP_IMPERSONATION_CONN_ID = os.getenv("GCP_IMPERSONATION_CONN_ID", "google_impersonation")
 LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 IMPERSONATION_CHAIN = os.getenv("IMPERSONATION_CHAIN", "")
@@ -63,7 +63,7 @@ with DAG(
         task_id="create_dataset",
         dataset_id=DATASET,
         location=LOCATION,
-        gcp_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
     )
 
@@ -73,7 +73,7 @@ with DAG(
         table_id=TABLE_1,
         schema_fields=SCHEMA,
         location=LOCATION,
-        bigquery_conn_id=GCP_CONN_ID,
+        bigquery_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
     )
 
@@ -83,7 +83,7 @@ with DAG(
         task_id="delete_dataset",
         dataset_id=DATASET,
         delete_contents=True,
-        gcp_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         trigger_rule="all_done",
         impersonation_chain=IMPERSONATION_CHAIN,
     )
@@ -98,7 +98,7 @@ with DAG(
             }
         },
         location=LOCATION,
-        gcp_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
     )
     # [END howto_operator_bigquery_insert_job_async]
@@ -113,7 +113,7 @@ with DAG(
             }
         },
         location=LOCATION,
-        gcp_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
         delegate_to=DELEGATE_TO,
     )
@@ -125,7 +125,7 @@ with DAG(
         sql=f"SELECT COUNT(*) FROM {DATASET}.{TABLE_1}",
         use_legacy_sql=False,
         location=LOCATION,
-        gcp_conn_id=GCP_CONN_ID,
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
     )
     # [END howto_operator_bigquery_check_async]

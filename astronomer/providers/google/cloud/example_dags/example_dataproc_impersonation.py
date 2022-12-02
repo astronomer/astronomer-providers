@@ -20,7 +20,7 @@ from astronomer.providers.google.cloud.operators.dataproc import (
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "astronomer-airflow-providers")
 CLUSTER_NAME = os.getenv("GCP_DATAPROC_CLUSTER_NAME", "example-cluster-astronomer-providers")
 REGION = os.getenv("GCP_LOCATION", "us-central1")
-GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_impersonation")
+GCP_IMPERSONATION_CONN_ID = os.getenv("GCP_IMPERSONATION_CONN_ID", "google_impersonation")
 ZONE = os.getenv("GCP_REGION", "us-central1-a")
 BUCKET = os.getenv("GCP_DATAPROC_BUCKET", "dataproc-system-tests-astronomer-providers")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
@@ -124,6 +124,7 @@ with models.DAG(
 ) as dag:
     # [START howto_operator_dataproc_create_cluster_async]
     create_cluster = DataprocCreateClusterOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="create_cluster",
         project_id=PROJECT_ID,
         cluster_config=CLUSTER_CONFIG,
@@ -148,6 +149,7 @@ with models.DAG(
 
     # [START howto_create_bucket_task]
     create_bucket = GCSCreateBucketOperator(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="create_bucket",
         bucket_name=BUCKET,
         project_id=PROJECT_ID,
@@ -163,12 +165,17 @@ with models.DAG(
 
     # [START howto_operator_dataproc_submit_pig_job_async]
     pig_task = DataprocSubmitJobOperatorAsync(
-        task_id="pig_task", job=PIG_JOB, region=REGION, project_id=PROJECT_ID
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
+        task_id="pig_task",
+        job=PIG_JOB,
+        region=REGION,
+        project_id=PROJECT_ID,
     )
     # [END howto_operator_dataproc_submit_pig_job_async]
 
     # [START howto_DataprocSubmitJobOperatorAsync]
     spark_sql_task = DataprocSubmitJobOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="spark_sql_task",
         job=SPARK_SQL_JOB,
         region=REGION,
@@ -178,6 +185,7 @@ with models.DAG(
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START howto_DataprocSubmitJobOperatorAsync]
     spark_task = DataprocSubmitJobOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="spark_task",
         job=SPARK_JOB,
         region=REGION,
@@ -187,6 +195,7 @@ with models.DAG(
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START howto_DataprocSubmitJobOperatorAsync]
     hive_task = DataprocSubmitJobOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="hive_task",
         job=HIVE_JOB,
         region=REGION,
@@ -196,6 +205,7 @@ with models.DAG(
     # [END howto_DataprocSubmitJobOperatorAsync]
     # [START howto_DataprocSubmitJobOperatorAsync]
     hadoop_task = DataprocSubmitJobOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="hadoop_task",
         job=HADOOP_JOB,
         region=REGION,
@@ -206,6 +216,7 @@ with models.DAG(
 
     # [START howto_operator_dataproc_delete_cluster_async]
     delete_cluster = DataprocDeleteClusterOperatorAsync(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="delete_cluster",
         project_id=PROJECT_ID,
         cluster_name=CLUSTER_NAME,
@@ -217,6 +228,7 @@ with models.DAG(
 
     # [START howto_delete_buckettask]
     delete_bucket = GCSDeleteBucketOperator(
+        gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         task_id="delete_bucket",
         bucket_name=BUCKET,
         trigger_rule="all_done",
