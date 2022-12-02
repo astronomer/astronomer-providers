@@ -11,7 +11,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
     BigQueryDeleteDatasetOperator,
-    BigQueryInsertJobOperator,
 )
 
 from astronomer.providers.google.cloud.operators.bigquery import (
@@ -90,7 +89,7 @@ with DAG(
     )
 
     # [START howto_operator_bigquery_insert_job_async]
-    insert_query_job = BigQueryInsertJobOperator(
+    insert_query_job = BigQueryInsertJobOperatorAsync(
         task_id="insert_query_job",
         configuration={
             "query": {
