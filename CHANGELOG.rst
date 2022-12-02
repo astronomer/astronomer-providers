@@ -1,6 +1,30 @@
 Changelog
 =========
 
+1.12.0 (2022-12-02)
+-------------------
+
+Feature
+"""""""
+
+- Add custom XCom backend for GCS.
+  (`#681 <https://github.com/astronomer/astronomer-providers/pull/681>`_)
+
+Bug Fixes
+"""""""""
+
+- Change return value of ``SnowflakeOperatorAsync`` to be same as that of ``SnowflakeOperator``.
+  (`#781 <https://github.com/astronomer/astronomer-providers/pull/781>`_)
+- Add poke_interval to ``S3KeySensorAsync``.
+  (`#782 <https://github.com/astronomer/astronomer-providers/pull/782>`_)
+- Use ``AwsConnectionWrapper`` to get connection details to create AWS async client.
+  (`#758 <https://github.com/astronomer/astronomer-providers/pull/758>`_)
+- Fix ADF Sensor broken docs.
+  (`#779 <https://github.com/astronomer/astronomer-providers/pull/779>`_)
+- Log warning message when ``response_check`` attribute is passed in ``HttpSensorAsync``.
+  (`#780 <https://github.com/astronomer/astronomer-providers/pull/780>`_)
+
+
 1.11.2 (2022-11-19)
 -------------------
 
