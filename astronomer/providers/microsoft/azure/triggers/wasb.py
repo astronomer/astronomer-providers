@@ -46,7 +46,7 @@ class WasbBlobSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Makes async connection to Azure WASB and polls for existence of the given blob name."""
         blob_exists = False
         hook = WasbHookAsync(wasb_conn_id=self.wasb_conn_id, public_read=self.public_read)
@@ -121,7 +121,7 @@ class WasbPrefixSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Makes async connection to Azure WASB and polls for existence of a blob with given prefix."""
         prefix_exists = False
         hook = WasbHookAsync(wasb_conn_id=self.wasb_conn_id, public_read=self.public_read)

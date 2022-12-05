@@ -85,7 +85,7 @@ class BatchOperatorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Make async connection using aiobotocore library to AWS Batch,
         periodically poll for the job status on the Triggerer
@@ -145,7 +145,7 @@ class BatchSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Make async connection using aiobotocore library to AWS Batch,
         periodically poll for the Batch job status

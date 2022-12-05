@@ -48,7 +48,7 @@ class GCSBlobTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple loop until the relevant file/folder is found."""
         try:
             hook = self._get_async_hook()
@@ -126,7 +126,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple loop until the matches are found for the given prefix on the bucket."""
         try:
             hook = self._get_async_hook()
@@ -226,7 +226,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Simple loop until no change in any new files or deleted in list blob is
         found for the inactivity_period.
@@ -360,7 +360,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple loop until the object updated time is greater than ts datetime in bucket."""
         try:
             hook = self._get_async_hook()

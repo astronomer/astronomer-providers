@@ -40,7 +40,7 @@ class RedshiftSQLTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Make async connection and execute query using the Amazon Redshift Data API."""
         hook = RedshiftSQLHookAsync(aws_conn_id=self.aws_conn_id)
         try:
