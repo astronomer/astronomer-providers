@@ -81,7 +81,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Check the status of cluster until reach the terminal state"""
         while self.end_time > time.time():
             try:
