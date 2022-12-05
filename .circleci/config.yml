@@ -105,7 +105,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - mypy-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
             - mypy-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies for sasl
@@ -126,7 +126,7 @@ jobs:
           paths:
             - ~/.cache/pip
             - ~/.pyenv/versions/
-          key: mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+          key: mypy-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
 
   build-docs:
     description: "Build docs"
@@ -137,7 +137,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
+            - docs-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
             - docs-main-{{ checksum "setup.cfg" }}-{ checksum ".readthedocs.yaml" }}
       - run:
           name: Install Dependencies for sasl
@@ -158,7 +158,7 @@ jobs:
           paths:
             - ~/.cache/pip
             - ~/.pyenv/versions/
-          key: docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
+          key: docs-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
 
 
   test:
@@ -175,7 +175,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - deps-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
             - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies for sasl
@@ -207,7 +207,7 @@ jobs:
           paths:
             - ~/.cache/pip
             - ~/.pyenv/versions/
-          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+          key: deps-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
 
   build-and-verify:
     executor:
