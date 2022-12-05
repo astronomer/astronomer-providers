@@ -55,7 +55,7 @@ class SnowflakeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a series of connections to snowflake to get the status of the query
         by async get_query_status function
@@ -112,7 +112,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes a GET API request to snowflake with query_id to get the status of the query
         by get_sql_api_query_status async function

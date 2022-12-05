@@ -54,7 +54,7 @@ class RedshiftClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Make async connection to redshift, based on the operation type call
         the RedshiftHookAsync functions
@@ -138,7 +138,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Simple async function run until the cluster status match the target status."""
         try:
             hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)

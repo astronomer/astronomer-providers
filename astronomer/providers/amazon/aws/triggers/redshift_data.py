@@ -40,7 +40,7 @@ class RedshiftDataTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # type: ignore[override]
+    async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
         Makes async connection and gets status for a list of queries submitted by the operator.
         Even if one of the queries has a non-successful state, the hook returns a failure event and the error
