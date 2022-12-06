@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict, Optional
 
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
@@ -53,14 +53,15 @@ class AwsBaseHookAsync(AwsBaseHook):
             credentials = await self.get_role_credentials(
                 async_session=async_connection, conn_config=conn_config
             )
-            session_token = credentials["SessionToken"]
-            aws_access = credentials["AccessKeyId"]
-            aws_secret = credentials["SecretAccessKey"]
+            if credentials:
+                session_token = credentials["SessionToken"]
+                aws_access = credentials["AccessKeyId"]
+                aws_secret = credentials["SecretAccessKey"]
         return async_connection.create_client(
             service_name=self.client_type,
             region_name=conn_config.region_name,
-            aws_secret_access_key=aws_access,
-            aws_access_key_id=aws_secret,
+            aws_secret_access_key=aws_secret,
+            aws_access_key_id=aws_access,
             aws_session_token=session_token,
             verify=self.verify,
             config=self.config,
@@ -68,29 +69,20 @@ class AwsBaseHookAsync(AwsBaseHook):
         )
 
     @staticmethod
-    async def get_role_credentials(async_session: AioSession, conn_config) -> Dict[str, Any]:
+    async def get_role_credentials(
+        async_session: AioSession, conn_config: AwsConnectionWrapper
+    ) -> Optional[Dict[str, str]]:
         """Get the role_arn, method credentials from connection details and get the role credentials detail"""
         async with async_session.create_client(
             "sts",
             aws_access_key_id=conn_config.aws_access_key_id,
             aws_secret_access_key=conn_config.aws_secret_access_key,
         ) as client:
-            if conn_config.assume_role_method == "assume_role_with_saml":
-                response = await client.assume_role_with_saml(
+            if conn_config.assume_role_method == "assume_role" or conn_config.assume_role_method is None:
+                response: Dict[str, Dict[str, str]] = await client.assume_role(
                     RoleArn=conn_config.role_arn,
                     RoleSessionName="RoleSession",
                     **conn_config.assume_role_kwargs,
                 )
-            elif conn_config.assume_role_method == "assume_role_with_web_identity":
-                response = await client.assume_role_with_web_identity(
-                    RoleArn=conn_config.role_arn,
-                    RoleSessionName="RoleSession",
-                    **conn_config.assume_role_kwargs,
-                )
-            else:
-                response = await client.assume_role(
-                    RoleArn=conn_config.role_arn,
-                    RoleSessionName="RoleSession",
-                    **conn_config.assume_role_kwargs,
-                )
-        return response["Credentials"]
+                return response["Credentials"]
+            return None
