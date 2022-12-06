@@ -101,14 +101,11 @@ async def test_get_role_credentials(mock_get_connection, mock_client_creator, mo
         botocore_config=aws_base_hook_async_obj.config,
         verify=aws_base_hook_async_obj.verify,
     )
-
     mock_session.create_client = mock_client_creator
     mock_client_creator.return_value.__aenter__.return_value.assume_role.return_value = {
         "Credentials": {"AccessKeyId": "test", "SecretAccessKey": "test", "SessionToken": "test"}
     }
-    print("conn_config ", conn_config)
     response = await aws_base_hook_async_obj.get_role_credentials(mock_session, conn_config)
-    print("response ", response)
     assert response == {"AccessKeyId": "test", "SecretAccessKey": "test", "SessionToken": "test"}
 
 

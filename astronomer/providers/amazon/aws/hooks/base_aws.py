@@ -85,4 +85,4 @@ class AwsBaseHookAsync(AwsBaseHook):
                     **conn_config.assume_role_kwargs,
                 )
                 return response["Credentials"]
-            return None
+            return None  # pragma: no cover
