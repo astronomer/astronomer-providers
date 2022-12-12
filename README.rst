@@ -189,4 +189,4 @@ Limitations
 License
 -------
 
-`Apache License 2.0 <LICENSE>`_
+`Apache License 2.0 <https://github.com/astronomer/astronomer-providers/blob/main/LICENSE>`_
