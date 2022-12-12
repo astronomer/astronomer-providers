@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict
 from unittest import mock
-from unittest.mock import AsyncMock
+# from unittest.mock import AsyncMock
 
 import pytest
 import requests
@@ -391,55 +391,55 @@ def test_get_private_key_should_support_private_auth_with_unencrypted_key(
         SnowflakeSqlApiHookAsync(snowflake_conn_id="test_conn").get_private_key()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "status_code,response,expected_response",
-    [
-        (
-            200,
-            {
-                "status": "success",
-                "message": "Statement executed successfully.",
-                "statementHandle": "uuid",
-            },
-            {
-                "status": "success",
-                "message": "Statement executed successfully.",
-                "statement_handles": ["uuid"],
-            },
-        ),
-        (
-            200,
-            {
-                "status": "success",
-                "message": "Statement executed successfully.",
-                "statementHandles": ["uuid", "uuid1"],
-            },
-            {
-                "status": "success",
-                "message": "Statement executed successfully.",
-                "statement_handles": ["uuid", "uuid1"],
-            },
-        ),
-        (202, {}, {"status": "running", "message": "Query statements are still running"}),
-        (422, {"status": "error", "message": "test"}, {"status": "error", "message": "test"}),
-        (404, {"status": "error", "message": "test"}, {"status": "error", "message": "test"}),
-    ],
-)
-@mock.patch(
-    "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync."
-    "get_request_url_header_params"
-)
-@mock.patch("astronomer.providers.snowflake.hooks.snowflake_sql_api.aiohttp.ClientSession.get")
-async def test_get_sql_api_query_status(
-    mock_get, mock_geturl_header_params, status_code, response, expected_response
-):
-    """Test Async get_sql_api_query_status function by mocking the status, response and expected response"""
-    req_id = uuid.uuid4()
-    params = {"requestId": str(req_id), "page": 2, "pageSize": 10}
-    mock_geturl_header_params.return_value = HEADERS, params, "/test/airflow/"
-    mock_get.return_value.__aenter__.return_value.status = status_code
-    mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=response)
-    hook = SnowflakeSqlApiHookAsync(snowflake_conn_id="test_conn")
-    response = await hook.get_sql_api_query_status("uuid")
-    assert response == expected_response
+# @pytest.mark.asyncio
+# @pytest.mark.parametrize(
+#     "status_code,response,expected_response",
+#     [
+#         (
+#             200,
+#             {
+#                 "status": "success",
+#                 "message": "Statement executed successfully.",
+#                 "statementHandle": "uuid",
+#             },
+#             {
+#                 "status": "success",
+#                 "message": "Statement executed successfully.",
+#                 "statement_handles": ["uuid"],
+#             },
+#         ),
+#         (
+#             200,
+#             {
+#                 "status": "success",
+#                 "message": "Statement executed successfully.",
+#                 "statementHandles": ["uuid", "uuid1"],
+#             },
+#             {
+#                 "status": "success",
+#                 "message": "Statement executed successfully.",
+#                 "statement_handles": ["uuid", "uuid1"],
+#             },
+#         ),
+#         (202, {}, {"status": "running", "message": "Query statements are still running"}),
+#         (422, {"status": "error", "message": "test"}, {"status": "error", "message": "test"}),
+#         (404, {"status": "error", "message": "test"}, {"status": "error", "message": "test"}),
+#     ],
+# )
+# @mock.patch(
+#     "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync."
+#     "get_request_url_header_params"
+# )
+# @mock.patch("astronomer.providers.snowflake.hooks.snowflake_sql_api.aiohttp.ClientSession.get")
+# async def test_get_sql_api_query_status(
+#     mock_get, mock_geturl_header_params, status_code, response, expected_response
+# ):
+#     """Test Async get_sql_api_query_status function by mocking the status, response and expected response"""
+#     req_id = uuid.uuid4()
+#     params = {"requestId": str(req_id), "page": 2, "pageSize": 10}
+#     mock_geturl_header_params.return_value = HEADERS, params, "/test/airflow/"
+#     mock_get.return_value.__aenter__.return_value.status = status_code
+#     mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=response)
+#     hook = SnowflakeSqlApiHookAsync(snowflake_conn_id="test_conn")
+#     response = await hook.get_sql_api_query_status("uuid")
+#     assert response == expected_response

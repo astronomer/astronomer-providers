@@ -1,6 +1,6 @@
 import json
 from unittest import mock
-from unittest.mock import AsyncMock
+# from unittest.mock import AsyncMock
 
 import multidict
 import pytest
@@ -54,69 +54,69 @@ class TestDbtCloudJobRunHookAsync:
         with pytest.raises(AirflowException):
             await hook.get_job_status(self.RUN_ID, self.ACCOUNT_ID)
 
-    @pytest.mark.asyncio
-    @mock.patch(
-        "astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers_tenants_from_connection"
-    )
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
-    async def test_get_job_details(
-        self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
-    ):
-        """
-        Test get_job_details function without passing the account id as param to the function and do
-        let the wrapper `provide_account_id` helps to get the account id from connection details
-        """
-        mock_get_conn.return_value = Connection(
-            conn_id=self.CONN_ID,
-            conn_type="test",
-            login=1234,
-            password="newT0k3n",
-            schema="Tenant",
-            extra=json.dumps(
-                {
-                    "login": "test",
-                    "password": "newT0k3n",
-                    "schema": "Tenant",
-                }
-            ),
-        )
-        mock_get_headers.return_value = HEADERS, "tenant"
-        mock_get_request_url_params.return_value = "/test/airflow/", {}
-        mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
-        hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
-        response = await hook.get_job_details(self.RUN_ID)
-        assert response == SAMPLE_RESPONSE
+    # @pytest.mark.asyncio
+    # @mock.patch(
+    #     "astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers_tenants_from_connection"
+    # )
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
+    # async def test_get_job_details(
+    #     self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
+    # ):
+    #     """
+    #     Test get_job_details function without passing the account id as param to the function and do
+    #     let the wrapper `provide_account_id` helps to get the account id from connection details
+    #     """
+    #     mock_get_conn.return_value = Connection(
+    #         conn_id=self.CONN_ID,
+    #         conn_type="test",
+    #         login=1234,
+    #         password="newT0k3n",
+    #         schema="Tenant",
+    #         extra=json.dumps(
+    #             {
+    #                 "login": "test",
+    #                 "password": "newT0k3n",
+    #                 "schema": "Tenant",
+    #             }
+    #         ),
+    #     )
+    #     mock_get_headers.return_value = HEADERS, "tenant"
+    #     mock_get_request_url_params.return_value = "/test/airflow/", {}
+    #     mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
+    #     hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
+    #     response = await hook.get_job_details(self.RUN_ID)
+    #     assert response == SAMPLE_RESPONSE
 
-    @pytest.mark.asyncio
-    @mock.patch(
-        "astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers_tenants_from_connection"
-    )
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
-    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
-    async def test_get_job_details_without_account_id_exception(
-        self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
-    ):
-        """
-        Test get_job_details function without passing the account id as param and in connection and to test
-        wrapper `provide_account_id` to through error.
-        """
-        mock_get_conn.return_value = Connection(
-            extra=json.dumps(
-                {
-                    "password": "newT0k3n",
-                    "schema": "Tenant",
-                }
-            )
-        )
-        mock_get_headers.return_value = HEADERS, "tenant"
-        mock_get_request_url_params.return_value = "/test/airflow/", {}
-        mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
-        hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
-        with pytest.raises(AirflowException):
-            await hook.get_job_details(self.RUN_ID)
+    # @pytest.mark.asyncio
+    # @mock.patch(
+    #     "astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_headers_tenants_from_connection"
+    # )
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_request_url_params")
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
+    # @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.aiohttp.ClientSession.get")
+    # async def test_get_job_details_without_account_id_exception(
+    #     self, mock_get, mock_get_conn, mock_get_request_url_params, mock_get_headers
+    # ):
+    #     """
+    #     Test get_job_details function without passing the account id as param and in connection and to test
+    #     wrapper `provide_account_id` to through error.
+    #     """
+    #     mock_get_conn.return_value = Connection(
+    #         extra=json.dumps(
+    #             {
+    #                 "password": "newT0k3n",
+    #                 "schema": "Tenant",
+    #             }
+    #         )
+    #     )
+    #     mock_get_headers.return_value = HEADERS, "tenant"
+    #     mock_get_request_url_params.return_value = "/test/airflow/", {}
+    #     mock_get.return_value.__aenter__.return_value.json = AsyncMock(return_value=SAMPLE_RESPONSE)
+    #     hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
+    #     with pytest.raises(AirflowException):
+    #         await hook.get_job_details(self.RUN_ID)
 
     @pytest.mark.asyncio
     @mock.patch(
