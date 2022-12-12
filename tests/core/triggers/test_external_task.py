@@ -1,6 +1,5 @@
 import asyncio
 from unittest import mock
-# from unittest.mock import AsyncMock
 
 import asynctest
 import pytest
@@ -17,6 +16,10 @@ from astronomer.providers.core.triggers.external_task import (
 from astronomer.providers.http.hooks.http import HttpHookAsync
 from tests.utils.airflow_util import get_dag_run, get_task_instance
 from tests.utils.config import Config
+
+# from unittest.mock import AsyncMock
+
+
 
 
 class TestTaskStateTrigger:

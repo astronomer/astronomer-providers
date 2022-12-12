@@ -3,7 +3,6 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict
 from unittest import mock
-# from unittest.mock import AsyncMock
 
 import pytest
 import requests
@@ -16,6 +15,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
     SnowflakeSqlApiHookAsync,
 )
+
+# from unittest.mock import AsyncMock
+
+
 
 SQL_MULTIPLE_STMTS = (
     "create or replace table user_test (i int); insert into user_test (i) "

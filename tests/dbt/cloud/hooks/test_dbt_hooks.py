@@ -1,6 +1,5 @@
 import json
 from unittest import mock
-# from unittest.mock import AsyncMock
 
 import multidict
 import pytest
@@ -10,6 +9,10 @@ from airflow.models.connection import Connection
 
 from astronomer.providers.dbt.cloud.hooks.dbt import DbtCloudHookAsync
 from astronomer.providers.package import get_provider_info
+
+# from unittest.mock import AsyncMock
+
+
 
 SAMPLE_RESPONSE = {
     "data": {"status": 1, "status_message": "Success"},
