@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import closing
+from contextlib import closing, contextmanager
 from io import StringIO
-from typing import Any, Callable
+from typing import Any, Callable, List, Optional
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
@@ -58,8 +58,9 @@ class SnowflakeHookAsync(SnowflakeHook):
         self,
         sql: str | list[str],
         autocommit: bool = True,
-        parameters: dict | None = None,  # type: ignore[type-arg]
-    ) -> list[str]:
+        parameters: Optional[dict] = None,  # type: ignore[type-arg]
+        return_dictionaries: bool = False,
+    ) -> List[str]:
         """
         Runs a SQL command or a list of SQL commands.
 
@@ -78,7 +79,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
 
             self.log.debug("Executing %d statements against Snowflake DB", len(sql))
-            with closing(conn.cursor(DictCursor)) as cur:
+            with self._get_cursor(conn, return_dictionaries) as cur:
 
                 for sql_statement in sql:
 
@@ -98,12 +99,16 @@ class SnowflakeHookAsync(SnowflakeHook):
         return self.query_ids
 
     def check_query_output(
-        self, query_ids: list[str], handler: Callable[[Any], Any] | None = None, return_last: bool = True
+        self,
+        query_ids: List[str],
+        handler: Optional[Callable[[Any], Any]] = None,
+        return_last: bool = True,
+        return_dictionaries: bool = False,
     ) -> Any | list[Any] | None:
         """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
             self.set_autocommit(conn, True)
-            with closing(conn.cursor(DictCursor)) as cur:
+            with self._get_cursor(conn, return_dictionaries) as cur:
                 results = []
                 for query_id in query_ids:
                     cur.get_results_from_sfqid(query_id)
@@ -159,3 +164,16 @@ class SnowflakeHookAsync(SnowflakeHook):
         except Exception as e:
             self.log.exception("Unexpected error when retrieving query status:")
             return {"status": "error", "message": str(e), "type": "ERROR"}
+
+    @contextmanager
+    def _get_cursor(self, conn: Any, return_dictionaries: bool):
+        cursor = None
+        try:
+            if return_dictionaries:
+                cursor = conn.cursor(DictCursor)
+            else:
+                cursor = conn.cursor()
+            yield cursor
+        finally:
+            if cursor is not None:
+                cursor.close()
