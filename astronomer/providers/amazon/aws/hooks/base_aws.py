@@ -77,11 +77,12 @@ class AwsBaseHookAsync(AwsBaseHook):
             aws_access_key_id=conn_config.aws_access_key_id,
             aws_secret_access_key=conn_config.aws_secret_access_key,
         ) as client:
+            return_response = None
             if conn_config.assume_role_method == "assume_role" or conn_config.assume_role_method is None:
                 response: Dict[str, Dict[str, str]] = await client.assume_role(
                     RoleArn=conn_config.role_arn,
                     RoleSessionName="RoleSession",
                     **conn_config.assume_role_kwargs,
                 )
-                return response["Credentials"]
-            return None  # pragma: no cover
+                return_response = response["Credentials"]
+            return return_response
