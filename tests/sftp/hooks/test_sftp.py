@@ -58,6 +58,29 @@ class MockAirflowConnection:
         return self.extra
 
 
+class MockAirflowConnectionWithPrivate:
+    def __init__(self):
+        self.host = "localhost"
+        self.port = 22
+        self.login = "username"
+        self.password = "password"
+        self.extra = """
+                {
+                    "private_key": "~/keys/my_key",
+                    "known_hosts": "unused",
+                    "passphrase": "mypassphrase"
+                }
+                """
+        self.extra_dejson = {
+            "private_key": "~/keys/my_key",
+            "known_hosts": None,
+            "passphrase": "mypassphrase",
+        }
+
+    def extra_dejson(self):
+        return self.extra
+
+
 class TestSFTPHookAsync:
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
@@ -108,6 +131,33 @@ class TestSFTPHookAsync:
             "password": "password",
             "client_keys": "~/keys/my_key",
             "known_hosts": "~/.ssh/known_hosts",
+            "passphrase": "mypassphrase",
+        }
+
+        mock_connect.assert_called_with(**expected_connection_details)
+
+    @pytest.mark.asyncio
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("asyncssh.import_private_key")
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    async def test_connection_private(self, mock_get_connection, mock_import_private_key, mock_connect):
+        """
+        Assert that connection details with private key passed through the extra field in the Airflow connection
+        are properly passed when creating SFTP connection
+        """
+
+        mock_get_connection.return_value = MockAirflowConnectionWithPrivate()
+        mock_import_private_key.return_value = "test"
+
+        hook = SFTPHookAsync()
+        await hook._get_conn()
+
+        expected_connection_details = {
+            "host": "localhost",
+            "port": 22,
+            "username": "username",
+            "password": "password",
+            "client_keys": ["test"],
             "passphrase": "mypassphrase",
         }
 
