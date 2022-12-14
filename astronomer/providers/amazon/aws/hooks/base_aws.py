@@ -1,5 +1,7 @@
+from typing import Dict, Optional
+
 from aiobotocore.client import AioBaseClient
-from aiobotocore.session import get_session
+from aiobotocore.session import AioSession, get_session
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from airflow.providers.amazon.aws.utils.connection_wrapper import AwsConnectionWrapper
 from asgiref.sync import sync_to_async
@@ -11,9 +13,8 @@ class AwsBaseHookAsync(AwsBaseHook):
 
     .. note::
         AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence, AwsBaseHookAsync
-        only supports the authentication mechanism that aiobotocore supports. The ability to assume
-        roles provided in the Airflow connection extra args via aiobotocore is not supported by the
-        library yet.
+        only supports the authentication mechanism that aiobotocore supports. Currently, AwsBaseHookAsync supports
+        only AWS STS client method ``assume_role`` provided in the Airflow connection extra args via aiobotocore.
 
     :param aws_conn_id: The Airflow connection used for AWS credentials.
         If this is None or empty then the default boto3 behaviour is used. If
@@ -44,12 +45,44 @@ class AwsBaseHookAsync(AwsBaseHook):
         )
 
         async_connection = get_session()
+        session_token = conn_config.aws_session_token
+        aws_secret = conn_config.aws_secret_access_key
+        aws_access = conn_config.aws_access_key_id
+        if conn_config.role_arn:
+            credentials = await self.get_role_credentials(
+                async_session=async_connection, conn_config=conn_config
+            )
+            if credentials:
+                session_token = credentials["SessionToken"]
+                aws_access = credentials["AccessKeyId"]
+                aws_secret = credentials["SecretAccessKey"]
         return async_connection.create_client(
             service_name=self.client_type,
             region_name=conn_config.region_name,
-            aws_secret_access_key=conn_config.aws_secret_access_key,
-            aws_access_key_id=conn_config.aws_access_key_id,
-            aws_session_token=conn_config.aws_session_token,
+            aws_secret_access_key=aws_secret,
+            aws_access_key_id=aws_access,
+            aws_session_token=session_token,
             verify=self.verify,
             config=self.config,
+            endpoint_url=conn_config.endpoint_url,
         )
+
+    @staticmethod
+    async def get_role_credentials(
+        async_session: AioSession, conn_config: AwsConnectionWrapper
+    ) -> Optional[Dict[str, str]]:
+        """Get the role_arn, method credentials from connection details and get the role credentials detail"""
+        async with async_session.create_client(
+            "sts",
+            aws_access_key_id=conn_config.aws_access_key_id,
+            aws_secret_access_key=conn_config.aws_secret_access_key,
+        ) as client:
+            return_response = None
+            if conn_config.assume_role_method == "assume_role" or conn_config.assume_role_method is None:
+                response: Dict[str, Dict[str, str]] = await client.assume_role(
+                    RoleArn=conn_config.role_arn,
+                    RoleSessionName="RoleSession",
+                    **conn_config.assume_role_kwargs,
+                )
+                return_response = response["Credentials"]
+            return return_response
