@@ -40,6 +40,7 @@ class SFTPHookAsync(BaseHook):
         known_hosts: str = default_known_hosts,
         key_file: str = "",
         passphrase: str = "",
+        private_key: str = "",
     ) -> None:
         self.sftp_conn_id = sftp_conn_id
         self.host = host
@@ -49,6 +50,7 @@ class SFTPHookAsync(BaseHook):
         self.known_hosts = known_hosts
         self.key_file = key_file
         self.passphrase = passphrase
+        self.private_key = private_key
 
     async def _get_conn(self) -> asyncssh.SSHClientConnection:
         """
@@ -73,8 +75,11 @@ class SFTPHookAsync(BaseHook):
                 if "known_hosts" in extra_options:
                     self.known_hosts = extra_options.get("known_hosts")
 
-                if "passphrase" in extra_options:
+                if ("passphrase" or "private_key_passphrase") in extra_options:
                     self.passphrase = extra_options.get("passphrase")
+
+                if "private_key" in extra_options:
+                    self.private_key = extra_options.get("private_key")
 
             conn_config = {
                 "host": conn.host,
@@ -91,6 +96,10 @@ class SFTPHookAsync(BaseHook):
                     conn_config.update(known_hosts=None)
                 else:
                     conn_config.update(known_hosts=self.known_hosts)
+
+            if self.private_key:
+                _private_key = asyncssh.import_private_key(self.private_key, self.passphrase)
+                conn_config.update(client_keys=[_private_key])
 
             if self.passphrase:
                 conn_config.update(passphrase=self.passphrase)
