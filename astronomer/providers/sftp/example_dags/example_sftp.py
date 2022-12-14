@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import shutil
 import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, List
@@ -64,7 +63,7 @@ def create_sftp_airflow_connection(task_instance: Any) -> None:
         port=SFTP_SSH_PORT,
         extra=json.dumps(
             {
-                "key_file": f"/usr/local/airflow/dags/{PEM_FILENAME}.pem",
+                "private_key": PRIVATE_KEY,
                 "no_host_key_check": "true",
                 "known_hosts": "none",
             }
@@ -171,14 +170,8 @@ def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     with open(f"/tmp/{PEM_FILENAME}.pem", "w+") as fh:
         fh.write(PRIVATE_KEY)
 
-    if os.path.exists(f"/usr/local/airflow/dags/{PEM_FILENAME}.pem"):
-        os.remove(f"/usr/local/airflow/dags/{PEM_FILENAME}.pem")
-
-    shutil.copyfile(f"/tmp/{PEM_FILENAME}.pem", f"/usr/local/airflow/dags/{PEM_FILENAME}.pem")
-
     # write private key to file with 400 permissions
     os.chmod(f"/tmp/{PEM_FILENAME}.pem", 0o400)
-    os.chmod(f"/usr/local/airflow/dags/{PEM_FILENAME}.pem", 0o400)
     # Check if the PEM file exists or not.
     if not os.path.exists(f"/tmp/{PEM_FILENAME}.pem"):
         # if it doesn't exists raise an error
