@@ -7,15 +7,15 @@ Changelog
 Feature
 """""""
 
-- Support assume role for AWS base async hook
+- Fix ``AwsBaseHookAsync`` to support assume role ``role_arn`` passed via ``extra_config`` in the airflow connection.
   (`#804 <https://github.com/astronomer/astronomer-providers/pull/804>`_)
-- Support private key connection in ``SFTPHookAsync``
+- Support private key authentication for ``SFTPHookAsync`` via SFTP connection.
   (`#749 <https://github.com/astronomer/astronomer-providers/pull/749>`_)
 
 Bug Fixes
 """""""""
 
-- Consider kubernetes connection details in trigger and hook async.
+- Fix ``KubernetesPodOperatorAsync`` to consider kubernetes connection id and details in trigger.
   (`#815 <https://github.com/astronomer/astronomer-providers/pull/815>`_)
 
 
