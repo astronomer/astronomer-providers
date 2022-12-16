@@ -59,7 +59,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             )
         super().defer(
             trigger=WaitContainerTrigger(
-                kubernetes_conn_id=None,
+                kubernetes_conn_id=self.kubernetes_conn_id,
                 hook_params={
                     "cluster_context": self.cluster_context,
                     "config_file": self.config_file,
