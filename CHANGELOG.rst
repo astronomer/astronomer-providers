@@ -1,6 +1,24 @@
 Changelog
 =========
 
+1.13.0 (2022-12-16)
+-------------------
+
+Feature
+"""""""
+
+- Enhance ``AwsBaseHookAsync`` to support assume role ``role_arn`` passed via ``extra_config`` in the airflow connection.
+  (`#804 <https://github.com/astronomer/astronomer-providers/pull/804>`_)
+- Support private key authentication for ``SFTPHookAsync`` via SFTP connection.
+  (`#749 <https://github.com/astronomer/astronomer-providers/pull/749>`_)
+
+Bug Fixes
+"""""""""
+
+- Fix ``KubernetesPodOperatorAsync`` to consider kubernetes connection id in the trigger.
+  (`#815 <https://github.com/astronomer/astronomer-providers/pull/815>`_)
+
+
 1.12.0 (2022-12-02)
 -------------------
 
