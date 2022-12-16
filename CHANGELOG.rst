@@ -1,6 +1,24 @@
 Changelog
 =========
 
+1.13.0 (2022-12-16)
+-------------------
+
+Feature
+"""""""
+
+- Support assume role for AWS base async hook
+  (`#804 <https://github.com/astronomer/astronomer-providers/pull/804>`_)
+- Support private key connection in ``SFTPHookAsync``
+  (`#749 <https://github.com/astronomer/astronomer-providers/pull/749>`_)
+
+Bug Fixes
+"""""""""
+
+- Consider kubernetes connection details in trigger and hook async.
+  (`#815 <https://github.com/astronomer/astronomer-providers/pull/815>`_)
+
+
 1.12.0 (2022-12-02)
 -------------------
 
