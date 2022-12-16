@@ -1,6 +1,6 @@
 import asyncio
 from datetime import timedelta
-from typing import Any, AsyncIterator, Dict, List, Tuple
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 from airflow import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -179,11 +179,11 @@ class SnowflakeSensorTrigger(BaseTrigger):
         task_id: str,
         run_id: str,
         snowflake_conn_id: str,
-        parameters: str = None,
-        success: str = None,
-        failure: str = None,
+        parameters: Optional[str] = None,
+        success: Optional[str] = None,
+        failure: Optional[str] = None,
         fail_on_empty: bool = False,
-        poke_interval: int = 60,
+        poke_interval: float = 60,
     ):
         super().__init__()
         self._sql = sql
@@ -215,7 +215,8 @@ class SnowflakeSensorTrigger(BaseTrigger):
             },
         )
 
-    def validate_result(self, result: List[Tuple]) -> bool:
+    def validate_result(self, result: List[Tuple[Any]]) -> Any:
+        """Validates query result and verifies if it returns a row"""
         if not result:
             if self._fail_on_empty:
                 raise AirflowException("No rows returned, raising as per fail_on_empty flag")
@@ -237,6 +238,10 @@ class SnowflakeSensorTrigger(BaseTrigger):
         return bool(first_cell)
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:
+        """
+        Make an asynchronous connection to Snowflake and defer until query
+        returns a result
+        """
         try:
             hook = get_db_hook(self._conn_id)
             while True:

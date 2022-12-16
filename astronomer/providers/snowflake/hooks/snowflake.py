@@ -166,7 +166,7 @@ class SnowflakeHookAsync(SnowflakeHook):
             return {"status": "error", "message": str(e), "type": "ERROR"}
 
     @contextmanager
-    def _get_cursor(self, conn: Any, return_dictionaries: bool):
+    def _get_cursor(self, conn: Any, return_dictionaries: bool) -> Generator[SnowflakeCursor, None, None]:
         cursor = None
         try:
             if return_dictionaries:

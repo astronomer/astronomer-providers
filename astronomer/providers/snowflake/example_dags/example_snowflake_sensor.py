@@ -1,4 +1,4 @@
-"""Example use of SnowflakeSensorAsync"""
+"""Example use of SnowflakeSensorAsync."""
 
 import os
 from datetime import timedelta
@@ -14,6 +14,7 @@ SNOWFLAKE_SAMPLE_TABLE = os.getenv("SNOWFLAKE_SAMPLE_TABLE", "sample_table")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 POKE_INTERVAL = int(os.getenv("POKE_INTERVAL", 30))
 TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 5))
+
 
 # SQL commands
 CREATE_TABLE_SQL_STRING = (
@@ -53,6 +54,7 @@ with DAG(
     # [START howto_sensor_snowflake_async]
     snowflake_op_sql_sensor = SnowflakeSensorAsync(
         task_id="snowflake_op_sql_sensor",
+        snowflake_conn_id="snowflake_conn",
         sql=SNOWFLAKE_SLACK_SQL,
         poke_interval=POKE_INTERVAL,
         timeout=TASK_TIMEOUT * 60,

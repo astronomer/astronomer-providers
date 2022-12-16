@@ -60,7 +60,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         self.token_life_time = token_life_time
         self.token_renewal_delta = token_renewal_delta
         super().__init__(snowflake_conn_id, *args, **kwargs)
-        self.private_key = None
+        self.private_key: Any = None
 
     def get_private_key(self) -> None:
         """Gets the private key from snowflake connection"""

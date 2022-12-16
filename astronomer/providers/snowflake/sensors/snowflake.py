@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from airflow import AirflowException
 from airflow.sensors.base import BaseSensorOperator
@@ -15,23 +15,26 @@ from astronomer.providers.utils.typing_compat import Context
 class SnowflakeSensorAsync(BaseSensorOperator):
     """
     Runs a sql statement repeatedly until a criteria is met. It will keep trying until
-    success or failure criteria are met, or if the first cell is not in (0, '0', '', None).
-    Optional success and failure callables are called with the first cell returned as the argument.
+    success or failure criteria are met, or if the first cell returned from the query
+    is not in (0, '0', '', None).
+    Optional success and failure callables are called with the first cell returned
+    from the query as the argument.
     If success callable is defined the sensor will keep retrying until the criteria is met.
     If failure callable is defined and the criteria is met the sensor will raise AirflowException.
     Failure criteria is evaluated before success criteria. A fail_on_empty boolean can also
-    be passed to the sensor in which case it will fail if no rows have been returned
+    be passed to the sensor in which case it will fail if no rows have been returned.
+
     :param snowflake_conn_id: The connection to run the sensor against
     :param sql: The sql to run. To pass, it needs to return at least one cell
         that contains a non-zero / empty string value.
     :param parameters: The parameters to render the SQL query with (optional).
-    :param success: Success criteria for the sensor is a Callable that takes first_cell
-        as the only argument, and returns a boolean (optional).
-    :param failure: Failure criteria for the sensor is a Callable that takes first_cell
-        as the only argument and return a boolean (optional).
+    :param success: Success criteria for the sensor is a Callable that takes the first cell
+        returned from the query as the only argument, and returns a boolean (optional).
+    :param failure: Failure criteria for the sensor is a Callable that takes the first cell
+        returned from the query as the only argument and return a boolean (optional).
     :param fail_on_empty: Explicitly fail on no rows returned.
     :param hook_params: Extra config params to be passed to the underlying hook.
-            Should match the desired hook constructor params.
+        Should match the desired hook constructor params.
     """
 
     template_fields: Sequence[str] = ("sql",)
@@ -41,15 +44,14 @@ class SnowflakeSensorAsync(BaseSensorOperator):
     def __init__(
         self,
         *,
-        snowflake_conn_id,
-        sql,
-        parameters: Optional[Dict] = None,
-        success: Optional[Callable[[Any], bool]] = None,
-        failure: Optional[Callable[[Any], bool]] = None,
+        snowflake_conn_id: str,
+        sql: str,
+        parameters: Optional[str] = None,
+        success: Optional[str] = None,
+        failure: Optional[str] = None,
         fail_on_empty: bool = False,
-        hook_params: Optional[Dict] = None,
-        poll_interval: int = 60,
-        **kwargs,
+        hook_params: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ):
         self.snowflake_conn_id = snowflake_conn_id
         self.sql = sql
@@ -58,11 +60,10 @@ class SnowflakeSensorAsync(BaseSensorOperator):
         self.failure = failure
         self.fail_on_empty = fail_on_empty
         self.hook_params = hook_params
-        if poll_interval:
-            self.poke_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Context, **kwargs) -> None:
+    def execute(self, context: Context) -> None:
+        """Check for query result in Snowflake by deferring using the trigger"""
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=SnowflakeSensorTrigger(
@@ -85,6 +86,11 @@ class SnowflakeSensorAsync(BaseSensorOperator):
         context: Context,
         event: Optional[Dict[str, Union[str, List[str]]]] = None,
     ) -> Any:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
         if event:
             if "status" in event and event["status"] == "error":
                 raise AirflowException(event["message"])
