@@ -5,7 +5,7 @@ import pickle  # nosec
 import uuid
 from datetime import date, datetime
 from io import BytesIO
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from airflow.configuration import conf
@@ -54,8 +54,8 @@ class _S3XComBackend:
 
     PREFIX = os.getenv("XCOM_BACKEND_PREFIX", "s3_xcom_")
     AWS_CONN_ID = os.getenv("CONNECTION_NAME", "aws_default")
-    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "xcombucket")
-    UPLOAD_CONTENT_AS_GZIP = os.getenv("XCOM_BACKEND_UPLOAD_CONTENT_AS_GZIP", True)
+    BUCKET_NAME = os.getenv("XCOM_BACKEND_BUCKET_NAME", "airflow_xcom_backend_default_bucket")
+    UPLOAD_CONTENT_AS_GZIP = os.getenv("XCOM_BACKEND_UPLOAD_CONTENT_AS_GZIP", False)
     PANDAS_DATAFRAME = "dataframe"
     DATETIME_OBJECT = "datetime"
 
@@ -84,15 +84,13 @@ class _S3XComBackend:
         return key_str
 
     @staticmethod
-    def download_and_read_value(filename: str) -> Union[str, bytes]:
+    def download_and_read_value(filename: str) -> Any:
         """Download the file from S3"""
         # Here we download the file from S3
         hook = S3Hook(aws_conn_id=_S3XComBackend.AWS_CONN_ID)
         f = BytesIO()
         hook.get_conn().download_fileobj(_S3XComBackend.BUCKET_NAME, filename, f)
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         data = f.getvalue()
-        print(data)
         if filename.endswith(".gz"):
             data = gzip.decompress(data)
             filename = filename.replace(".gz", "")
