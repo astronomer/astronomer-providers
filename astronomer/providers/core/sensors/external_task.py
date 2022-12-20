@@ -56,6 +56,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
                     task_id=self.external_task_id,
                     states=self.allowed_states + self.failed_states,
                     execution_dates=execution_dates,
+                    poll_interval=self.poke_interval,
                 ),
                 method_name="execute_complete",
             )
