@@ -4,7 +4,6 @@ import os
 import pickle  # nosec
 import uuid
 from datetime import date, datetime
-from io import BytesIO
 from typing import Any
 
 import pandas as pd
@@ -88,9 +87,11 @@ class _S3XComBackend:
         """Download the file from S3"""
         # Here we download the file from S3
         hook = S3Hook(aws_conn_id=_S3XComBackend.AWS_CONN_ID)
-        f = BytesIO()
-        hook.get_conn().download_fileobj(_S3XComBackend.BUCKET_NAME, filename, f)
-        data = f.getvalue()
+        file = hook.download_file(
+            bucket_name=_S3XComBackend.BUCKET_NAME, key=filename, preserve_file_name=True
+        )
+        with open(file, "rb") as f:
+            data = f.read()
         if filename.endswith(".gz"):
             data = gzip.decompress(data)
             filename = filename.replace(".gz", "")

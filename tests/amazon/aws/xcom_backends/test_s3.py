@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import json
 import os
+import pickle  # nosec
 from datetime import datetime
 from unittest import mock
 
@@ -11,6 +13,7 @@ import pytest
 from airflow import settings
 from airflow.configuration import conf
 from airflow.models.xcom import BaseXCom
+from pandas.util.testing import assert_frame_equal
 
 from astronomer.providers.amazon.aws.xcom_backends.s3 import (
     S3XComBackend,
@@ -148,6 +151,108 @@ def test_custom_xcom_s3_deserialize(mock_download, job_id):
     real_job_id = BaseXCom(value=json.dumps(job_id).encode("UTF-8"))
     result = S3XComBackend.deserialize_value(real_job_id)
     assert result == job_id
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_open.side_effect = [mock.mock_open(read_data=json.dumps(job_id)).return_value]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert result == job_id
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234_dataframe"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value_pandas(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_open.side_effect = [
+        mock.mock_open(read_data=pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()).return_value
+    ]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert_frame_equal(result, pd.DataFrame({"numbers": [1], "colors": ["red"]}))
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234_datetime"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value_datetime(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    time = datetime.now()
+    mock_open.side_effect = [mock.mock_open(read_data=time.isoformat()).return_value]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert result == time
+
+
+@conf_vars({("core", "enable_xcom_pickling"): "True"})
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value_pickle(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_open.side_effect = [mock.mock_open(read_data=pickle.dumps(job_id)).return_value]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert result == job_id
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value_bytes(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_open.side_effect = [mock.mock_open(read_data=b'{ "Class": "Email addresses"}').return_value]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert result == {"Class": "Email addresses"}
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    ["gcs_xcom_1234.gz"],
+)
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
+@mock.patch("builtins.open", create=True)
+def test_custom_xcom_s3_download_and_read_value_gzip(mock_open, mock_download, job_id):
+    """
+    Asserts that custom xcom is deserialized and check for data
+    """
+    mock_open.side_effect = [
+        mock.mock_open(read_data=gzip.compress(b'{"Class": "Email addresses"}')).return_value
+    ]
+    mock_download.return_value = job_id
+    result = _S3XComBackend().download_and_read_value(job_id)
+    assert result == {"Class": "Email addresses"}
 
 
 def test_custom_xcom_s3_orm_deserialize_value():
