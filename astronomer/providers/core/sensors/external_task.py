@@ -18,6 +18,14 @@ if TYPE_CHECKING:
 
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
+    def __init__(
+        self,
+        poke_interval: float = 5.0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.poke_interval = poke_interval
+
     def execute(self, context: Context) -> None:
         """Correctly identify which trigger to execute, and defer execution as expected."""
         execution_dates = self.get_execution_dates(context)
@@ -36,6 +44,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
                     # then work out which result we have in execute_complete.
                     states=self.allowed_states + self.failed_states,
                     execution_dates=execution_dates,
+                    poll_interval=self.poke_interval,
                 ),
                 method_name="execute_complete",
             )
