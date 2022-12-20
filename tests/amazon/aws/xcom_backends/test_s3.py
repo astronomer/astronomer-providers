@@ -58,7 +58,7 @@ def conf_vars(overrides):
 @mock.patch("astronomer.providers.amazon.aws.xcom_backends.s3._S3XComBackend.write_and_upload_value")
 def test_custom_xcom_s3_serialize(mock_write):
     """
-    Asserts that custom xcom is serialize or not
+    Asserts that custom xcom is serialized or not
     """
     real_job_id = "12345_hash"
     mock_write.return_value = real_job_id
@@ -74,7 +74,7 @@ def test_custom_xcom_s3_serialize(mock_write):
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
 def test_custom_xcom_s3_write_and_upload(mock_upload, mock_uuid, job_id):
     """
-    Asserts that custom xcom is upload and returns key
+    Asserts that custom xcom is uploaded and returns the key
     """
     mock_uuid.return_value = "12345667890"
     result = _S3XComBackend().write_and_upload_value(job_id)
@@ -90,7 +90,7 @@ def test_custom_xcom_s3_write_and_upload(mock_upload, mock_uuid, job_id):
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
 def test_custom_xcom_s3_write_and_upload_pickle(mock_upload, mock_uuid, job_id):
     """
-    Asserts that custom xcom pickle is upload and returns key
+    Asserts that custom xcom pickle data is uploaded and returns the key
     """
     mock_uuid.return_value = "12345667890"
     result = _S3XComBackend().write_and_upload_value(job_id)
@@ -101,7 +101,7 @@ def test_custom_xcom_s3_write_and_upload_pickle(mock_upload, mock_uuid, job_id):
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
 def test_custom_xcom_s3_write_and_upload_pandas(mock_upload, mock_uuid):
     """
-    Asserts that custom xcom pandas is upload and returns key
+    Asserts that custom xcom pandas data is uploaded and returns the key
     """
     mock_uuid.return_value = "12345667890"
     result = _S3XComBackend().write_and_upload_value(pd.DataFrame({"numbers": [1], "colors": ["red"]}))
@@ -112,7 +112,7 @@ def test_custom_xcom_s3_write_and_upload_pandas(mock_upload, mock_uuid):
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
 def test_custom_xcom_s3_write_and_upload_datetime(mock_upload, mock_uuid):
     """
-    Asserts that custom xcom datatime is upload and returns key
+    Asserts that custom xcom datetime object is uploaded and returns the key
     """
     mock_uuid.return_value = "12345667890"
     result = _S3XComBackend().write_and_upload_value(datetime.now())
@@ -127,7 +127,7 @@ def test_custom_xcom_s3_write_and_upload_datetime(mock_upload, mock_uuid):
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.load_string")
 def test_custom_xcom_s3_write_and_upload_as_gzip(mock_upload, mock_uuid, job_id):
     """
-    Asserts that custom xcom as gzip is upload and returns key
+    Asserts that custom xcom as gzip is uploaded and returns the key
     """
     mock_uuid.return_value = "12345667890"
     _S3XComBackend.UPLOAD_CONTENT_AS_GZIP = mock.patch.dict(
@@ -161,7 +161,7 @@ def test_custom_xcom_s3_deserialize(mock_download, job_id):
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is read the data and validate it.
     """
     mock_open.side_effect = [mock.mock_open(read_data=json.dumps(job_id)).return_value]
     mock_download.return_value = job_id
@@ -177,7 +177,7 @@ def test_custom_xcom_s3_download_and_read_value(mock_open, mock_download, job_id
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value_pandas(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is read the pandas data and validate it.
     """
     mock_open.side_effect = [
         mock.mock_open(read_data=pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()).return_value
@@ -195,7 +195,7 @@ def test_custom_xcom_s3_download_and_read_value_pandas(mock_open, mock_download,
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value_datetime(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is read the datetime object and validate it.
     """
     time = datetime.now()
     mock_open.side_effect = [mock.mock_open(read_data=time.isoformat()).return_value]
@@ -213,7 +213,7 @@ def test_custom_xcom_s3_download_and_read_value_datetime(mock_open, mock_downloa
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value_pickle(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is read the pickle data and validate it.
     """
     mock_open.side_effect = [mock.mock_open(read_data=pickle.dumps(job_id)).return_value]
     mock_download.return_value = job_id
@@ -229,7 +229,7 @@ def test_custom_xcom_s3_download_and_read_value_pickle(mock_open, mock_download,
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value_bytes(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is read the bytes data and validate it.
     """
     mock_open.side_effect = [mock.mock_open(read_data=b'{ "Class": "Email addresses"}').return_value]
     mock_download.return_value = job_id
@@ -245,7 +245,7 @@ def test_custom_xcom_s3_download_and_read_value_bytes(mock_open, mock_download, 
 @mock.patch("builtins.open", create=True)
 def test_custom_xcom_s3_download_and_read_value_gzip(mock_open, mock_download, job_id):
     """
-    Asserts that custom xcom is deserialized and check for data
+    Asserts that custom xcom is gzip content and validate it.
     """
     mock_open.side_effect = [
         mock.mock_open(read_data=gzip.compress(b'{"Class": "Email addresses"}')).return_value
