@@ -56,6 +56,21 @@ def test_serialization():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_state, expected_value",
+    [
+        ("Succeeded", {"status": "done", "namespace": NAMESPACE, "pod_name": POD_NAME}),
+        (
+            "Failed",
+            {
+                "status": "failed",
+                "namespace": NAMESPACE,
+                "pod_name": POD_NAME,
+                "description": "Failed to start pod operator",
+            },
+        ),
+    ],
+)
 @mock.patch(
     "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_pod_start"
 )
@@ -63,12 +78,12 @@ def test_serialization():
 @mock.patch(
     "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
 )
-async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start):
+async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start, mock_state, expected_value):
     """assert that when wait_for_pod_start succeeded run method yield correct event"""
     my_tmp = mock_tmp.__enter__()
     my_tmp.return_value = "/tmp/tmps90l"
     get_api_client_async.return_value = client.ApiClient()
-    wait_for_pod_start.return_value = "Succeeded"
+    wait_for_pod_start.return_value = mock_state
     trigger = GKEStartPodTrigger(
         namespace=NAMESPACE,
         name=POD_NAME,
@@ -85,7 +100,7 @@ async def test_run(mock_tmp, get_api_client_async, wait_for_pod_start):
         pending_phase_timeout=120,
         logging_interval=None,
     )
-    assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
+    assert await trigger.run().__anext__() == TriggerEvent(expected_value)
 
 
 @pytest.mark.asyncio

@@ -10,6 +10,12 @@ from airflow.providers.google.cloud.operators.kubernetes_engine import (
 )
 from kubernetes.client import models as k8s
 
+from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    PodNotFoundException,
+)
+from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
+    PodLaunchTimeoutException,
+)
 from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
     GKEStartPodTrigger,
 )
@@ -66,6 +72,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         regional: bool = False,
         poll_interval: float = 5,
+        logging_interval: Optional[int] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -79,6 +86,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.pod_name: str = ""
         self.pod_namespace: str = ""
         self.poll_interval = poll_interval
+        self.logging_interval = logging_interval
 
     def _get_or_create_pod(self, context: Context) -> None:
         """A wrapper to fetch GKE config and get or create a pod"""
@@ -116,13 +124,83 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
                 regional=self.regional,
                 poll_interval=self.poll_interval,
                 pending_phase_timeout=self.startup_timeout_seconds,
+                logging_interval=self.logging_interval,
             ),
-            method_name="execute_complete",
+            method_name=self.trigger_reentry.__name__,
         )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         """Callback for trigger once task reach terminal state"""
-        if event and event["status"] == "done":
-            self.log.info("Job completed successfully")
-        else:
-            raise AirflowException(event["description"])
+        self.trigger_reentry(context=context, event=event)
+
+    @staticmethod
+    def raise_for_trigger_status(event: Dict[str, Any]) -> None:
+        """Raise exception if pod is not in expected state."""
+        if event["status"] == "error":
+            description = event["description"]
+            if "error_type" in event and event["error_type"] == "PodLaunchTimeoutException":
+                raise PodLaunchTimeoutException(description)
+            else:
+                raise AirflowException(description)
+
+    def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
+        """
+        Point of re-entry from trigger.
+
+        If ``logging_interval`` is None, then at this point the pod should be done and we'll just fetch
+        the logs and exit.
+
+        If ``logging_interval`` is not None, it could be that the pod is still running and we'll just
+        grab the latest logs and defer back to the trigger again.
+        """
+        remote_pod = None
+        print("evenet ", event)
+        self.raise_for_trigger_status(event)
+        try:
+            with GKEStartPodOperator.get_gke_config_file(
+                gcp_conn_id=self.gcp_conn_id,
+                project_id=self.project_id,
+                cluster_name=self.cluster_name,
+                impersonation_chain=self.impersonation_chain,
+                regional=self.regional,
+                location=self.location,
+                use_internal_ip=self.use_internal_ip,
+            ) as config_file:
+                self.config_file = config_file
+                self.pod = self.find_pod(
+                    namespace=event["namespace"],
+                    context=context,
+                )
+
+                if not self.pod:
+                    raise PodNotFoundException("Could not find pod after resuming from deferral")
+
+                if self.get_logs:
+                    last_log_time = event and event.get("last_log_time")
+                    if last_log_time:
+                        self.log.info("Resuming logs read from time %r", last_log_time)  # pragma: no cover
+                    self.pod_manager.fetch_container_logs(
+                        pod=self.pod,
+                        container_name=self.BASE_CONTAINER_NAME,
+                        follow=self.logging_interval is None,
+                        since_time=last_log_time,
+                    )
+
+                if self.do_xcom_push:
+                    result = self.extract_xcom(pod=self.pod)
+                remote_pod = self.pod_manager.await_pod_completion(self.pod)
+        except Exception:
+            self.cleanup(
+                pod=self.pod,
+                remote_pod=remote_pod,
+            )
+            raise
+        self.cleanup(
+            pod=self.pod,
+            remote_pod=remote_pod,
+        )
+        ti = context["ti"]
+        ti.xcom_push(key="pod_name", value=self.pod.metadata.name)
+        ti.xcom_push(key="pod_namespace", value=self.pod.metadata.namespace)
+        if self.do_xcom_push:
+            return result

@@ -118,8 +118,20 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 async with await hook.get_api_client_async() as api_client:
                     v1_api = CoreV1Api(api_client)
                     state = await self.wait_for_pod_start(v1_api)
-                    if state in PodPhase.terminal_states:
-                        event = TriggerEvent({"status": "done"})
+                    print("state ", state)
+                    if state == PodPhase.SUCCEEDED:
+                        event = TriggerEvent(
+                            {"status": "done", "namespace": self.namespace, "pod_name": self.name}
+                        )
+                    elif state == PodPhase.FAILED:
+                        event = TriggerEvent(
+                            {
+                                "status": "failed",
+                                "namespace": self.namespace,
+                                "pod_name": self.name,
+                                "description": "Failed to start pod operator",
+                            }
+                        )
                     else:
                         event = await self.wait_for_container_completion(v1_api)
                 yield event
