@@ -118,7 +118,6 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 async with await hook.get_api_client_async() as api_client:
                     v1_api = CoreV1Api(api_client)
                     state = await self.wait_for_pod_start(v1_api)
-                    print("state ", state)
                     if state == PodPhase.SUCCEEDED:
                         event = TriggerEvent(
                             {"status": "done", "namespace": self.namespace, "pod_name": self.name}

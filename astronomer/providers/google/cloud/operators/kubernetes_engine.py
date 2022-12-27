@@ -154,7 +154,6 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         grab the latest logs and defer back to the trigger again.
         """
         remote_pod = None
-        print("evenet ", event)
         self.raise_for_trigger_status(event)
         try:
             with GKEStartPodOperator.get_gke_config_file(
