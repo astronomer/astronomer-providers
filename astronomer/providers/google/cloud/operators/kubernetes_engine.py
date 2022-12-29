@@ -73,6 +73,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         regional: bool = False,
         poll_interval: float = 5,
         logging_interval: Optional[int] = None,
+        do_xcom_push: bool = True,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -87,6 +88,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.pod_namespace: str = ""
         self.poll_interval = poll_interval
         self.logging_interval = logging_interval
+        self.do_xcom_push = do_xcom_push
 
     def _get_or_create_pod(self, context: Context) -> None:
         """A wrapper to fetch GKE config and get or create a pod"""
@@ -198,8 +200,8 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             pod=self.pod,
             remote_pod=remote_pod,
         )
-        ti = context["ti"]
-        ti.xcom_push(key="pod_name", value=self.pod.metadata.name)
-        ti.xcom_push(key="pod_namespace", value=self.pod.metadata.namespace)
         if self.do_xcom_push:
+            ti = context["ti"]
+            ti.xcom_push(key="pod_name", value=self.pod.metadata.name)
+            ti.xcom_push(key="pod_namespace", value=self.pod.metadata.namespace)
             return result
