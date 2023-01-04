@@ -107,7 +107,9 @@ class WaitContainerTrigger(BaseTrigger):
         while True:
             pod = await v1_api.read_namespaced_pod(self.pod_name, self.pod_namespace)
             if not container_is_running(pod=pod, container_name=self.container_name):
-                return TriggerEvent({"status": "done"})
+                return TriggerEvent(
+                    {"status": "done", "namespace": self.pod_namespace, "pod_name": self.pod_name}
+                )
             if time_get_more_logs and timezone.utcnow() > time_get_more_logs:
                 return TriggerEvent({"status": "running", "last_log_time": self.last_log_time})
             await asyncio.sleep(self.poll_interval)
@@ -120,7 +122,9 @@ class WaitContainerTrigger(BaseTrigger):
                 v1_api = CoreV1Api(api_client)
                 state = await self.wait_for_pod_start(v1_api)
                 if state in PodPhase.terminal_states:
-                    event = TriggerEvent({"status": "done"})
+                    event = TriggerEvent(
+                        {"status": "done", "namespace": self.pod_namespace, "pod_name": self.pod_name}
+                    )
                 else:
                     event = await self.wait_for_container_completion(v1_api)
             yield event

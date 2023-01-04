@@ -137,7 +137,9 @@ class TestWaitContainerTrigger:
             poll_interval=2,
         )
 
-        assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
+        assert await trigger.run().__anext__() == TriggerEvent(
+            {"status": "done", "namespace": mock.ANY, "pod_name": mock.ANY}
+        )
         wait_completion.assert_not_awaited()
 
     @pytest.mark.asyncio
@@ -181,7 +183,9 @@ class TestWaitContainerTrigger:
             poll_interval=2,
         )
 
-        assert await trigger.run().__anext__() == TriggerEvent({"status": "done"})
+        assert await trigger.run().__anext__() == TriggerEvent(
+            {"status": "done", "namespace": mock.ANY, "pod_name": mock.ANY}
+        )
         wait_completion.assert_not_awaited()
 
     @pytest.mark.asyncio
@@ -189,7 +193,7 @@ class TestWaitContainerTrigger:
         "logging_interval, exp_event",
         [
             param(0, {"status": "running", "last_log_time": DateTime(2022, 1, 1)}, id="short_interval"),
-            param(None, {"status": "done"}, id="no_interval"),
+            param(None, {"status": "done", "namespace": mock.ANY, "pod_name": mock.ANY}, id="no_interval"),
         ],
     )
     @mock.patch(READ_NAMESPACED_POD_PATH, new=get_read_pod_mock_containers([1, 1, None, None]))
