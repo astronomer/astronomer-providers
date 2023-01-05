@@ -177,6 +177,8 @@ class DataprocCreateClusterTrigger(BaseTrigger):
             metadata=self.metadata,
         )
 
+    # Hello
+
     def _diagnose_cluster(self) -> Any:
         hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         return hook.diagnose_cluster(
