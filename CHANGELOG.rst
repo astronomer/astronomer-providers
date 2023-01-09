@@ -1,6 +1,24 @@
 Changelog
 =========
 
+1.14.0 (2023-01-09)
+-------------------
+
+Feature
+"""""""
+
+- Add custom XCom backend for S3.
+  (`#820 <https://github.com/astronomer/astronomer-providers/pull/820>`_)
+
+Bug Fixes
+"""""""""
+
+- Add poke_interval to ``ExternalTaskSensorAsync``.
+  (`#823 <https://github.com/astronomer/astronomer-providers/pull/823>`_)
+- Support getting logs of pod, pod cleanup and reflect status of the pod in ``GKEStartPodOperatorAsync``
+  (`#824 <https://github.com/astronomer/astronomer-providers/pull/824>`_)
+
+
 1.13.0 (2022-12-16)
 -------------------
 
