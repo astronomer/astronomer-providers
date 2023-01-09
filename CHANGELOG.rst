@@ -15,7 +15,7 @@ Bug Fixes
 
 - Add poke_interval to ``ExternalTaskSensorAsync``.
   (`#823 <https://github.com/astronomer/astronomer-providers/pull/823>`_)
-- Support get_logs of pod, pod cleanup and reflect status of the pod in ``GKEStartPodOperatorAsync``
+- Support getting logs of pod, pod cleanup and reflect status of the pod in ``GKEStartPodOperatorAsync``
   (`#824 <https://github.com/astronomer/astronomer-providers/pull/824>`_)
 
 
