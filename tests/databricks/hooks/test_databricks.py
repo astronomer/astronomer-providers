@@ -252,24 +252,24 @@ class TestDatabricksHookAsync:
         "mock_response",
         [
             (
-                    {
-                        "state": {
-                            "life_cycle_state": "RUNNING",
-                            "result_state": "",
-                            "state_message": "In run",
-                            "user_cancelled_or_timedout": "False",
-                        }
+                {
+                    "state": {
+                        "life_cycle_state": "RUNNING",
+                        "result_state": "",
+                        "state_message": "In run",
+                        "user_cancelled_or_timedout": "False",
                     }
+                }
             ),
             (
-                    {
-                        "state": {
-                            "life_cycle_state": "TERMINATED",
-                            "result_state": "SUCCESS",
-                            "state_message": "",
-                            "user_cancelled_or_timedout": "False",
-                        }
+                {
+                    "state": {
+                        "life_cycle_state": "TERMINATED",
+                        "result_state": "SUCCESS",
+                        "state_message": "",
+                        "user_cancelled_or_timedout": "False",
                     }
+                }
             ),
         ],
     )

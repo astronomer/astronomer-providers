@@ -191,14 +191,14 @@ class TestDatabricksTrigger:
         generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         assert (
-                TriggerEvent(
-                    {
-                        "status": "error",
-                        "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
-                                   " 'result_state': 'TERMINATED', 'state_message': ''} and with the error ",
-                    }
-                )
-                == actual
+            TriggerEvent(
+                {
+                    "status": "error",
+                    "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
+                    " 'result_state': 'TERMINATED', 'state_message': ''} and with the error ",
+                }
+            )
+            == actual
         )
 
     @pytest.mark.asyncio
@@ -211,11 +211,17 @@ class TestDatabricksTrigger:
         ],
     )
     @mock.patch("airflow.providers.databricks.hooks.databricks.RunState")
-    @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_output_response")
+    @mock.patch(
+        "astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_output_response"
+    )
     @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHookAsync.get_run_response")
     async def test_databricks_trigger_terminal_status_failed(
-            self, mock_run_response_func, mock_get_run_output, mock_run_state, mock_run_response,
-            mock_get_output_response
+        self,
+        mock_run_response_func,
+        mock_get_run_output,
+        mock_run_state,
+        mock_run_response,
+        mock_get_output_response,
     ):
         """
         Tests that the DatabricksTrigger does not fire once a
@@ -228,15 +234,15 @@ class TestDatabricksTrigger:
         generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         assert (
-                TriggerEvent(
-                    {
-                        "status": "error",
-                        "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
-                                   " 'result_state': 'FAILED', 'state_message': 'Test error'}"
-                                   " and with the error Test error",
-                    }
-                )
-                == actual
+            TriggerEvent(
+                {
+                    "status": "error",
+                    "message": "databricks_check failed with terminal state: {'life_cycle_state': 'TERMINATED',"
+                    " 'result_state': 'FAILED', 'state_message': 'Test error'}"
+                    " and with the error Test error",
+                }
+            )
+            == actual
         )
 
     @pytest.mark.asyncio
