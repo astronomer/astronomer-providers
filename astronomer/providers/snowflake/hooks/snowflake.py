@@ -29,12 +29,10 @@ def fetch_one_snowflake_handler(cursor: SnowflakeCursor) -> dict[str, Any] | tup
 class SnowflakeHookAsync(SnowflakeHook):
     """
     A client to interact with Snowflake.
-
     This hook requires the snowflake_conn_id connection. The snowflake host, login,
     and, password field must be setup in the connection. Other inputs can be defined
     in the connection or hook instantiation. If used with the S3ToSnowflakeOperator
     add 'aws_access_key_id' and 'aws_secret_access_key' to extra field in the connection.
-
     :param snowflake_conn_id: Reference to
         :ref:`Snowflake connection id<howto/connection:snowflake>`
     :param account: snowflake account name
@@ -63,7 +61,6 @@ class SnowflakeHookAsync(SnowflakeHook):
     ) -> list[str]:
         """
         Runs a SQL command or a list of SQL commands.
-
         :param sql: the sql string to be executed with possibly multiple statements,
           or a list of sql statements to execute
         :param autocommit: What to set the connection's autocommit setting to before executing the query.
@@ -71,13 +68,13 @@ class SnowflakeHookAsync(SnowflakeHook):
         """
         self.query_ids = []
         with closing(self.get_conn()) as conn:
-            self.set_autocommit(conn, autocommit)
-
             self.log.info("SQL statement to be executed: %s ", sql)
             if isinstance(sql, str):
                 split_statements_tuple = split_statements(StringIO(sql))
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
-
+            if not sql:
+                raise ValueError("List of SQL statements is empty")
+            self.set_autocommit(conn, autocommit)
             self.log.debug("Executing %d statements against Snowflake DB", len(sql))
             with self._get_cursor(conn, return_dictionaries) as cur:
 
