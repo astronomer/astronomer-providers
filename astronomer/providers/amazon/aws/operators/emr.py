@@ -40,6 +40,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             job_driver=self.job_driver,
             configuration_overrides=self.configuration_overrides,
             client_request_token=self.client_request_token,
+            tags=self.tags,
         )
         try:
             # for apache-airflow-providers-amazon<6.0.0
