@@ -7,28 +7,27 @@ from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
 from astronomer.providers.amazon.aws.triggers.batch import BatchOperatorTrigger
 from tests.utils.airflow_util import create_context
 
-JOB_NAME = "51455483-c62c-48ac-9b88-53a6a725baa3"
-JOB_ID = "8ba9d676-4108-4474-9dca-8bbac1da9b19"
-MAX_RETRIES = 2
-STATUS_RETRIES = 3
-
-RESPONSE_WITHOUT_FAILURES = {
-    "jobName": JOB_NAME,
-    "jobId": JOB_ID,
-}
-
 
 class TestBatchOperatorAsync:
+    JOB_NAME = "51455483-c62c-48ac-9b88-53a6a725baa3"
+    JOB_ID = "8ba9d676-4108-4474-9dca-8bbac1da9b19"
+    MAX_RETRIES = 2
+    STATUS_RETRIES = 3
+    RESPONSE_WITHOUT_FAILURES = {
+        "jobName": JOB_NAME,
+        "jobId": JOB_ID,
+    }
+
     @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
     def test_batch_op_async(self, get_client_type_mock):
-        get_client_type_mock.return_value.submit_job.return_value = RESPONSE_WITHOUT_FAILURES
+        get_client_type_mock.return_value.submit_job.return_value = self.RESPONSE_WITHOUT_FAILURES
         task = BatchOperatorAsync(
             task_id="task",
-            job_name=JOB_NAME,
+            job_name=self.JOB_NAME,
             job_queue="queue",
             job_definition="hello-world",
-            max_retries=MAX_RETRIES,
-            status_retries=STATUS_RETRIES,
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
             parameters=None,
             overrides={},
             array_properties=None,
@@ -46,11 +45,11 @@ class TestBatchOperatorAsync:
 
         task = BatchOperatorAsync(
             task_id="task",
-            job_name=JOB_NAME,
+            job_name=self.JOB_NAME,
             job_queue="queue",
             job_definition="hello-world",
-            max_retries=MAX_RETRIES,
-            status_retries=STATUS_RETRIES,
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
             parameters=None,
             overrides={},
             array_properties=None,
@@ -71,11 +70,11 @@ class TestBatchOperatorAsync:
         """Tests that execute_complete method returns None and that it prints expected log"""
         task = BatchOperatorAsync(
             task_id="task",
-            job_name=JOB_NAME,
+            job_name=self.JOB_NAME,
             job_queue="queue",
             job_definition="hello-world",
-            max_retries=MAX_RETRIES,
-            status_retries=STATUS_RETRIES,
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
             parameters=None,
             overrides={},
             array_properties=None,
@@ -86,4 +85,4 @@ class TestBatchOperatorAsync:
         with mock.patch.object(task.log, "info") as mock_log_info:
             assert task.execute_complete(context=None, event=event) is None
 
-        mock_log_info.assert_called_with(f"AWS Batch job ({JOB_ID}) succeeded")
+        mock_log_info.assert_called_with(f"AWS Batch job ({self.JOB_ID}) succeeded")

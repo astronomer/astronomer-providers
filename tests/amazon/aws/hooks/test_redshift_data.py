@@ -8,10 +8,10 @@ from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 
-TEST_SQL = "select * from any"
-
 
 class TestRedshiftDataHook:
+    SQL_QUERY = "select * from any"
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "query_ids, describe_statement_response, expected_result",
@@ -232,7 +232,7 @@ class TestRedshiftDataHook:
             operation_name="redshift-data",
         )
 
-        resp = hook.execute_query(TEST_SQL, params=None)
+        resp = hook.execute_query(self.SQL_QUERY, params=None)
         assert resp == (
             [],
             {

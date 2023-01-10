@@ -41,7 +41,6 @@ class TestRedshiftHookAsync:
         self, mock_client, mock_cluster_identifier, cluster_state, expected_result
     ):
         """Test cluster status async hook function to get the cluster status by calling Aiobotocore lib"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_clusters.return_value = expected_result
         hook = RedshiftHookAsync(
             aws_conn_id="test_aws_connection_id", client_type="redshift", resource_type="redshift"
@@ -56,7 +55,6 @@ class TestRedshiftHookAsync:
         Test cluster status async hook function to get the cluster status by calling Aiobotocore lib
          when cluster does not exist.
         """
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_clusters.side_effect = (
             botocore.exceptions.ClientError(
                 error_response={

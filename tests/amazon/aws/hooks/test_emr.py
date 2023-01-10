@@ -58,7 +58,6 @@ class TestEmrContainerHookAsync:
     async def test_emr_container_cluster_status(self, mock_client, mock_expected_job_state, mock_result):
         """Test check_job_status async hook function to get the status of the job running in emr container
         using Aiobotocore lib"""
-        # mocking async context function with return_value of __aenter__
         mock_client.return_value.__aenter__.return_value.describe_job_run.return_value = mock_result
         hook = EmrContainerHookAsync(aws_conn_id=AWS_CONN_ID, virtual_cluster_id=VIRTUAL_CLUSTER_ID)
         result = await hook.check_job_status(job_id=JOB_ID)

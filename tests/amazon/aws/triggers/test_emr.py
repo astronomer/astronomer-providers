@@ -67,19 +67,21 @@ def _emr_describe_step_response(state):
 
 
 class TestEmrContainerSensorTrigger:
+    TRIGGER = EmrContainerSensorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        max_tries=MAX_RETRIES,
+        aws_conn_id=AWS_CONN_ID,
+        poll_interval=POLL_INTERVAL,
+    )
+
     def test_emr_container_sensors_trigger_serialization(self):
         """
         Asserts that the EmrContainerSensorTrigger correctly serializes its arguments
         and classpath.
         """
-        trigger = EmrContainerSensorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            max_tries=MAX_RETRIES,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-        )
-        classpath, kwargs = trigger.serialize()
+
+        classpath, kwargs = self.TRIGGER.serialize()
         assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerSensorTrigger"
         assert kwargs == {
             "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
@@ -103,14 +105,8 @@ class TestEmrContainerSensorTrigger:
     async def test_emr_container_sensors_trigger_run(self, mock_query_status, mock_status):
         """Test if the task is run is in trigger successfully."""
         mock_query_status.return_value = mock_status
-        trigger = EmrContainerSensorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            max_tries=MAX_RETRIES,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-        )
-        task = asyncio.create_task(trigger.run().__anext__())
+
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
 
         # TriggerEvent was not returned
@@ -128,14 +124,8 @@ class TestEmrContainerSensorTrigger:
         Test if the task is run is in trigger failure status.
         """
         mock_query_status.return_value = mock_status
-        trigger = EmrContainerSensorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            max_tries=MAX_RETRIES,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         response = await generator.asend(None)
         msg = "EMR Containers sensors completed"
         assert TriggerEvent({"status": "success", "message": msg}) == response
@@ -151,14 +141,8 @@ class TestEmrContainerSensorTrigger:
         Test if the task is run is in trigger failure status.
         """
         mock_query_status.return_value = mock_status
-        trigger = EmrContainerSensorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            max_tries=MAX_RETRIES,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         response = await generator.asend(None)
         msg = f"EMR Containers sensor failed {mock_status}"
         assert TriggerEvent({"status": "error", "message": msg}) == response
@@ -170,14 +154,8 @@ class TestEmrContainerSensorTrigger:
         Test EMR container sensors with raise exception
         """
         mock_query_status.side_effect = Exception("Test exception")
-        trigger = EmrContainerSensorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            max_tries=MAX_RETRIES,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-        )
-        task = [i async for i in trigger.run()]
+
+        task = [i async for i in self.TRIGGER.run()]
         assert len(task) == 1
         assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
@@ -297,19 +275,21 @@ class TestEmrStepSensorTrigger:
 
 
 class TestEmrJobFlowSensorTrigger:
+    TRIGGER = EmrJobFlowSensorTrigger(
+        job_flow_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        target_states=TARGET_STATE,
+        failed_states=FAILED_STATE,
+        poll_interval=POLL_INTERVAL,
+    )
+
     def test_emr_job_flow_sensors_trigger_serialization(self):
         """
         Asserts that the TaskStateTrigger correctly serializes its arguments
         and classpath.
         """
-        trigger = EmrJobFlowSensorTrigger(
-            job_flow_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            target_states=TARGET_STATE,
-            failed_states=FAILED_STATE,
-            poll_interval=POLL_INTERVAL,
-        )
-        classpath, kwargs = trigger.serialize()
+
+        classpath, kwargs = self.TRIGGER.serialize()
         assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrJobFlowSensorTrigger"
         assert kwargs == {
             "job_flow_id": JOB_ID,
@@ -334,14 +314,8 @@ class TestEmrJobFlowSensorTrigger:
         """Test if the task is run is in trigger successfully."""
         MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
         mock_cluster_detail.return_value = MOCK_RESPONSE
-        trigger = EmrJobFlowSensorTrigger(
-            job_flow_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            target_states=TARGET_STATE,
-            failed_states=FAILED_STATE,
-            poll_interval=POLL_INTERVAL,
-        )
-        task = asyncio.create_task(trigger.run().__anext__())
+
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
 
         # TriggerEvent was not returned
@@ -358,14 +332,8 @@ class TestEmrJobFlowSensorTrigger:
         """Test if the task is run is in trigger failure status."""
         MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
         mock_cluster_detail.return_value = MOCK_RESPONSE
-        trigger = EmrJobFlowSensorTrigger(
-            job_flow_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            target_states=TARGET_STATE,
-            failed_states=FAILED_STATE,
-            poll_interval=POLL_INTERVAL,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         msg = f"Job flow currently {mock_status}"
         assert TriggerEvent({"status": "success", "message": msg}) == actual
@@ -376,14 +344,8 @@ class TestEmrJobFlowSensorTrigger:
         """Test if the task is run is in trigger failure status."""
         MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
         mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
-        trigger = EmrJobFlowSensorTrigger(
-            job_flow_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            target_states=TARGET_STATE,
-            failed_states=FAILED_STATE,
-            poll_interval=POLL_INTERVAL,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         final_message = "EMR job failed"
         error_code = "1111"
@@ -396,30 +358,26 @@ class TestEmrJobFlowSensorTrigger:
     async def test_emr_job_flow_sensors_trigger_exception(self, mock_cluster_detail):
         """Test emr job flow sensors trigger with exception"""
         mock_cluster_detail.side_effect = Exception("Test exception")
-        trigger = EmrJobFlowSensorTrigger(
-            job_flow_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            target_states=TARGET_STATE,
-            failed_states=FAILED_STATE,
-            poll_interval=POLL_INTERVAL,
-        )
-        task = [i async for i in trigger.run()]
+
+        task = [i async for i in self.TRIGGER.run()]
         assert len(task) == 1
         assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
 class TestEmrContainerOperatorTrigger:
+    TRIGGER = EmrContainerOperatorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        name=NAME,
+        job_id=JOB_ID,
+        aws_conn_id=AWS_CONN_ID,
+        max_tries=MAX_RETRIES,
+        poll_interval=POLL_INTERVAL,
+    )
+
     def test_emr_container_operator_trigger_serialization(self):
         """Asserts EmrContainerOperatorTrigger correctly serializes its arguments and classpath."""
-        trigger = EmrContainerOperatorTrigger(
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            name=NAME,
-            job_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            max_tries=MAX_RETRIES,
-            poll_interval=POLL_INTERVAL,
-        )
-        classpath, kwargs = trigger.serialize()
+
+        classpath, kwargs = self.TRIGGER.serialize()
         assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger"
         assert kwargs == {
             "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
@@ -443,15 +401,8 @@ class TestEmrContainerOperatorTrigger:
     async def test_emr_container_operator_trigger_run(self, mock_query_status, mock_status):
         """Assert EmrContainerOperatorTrigger task run in trigger and sleep if state is intermediate"""
         mock_query_status.return_value = mock_status
-        trigger = EmrContainerOperatorTrigger(
-            name=NAME,
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-            max_tries=MAX_RETRIES,
-        )
-        task = asyncio.create_task(trigger.run().__anext__())
+
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
 
         # TriggerEvent was not returned
@@ -463,15 +414,8 @@ class TestEmrContainerOperatorTrigger:
     async def test_emr_container_operator_trigger_completed(self, mock_query_status):
         """Assert EmrContainerOperatorTrigger succeed."""
         mock_query_status.return_value = "COMPLETED"
-        trigger = EmrContainerOperatorTrigger(
-            name=NAME,
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-            max_tries=MAX_RETRIES,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         msg = "EMR Containers Operator success COMPLETED"
         assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) == actual
@@ -489,15 +433,8 @@ class TestEmrContainerOperatorTrigger:
         """Assert EmrContainerOperatorTrigger failed."""
         mock_query_status.return_value = mock_status
         mock_failure_reason.return_value = None
-        trigger = EmrContainerOperatorTrigger(
-            name=NAME,
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-            max_tries=MAX_RETRIES,
-        )
-        generator = trigger.run()
+
+        generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         message = (
             f"EMR Containers job failed. Final state is {mock_status}. "
@@ -510,15 +447,8 @@ class TestEmrContainerOperatorTrigger:
     async def test_emr_container_operator_trigger_exception(self, mock_query_status):
         """Assert EmrContainerOperatorTrigger raise exception"""
         mock_query_status.side_effect = Exception("Test exception")
-        trigger = EmrContainerOperatorTrigger(
-            name=NAME,
-            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-            job_id=JOB_ID,
-            aws_conn_id=AWS_CONN_ID,
-            poll_interval=POLL_INTERVAL,
-            max_tries=MAX_RETRIES,
-        )
-        task = [i async for i in trigger.run()]
+
+        task = [i async for i in self.TRIGGER.run()]
         assert len(task) == 1
         assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
