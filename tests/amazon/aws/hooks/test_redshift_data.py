@@ -380,24 +380,24 @@ class TestRedshiftDataHook:
         "mock_login, mock_pwd, connection_details, expected_output",
         [
             (
-                    "test",
-                    "test",
-                    {
-                        "db_user": "test_user",
-                        "cluster_identifier": "test_cluster",
-                        "region": "us-east-2",
-                        "database": "test-redshift_database",
-                        "aws_session_token": "test",
-                    },
-                    {
-                        "aws_access_key_id": "test",
-                        "aws_secret_access_key": "test",
-                        "aws_session_token": "test",
-                        "db_user": "test_user",
-                        "cluster_identifier": "test_cluster",
-                        "region_name": "us-east-2",
-                        "database": "test-redshift_database",
-                    },
+                "test",
+                "test",
+                {
+                    "db_user": "test_user",
+                    "cluster_identifier": "test_cluster",
+                    "region": "us-east-2",
+                    "database": "test-redshift_database",
+                    "aws_session_token": "test",
+                },
+                {
+                    "aws_access_key_id": "test",
+                    "aws_secret_access_key": "test",
+                    "aws_session_token": "test",
+                    "db_user": "test_user",
+                    "cluster_identifier": "test_cluster",
+                    "region_name": "us-east-2",
+                    "database": "test-redshift_database",
+                },
             ),
         ],
     )

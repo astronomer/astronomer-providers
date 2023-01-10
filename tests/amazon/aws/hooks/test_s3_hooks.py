@@ -1,10 +1,8 @@
-
 import unittest
 from datetime import datetime
 from unittest import mock
 
 import pytest
-
 from botocore.exceptions import ClientError
 
 from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
@@ -107,7 +105,9 @@ class TestS3HookAsync:
             operation_name="s3",
         )
         with pytest.raises(ClientError) as err:
-            response = await s3_hook_async.get_head_object(mock_client, "s3://test_bucket/file", "test_bucket")
+            response = await s3_hook_async.get_head_object(
+                mock_client, "s3://test_bucket/file", "test_bucket"
+            )
             assert isinstance(response, err)
 
     @pytest.mark.asyncio
@@ -349,7 +349,9 @@ class TestS3HookAsync:
         ],
     )
     @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
-    async def test_s3_prefix_sensor_hook_list_prefixes(self, mock_client, test_first_prefix, test_second_prefix):
+    async def test_s3_prefix_sensor_hook_list_prefixes(
+        self, mock_client, test_first_prefix, test_second_prefix
+    ):
         """
         Test list_prefixes whether it returns a valid response
         """
@@ -420,7 +422,9 @@ class TestS3HookAsync:
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_s3_bucket_key")
     @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_head_object")
     @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
-    async def test_s3__check_key_none_without_wild_card(self, mock_client, mock_head_object, mock_get_bucket_key):
+    async def test_s3__check_key_none_without_wild_card(
+        self, mock_client, mock_head_object, mock_get_bucket_key
+    ):
         """Test _check_key function when get head object returns none"""
         mock_get_bucket_key.return_value = "test_bucket", "test.txt"
         mock_head_object.return_value = None
@@ -434,12 +438,24 @@ class TestS3HookAsync:
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_s3_bucket_key")
     @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_file_metadata")
     @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
-    async def test_s3__check_key_with_wild_card(self, mock_client, mock_get_file_metadata, mock_get_bucket_key):
+    async def test_s3__check_key_with_wild_card(
+        self, mock_client, mock_get_file_metadata, mock_get_bucket_key
+    ):
         """Test _check_key function"""
         mock_get_bucket_key.return_value = "test_bucket", "test"
         mock_get_file_metadata.return_value = [
-            {"Key": "test_key", "ETag": "etag1", "LastModified": datetime(2020, 8, 14, 17, 19, 34), "Size": 0},
-            {"Key": "test_key2", "ETag": "etag2", "LastModified": datetime(2020, 8, 14, 17, 19, 34), "Size": 0},
+            {
+                "Key": "test_key",
+                "ETag": "etag1",
+                "LastModified": datetime(2020, 8, 14, 17, 19, 34),
+                "Size": 0,
+            },
+            {
+                "Key": "test_key2",
+                "ETag": "etag2",
+                "LastModified": datetime(2020, 8, 14, 17, 19, 34),
+                "Size": 0,
+            },
         ]
         s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
         response = await s3_hook_async._check_key(

@@ -1,8 +1,7 @@
 import json
-
-import pytest
 from unittest import mock
 
+import pytest
 from aiobotocore.session import ClientCreatorContext
 from airflow.models.connection import Connection
 from airflow.providers.amazon.aws.utils.connection_wrapper import AwsConnectionWrapper

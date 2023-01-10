@@ -17,7 +17,9 @@ class TestS3KeyTrigger:
         Asserts that the TaskStateTrigger correctly serializes its arguments
         and classpath.
         """
-        trigger = S3KeyTrigger(bucket_key="s3://test_bucket/file", bucket_name="test_bucket", wildcard_match=True)
+        trigger = S3KeyTrigger(
+            bucket_key="s3://test_bucket/file", bucket_name="test_bucket", wildcard_match=True
+        )
         classpath, kwargs = trigger.serialize()
         assert classpath == "astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger"
         assert kwargs == {
