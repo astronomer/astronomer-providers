@@ -193,7 +193,7 @@ def test_dataproc_delete_operator_execute_complete_exception(event):
     with pytest.raises(AirflowException):
         task.execute_complete(context=context, event=event)
 
-
+@mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
 @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
 def test_dataproc_operator_execute_async(mock_submit_job):
     """
