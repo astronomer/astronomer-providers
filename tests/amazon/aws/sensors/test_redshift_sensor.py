@@ -35,13 +35,17 @@ class TestRedshiftClusterSensorAsync:
         """Test RedshiftClusterSensorAsync with an AirflowException is raised in case of error event"""
 
         with pytest.raises(AirflowException):
-            self.TASK.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
 
     def test_redshift_sensor_async_execute_complete(self):
         """Asserts that logging occurs as expected"""
 
         with mock.patch.object(self.TASK.log, "info") as mock_log_info:
-            self.TASK.execute_complete(context=None, event={"status": "success", "cluster_state": "available"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "success", "cluster_state": "available"}
+            )
         mock_log_info.assert_called_with(
             "Cluster Identifier %s is in %s state", "astro-redshift-cluster-1", "available"
         )

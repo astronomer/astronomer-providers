@@ -47,7 +47,9 @@ class TestEmrContainerSensorAsync:
         """Tests that an AirflowException is raised in case of error event"""
 
         with pytest.raises(AirflowException):
-            self.TASK.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
 
     def test_emr_container_sensor_async_execute_complete(self):
         """Asserts that logging occurs as expected"""
@@ -85,7 +87,9 @@ class TestEmrJobFlowSensorAsync:
         """Test EMR flow sensor with an AirflowException is raised in case of error event"""
 
         with pytest.raises(AirflowException):
-            self.TASK.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
 
     def test_emr_job_flow_sensor_async_execute_complete(self):
         """Asserts that logging occurs as expected"""

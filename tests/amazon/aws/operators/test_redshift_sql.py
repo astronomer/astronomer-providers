@@ -37,7 +37,9 @@ class TestRedshiftSQLOperatorAsync:
         """Tests that an AirflowException is raised in case of error event"""
 
         with pytest.raises(AirflowException):
-            self.TASK.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
 
     @pytest.mark.parametrize(
         "event",

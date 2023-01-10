@@ -32,7 +32,9 @@ class TestBatchSensorAsync:
         """Tests that an AirflowException is raised in case of error event"""
 
         with pytest.raises(AirflowException) as exc_info:
-            self.TASK.execute_complete(context=None, event={"status": "error", "message": "test failure message"})
+            self.TASK.execute_complete(
+                context=None, event={"status": "error", "message": "test failure message"}
+            )
 
         assert str(exc_info.value) == "test failure message"
 
