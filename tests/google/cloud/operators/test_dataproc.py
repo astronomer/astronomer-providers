@@ -195,11 +195,12 @@ def test_dataproc_delete_operator_execute_complete_exception(event):
 
 @mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
 @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
-def test_dataproc_operator_execute_async(mock_submit_job):
+def test_dataproc_operator_execute_async(mock_submit_job, mock_persist):
     """
     Asserts that a task is deferred and a DataProcSubmitTrigger will be fired
     when the DataprocSubmitJobOperatorAsync is executed.
     """
+    mock_persist.return_value = {}
     mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
     task = DataprocSubmitJobOperatorAsync(
         task_id="task-id", job=SPARK_JOB, region=TEST_REGION, project_id=TEST_PROJECT_ID
