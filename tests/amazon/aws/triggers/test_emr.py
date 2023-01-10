@@ -11,7 +11,6 @@ from astronomer.providers.amazon.aws.triggers.emr import (
     EmrStepSensorTrigger,
 )
 
-TASK_ID = "test_emr_container_sensor"
 VIRTUAL_CLUSTER_ID = "test_cluster_1"
 JOB_ID = "jobid-12122"
 AWS_CONN_ID = "aws_default"
@@ -52,163 +51,6 @@ MOCK_FAILED_RESPONSE = {
 }
 
 
-def test_emr_container_sensors_trigger_serialization():
-    """
-    Asserts that the EmrContainerSensorTrigger correctly serializes its arguments
-    and classpath.
-    """
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        max_tries=MAX_RETRIES,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-    )
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerSensorTrigger"
-    assert kwargs == {
-        "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
-        "job_id": JOB_ID,
-        "max_tries": MAX_RETRIES,
-        "poll_interval": POLL_INTERVAL,
-        "aws_conn_id": AWS_CONN_ID,
-    }
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    [
-        "PENDING",
-        "SUBMITTED",
-        "RUNNING",
-        None,
-    ],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_sensors_trigger_run(mock_query_status, mock_status):
-    """Test if the task is run is in trigger successfully."""
-    mock_query_status.return_value = mock_status
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        max_tries=MAX_RETRIES,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-    )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was not returned
-    assert task.done() is False
-    asyncio.get_event_loop().stop()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    ["COMPLETED"],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_sensors_trigger_completed(mock_query_status, mock_status):
-    """
-    Test if the task is run is in trigger failure status.
-    """
-    mock_query_status.return_value = mock_status
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        max_tries=MAX_RETRIES,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-    )
-    generator = trigger.run()
-    response = await generator.asend(None)
-    msg = "EMR Containers sensors completed"
-    assert TriggerEvent({"status": "success", "message": msg}) == response
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    ["FAILED", "CANCELLED", "CANCEL_PENDING"],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_sensors_trigger_failure_status(mock_query_status, mock_status):
-    """
-    Test if the task is run is in trigger failure status.
-    """
-    mock_query_status.return_value = mock_status
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        max_tries=MAX_RETRIES,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-    )
-    generator = trigger.run()
-    response = await generator.asend(None)
-    msg = f"EMR Containers sensor failed {mock_status}"
-    assert TriggerEvent({"status": "error", "message": msg}) == response
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_sensors_trigger_exception(mock_query_status):
-    """
-    Test EMR container sensors with raise exception
-    """
-    mock_query_status.side_effect = Exception("Test exception")
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        max_tries=MAX_RETRIES,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-    )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_sensor_trigger_timeout(mock_query_status):
-    """Asserts that the  EmrContainerSensorTrigger triggers correct event in case of timeout"""
-    mock_query_status.return_value = "PENDING"
-    trigger = EmrContainerSensorTrigger(
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=1,
-        max_tries=2,
-    )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    expected = TriggerEvent(
-        {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
-    )
-    assert actual == expected
-
-
-def test_emr_step_sensor_serialization():
-    """Asserts that the EmrStepSensorTrigger correctly serializes its arguments and classpath."""
-    trigger = EmrStepSensorTrigger(
-        job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
-    )
-
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrStepSensorTrigger"
-    assert kwargs == {
-        "job_flow_id": JOB_FLOW_ID,
-        "step_id": STEP_ID,
-        "aws_conn_id": AWS_CONN_ID,
-        "poke_interval": 60,
-        "target_states": ["COMPLETED"],
-        "failed_states": ["CANCELLED", "FAILED", "INTERRUPTED"],
-    }
-
-
 def _emr_describe_step_response(state):
     """Return dummy response dict for emr_describe_step method"""
     return {
@@ -224,204 +66,306 @@ def _emr_describe_step_response(state):
     }
 
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
-async def test_emr_step_sensor_trigger_run_success(emr_describe_step):
-    """Assert EmrStepSensorTrigger run method success"""
-    emr_describe_step.return_value = _emr_describe_step_response("COMPLETED")
-    trigger = EmrStepSensorTrigger(
-        job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
-    )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    expected = TriggerEvent({"status": "success", "message": "Job flow currently COMPLETED"})
-    assert expected == actual
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_response",
-    [
-        _emr_describe_step_response("PENDING"),
-        _emr_describe_step_response("CANCEL_PENDING"),
-        _emr_describe_step_response("RUNNING"),
-        _emr_describe_step_response(None),
-    ],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
-async def test_emr_step_sensor_trigger_run_pending(emr_describe_step, mock_response):
-    """Assert run method of EmrStepSensorHookAsync sleep"""
-    emr_describe_step.return_value = mock_response
-    trigger = EmrStepSensorTrigger(
-        job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=5
-    )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
-
-    # TriggerEvent was not returned
-    assert task.done() is False
-    asyncio.get_event_loop().stop()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_response",
-    [
-        _emr_describe_step_response("CANCELLED"),
-        _emr_describe_step_response("FAILED"),
-        _emr_describe_step_response("INTERRUPTED"),
-    ],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
-async def test_emr_step_sensor_trigger_run_fail(emr_describe_step, mock_response):
-    """Assert run method of EmrStepSensorHookAsync fail"""
-    emr_describe_step.return_value = mock_response
-    trigger = EmrStepSensorTrigger(
-        job_flow_id=JOB_FLOW_ID,
-        step_id=STEP_ID,
+class TestEmrContainerSensorTrigger:
+    TRIGGER = EmrContainerSensorTrigger(
+        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+        job_id=JOB_ID,
+        max_tries=MAX_RETRIES,
         aws_conn_id=AWS_CONN_ID,
-        poke_interval=5,
-        failed_states=["CANCELLED", "FAILED", "INTERRUPTED"],
+        poll_interval=POLL_INTERVAL,
     )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    expected = TriggerEvent(
-        {"status": "error", "message": "for reason Unknown Error with message  and log file "}
+
+    def test_emr_container_sensors_trigger_serialization(self):
+        """
+        Asserts that the EmrContainerSensorTrigger correctly serializes its arguments
+        and classpath.
+        """
+
+        classpath, kwargs = self.TRIGGER.serialize()
+        assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerSensorTrigger"
+        assert kwargs == {
+            "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
+            "job_id": JOB_ID,
+            "max_tries": MAX_RETRIES,
+            "poll_interval": POLL_INTERVAL,
+            "aws_conn_id": AWS_CONN_ID,
+        }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        [
+            "PENDING",
+            "SUBMITTED",
+            "RUNNING",
+            None,
+        ],
     )
-    assert actual == expected
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_sensors_trigger_run(self, mock_query_status, mock_status):
+        """Test if the task is run is in trigger successfully."""
+        mock_query_status.return_value = mock_status
 
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
+        await asyncio.sleep(0.5)
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
-async def test_emr_step_sensor_trigger_run_failure(emr_describe_step):
-    """Test EmrStepSensorTrigger run method fail"""
-    emr_describe_step.side_effect = Exception("Test exception")
-    trigger = EmrStepSensorTrigger(
-        job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
+        # TriggerEvent was not returned
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        ["COMPLETED"],
     )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) == actual
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_sensors_trigger_completed(self, mock_query_status, mock_status):
+        """
+        Test if the task is run is in trigger failure status.
+        """
+        mock_query_status.return_value = mock_status
+
+        generator = self.TRIGGER.run()
+        response = await generator.asend(None)
+        msg = "EMR Containers sensors completed"
+        assert TriggerEvent({"status": "success", "message": msg}) == response
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        ["FAILED", "CANCELLED", "CANCEL_PENDING"],
+    )
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_sensors_trigger_failure_status(self, mock_query_status, mock_status):
+        """
+        Test if the task is run is in trigger failure status.
+        """
+        mock_query_status.return_value = mock_status
+
+        generator = self.TRIGGER.run()
+        response = await generator.asend(None)
+        msg = f"EMR Containers sensor failed {mock_status}"
+        assert TriggerEvent({"status": "error", "message": msg}) == response
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_sensors_trigger_exception(self, mock_query_status):
+        """
+        Test EMR container sensors with raise exception
+        """
+        mock_query_status.side_effect = Exception("Test exception")
+
+        task = [i async for i in self.TRIGGER.run()]
+        assert len(task) == 1
+        assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_sensor_trigger_timeout(self, mock_query_status):
+        """Asserts that the  EmrContainerSensorTrigger triggers correct event in case of timeout"""
+        mock_query_status.return_value = "PENDING"
+        trigger = EmrContainerSensorTrigger(
+            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+            job_id=JOB_ID,
+            aws_conn_id=AWS_CONN_ID,
+            poll_interval=1,
+            max_tries=2,
+        )
+        generator = trigger.run()
+        actual = await generator.asend(None)
+        expected = TriggerEvent(
+            {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
+        )
+        assert actual == expected
 
 
-def test_emr_job_flow_sensors_trigger_serialization():
-    """
-    Asserts that the TaskStateTrigger correctly serializes its arguments
-    and classpath.
-    """
-    trigger = EmrJobFlowSensorTrigger(
+class TestEmrStepSensorTrigger:
+    def test_emr_step_sensor_serialization(self):
+        """Asserts that the EmrStepSensorTrigger correctly serializes its arguments and classpath."""
+        trigger = EmrStepSensorTrigger(
+            job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
+        )
+
+        classpath, kwargs = trigger.serialize()
+        assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrStepSensorTrigger"
+        assert kwargs == {
+            "job_flow_id": JOB_FLOW_ID,
+            "step_id": STEP_ID,
+            "aws_conn_id": AWS_CONN_ID,
+            "poke_interval": 60,
+            "target_states": ["COMPLETED"],
+            "failed_states": ["CANCELLED", "FAILED", "INTERRUPTED"],
+        }
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
+    async def test_emr_step_sensor_trigger_run_success(self, emr_describe_step):
+        """Assert EmrStepSensorTrigger run method success"""
+        emr_describe_step.return_value = _emr_describe_step_response("COMPLETED")
+        trigger = EmrStepSensorTrigger(
+            job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
+        )
+        generator = trigger.run()
+        actual = await generator.asend(None)
+        expected = TriggerEvent({"status": "success", "message": "Job flow currently COMPLETED"})
+        assert expected == actual
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_response",
+        [
+            _emr_describe_step_response("PENDING"),
+            _emr_describe_step_response("CANCEL_PENDING"),
+            _emr_describe_step_response("RUNNING"),
+            _emr_describe_step_response(None),
+        ],
+    )
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
+    async def test_emr_step_sensor_trigger_run_pending(self, emr_describe_step, mock_response):
+        """Assert run method of EmrStepSensorHookAsync sleep"""
+        emr_describe_step.return_value = mock_response
+        trigger = EmrStepSensorTrigger(
+            job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=5
+        )
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
+
+        # TriggerEvent was not returned
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_response",
+        [
+            _emr_describe_step_response("CANCELLED"),
+            _emr_describe_step_response("FAILED"),
+            _emr_describe_step_response("INTERRUPTED"),
+        ],
+    )
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
+    async def test_emr_step_sensor_trigger_run_fail(self, emr_describe_step, mock_response):
+        """Assert run method of EmrStepSensorHookAsync fail"""
+        emr_describe_step.return_value = mock_response
+        trigger = EmrStepSensorTrigger(
+            job_flow_id=JOB_FLOW_ID,
+            step_id=STEP_ID,
+            aws_conn_id=AWS_CONN_ID,
+            poke_interval=5,
+            failed_states=["CANCELLED", "FAILED", "INTERRUPTED"],
+        )
+        generator = trigger.run()
+        actual = await generator.asend(None)
+        expected = TriggerEvent(
+            {"status": "error", "message": "for reason Unknown Error with message  and log file "}
+        )
+        assert actual == expected
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrStepSensorHookAsync.emr_describe_step")
+    async def test_emr_step_sensor_trigger_run_failure(self, emr_describe_step):
+        """Test EmrStepSensorTrigger run method fail"""
+        emr_describe_step.side_effect = Exception("Test exception")
+        trigger = EmrStepSensorTrigger(
+            job_flow_id=JOB_FLOW_ID, step_id=STEP_ID, aws_conn_id=AWS_CONN_ID, poke_interval=60
+        )
+        generator = trigger.run()
+        actual = await generator.asend(None)
+        assert TriggerEvent({"status": "error", "message": "Test exception"}) == actual
+
+
+class TestEmrJobFlowSensorTrigger:
+    TRIGGER = EmrJobFlowSensorTrigger(
         job_flow_id=JOB_ID,
         aws_conn_id=AWS_CONN_ID,
         target_states=TARGET_STATE,
         failed_states=FAILED_STATE,
         poll_interval=POLL_INTERVAL,
     )
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrJobFlowSensorTrigger"
-    assert kwargs == {
-        "job_flow_id": JOB_ID,
-        "aws_conn_id": AWS_CONN_ID,
-        "target_states": TARGET_STATE,
-        "failed_states": FAILED_STATE,
-        "poll_interval": POLL_INTERVAL,
-    }
 
+    def test_emr_job_flow_sensors_trigger_serialization(self):
+        """
+        Asserts that the TaskStateTrigger correctly serializes its arguments
+        and classpath.
+        """
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    [
-        "PENDING",
-        "SUBMITTED",
-        "RUNNING",
-        None,
-    ],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
-async def test_emr_job_flow_sensors_trigger_run(mock_cluster_detail, mock_status):
-    """Test if the task is run is in trigger successfully."""
-    MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
-    mock_cluster_detail.return_value = MOCK_RESPONSE
-    trigger = EmrJobFlowSensorTrigger(
-        job_flow_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        target_states=TARGET_STATE,
-        failed_states=FAILED_STATE,
-        poll_interval=POLL_INTERVAL,
+        classpath, kwargs = self.TRIGGER.serialize()
+        assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrJobFlowSensorTrigger"
+        assert kwargs == {
+            "job_flow_id": JOB_ID,
+            "aws_conn_id": AWS_CONN_ID,
+            "target_states": TARGET_STATE,
+            "failed_states": FAILED_STATE,
+            "poll_interval": POLL_INTERVAL,
+        }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        [
+            "PENDING",
+            "SUBMITTED",
+            "RUNNING",
+            None,
+        ],
     )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
+    async def test_emr_job_flow_sensors_trigger_run(self, mock_cluster_detail, mock_status):
+        """Test if the task is run is in trigger successfully."""
+        MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
+        mock_cluster_detail.return_value = MOCK_RESPONSE
 
-    # TriggerEvent was not returned
-    assert task.done() is False
-    asyncio.get_event_loop().stop()
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
+        await asyncio.sleep(0.5)
 
+        # TriggerEvent was not returned
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    ["TERMINATED"],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
-async def test_emr_job_flow_sensors_trigger_completed(mock_cluster_detail, mock_status):
-    """Test if the task is run is in trigger failure status."""
-    MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
-    mock_cluster_detail.return_value = MOCK_RESPONSE
-    trigger = EmrJobFlowSensorTrigger(
-        job_flow_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        target_states=TARGET_STATE,
-        failed_states=FAILED_STATE,
-        poll_interval=POLL_INTERVAL,
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        ["TERMINATED"],
     )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    msg = f"Job flow currently {mock_status}"
-    assert TriggerEvent({"status": "success", "message": msg}) == actual
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
+    async def test_emr_job_flow_sensors_trigger_completed(self, mock_cluster_detail, mock_status):
+        """Test if the task is run is in trigger failure status."""
+        MOCK_RESPONSE["Cluster"]["Status"]["State"] = mock_status
+        mock_cluster_detail.return_value = MOCK_RESPONSE
+
+        generator = self.TRIGGER.run()
+        actual = await generator.asend(None)
+        msg = f"Job flow currently {mock_status}"
+        assert TriggerEvent({"status": "success", "message": msg}) == actual
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
+    async def test_emr_job_flow_sensors_trigger_failure_status(self, mock_cluster_detail):
+        """Test if the task is run is in trigger failure status."""
+        MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
+        mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
+
+        generator = self.TRIGGER.run()
+        actual = await generator.asend(None)
+        final_message = "EMR job failed"
+        error_code = "1111"
+        msg = f"for code: {error_code} with message Failed"
+        final_message += " " + msg
+        assert TriggerEvent({"status": "error", "message": final_message}) == actual
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
+    async def test_emr_job_flow_sensors_trigger_exception(self, mock_cluster_detail):
+        """Test emr job flow sensors trigger with exception"""
+        mock_cluster_detail.side_effect = Exception("Test exception")
+
+        task = [i async for i in self.TRIGGER.run()]
+        assert len(task) == 1
+        assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
-async def test_emr_job_flow_sensors_trigger_failure_status(mock_cluster_detail):
-    """Test if the task is run is in trigger failure status."""
-    MOCK_FAILED_RESPONSE["Cluster"]["Status"]["State"] = "TERMINATED_WITH_ERRORS"
-    mock_cluster_detail.return_value = MOCK_FAILED_RESPONSE
-    trigger = EmrJobFlowSensorTrigger(
-        job_flow_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        target_states=TARGET_STATE,
-        failed_states=FAILED_STATE,
-        poll_interval=POLL_INTERVAL,
-    )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    final_message = "EMR job failed"
-    error_code = "1111"
-    msg = f"for code: {error_code} with message Failed"
-    final_message += " " + msg
-    assert TriggerEvent({"status": "error", "message": final_message}) == actual
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrJobFlowHookAsync.get_cluster_details")
-async def test_emr_job_flow_sensors_trigger_exception(mock_cluster_detail):
-    """Test emr job flow sensors trigger with exception"""
-    mock_cluster_detail.side_effect = Exception("Test exception")
-    trigger = EmrJobFlowSensorTrigger(
-        job_flow_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        target_states=TARGET_STATE,
-        failed_states=FAILED_STATE,
-        poll_interval=POLL_INTERVAL,
-    )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
-
-
-def test_emr_container_operator_trigger_serialization():
-    """Asserts EmrContainerOperatorTrigger correctly serializes its arguments and classpath."""
-    trigger = EmrContainerOperatorTrigger(
+class TestEmrContainerOperatorTrigger:
+    TRIGGER = EmrContainerOperatorTrigger(
         virtual_cluster_id=VIRTUAL_CLUSTER_ID,
         name=NAME,
         job_id=JOB_ID,
@@ -429,130 +373,101 @@ def test_emr_container_operator_trigger_serialization():
         max_tries=MAX_RETRIES,
         poll_interval=POLL_INTERVAL,
     )
-    classpath, kwargs = trigger.serialize()
-    assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger"
-    assert kwargs == {
-        "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
-        "job_id": JOB_ID,
-        "aws_conn_id": AWS_CONN_ID,
-        "poll_interval": POLL_INTERVAL,
-        "max_tries": MAX_RETRIES,
-    }
 
+    def test_emr_container_operator_trigger_serialization(self):
+        """Asserts EmrContainerOperatorTrigger correctly serializes its arguments and classpath."""
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    [
-        "PENDING",
-        "SUBMITTED",
-        "RUNNING",
-        None,
-    ],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_operator_trigger_run(mock_query_status, mock_status):
-    """Assert EmrContainerOperatorTrigger task run in trigger and sleep if state is intermediate"""
-    mock_query_status.return_value = mock_status
-    trigger = EmrContainerOperatorTrigger(
-        name=NAME,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+        classpath, kwargs = self.TRIGGER.serialize()
+        assert classpath == "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger"
+        assert kwargs == {
+            "virtual_cluster_id": VIRTUAL_CLUSTER_ID,
+            "job_id": JOB_ID,
+            "aws_conn_id": AWS_CONN_ID,
+            "poll_interval": POLL_INTERVAL,
+            "max_tries": MAX_RETRIES,
+        }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        [
+            "PENDING",
+            "SUBMITTED",
+            "RUNNING",
+            None,
+        ],
     )
-    task = asyncio.create_task(trigger.run().__anext__())
-    await asyncio.sleep(0.5)
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_operator_trigger_run(self, mock_query_status, mock_status):
+        """Assert EmrContainerOperatorTrigger task run in trigger and sleep if state is intermediate"""
+        mock_query_status.return_value = mock_status
 
-    # TriggerEvent was not returned
-    assert task.done() is False
-    asyncio.get_event_loop().stop()
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
+        await asyncio.sleep(0.5)
 
+        # TriggerEvent was not returned
+        assert task.done() is False
+        asyncio.get_event_loop().stop()
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_operator_trigger_completed(mock_query_status):
-    """Assert EmrContainerOperatorTrigger succeed."""
-    mock_query_status.return_value = "COMPLETED"
-    trigger = EmrContainerOperatorTrigger(
-        name=NAME,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_operator_trigger_completed(self, mock_query_status):
+        """Assert EmrContainerOperatorTrigger succeed."""
+        mock_query_status.return_value = "COMPLETED"
+
+        generator = self.TRIGGER.run()
+        actual = await generator.asend(None)
+        msg = "EMR Containers Operator success COMPLETED"
+        assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) == actual
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_status",
+        ["FAILED", "CANCELLED", "CANCEL_PENDING"],
     )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    msg = "EMR Containers Operator success COMPLETED"
-    assert TriggerEvent({"status": "success", "message": msg, "job_id": JOB_ID}) == actual
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_job_failure_reason")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_operator_trigger_failure_status(
+        self, mock_query_status, mock_failure_reason, mock_status
+    ):
+        """Assert EmrContainerOperatorTrigger failed."""
+        mock_query_status.return_value = mock_status
+        mock_failure_reason.return_value = None
 
+        generator = self.TRIGGER.run()
+        actual = await generator.asend(None)
+        message = (
+            f"EMR Containers job failed. Final state is {mock_status}. "
+            f"query_execution_id is {JOB_ID}. Error: {None}"
+        )
+        assert TriggerEvent({"status": "error", "message": message, "job_id": JOB_ID}) == actual
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_status",
-    ["FAILED", "CANCELLED", "CANCEL_PENDING"],
-)
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.get_job_failure_reason")
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_operator_trigger_failure_status(
-    mock_query_status, mock_failure_reason, mock_status
-):
-    """Assert EmrContainerOperatorTrigger failed."""
-    mock_query_status.return_value = mock_status
-    mock_failure_reason.return_value = None
-    trigger = EmrContainerOperatorTrigger(
-        name=NAME,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
-    )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    message = (
-        f"EMR Containers job failed. Final state is {mock_status}. "
-        f"query_execution_id is {JOB_ID}. Error: {None}"
-    )
-    assert TriggerEvent({"status": "error", "message": message, "job_id": JOB_ID}) == actual
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_operator_trigger_exception(self, mock_query_status):
+        """Assert EmrContainerOperatorTrigger raise exception"""
+        mock_query_status.side_effect = Exception("Test exception")
 
+        task = [i async for i in self.TRIGGER.run()]
+        assert len(task) == 1
+        assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_operator_trigger_exception(mock_query_status):
-    """Assert EmrContainerOperatorTrigger raise exception"""
-    mock_query_status.side_effect = Exception("Test exception")
-    trigger = EmrContainerOperatorTrigger(
-        name=NAME,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=POLL_INTERVAL,
-        max_tries=MAX_RETRIES,
-    )
-    task = [i async for i in trigger.run()]
-    assert len(task) == 1
-    assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
-
-
-@pytest.mark.asyncio
-@mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
-async def test_emr_container_operator_trigger_timeout(mock_query_status):
-    """Assert EmrContainerOperatorTrigger max_tries exceed"""
-    mock_query_status.return_value = "PENDING"
-    trigger = EmrContainerOperatorTrigger(
-        name=NAME,
-        virtual_cluster_id=VIRTUAL_CLUSTER_ID,
-        job_id=JOB_ID,
-        aws_conn_id=AWS_CONN_ID,
-        poll_interval=1,
-        max_tries=2,
-    )
-    generator = trigger.run()
-    actual = await generator.asend(None)
-    expected = TriggerEvent(
-        {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
-    )
-    assert actual == expected
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.hooks.emr.EmrContainerHookAsync.check_job_status")
+    async def test_emr_container_operator_trigger_timeout(self, mock_query_status):
+        """Assert EmrContainerOperatorTrigger max_tries exceed"""
+        mock_query_status.return_value = "PENDING"
+        trigger = EmrContainerOperatorTrigger(
+            name=NAME,
+            virtual_cluster_id=VIRTUAL_CLUSTER_ID,
+            job_id=JOB_ID,
+            aws_conn_id=AWS_CONN_ID,
+            poll_interval=1,
+            max_tries=2,
+        )
+        generator = trigger.run()
+        actual = await generator.asend(None)
+        expected = TriggerEvent(
+            {"status": "error", "message": "Timeout: Maximum retry limit exceed", "job_id": JOB_ID}
+        )
+        assert actual == expected

@@ -22,28 +22,20 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
 )
 
 
-@pytest.fixture
-def context():
-    """
-    Creates an empty context.
-    """
-    context = {}
-    yield context
-
-
-class TestS3KeySensorAsync(unittest.TestCase):
-    def test_bucket_name_none_and_bucket_key_as_relative_path(self):
+class TestS3KeySensorAsync:
+    def test_bucket_name_none_and_bucket_key_as_relative_path(self, context):
         """
         Test if exception is raised when bucket_name is None
         and bucket_key is provided with one of the two keys as relative path rather than s3:// url.
-        :return:
         """
         sensor = S3KeySensorAsync(task_id="s3_key_sensor", bucket_key="file_in_bucket")
         with pytest.raises(TaskDeferred):
             sensor.execute(context)
 
     @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_head_object")
-    def test_bucket_name_none_and_bucket_key_is_list_and_contain_relative_path(self, mock_head_object):
+    def test_bucket_name_none_and_bucket_key_is_list_and_contain_relative_path(
+        self, mock_head_object, context
+    ):
         """
         Test if exception is raised when bucket_name is None
         and bucket_key is provided with one of the two keys as relative path rather than s3:// url.
@@ -56,7 +48,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         with pytest.raises(TaskDeferred):
             sensor.execute(context)
 
-    def test_bucket_name_provided_and_bucket_key_is_s3_url(self):
+    def test_bucket_name_provided_and_bucket_key_is_s3_url(self, context):
         """
         Test if exception is raised when bucket_name is provided
         while bucket_key is provided as a full s3:// url.
@@ -89,7 +81,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         )
 
         with pytest.raises(TaskDeferred) as exc:
-            sensor.execute(context)
+            sensor.execute(context=None)
 
         assert isinstance(exc.value.trigger, S3KeyTrigger), "Trigger is not a S3KeyTrigger"
 
@@ -180,7 +172,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
             bucket_name=bucket,
         )
 
-        sensor.execute(context)
+        sensor.execute(context=None)
 
         mock_defer.assert_called()
         mock_defer.assert_called_once_with(
@@ -213,7 +205,7 @@ class TestS3KeySensorAsync(unittest.TestCase):
         assert op.bucket_name is None
 
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_with_wildcard_async(self, mock_hook):
+    def test_s3_key_sensor_with_wildcard_async(self, mock_hook, context):
         """
         Asserts that a task with wildcard=True is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
@@ -230,9 +222,9 @@ class TestS3KeySensorAsync(unittest.TestCase):
         assert isinstance(exc.value.trigger, S3KeyTrigger), "Trigger is not a S3KeyTrigger"
 
 
-class TestS3KeysUnchangedSensorAsync(unittest.TestCase):
+class TestS3KeysUnchangedSensorAsync:
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_keys_unchanged_sensor_check_trigger_instance(self, mock_hook):
+    def test_s3_keys_unchanged_sensor_check_trigger_instance(self, mock_hook, context):
         """
         Asserts that a task is deferred and an S3KeysUnchangedTrigger will be fired
         when the S3KeysUnchangedSensorAsync is executed.

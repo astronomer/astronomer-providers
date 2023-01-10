@@ -2,10 +2,11 @@
 import pytest
 
 
-def test_deprecated_warning():
-    with pytest.warns(expected_warning=DeprecationWarning):
-        from astronomer.providers.amazon.aws.hooks.base_aws_async import (
-            AwsBaseHookAsync,
-        )
+class TestAwsBaseHookAsync:
+    def test_deprecated_warning(self):
+        with pytest.warns(expected_warning=DeprecationWarning):
+            from astronomer.providers.amazon.aws.hooks.base_aws_async import (
+                AwsBaseHookAsync,
+            )
 
-        AwsBaseHookAsync(client_type="S3")
+            AwsBaseHookAsync(client_type="S3")
