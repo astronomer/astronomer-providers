@@ -102,6 +102,7 @@ def create_successful_response_mock(content):
     response.status_code = 200
     return response
 
+
 def create_post_side_effect(status_code=429):
     """create mock response for post side effect"""
     response = mock.MagicMock()
