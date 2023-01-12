@@ -16,8 +16,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeTrigger,
 )
 
-LONG_MOCK_PATH = "astronomer.providers.snowflake.operators.snowflake."
-LONG_MOCK_PATH += "SnowflakeOperatorAsync.get_db_hook"
+MODULE = "astronomer.providers.snowflake"
 TASK_ID = "snowflake_check"
 CONN_ID = "my_snowflake_conn"
 TEST_SQL = "select * from any;"
@@ -33,7 +32,7 @@ SINGLE_STMT = "select i from user_test order by i;"
 class TestSnowflakeOperatorAsync:
 
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
-    @mock.patch(LONG_MOCK_PATH)
+    @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
     def test_snowflake_execute_operator_async(self, mock_db_hook, mock_sql):
         """
         Asserts that a task is deferred and an SnowflakeTrigger will be fired
@@ -73,7 +72,7 @@ class TestSnowflakeOperatorAsync:
             ({"status": "success", "query_ids": ["uuid", "uuid"]}, False),
         ],
     )
-    @mock.patch(LONG_MOCK_PATH)
+    @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
     def test_snowflake_async_execute_complete(self, mock_conn, mock_event, mock_xcom_push):
         """Tests execute_complete assert with successful message"""
 
@@ -88,7 +87,7 @@ class TestSnowflakeOperatorAsync:
             operator.execute_complete(context=None, event=mock_event)
         mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
 
-    @mock.patch(LONG_MOCK_PATH)
+    @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
     def test_snowflake_sql_api_execute_complete_event_none(self, mock_conn):
         """Tests execute_complete assert with successful message"""
 
