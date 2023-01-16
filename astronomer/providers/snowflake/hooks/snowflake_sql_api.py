@@ -96,7 +96,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 passphrase = conn.password.strip().encode()
 
             self.private_key = serialization.load_pem_private_key(
-                private_key_pem, password=passphrase, backend=default_backend()
+                private_key_pem, password=passphrase, backend=default_backend()  # type: ignore[assignment]
             )
 
     def execute_query(
