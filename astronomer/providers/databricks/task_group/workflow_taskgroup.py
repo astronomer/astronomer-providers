@@ -9,23 +9,22 @@ from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.models.operator import BaseOperator
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
+from airflow.utils.context import Context
 from airflow.utils.task_group import TaskGroup
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
-from airflow.utils.context import Context
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
 
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
-
     def __init__(
-            self,
-            task_id,
-            databricks_conn_id,
-            job_cluster_json: dict[str, object] = None,
-            tasks_to_convert: list[BaseOperator] = None,
-            **kwargs,
+        self,
+        task_id,
+        databricks_conn_id,
+        job_cluster_json: dict[str, object] = None,
+        tasks_to_convert: list[BaseOperator] = None,
+        **kwargs,
     ):
         self.job_cluster_key = job_cluster_json["job_cluster_key"]
         self.job_cluster_json = job_cluster_json
@@ -52,7 +51,9 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
         }
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
-        api_client = ApiClient(user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host)
+        api_client = ApiClient(
+            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
+        )
         jobs_api = JobsApi(api_client=api_client)
         job_id = jobs_api.create_job(json=full_json)
         run_info = jobs_api.run_now(
@@ -93,9 +94,13 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             job_cluster_json=self.job_cluster_json,
         )
         for task in roots:
-            if not (hasattr(task, "convert_to_databricks_workflow_task")
-                    and callable(task.convert_to_databricks_workflow_task)):
-                raise AirflowException(f"Task {task.task_id} does not support conversion to databricks workflow task.")
+            if not (
+                hasattr(task, "convert_to_databricks_workflow_task")
+                and callable(task.convert_to_databricks_workflow_task)
+            ):
+                raise AirflowException(
+                    f"Task {task.task_id} does not support conversion to databricks workflow task."
+                )
             create_databricks_workflow_task.set_upstream(task_or_task_list=list(task.upstream_list))
 
         for task_id, task in self.children.items():

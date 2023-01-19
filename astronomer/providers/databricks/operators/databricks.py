@@ -1,20 +1,20 @@
+import time
 from typing import Any
 
 from airflow.exceptions import AirflowException
+from airflow.models.operator import BaseOperator
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
     DatabricksRunNowOperator,
     DatabricksSubmitRunOperator,
 )
+from databricks_cli.runs.api import RunsApi
+from databricks_cli.sdk.api_client import ApiClient
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
-from databricks_cli.runs.api import RunsApi
-from databricks_cli.sdk.api_client import ApiClient
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
-import time
-from airflow.models.operator import BaseOperator
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
@@ -380,7 +380,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
         )
 
     def execute_complete(
-            self, context: Context, event: Any = None
+        self, context: Context, event: Any = None
     ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
@@ -398,7 +398,7 @@ class DatabricksNotebookOperator(BaseOperator):
     template_fields = "databricks_run_id"
 
     def __init__(
-            self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs
+        self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs
     ):
         self.notebook_path = notebook_path
         self.source = source
@@ -413,7 +413,9 @@ class DatabricksNotebookOperator(BaseOperator):
 
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
-        api_client = ApiClient(user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host)
+        api_client = ApiClient(
+            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
+        )
         runs_api = RunsApi(api_client)
         current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[
             self.task_id.replace(".", "__")
