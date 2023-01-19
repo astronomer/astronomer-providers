@@ -10,6 +10,11 @@ from airflow.providers.databricks.operators.databricks import (
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
+from databricks_cli.runs.api import RunsApi
+from databricks_cli.sdk.api_client import ApiClient
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
+import time
+from airflow.models.operator import BaseOperator
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
@@ -375,7 +380,7 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
         )
 
     def execute_complete(
-        self, context: Context, event: Any = None
+            self, context: Context, event: Any = None
     ) -> None:  # pylint: disable=unused-argument
         """
         Callback for when the trigger fires - returns immediately.
@@ -387,3 +392,40 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
 
         self.log.info("%s completed successfully.", self.task_id)
         return None
+
+
+class DatabricksNotebookOperator(BaseOperator):
+    template_fields = "databricks_run_id"
+
+    def __init__(
+            self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs
+    ):
+        self.notebook_path = notebook_path
+        self.source = source
+        self.databricks_conn_id = databricks_conn_id
+        self.databricks_run_id = databricks_run_id
+        super().__init__(**kwargs)
+
+    def execute(self, context: Context) -> Any:
+
+        if not (hasattr(self.task_group, "is_databricks") and getattr(self.task_group, "is_databricks")):
+            raise AirflowException("Currently this operator only works in a databricks context")
+
+        hook = DatabricksHook(self.databricks_conn_id)
+        databricks_conn = hook.get_conn()
+        api_client = ApiClient(user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host)
+        runs_api = RunsApi(api_client)
+        current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[
+            self.task_id.replace(".", "__")
+        ]
+        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "PENDING":
+            print("job pending")
+            time.sleep(5)
+
+        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "RUNNING":
+            print("job running")
+            time.sleep(5)
+
+        final_state = runs_api.get_run(current_task["run_id"])["state"]
+        if final_state["result_state"] != "SUCCESS":
+            raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
