@@ -15,7 +15,7 @@ class SnowflakeAsyncExtractor(BaseExtractor):
     source_type = "SNOWFLAKE"
     default_schema = "PUBLIC"
 
-    def __init__(self, operator):  # type: ignore[no-untyped-def]
+    def __init__(self, operator):
         super().__init__(operator)
         self.conn: "Connection" = None
         self.hook = None

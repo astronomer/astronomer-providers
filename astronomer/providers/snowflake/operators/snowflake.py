@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import (
-        SQLExecuteQueryOperator as SnowflakeOperator,  # type: ignore[assignment] # noqa: E501 # pragma: no cover
+        SQLExecuteQueryOperator as SnowflakeOperator,  # type: ignore[assignment]  # pragma: no cover
     )
 
 from astronomer.providers.snowflake.hooks.snowflake import (
@@ -180,9 +180,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Context, event: dict[str, str | list[str]] | None = None
-    ) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, str | list[str]] | None = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -351,9 +349,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(
-        self, context: Context, event: dict[str, str | list[str]] | None = None
-    ) -> None:
+    def execute_complete(self, context: Context, event: dict[str, str | list[str]] | None = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

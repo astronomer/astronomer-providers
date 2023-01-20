@@ -9,7 +9,7 @@ except ImportError:  # pragma: no cover
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
     from airflow.providers.common.sql.operators.sql import (
-        SQLExecuteQueryOperator as RedshiftSQLOperator,  # type: ignore[assignment] # noqa: E501  # pragma: no cover
+        SQLExecuteQueryOperator as RedshiftSQLOperator,  # type: ignore[assignment]  # pragma: no cover
     )
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
