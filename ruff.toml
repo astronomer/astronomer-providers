@@ -15,9 +15,7 @@ extend-select = [
 ]
 
 # Remove this in future
-ignore = ["C901", "ISC001"]
-
-extend-ignore = ["A002", "C901", "ISC001"]
+extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
 
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
