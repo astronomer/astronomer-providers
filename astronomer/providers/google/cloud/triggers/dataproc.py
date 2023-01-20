@@ -5,11 +5,11 @@ from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+
+from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 from google.api_core.exceptions import NotFound
 from google.cloud.dataproc_v1 import Cluster
 from google.cloud.dataproc_v1.types import JobStatus, clusters
-
-from astronomer.providers.google.cloud.hooks.dataproc import DataprocHookAsync
 
 
 class DataprocCreateClusterTrigger(BaseTrigger):

@@ -116,7 +116,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         conn_config = self._get_conn_params()
 
         req_id = uuid.uuid4()
-        url = "https://{0}.snowflakecomputing.com/api/v2/statements".format(conn_config["account"])
+        url = "https://{}.snowflakecomputing.com/api/v2/statements".format(conn_config["account"])
         params: Optional[Union[Dict[str, Any]]] = {"requestId": str(req_id), "async": True, "pageSize": 10}
         headers = self.get_headers()
         if bindings is None:
@@ -185,7 +185,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         req_id = uuid.uuid4()
         header = self.get_headers()
         params = {"requestId": str(req_id), "page": 2, "pageSize": 10}
-        url = "https://{0}.snowflakecomputing.com/api/v2/statements/{1}".format(
+        url = "https://{}.snowflakecomputing.com/api/v2/statements/{}".format(
             conn_config["account"], query_id
         )
         return header, params, url

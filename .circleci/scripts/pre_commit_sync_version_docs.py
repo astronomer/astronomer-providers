@@ -13,7 +13,7 @@ version_in_setup_cfg = config["metadata"]["version"]
 
 conf_py_path = repo_dir / "docs" / "conf.py"
 
-with open(conf_py_path, "r") as f:
+with open(conf_py_path) as f:
     conf_py_contents = f.read()
 
 new_text = re.sub(

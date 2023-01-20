@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, List
 
 from airflow.exceptions import AirflowException
 
@@ -12,7 +12,9 @@ except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 3.3.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as SnowflakeOperator  # type: ignore[assignment] # noqa: E501 # pragma: no cover
+    from airflow.providers.common.sql.operators.sql import (
+        SQLExecuteQueryOperator as SnowflakeOperator,  # type: ignore[assignment] # noqa: E501 # pragma: no cover
+    )
 
 from astronomer.providers.snowflake.hooks.snowflake import (
     SnowflakeHookAsync,
@@ -91,12 +93,12 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self,
         *,
         snowflake_conn_id: str = "snowflake_default",
-        warehouse: Optional[str] = None,
-        database: Optional[str] = None,
-        role: Optional[str] = None,
-        schema: Optional[str] = None,
-        authenticator: Optional[str] = None,
-        session_parameters: Optional[Dict[str, Any]] = None,
+        warehouse: str | None = None,
+        database: str | None = None,
+        role: str | None = None,
+        schema: str | None = None,
+        authenticator: str | None = None,
+        session_parameters: dict[str, Any] | None = None,
         poll_interval: int = 5,
         handler: Callable[[Any], Any] = fetch_all_snowflake_handler,
         return_last: bool = True,
@@ -179,7 +181,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         )
 
     def execute_complete(
-        self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, context: Context, event: dict[str, str | list[str]] | None = None
     ) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
@@ -189,7 +191,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL in execute_complete: %s", self.sql)
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["type"], event["message"])
+                msg = "{}: {}".format(event["type"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
@@ -271,17 +273,17 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self,
         *,
         snowflake_conn_id: str = "snowflake_default",
-        warehouse: Optional[str] = None,
-        database: Optional[str] = None,
-        role: Optional[str] = None,
-        schema: Optional[str] = None,
-        authenticator: Optional[str] = None,
-        session_parameters: Optional[Dict[str, Any]] = None,
+        warehouse: str | None = None,
+        database: str | None = None,
+        role: str | None = None,
+        schema: str | None = None,
+        authenticator: str | None = None,
+        session_parameters: dict[str, Any] | None = None,
         poll_interval: int = 5,
         statement_count: int = 0,
         token_life_time: timedelta = LIFETIME,
         token_renewal_delta: timedelta = RENEWAL_DELTA,
-        bindings: Optional[Dict[str, Any]] = None,
+        bindings: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         self.warehouse = warehouse
@@ -350,7 +352,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         )
 
     def execute_complete(
-        self, context: Context, event: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, context: Context, event: dict[str, str | list[str]] | None = None
     ) -> None:
         """
         Callback for when the trigger fires - returns immediately.
@@ -359,7 +361,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["status"], event["message"])
+                msg = "{}: {}".format(event["status"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = SnowflakeSqlApiHookAsync(snowflake_conn_id=self.snowflake_conn_id)

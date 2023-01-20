@@ -32,10 +32,10 @@ class SnowflakeAsyncExtractor(BaseExtractor):
         job_facets = {"sql": SqlJobFacet(self.operator.sql)}
 
         # (1) Parse sql statement to obtain input / output tables.
-        stm = "Sending SQL to parser {0}".format(self.operator.sql)
+        stm = "Sending SQL to parser {}".format(self.operator.sql)
         self.log.debug(stm)
         sql_meta: Optional[SqlMeta] = parse(self.operator.sql, self.default_schema)
-        metadata = "Got meta {0}".format(sql_meta)
+        metadata = "Got meta {}".format(sql_meta)
         self.log.debug(metadata)
 
         if not sql_meta:
