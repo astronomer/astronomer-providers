@@ -5,7 +5,6 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 110
 target-version = ['py39']
-fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -82,4 +81,4 @@ max-complexity = 6
 combine-as-imports = true
 known-first-party = ["astronomer", "tests"]
 # TODO: for now, https://github.com/charliermarsh/ruff/issues/1817
-known-third-party = ["google"]
+known-third-party = ["google", "gcloud"]
