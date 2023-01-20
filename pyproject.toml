@@ -74,10 +74,10 @@ extend-exclude = [
 target-version = "py37"
 fix = true
 
-[mccabe]
+[tool.ruff.mccabe]
 max-complexity = 6
 
-[isort]
+[tool.ruff.isort]
 combine-as-imports = true
 known-first-party = ["astronomer", "tests"]
 # TODO: for now, https://github.com/charliermarsh/ruff/issues/1817
