@@ -7,8 +7,9 @@ from airflow import AirflowException
 from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
+    SnowflakeSensorTrigger,
     SnowflakeSqlApiTrigger,
-    SnowflakeTrigger, SnowflakeSensorTrigger,
+    SnowflakeTrigger,
 )
 
 TASK_ID = "snowflake_check"
@@ -273,19 +274,19 @@ class TestSnowflakeSensorTrigger:
         "result,return_value,response",
         [
             (
-                    True,
-                    {"status": "success", "message": "Found expected markers."},
-                    TriggerEvent({"status": "success", "message": "Found expected markers."}),
+                True,
+                {"status": "success", "message": "Found expected markers."},
+                TriggerEvent({"status": "success", "message": "Found expected markers."}),
             ),
             (
-                    None,
-                    False,
-                    TriggerEvent(
-                        {
-                            "status": "error",
-                            "message": f"{TASK_ID} " f"failed with terminal state: False",
-                        }
-                    ),
+                None,
+                False,
+                TriggerEvent(
+                    {
+                        "status": "error",
+                        "message": f"{TASK_ID} " f"failed with terminal state: False",
+                    }
+                ),
             ),
         ],
     )
@@ -296,14 +297,14 @@ class TestSnowflakeSensorTrigger:
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.check_query_output")
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
     async def test_snowflake_sensor_trigger_running(
-            self,
-            mock_hook,
-            mock_check_query_output,
-            mock_get_query_status,
-            mock_validate_result,
-            result,
-            return_value,
-            response,
+        self,
+        mock_hook,
+        mock_check_query_output,
+        mock_get_query_status,
+        mock_validate_result,
+        result,
+        return_value,
+        response,
     ):
         """Tests that the SnowflakeTrigger in"""
         mock_get_query_status.return_value = return_value
@@ -414,7 +415,7 @@ class TestSnowflakeSensorTrigger:
         """Tests the SnowflakeSensorTrigger does not fire if there is an exception."""
         trigger = SnowflakeSensorTrigger(
             task_id=TASK_ID,
-            sql=TEST_SQL,
+            sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
             parameters=None,
@@ -433,7 +434,7 @@ class TestSnowflakeSensorTrigger:
         mock_result = []
         trigger = SnowflakeSensorTrigger(
             task_id=TASK_ID,
-            sql=TEST_SQL,
+            sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
             fail_on_empty=True,
@@ -449,7 +450,7 @@ class TestSnowflakeSensorTrigger:
 
         trigger_2 = SnowflakeSensorTrigger(
             task_id=TASK_ID,
-            sql=TEST_SQL,
+            sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
             fail_on_empty=False,

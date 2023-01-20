@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import closing, contextmanager
 from io import StringIO
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Generator
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
@@ -58,9 +58,9 @@ class SnowflakeHookAsync(SnowflakeHook):
         self,
         sql: str | list[str],
         autocommit: bool = True,
-        parameters: Optional[dict] = None,  # type: ignore[type-arg]
+        parameters: dict | None = None,  # type: ignore[type-arg]
         return_dictionaries: bool = False,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Runs a SQL command or a list of SQL commands.
 
@@ -100,8 +100,8 @@ class SnowflakeHookAsync(SnowflakeHook):
 
     def check_query_output(
         self,
-        query_ids: List[str],
-        handler: Optional[Callable[[Any], Any]] = None,
+        query_ids: list[str],
+        handler: Callable[[Any], Any] | None = None,
         return_last: bool = True,
         return_dictionaries: bool = False,
     ) -> Any | list[Any] | None:
