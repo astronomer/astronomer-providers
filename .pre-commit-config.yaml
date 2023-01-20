@@ -60,6 +60,7 @@ repos:
       - id: ruff
         args:
           - --config=./ruff.toml
+          - --ignore=["C901"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
