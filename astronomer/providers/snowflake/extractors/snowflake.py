@@ -17,7 +17,7 @@ class SnowflakeAsyncExtractor(BaseExtractor):
 
     def __init__(self, operator: BaseOperator) -> None:
         super().__init__(operator)
-        self.conn: Connection = Connection()
+        self.conn: "Connection" = None
         self.hook = None
 
     @classmethod
