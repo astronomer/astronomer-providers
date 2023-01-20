@@ -23,6 +23,11 @@ extend-exclude = [
     "docs/source/conf.py",
 ]
 
+# TODO: for now, https://github.com/charliermarsh/ruff/issues/1817
+known-third-party = [
+    "google",
+]
+
 target-version = "py37"
 fix = true
 
