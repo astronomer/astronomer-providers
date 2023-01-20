@@ -241,7 +241,9 @@ class TestSnowflakeSqlApiHookAsync:
         assert header == HEADERS
         assert url == "https://airflow.snowflakecomputing.com/api/v2/statements/uuid"
 
-    @mock.patch("astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.get_private_key")
+    @mock.patch(
+        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.get_private_key"
+    )
     @mock.patch(
         "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync._get_conn_params"
     )
@@ -278,7 +280,9 @@ class TestSnowflakeSqlApiHookAsync:
         test_key_file.write_bytes(private_key)
         return test_key_file
 
-    def test_get_private_key_should_support_private_auth_in_connection(self, encrypted_temporary_private_key: Path):
+    def test_get_private_key_should_support_private_auth_in_connection(
+        self, encrypted_temporary_private_key: Path
+    ):
         """Test get_private_key function with private_key_content in connection"""
         connection_kwargs: Any = {
             **BASE_CONNECTION_KWARGS,
@@ -327,7 +331,9 @@ class TestSnowflakeSqlApiHookAsync:
         ):
             hook.get_private_key()
 
-    def test_get_private_key_should_support_private_auth_with_encrypted_key(self, encrypted_temporary_private_key):
+    def test_get_private_key_should_support_private_auth_with_encrypted_key(
+        self, encrypted_temporary_private_key
+    ):
         """Test get_private_key method by supporting for private auth encrypted_key"""
         connection_kwargs = {
             **BASE_CONNECTION_KWARGS,
@@ -349,7 +355,8 @@ class TestSnowflakeSqlApiHookAsync:
             assert hook.private_key is not None
 
     def test_get_private_key_should_support_private_auth_with_unencrypted_key(
-        self, non_encrypted_temporary_private_key,
+        self,
+        non_encrypted_temporary_private_key,
     ):
         connection_kwargs = {
             **BASE_CONNECTION_KWARGS,

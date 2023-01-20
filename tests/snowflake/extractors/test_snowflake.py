@@ -28,7 +28,9 @@ DB_TABLE_COLUMNS = [
     DbColumn(name="CUSTOMER_EMAIL", type="varchar", ordinal_position=3),
     DbColumn(name="STARTS_ON", type="timestamp", ordinal_position=4),
 ]
-DB_TABLE_SCHEMA = DbTableSchema(schema_name=DB_SCHEMA_NAME, table_name=DB_TABLE_NAME, columns=DB_TABLE_COLUMNS)
+DB_TABLE_SCHEMA = DbTableSchema(
+    schema_name=DB_SCHEMA_NAME, table_name=DB_TABLE_NAME, columns=DB_TABLE_COLUMNS
+)
 
 DAG_ID = "email_discounts"
 
@@ -44,7 +46,6 @@ TASK = SnowflakeOperatorAsync(
 
 
 class TestSnowflakeAsyncExtractor:
-
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
     def test_extract(self, get_connection, mock_get_table_schemas):
@@ -79,7 +80,9 @@ class TestSnowflakeAsyncExtractor:
         assert task_metadata.inputs == expected_inputs
         assert task_metadata.outputs == []
 
-    @pytest.mark.skipif(parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test")  # noqa
+    @pytest.mark.skipif(
+        parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test"
+    )  # noqa
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
     def test_extract_query_id(self, get_connection, mock_get_table_schemas):
@@ -100,7 +103,9 @@ class TestSnowflakeAsyncExtractor:
 
         assert task_metadata.run_facets["externalQuery"].externalQueryId == "1500100900"
 
-    @pytest.mark.skipif(parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test")  # noqa
+    @pytest.mark.skipif(
+        parse_version(AIRFLOW_VERSION) < parse_version("2.0.0"), reason="Airflow 2+ test"
+    )  # noqa
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_table_schemas")  # noqa
     @mock.patch("astronomer.providers.snowflake.extractors.snowflake.get_connection")
     def test_extract_query_ids(self, get_connection, mock_get_table_schemas):

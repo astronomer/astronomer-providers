@@ -4,7 +4,6 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
-from tests.utils.airflow_util import create_context
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.operators.snowflake import (
@@ -15,6 +14,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSqlApiTrigger,
     SnowflakeTrigger,
 )
+from tests.utils.airflow_util import create_context
 
 MODULE = "astronomer.providers.snowflake"
 TASK_ID = "snowflake_check"
@@ -30,7 +30,6 @@ SINGLE_STMT = "select i from user_test order by i;"
 
 
 class TestSnowflakeOperatorAsync:
-
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
     def test_snowflake_execute_operator_async(self, mock_db_hook, mock_sql):
@@ -114,7 +113,9 @@ class TestSnowflakeOperatorAsync:
 
 class TestSnowflakeSqlApiOperatorAsync:
     @pytest.mark.parametrize("mock_sql, statement_count", [(SQL_MULTIPLE_STMTS, 4), (SINGLE_STMT, 1)])
-    @mock.patch("astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.execute_query")
+    @mock.patch(
+        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.execute_query"
+    )
     def test_snowflake_sql_api_execute_operator_async(self, mock_db_hook, mock_sql, statement_count):
         """
         Asserts that a task is deferred and an SnowflakeSqlApiTrigger will be fired
@@ -130,7 +131,9 @@ class TestSnowflakeSqlApiOperatorAsync:
         with pytest.raises(TaskDeferred) as exc:
             operator.execute(create_context(operator))
 
-        assert isinstance(exc.value.trigger, SnowflakeSqlApiTrigger), "Trigger is not a SnowflakeSqlApiTrigger"
+        assert isinstance(
+            exc.value.trigger, SnowflakeSqlApiTrigger
+        ), "Trigger is not a SnowflakeSqlApiTrigger"
 
     def test_snowflake_sql_api_execute_complete_failure(self):
         """Test SnowflakeSqlApiOperatorAsync raise AirflowException of error event"""
