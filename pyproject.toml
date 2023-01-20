@@ -67,11 +67,10 @@ extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
     "__pycache__",
-    "docs/source/conf.py",
+    "docs/conf.py",
 ]
 
 target-version = "py37"
-fix = true
 
 
 [mccabe]
