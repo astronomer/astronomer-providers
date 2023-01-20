@@ -4,10 +4,10 @@ from aiohttp import ClientSession as ClientSession
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from gcloud.aio.bigquery import Job, Table
+from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 from requests import Session
 
 from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookAsync
-from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
 try:
     from airflow.providers.google.cloud.utils.bigquery import bq_cast

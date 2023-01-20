@@ -15,6 +15,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
+from google.api_core.exceptions import AlreadyExists
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -22,7 +23,6 @@ from astronomer.providers.google.cloud.triggers.dataproc import (
     DataProcSubmitTrigger,
 )
 from astronomer.providers.utils.typing_compat import Context
-from google.api_core.exceptions import AlreadyExists
 
 
 class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):

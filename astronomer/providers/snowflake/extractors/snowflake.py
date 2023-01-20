@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from airflow.models import BaseOperator, Connection
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
@@ -19,24 +19,24 @@ class SnowflakeAsyncExtractor(BaseExtractor):
 
     def __init__(self, operator: BaseOperator) -> None:
         super().__init__(operator)
-        self.conn: Optional[Connection] = None
+        self.conn: Connection | None = None
         self.hook = None
 
     @classmethod
-    def get_operator_classnames(cls) -> List[str]:
+    def get_operator_classnames(cls) -> list[str]:
         """Returns the list of operators this extractors works on."""
         return ["SnowflakeOperatorAsync"]
 
     def extract(self) -> TaskMetadata:
         """Extract the Metadata from the task returns the TaskMetadata class instance type"""
         task_name = f"{self.operator.dag_id}.{self.operator.task_id}"
-        run_facets: Dict = {}  # type: ignore[type-arg]
+        run_facets: dict = {}  # type: ignore[type-arg]
         job_facets = {"sql": SqlJobFacet(self.operator.sql)}
 
         # (1) Parse sql statement to obtain input / output tables.
         stm = "Sending SQL to parser {}".format(self.operator.sql)
         self.log.debug(stm)
-        sql_meta: Optional[SqlMeta] = parse(self.operator.sql, self.default_schema)
+        sql_meta: SqlMeta | None = parse(self.operator.sql, self.default_schema)
         metadata = "Got meta {}".format(sql_meta)
         self.log.debug(metadata)
 
@@ -91,7 +91,7 @@ class SnowflakeAsyncExtractor(BaseExtractor):
             job_facets=job_facets,
         )
 
-    def _information_schema_query(self, tables: List[DbTableMeta]) -> str:
+    def _information_schema_query(self, tables: list[DbTableMeta]) -> str:
         """
         Forms the information execution query with table names and Returns SQL query
 
@@ -153,7 +153,7 @@ class SnowflakeAsyncExtractor(BaseExtractor):
         """Return the connection uri from the connection details by passing the connection id"""
         return get_connection_uri(self.conn)
 
-    def _get_query_ids(self) -> List[str]:
+    def _get_query_ids(self) -> list[str]:
         """Returns the list of query ids from the class"""
         if hasattr(self.operator, "query_ids"):
             return self.operator.query_ids  # type: ignore[no-any-return]

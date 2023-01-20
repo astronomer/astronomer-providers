@@ -5,6 +5,7 @@ import attr
 from airflow.exceptions import AirflowException
 from airflow.models.taskinstance import TaskInstance
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from google.cloud.bigquery import Client
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
 from openlineage.airflow.utils import get_job_name
 from openlineage.client.facet import SqlJobFacet
@@ -18,7 +19,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryIntervalCheckOperatorAsync,
     BigQueryValueCheckOperatorAsync,
 )
-from google.cloud.bigquery import Client
 
 
 @attr.s
