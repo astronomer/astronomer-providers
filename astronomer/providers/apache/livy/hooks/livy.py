@@ -374,7 +374,7 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         :rtype: bool
         """
         if size and not (isinstance(size, str) and re.match(r"^\d+[kmgt]b?$", size, re.IGNORECASE)):
-            raise ValueError(f"Invalid java size format for string'{size}'")
+            raise ValueError("Invalid java size format for string {!r}".format(size))
         return True
 
     @staticmethod
