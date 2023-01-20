@@ -10,10 +10,11 @@ from typing import Any
 from airflow.exceptions import AirflowException
 from airflow.models.operator import BaseOperator
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
-from astronomer.providers.utils.typing_compat import Context
 from airflow.utils.task_group import TaskGroup
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
+
+from astronomer.providers.utils.typing_compat import Context
 
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
