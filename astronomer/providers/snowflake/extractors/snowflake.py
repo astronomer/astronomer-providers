@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional
 
-from airflow.models import Connection
 from openlineage.airflow.extractors.base import BaseExtractor, TaskMetadata
 from openlineage.airflow.extractors.dbapi_utils import get_table_schemas
 from openlineage.airflow.utils import get_connection, get_connection_uri  # noqa
@@ -15,9 +14,9 @@ class SnowflakeAsyncExtractor(BaseExtractor):
     source_type = "SNOWFLAKE"
     default_schema = "PUBLIC"
 
-    def __init__(self, operator):
+    def __init__(self, operator) -> None:
         super().__init__(operator)
-        self.conn: "Connection" = None
+        self.conn = None
         self.hook = None
 
     @classmethod
