@@ -14,7 +14,7 @@ description_in_setup_cfg = config["metadata"]["description"]
 
 package_py = repo_dir / "astronomer/providers/package.py"
 
-with open(package_py, "r") as f:
+with open(package_py) as f:
     package_py_contents = f.read()
 
 new_text = re.sub(

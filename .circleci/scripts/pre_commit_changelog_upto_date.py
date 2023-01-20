@@ -15,7 +15,7 @@ version = Version(version_in_setup_cfg)
 
 changelog_path = repo_dir / "CHANGELOG.rst"
 
-with open(changelog_path, "r") as f:
+with open(changelog_path) as f:
     changelog_contents = f.read()
 
 if not version.is_devrelease and version_in_setup_cfg not in changelog_contents:

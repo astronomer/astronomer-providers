@@ -58,7 +58,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["status"], event["message"])
+                msg = "{}: {}".format(event["status"], event["message"])
                 raise AirflowException(msg)
             if "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)

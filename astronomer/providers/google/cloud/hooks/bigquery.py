@@ -11,11 +11,10 @@ from astronomer.providers.google.common.hooks.base_google import GoogleBaseHookA
 
 try:
     from airflow.providers.google.cloud.utils.bigquery import bq_cast
-except ImportError:
+except ImportError:  # pragma: no cover
     # For apache-airflow-providers-google < 8.5.0
-    from airflow.providers.google.cloud.hooks.bigquery import (  # type: ignore[no-redef,attr-defined] # noqa: E501 # pragma: no cover
-        _bq_cast as bq_cast,
-    )
+    from airflow.providers.google.cloud.hooks.bigquery import _bq_cast as bq_cast  # type: ignore[no-redef,attr-defined]
+
 
 BigQueryJob = Union[CopyJob, QueryJob, LoadJob, ExtractJob]
 
