@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Sequence
 
 from airflow import AirflowException
 from airflow.sensors.base import BaseSensorOperator
@@ -46,11 +46,11 @@ class SnowflakeSensorAsync(BaseSensorOperator):
         *,
         snowflake_conn_id: str,
         sql: str,
-        parameters: Optional[str] = None,
-        success: Optional[str] = None,
-        failure: Optional[str] = None,
+        parameters: str | None = None,
+        success: str | None = None,
+        failure: str | None = None,
         fail_on_empty: bool = False,
-        hook_params: Optional[Dict[str, Any]] = None,
+        hook_params: dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         self.snowflake_conn_id = snowflake_conn_id
@@ -84,7 +84,7 @@ class SnowflakeSensorAsync(BaseSensorOperator):
     def execute_complete(
         self,
         context: Context,
-        event: Optional[Dict[str, Union[str, List[str]]]] = None,
+        event: dict[str, str | list[str]] | None = None,
     ) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
