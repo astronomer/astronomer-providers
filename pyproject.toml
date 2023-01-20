@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 110
 target-version = ['py39']
+fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -62,7 +63,7 @@ extend-select = [
 ]
 
 # Remove this in future
-extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
+extend-ignore = ["A002", "C901", "E402", "E501", "I001", "ISC001", "ISC003", "UP030"]
 
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
@@ -71,7 +72,7 @@ extend-exclude = [
 ]
 
 target-version = "py37"
-
+fix = true
 
 [mccabe]
 max-complexity = 6
