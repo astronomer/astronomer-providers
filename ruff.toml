@@ -13,6 +13,10 @@ extend-select = [
     "A",    # flake8-builtins
     "UP",   # pyupgrade
 ]
+
+# Remove this in future
+ignore = ["C901", "ISC001"]
+
 extend-ignore = ["A002"]
 
 # Exclude a variety of commonly ignored directories.
