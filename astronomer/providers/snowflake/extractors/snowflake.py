@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional
 
 from airflow.models import BaseOperator, Connection
@@ -17,7 +19,7 @@ class SnowflakeAsyncExtractor(BaseExtractor):
 
     def __init__(self, operator: BaseOperator) -> None:
         super().__init__(operator)
-        self.conn: Connection = Connection()
+        self.conn: Connection | None = None
         self.hook = None
 
     @classmethod
