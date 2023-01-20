@@ -27,9 +27,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
-    async def get_job_instance(
-        self, project_id: Optional[str], job_id: Optional[str], session: ClientSession
-    ) -> Job:
+    async def get_job_instance(self, project_id: Optional[str], job_id: Optional[str], session: ClientSession) -> Job:
         """Get the specified job resource by job ID and project ID."""
         with await self.service_file_as_context() as f:
             return Job(job_id=job_id, project=project_id, service_file=f, session=cast(Session, session))
@@ -129,9 +127,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
             raise AirflowException(error_msg)
 
     @staticmethod
-    def _get_numeric_matches(
-        records: List[float], pass_value: Any, tolerance: Optional[float] = None
-    ) -> List[bool]:
+    def _get_numeric_matches(records: List[float], pass_value: Any, tolerance: Optional[float] = None) -> List[bool]:
         """
         A helper function to match numeric pass_value, tolerance with records value
 
@@ -140,9 +136,7 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         :param tolerance: Allowed tolerance for match to succeed
         """
         if tolerance:
-            return [
-                pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance) for record in records
-            ]
+            return [pass_value * (1 - tolerance) <= record <= pass_value * (1 + tolerance) for record in records]
 
         return [record == pass_value for record in records]
 
@@ -207,18 +201,11 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
                 ratios[metric] = None
                 test_results[metric] = ignore_zero
             else:
-                ratios[metric] = ratio_formulas[ratio_formula](
-                    float(current[metric]), float(reference[metric])
-                )
+                ratios[metric] = ratio_formulas[ratio_formula](float(current[metric]), float(reference[metric]))
                 test_results[metric] = float(ratios[metric]) < threshold
 
             self.log.info(
-                (
-                    "Current metric for %s: %s\n"
-                    "Past metric for %s: %s\n"
-                    "Ratio for %s: %s\n"
-                    "Threshold: %s\n"
-                ),
+                ("Current metric for %s: %s\n" "Past metric for %s: %s\n" "Ratio for %s: %s\n" "Threshold: %s\n"),
                 metric,
                 cur,
                 metric,
@@ -252,9 +239,7 @@ class BigQueryTableHookAsync(GoogleBaseHookAsync):
 
     sync_hook_class = BigQueryHook
 
-    async def get_table_client(
-        self, dataset: str, table_id: str, project_id: str, session: ClientSession
-    ) -> Table:
+    async def get_table_client(self, dataset: str, table_id: str, project_id: str, session: ClientSession) -> Table:
         """
         Returns a Google Big Query Table object.
 
