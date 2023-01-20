@@ -58,7 +58,7 @@ repos:
     rev: 'v0.0.219'
     hooks:
       - id: ruff
-        args: ["--config", "./ruff.toml"]
+        args: ["--config", "./pyproject.toml"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
