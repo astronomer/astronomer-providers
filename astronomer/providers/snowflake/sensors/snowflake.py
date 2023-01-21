@@ -78,7 +78,7 @@ class SnowflakeSensorAsync(BaseSensorOperator):
                 run_id=context["dag_run"].run_id,
                 snowflake_conn_id=self.snowflake_conn_id,
             ),
-            method_name=self.execute_complete,
+            method_name=self.execute_complete.__name__,
         )
 
     def execute_complete(
