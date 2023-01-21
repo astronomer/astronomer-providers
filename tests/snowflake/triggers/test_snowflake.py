@@ -237,24 +237,21 @@ class TestSnowflakeSensorTrigger:
     TEST_SQL = "select * from any;"
     TASK_ID = "snowflake_check"
 
-    def test_snowflake_sensor_trigger_serialization(self):
+    TRIGGER = SnowflakeSensorTrigger(
+        dag_id="unit_test_dag",
+        task_id=TASK_ID,
+        sql=TEST_SQL,
+        poke_interval=POLL_INTERVAL,
+        snowflake_conn_id="test_conn",
+        run_id=None,
+    )
+
+    def test_trigger_serialization(self):
         """
         Asserts that the SnowflakeSensorTrigger correctly serializes its arguments
         and classpath.
         """
-        trigger = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-        classpath, kwargs = trigger.serialize()
+        classpath, kwargs = self.TRIGGER.serialize()
         assert classpath == "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeSensorTrigger"
         assert kwargs == {
             "task_id": self.TASK_ID,
@@ -309,20 +306,8 @@ class TestSnowflakeSensorTrigger:
         """Tests that the SnowflakeTrigger in"""
         mock_get_query_status.return_value = return_value
         mock_validate_result.return_value = result
-        trigger = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
 
-        generator = trigger.run()
+        generator = self.TRIGGER.run()
         actual = await generator.asend(None)
         assert response == actual
 
@@ -332,20 +317,7 @@ class TestSnowflakeSensorTrigger:
         """Tests that the SnowflakeTrigger in success case"""
         mock_get_first.return_value = {"status": "success"}
 
-        trigger = SnowflakeSensorTrigger(
-            task_id=self.TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-
-        task = asyncio.create_task(trigger.run().__anext__())
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
 
         # TriggerEvent was returned
@@ -360,20 +332,7 @@ class TestSnowflakeSensorTrigger:
         """Tests the SnowflakeTrigger does not fire if it reaches a failed state."""
         mock_result.return_value = [[0]]
 
-        trigger = SnowflakeSensorTrigger(
-            task_id=self.TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-
-        task = asyncio.create_task(trigger.run().__anext__())
+        task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
 
         # TriggerEvent was returned
@@ -387,20 +346,7 @@ class TestSnowflakeSensorTrigger:
         """Tests the SnowflakeSensorTrigger does not fire if there is an exception."""
         mock_query_status.side_effect = Exception("Test exception")
 
-        trigger = SnowflakeSensorTrigger(
-            task_id=self.TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-
-        task = [i async for i in trigger.run()]
+        task = [i async for i in self.TRIGGER.run()]
         assert len(task) == 1
         assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
 
@@ -413,19 +359,8 @@ class TestSnowflakeSensorTrigger:
     )
     def test_snowflake_sensor_validate_results(self, mock_result, expected_status):
         """Tests the SnowflakeSensorTrigger does not fire if there is an exception."""
-        trigger = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            parameters=None,
-            success=None,
-            failure=None,
-            fail_on_empty=False,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-        result = trigger.validate_result(mock_result)
+
+        result = self.TRIGGER.validate_result(mock_result)
 
         assert result == expected_status
 
@@ -438,9 +373,6 @@ class TestSnowflakeSensorTrigger:
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
             fail_on_empty=True,
-            parameters=None,
-            success=None,
-            failure=None,
             dag_id="unit_test_dag",
             run_id=None,
         )
@@ -453,24 +385,18 @@ class TestSnowflakeSensorTrigger:
             sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
-            fail_on_empty=False,
-            parameters=None,
-            success=None,
-            failure=None,
             dag_id="unit_test_dag",
             run_id=None,
         )
 
         assert not trigger_2.validate_result(mock_result)
 
-    def test_sql_sensor_postgres_poke_failure_success(self):
+    def test_sql_sensor_snowflake_poke_failure_success(self):
         trigger = SnowflakeSensorTrigger(
             task_id=TASK_ID,
             sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
-            fail_on_empty=False,
-            parameters=None,
             dag_id="unit_test_dag",
             run_id=None,
             failure=lambda x: x in [1],
@@ -487,15 +413,13 @@ class TestSnowflakeSensorTrigger:
         mock_value = [[2]]
         assert trigger.validate_result(mock_value)
 
-    def test_sql_sensor_postgres_poke_invalid_failure(self):
+    def test_sql_sensor_snowflake_poke_invalid_failure(self):
         trigger = SnowflakeSensorTrigger(
+            dag_id="unit_test_dag",
             task_id=self.TASK_ID,
             sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
-            fail_on_empty=False,
-            parameters=None,
-            dag_id="unit_test_dag",
             run_id=None,
             failure=[1],
         )
@@ -505,14 +429,12 @@ class TestSnowflakeSensorTrigger:
             trigger.validate_result(mock_value)
         assert "self.failure is present, but not callable -> [1]" == str(ctx.value)
 
-    def test_sql_sensor_postgres_poke_invalid_success(self):
+    def test_sql_sensor_snowflake_poke_invalid_success(self):
         trigger = SnowflakeSensorTrigger(
             task_id=self.TASK_ID,
             sql=self.TEST_SQL,
             poke_interval=POLL_INTERVAL,
             snowflake_conn_id="test_conn",
-            fail_on_empty=False,
-            parameters=None,
             dag_id="unit_test_dag",
             run_id=None,
             success=[1],
