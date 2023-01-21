@@ -62,7 +62,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "context: {0}, error message: {1}".format(context, event["message"])
+                msg = "context: {}, error message: {}".format(context, event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)

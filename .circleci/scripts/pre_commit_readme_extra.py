@@ -34,7 +34,7 @@ for extra in sorted(all_extras):
 """
 
 
-with open(readme_path, "r") as readme_file:
+with open(readme_path) as readme_file:
     readme_contents = readme_file.read()
     new_readme_text = re.sub(
         r".. EXTRA_DOC_START([\s\S]*).. EXTRA_DOC_END",

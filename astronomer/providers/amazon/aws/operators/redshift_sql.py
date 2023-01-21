@@ -8,7 +8,9 @@ except ImportError:  # pragma: no cover
     # For apache-airflow-providers-amazon > 6.0.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator as RedshiftSQLOperator  # type: ignore[assignment] # noqa: E501  # pragma: no cover
+    from airflow.providers.common.sql.operators.sql import (  # type: ignore[assignment]
+        SQLExecuteQueryOperator as RedshiftSQLOperator,
+    )
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
@@ -74,7 +76,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}".format(event["message"])
+                msg = "{}".format(event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)

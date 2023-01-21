@@ -2,7 +2,7 @@ import base64
 import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional, Text
+from typing import Any, Optional
 
 # This class relies on the PyJWT module (https://pypi.org/project/PyJWT/).
 import jwt
@@ -21,7 +21,7 @@ SUBJECT = "sub"
 # prompts the user for the passphrase.
 
 
-class JWTGenerator(object):
+class JWTGenerator:
     """
     Creates and signs a JWT with the specified private key file, username, and account identifier.
     The JWTGenerator keeps the generated token and only regenerates the token if a specified period of time has passed.
@@ -44,8 +44,8 @@ class JWTGenerator(object):
 
     def __init__(
         self,
-        account: Text,
-        user: Text,
+        account: str,
+        user: str,
         private_key: Any,
         lifetime: timedelta = LIFETIME,
         renewal_delay: timedelta = RENEWAL_DELTA,
@@ -70,7 +70,7 @@ class JWTGenerator(object):
         self.renew_time = datetime.now(timezone.utc)
         self.token: Optional[str] = None
 
-    def prepare_account_name_for_jwt(self, raw_account: Text) -> Text:
+    def prepare_account_name_for_jwt(self, raw_account: str) -> str:
         """
         Prepare the account identifier for use in the JWT.
         For the JWT, the account identifier must not include the subdomain or any region or cloud provider information.
@@ -91,7 +91,7 @@ class JWTGenerator(object):
         # Use uppercase for the account identifier.
         return account.upper()
 
-    def get_token(self) -> Optional[Text]:
+    def get_token(self) -> Optional[str]:
         """
         Generates a new JWT. If a JWT has been already been generated earlier, return the previously
         generated token unless the specified renewal time has passed.
@@ -133,7 +133,7 @@ class JWTGenerator(object):
 
         return self.token
 
-    def calculate_public_key_fingerprint(self, private_key: Any) -> Text:
+    def calculate_public_key_fingerprint(self, private_key: Any) -> str:
         """
         Given a private key in PEM format, return the public key fingerprint.
 

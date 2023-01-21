@@ -16,18 +16,21 @@ private_key = key.private_bytes(
 )
 
 
-@pytest.mark.parametrize(
-    "account_name, expected_account_name",
-    [("test.us-east-1", "TEST"), ("test.global", "TEST.GLOBAL"), ("test", "TEST")],
-)
-def test_prepare_account_name_for_jwt(account_name, expected_account_name):
-    """Test prepare_account_name_for_jwt by passing the account identifier and get the proper account name in caps"""
-    jwt_generator = JWTGenerator(account_name, "test_user", private_key)
-    response = jwt_generator.prepare_account_name_for_jwt(account_name)
-    assert response == expected_account_name
+class TestJWTGenerator:
+    @pytest.mark.parametrize(
+        "account_name, expected_account_name",
+        [("test.us-east-1", "TEST"), ("test.global", "TEST.GLOBAL"), ("test", "TEST")],
+    )
+    def test_prepare_account_name_for_jwt(self, account_name, expected_account_name):
+        """
+        Test prepare_account_name_for_jwt by passing the account identifier and
+        get the proper account name in caps
+        """
+        jwt_generator = JWTGenerator(account_name, "test_user", private_key)
+        response = jwt_generator.prepare_account_name_for_jwt(account_name)
+        assert response == expected_account_name
 
-
-def test_calculate_public_key_fingerprint():
-    """Asserting get_token and calculate_public_key_fingerprint by passing key and generating token"""
-    jwt_generator = JWTGenerator("test.us-east-1", "test_user", key)
-    assert jwt_generator.get_token()
+    def test_calculate_public_key_fingerprint(self):
+        """Asserting get_token and calculate_public_key_fingerprint by passing key and generating token"""
+        jwt_generator = JWTGenerator("test.us-east-1", "test_user", key)
+        assert jwt_generator.get_token()

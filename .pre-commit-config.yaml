@@ -22,7 +22,7 @@ repos:
         args: ["--allow-missing-credentials"]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
       - id: python-no-log-warn
@@ -49,30 +49,16 @@ repos:
       - id: black
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.1
+    rev: 1.13.0
     hooks:
       - id: blacken-docs
         additional_dependencies: [black==22.3.0]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.11.4
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.219'
     hooks:
-      - id: isort
-        args: ["--profile=black"]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-builtins
-          - flake8-comprehensions
-          - flake8-colors
-          - flake8-rst-docstrings
-          - flake8-assertive
-          - flake8-typing-imports
-          - flake8-logging-format
-          - flake8-bugbear
+      - id: ruff
+        args: ["--config", "./pyproject.toml"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
@@ -84,7 +70,7 @@ repos:
         args: ["--write-changes", "--ignore-words-list", "asend"]
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.28.0
+    rev: v1.29.0
     hooks:
       - id: yamllint
         name: Check YAML files with yamllint
