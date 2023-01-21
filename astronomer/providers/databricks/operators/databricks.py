@@ -1,17 +1,12 @@
-import time
 from typing import Any
 
 from airflow.exceptions import AirflowException
-from airflow.models.operator import BaseOperator
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
     DatabricksRunNowOperator,
     DatabricksSubmitRunOperator,
 )
-from databricks_cli.runs.api import RunsApi
-from databricks_cli.sdk.api_client import ApiClient
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
@@ -392,95 +387,3 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
 
         self.log.info("%s completed successfully.", self.task_id)
         return None
-
-
-class DatabricksNotebookOperator(BaseOperator):
-    template_fields = "databricks_run_id"
-
-    def __init__(
-        self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs
-    ):
-        self.notebook_path = notebook_path
-        self.source = source
-        self.databricks_conn_id = databricks_conn_id
-        self.databricks_run_id = databricks_run_id
-        super().__init__(**kwargs)
-
-    def convert_to_databricks_workflow_task(self, relevant_upstreams, job_cluster_key):
-        """
-        Converts the operator to a Databricks workflow task. This is used to create a Databricks workflow
-        when the task is inside a workflow task group
-        :type relevant_upstreams: list[BaseOperator]
-        :type job_cluster_key: object
-        """
-        result = {
-            "task_key": self.task_id.replace(".", "__"),
-            "depends_on": list(
-                [
-                    {"task_key": t.replace(".", "__")}
-                    for t in self.upstream_task_ids
-                    if t in relevant_upstreams
-                ]
-            ),
-            "job_cluster_key": job_cluster_key,
-            "timeout_seconds": 0,
-            "email_notifications": {},
-            "notebook_task": {
-                "notebook_path": self.notebook_path,
-                "source": self.source,
-            },
-        }
-        return result
-
-    def monitor_databricks_job(self):
-        """
-        Monitor the Databricks job until it completes. Raises Airflow exception if the job fails
-        """
-        hook = DatabricksHook(self.databricks_conn_id)
-        databricks_conn = hook.get_conn()
-        api_client = ApiClient(
-            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
-        )
-        runs_api = RunsApi(api_client)
-        current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[
-            self.task_id.replace(".", "__")
-        ]
-        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "PENDING":
-            print("job pending")
-            time.sleep(5)
-
-        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "RUNNING":
-            print("job running")
-            time.sleep(5)
-
-        final_state = runs_api.get_run(current_task["run_id"])["state"]
-        if final_state["result_state"] != "SUCCESS":
-            raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
-
-    def launch_notebook_job(self, job_cluster_key):
-        """
-        Launches the notebook as a one-time job to Databricks
-        :type job_cluster_key: string
-        """
-        hook = DatabricksHook(self.databricks_conn_id)
-        databricks_conn = hook.get_conn()
-        api_client = ApiClient(
-            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
-        )
-        runs_api = RunsApi(api_client)
-        run = runs_api.submit_run(
-            {
-                "new_cluster": {"spark_version": "6.6.x-scala2.11", "node_type_id": "Standard_DS3_v2"},
-                "notebook_task": {
-                    "notebook_path": self.notebook_path,
-                    "base_parameters": {"source": self.source},
-                },
-            }
-        )
-        self.databricks_run_id = run["run_id"]
-        return run
-
-    def execute(self, context: Context) -> Any:
-        if not (hasattr(self.task_group, "is_databricks") and getattr(self.task_group, "is_databricks")):
-            self.launch_notebook_job(self.task_group.job_cluster_key)
-        self.monitor_databricks_job()
