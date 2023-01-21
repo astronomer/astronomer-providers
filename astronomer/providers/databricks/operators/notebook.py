@@ -38,13 +38,11 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         result = {
             "task_key": self.task_id.replace(".", "__"),
-            "depends_on": list(
-                [
+            "depends_on": [
                     {"task_key": t.replace(".", "__")}
                     for t in self.upstream_task_ids
                     if t in relevant_upstreams
-                ]
-            ),
+                ],
             "existing_cluster_id": job_cluster_key_map[self.job_cluster_key],
             "timeout_seconds": 0,
             "email_notifications": {},
