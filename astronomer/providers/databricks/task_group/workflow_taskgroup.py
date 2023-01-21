@@ -1,4 +1,4 @@
-from __future__ import annotations
+gfrom __future__ import annotations
 
 from logging import Logger
 from typing import TYPE_CHECKING
@@ -21,13 +21,13 @@ from astronomer.providers.utils.typing_compat import Context
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
     def __init__(
-            self,
-            task_id,
-            databricks_conn_id,
-            job_clusters: list[dict[str, object]] = None,
-            existing_clusters: list[str] = None,
-            tasks_to_convert: list[BaseOperator] = None,
-            **kwargs,
+        self,
+        task_id,
+        databricks_conn_id,
+        job_clusters: list[dict[str, object]] = None,
+        existing_clusters: list[str] = None,
+        tasks_to_convert: list[BaseOperator] = None,
+        **kwargs,
     ):
         self.existing_clusters = existing_clusters or []
         self.job_clusters = job_clusters or []
@@ -91,11 +91,11 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
 
 class CleanupDatabricksWorkflowOperator(BaseOperator):
     def __init__(
-            self,
-            task_id,
-            databricks_conn_id,
-            job_cluster_ids: list[str] = None,
-            **kwargs,
+        self,
+        task_id,
+        databricks_conn_id,
+        job_cluster_ids: list[str] = None,
+        **kwargs,
     ):
         self.job_cluster_ids = job_cluster_ids or []
         self.databricks_conn_id = databricks_conn_id
@@ -134,18 +134,20 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             job_clusters=self.job_clusters,
             existing_clusters=self.existing_clusters,
         )
-        cleanup_databricks_workflow_task: CleanupDatabricksWorkflowOperator = CleanupDatabricksWorkflowOperator(
-            dag=self.dag,
-            task_id="cleanup",
-            databricks_conn_id=self.databricks_conn_id,
-            job_cluster_ids=[c["cluster_id"] for c in self.job_clusters],
-            run_id=create_databricks_workflow_task.output,
+        cleanup_databricks_workflow_task: CleanupDatabricksWorkflowOperator = (
+            CleanupDatabricksWorkflowOperator(
+                dag=self.dag,
+                task_id="cleanup",
+                databricks_conn_id=self.databricks_conn_id,
+                job_cluster_ids=[c["cluster_id"] for c in self.job_clusters],
+                run_id=create_databricks_workflow_task.output,
+            )
         )
 
         for task in roots:
             if not (
-                    hasattr(task, "convert_to_databricks_workflow_task")
-                    and callable(task.convert_to_databricks_workflow_task)
+                hasattr(task, "convert_to_databricks_workflow_task")
+                and callable(task.convert_to_databricks_workflow_task)
             ):
                 raise AirflowException(
                     f"Task {task.task_id} does not support conversion to databricks workflow task."

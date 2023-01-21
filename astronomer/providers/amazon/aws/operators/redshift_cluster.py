@@ -80,7 +80,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["status"], event["message"])
+                msg = "{}: {}".format(event["status"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
@@ -144,7 +144,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["status"], event["message"])
+                msg = "{}: {}".format(event["status"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
@@ -210,7 +210,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{0}: {1}".format(event["status"], event["message"])
+                msg = "{}: {}".format(event["status"], event["message"])
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)

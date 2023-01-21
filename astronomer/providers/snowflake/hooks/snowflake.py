@@ -3,10 +3,11 @@ from __future__ import annotations
 import asyncio
 from contextlib import closing
 from io import StringIO
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async
+
 from snowflake.connector import DictCursor, ProgrammingError
 from snowflake.connector.constants import QueryStatus
 from snowflake.connector.cursor import SnowflakeCursor
@@ -15,12 +16,12 @@ from snowflake.connector.util_text import split_statements
 
 def fetch_all_snowflake_handler(
     cursor: SnowflakeCursor,
-) -> List[Tuple[Any, ...]] | List[Dict[str, Any]] | None:
+) -> list[tuple[Any, ...]] | list[dict[str, Any]] | None:
     """Handler for SnowflakeCursor to return results"""
     return cursor.fetchall()
 
 
-def fetch_one_snowflake_handler(cursor: SnowflakeCursor) -> Dict[str, Any] | Tuple[Any, ...] | None:
+def fetch_one_snowflake_handler(cursor: SnowflakeCursor) -> dict[str, Any] | tuple[Any, ...] | None:
     """Handler for SnowflakeCursor to return results"""
     return cursor.fetchone()
 
@@ -55,10 +56,10 @@ class SnowflakeHookAsync(SnowflakeHook):
 
     def run(  # type: ignore[override]
         self,
-        sql: Union[str, List[str]],
+        sql: str | list[str],
         autocommit: bool = True,
-        parameters: Optional[dict] = None,  # type: ignore[type-arg]
-    ) -> List[str]:
+        parameters: dict | None = None,  # type: ignore[type-arg]
+    ) -> list[str]:
         """
         Runs a SQL command or a list of SQL commands.
 
@@ -97,7 +98,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         return self.query_ids
 
     def check_query_output(
-        self, query_ids: List[str], handler: Optional[Callable[[Any], Any]] = None, return_last: bool = True
+        self, query_ids: list[str], handler: Callable[[Any], Any] | None = None, return_last: bool = True
     ) -> Any | list[Any] | None:
         """Once the query is finished fetch the result and log it in airflow"""
         with closing(self.get_conn()) as conn:
@@ -120,8 +121,8 @@ class SnowflakeHookAsync(SnowflakeHook):
             return results
 
     async def get_query_status(
-        self, query_ids: List[str], poll_interval: float
-    ) -> Dict[str, Union[str, List[str]]]:
+        self, query_ids: list[str], poll_interval: float
+    ) -> dict[str, str | list[str]]:
         """Get the Query status by query ids."""
         try:
             sfqid = []
@@ -153,7 +154,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                             return {"status": "error", "message": f"Unknown status: {status}"}
                     return {"status": "success", "query_ids": sfqid}
             except ProgrammingError as err:
-                error_message = "Programming Error: {0}".format(err)
+                error_message = "Programming Error: {}".format(err)
                 return {"status": "error", "message": error_message, "type": "ERROR"}
         except Exception as e:
             self.log.exception("Unexpected error when retrieving query status:")

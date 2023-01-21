@@ -52,7 +52,7 @@ def context():
 def test_azure_data_factory_run_pipeline_operator_async(mock_run_pipeline):
     """Assert that AzureDataFactoryRunPipelineOperatorAsync deferred"""
 
-    class CreateRunResponse(object):
+    class CreateRunResponse:
         pass
 
     CreateRunResponse.run_id = AZ_PIPELINE_RUN_ID

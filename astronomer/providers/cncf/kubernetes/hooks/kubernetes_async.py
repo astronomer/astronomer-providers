@@ -2,9 +2,7 @@
 import warnings
 from typing import Any
 
-from astronomer.providers.cncf.kubernetes.hooks.kubernetes import (
-    KubernetesHookAsync as KubernetesHook,
-)
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync as KubernetesHook
 
 # This requires to show warning in code editor
 warnings.warn(
