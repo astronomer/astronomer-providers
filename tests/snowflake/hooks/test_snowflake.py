@@ -46,6 +46,15 @@ class TestPytestSnowflakeHookAsync:
         assert hook.query_ids == expected_query_ids
         cur.close.assert_called()
 
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    def test_run_empty_query_list(self, mock_conn):
+        hook = SnowflakeHookAsync()
+        mock_conn.return_value = mock.MagicMock()
+        mock_params = {"mock_param": "mock_param"}
+        with pytest.raises(ValueError) as exc_info:
+            hook.run([], parameters=mock_params)
+        assert str(exc_info.value) == "List of SQL statements is empty"
+
     @pytest.mark.parametrize(
         "sql,expected_sql,expected_query_ids",
         [
