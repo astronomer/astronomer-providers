@@ -50,9 +50,8 @@ class TestPytestSnowflakeHookAsync:
     def test_run_empty_query_list(self, mock_conn):
         hook = SnowflakeHookAsync()
         mock_conn.return_value = mock.MagicMock()
-        mock_params = {"mock_param": "mock_param"}
         with pytest.raises(ValueError) as exc_info:
-            hook.run([], parameters=mock_params)
+            hook.run([], parameters={})
         assert str(exc_info.value) == "List of SQL statements is empty"
 
     @pytest.mark.parametrize(
