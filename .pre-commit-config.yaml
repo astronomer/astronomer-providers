@@ -30,7 +30,7 @@ repos:
       - id: python-check-blanket-type-ignore
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.1
+    rev: v1.4.1
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -55,7 +55,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.219'
+    rev: 'v0.0.230'
     hooks:
       - id: ruff
         args: ["--config", "./pyproject.toml"]
@@ -78,7 +78,7 @@ repos:
         types: [yaml]
 
   - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.2.3
+    rev: 6.3.0
     hooks:
       - id: pydocstyle
         name: Run pydocstyle
