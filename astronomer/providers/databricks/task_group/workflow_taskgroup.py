@@ -29,13 +29,13 @@ def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
     def __init__(
-            self,
-            task_id,
-            databricks_conn_id,
-            job_clusters: list[dict[str, object]] = None,
-            existing_clusters: list[str] = None,
-            tasks_to_convert: list[BaseOperator] = None,
-            **kwargs,
+        self,
+        task_id,
+        databricks_conn_id,
+        job_clusters: list[dict[str, object]] = None,
+        existing_clusters: list[str] = None,
+        tasks_to_convert: list[BaseOperator] = None,
+        **kwargs,
     ):
         self.existing_clusters = existing_clusters or []
         self.job_clusters = job_clusters or []
@@ -117,15 +117,15 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
     is_databricks = True
 
     def __init__(
-            self,
-            databricks_conn_id,
-            existing_clusters=None,
-            job_clusters=None,
-            jar_params: dict = None,
-            notebook_params: list = None,
-            python_params: list = None,
-            spark_submit_params: list = None,
-            **kwargs,
+        self,
+        databricks_conn_id,
+        existing_clusters=None,
+        job_clusters=None,
+        jar_params: dict = None,
+        notebook_params: list = None,
+        python_params: list = None,
+        spark_submit_params: list = None,
+        **kwargs,
     ):
         self.databricks_conn_id = databricks_conn_id
         self.existing_clusters = existing_clusters or []
@@ -148,8 +148,8 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
 
         for task in roots:
             if not (
-                    hasattr(task, "convert_to_databricks_workflow_task")
-                    and callable(task.convert_to_databricks_workflow_task)
+                hasattr(task, "convert_to_databricks_workflow_task")
+                and callable(task.convert_to_databricks_workflow_task)
             ):
                 raise AirflowException(
                     f"Task {task.task_id} does not support conversion to databricks workflow task."

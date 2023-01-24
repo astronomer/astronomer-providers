@@ -7,27 +7,36 @@ from astronomer.providers.databricks.task_group.workflow_taskgroup import (
     DatabricksWorkflowTaskGroup,
 )
 
-expected_workflow_json = {'email_notifications': {'no_alert_for_skipped_runs': False},
- 'format': 'MULTI_TASK',
- 'max_concurrent_runs': 1,
- 'name': 'unit_test_dag_test_workflow_test_workflow.launch',
- 'tasks': [{'depends_on': [],
-            'email_notifications': {},
-            'job_cluster_key': 'foo',
-            'notebook_task': {'base_parameters': {},
-                              'notebook_path': '/foo/bar',
-                              'source': 'WORKSPACE'},
-            'task_key': 'test_workflow__notebook_1',
-            'timeout_seconds': 0},
-           {'depends_on': [{'task_key': 'test_workflow__notebook_1'}],
-            'email_notifications': {},
-            'job_cluster_key': 'foo',
-            'notebook_task': {'base_parameters': {'foo': 'bar'},
-                              'notebook_path': '/foo/bar',
-                              'source': 'WORKSPACE'},
-            'task_key': 'test_workflow__notebook_2',
-            'timeout_seconds': 0}],
- 'timeout_seconds': 0}
+expected_workflow_json = {
+    "email_notifications": {"no_alert_for_skipped_runs": False},
+    "format": "MULTI_TASK",
+    "max_concurrent_runs": 1,
+    "name": "unit_test_dag_test_workflow_test_workflow.launch",
+    "tasks": [
+        {
+            "depends_on": [],
+            "email_notifications": {},
+            "job_cluster_key": "foo",
+            "notebook_task": {"base_parameters": {}, "notebook_path": "/foo/bar", "source": "WORKSPACE"},
+            "task_key": "test_workflow__notebook_1",
+            "timeout_seconds": 0,
+        },
+        {
+            "depends_on": [{"task_key": "test_workflow__notebook_1"}],
+            "email_notifications": {},
+            "job_cluster_key": "foo",
+            "notebook_task": {
+                "base_parameters": {"foo": "bar"},
+                "notebook_path": "/foo/bar",
+                "source": "WORKSPACE",
+            },
+            "task_key": "test_workflow__notebook_2",
+            "timeout_seconds": 0,
+        },
+    ],
+    "timeout_seconds": 0,
+}
+
 
 @mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.DatabricksHook")
 @mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.ApiClient")
@@ -56,7 +65,7 @@ def test_create_workflow_from_notebooks(mock_jobs_api, mock_api, mock_hook, dag)
                 job_cluster_key="foo",
                 notebook_params={
                     "foo": "bar",
-                }
+                },
             )
             notebook_1 >> notebook_2
 
