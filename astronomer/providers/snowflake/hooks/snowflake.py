@@ -71,13 +71,13 @@ class SnowflakeHookAsync(SnowflakeHook):
         """
         self.query_ids = []
         with closing(self.get_conn()) as conn:
-            self.set_autocommit(conn, autocommit)
-
             self.log.info("SQL statement to be executed: %s ", sql)
             if isinstance(sql, str):
                 split_statements_tuple = split_statements(StringIO(sql))
                 sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
-
+            if not sql:
+                raise ValueError("List of SQL statements is empty")
+            self.set_autocommit(conn, autocommit)
             self.log.debug("Executing %d statements against Snowflake DB", len(sql))
             with self._get_cursor(conn, return_dictionaries) as cur:
 
