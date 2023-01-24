@@ -29,7 +29,7 @@ class DatabricksNotebookOperator(BaseOperator):
         self.job_cluster_key = kwargs.pop("job_cluster_key", "")
         super().__init__(**kwargs)
 
-    def convert_to_databricks_workflow_task(self, relevant_upstreams, job_cluster_key_map):
+    def convert_to_databricks_workflow_task(self, relevant_upstreams):
         """
         Converts the operator to a Databricks workflow task. This is used to create a Databricks workflow
         when the task is inside a workflow task group
@@ -38,14 +38,12 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         result = {
             "task_key": self.task_id.replace(".", "__"),
-            "depends_on": list(
-                [
+            "depends_on": [
                     {"task_key": t.replace(".", "__")}
                     for t in self.upstream_task_ids
                     if t in relevant_upstreams
-                ]
-            ),
-            "existing_cluster_id": job_cluster_key_map[self.job_cluster_key],
+                ],
+            "job_cluster_key": self.job_cluster_key,
             "timeout_seconds": 0,
             "email_notifications": {},
             "notebook_task": {
