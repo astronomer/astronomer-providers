@@ -236,56 +236,56 @@ class BlobPropertiesAsyncIterator(BlobProperties):
             raise StopAsyncIteration
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "mock_blob_properties, expected_result",
-    [
-        (BlobProperties(), True),
-        ("raise_resource_not_found", False),
-    ],
-)
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
-async def test_check_for_blob(mock_service_client, mock_blob_properties, expected_result):
-    """Tests check_for_blob function with mocked response."""
-    hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
-    mock_blob_client = mock_service_client.return_value.get_blob_client
-
-    future = Future()
-    if mock_blob_properties == "raise_resource_not_found":
-        future.set_exception(ResourceNotFoundError())
-    else:
-        future.set_result(mock_blob_properties)
-    mock_blob_client.return_value.get_blob_properties.return_value = future
-    response = await hook.check_for_blob_async(
-        container_name=TEST_DATA_STORAGE_CONTAINER_NAME, blob_name=TEST_DATA_STORAGE_CONTAINER_NAME
+class TestWasbHookAsync:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "mock_blob_properties, expected_result",
+        [
+            (BlobProperties(), True),
+            ("raise_resource_not_found", False),
+        ],
     )
-    assert response == expected_result
+    @mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
+    async def test_check_for_blob(self, mock_service_client, mock_blob_properties, expected_result):
+        """Tests check_for_blob function with mocked response."""
+        hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
+        mock_blob_client = mock_service_client.return_value.get_blob_client
 
-    mock_blob_client.assert_called_once_with(
-        container=TEST_DATA_STORAGE_CONTAINER_NAME, blob=TEST_DATA_STORAGE_CONTAINER_NAME
+        future = Future()
+        if mock_blob_properties == "raise_resource_not_found":
+            future.set_exception(ResourceNotFoundError())
+        else:
+            future.set_result(mock_blob_properties)
+        mock_blob_client.return_value.get_blob_properties.return_value = future
+        response = await hook.check_for_blob_async(
+            container_name=TEST_DATA_STORAGE_CONTAINER_NAME, blob_name=TEST_DATA_STORAGE_CONTAINER_NAME
+        )
+        assert response == expected_result
+
+        mock_blob_client.assert_called_once_with(
+            container=TEST_DATA_STORAGE_CONTAINER_NAME, blob=TEST_DATA_STORAGE_CONTAINER_NAME
+        )
+        mock_blob_client.return_value.get_blob_properties.assert_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "blobs, expected_result",
+        [
+            (BlobPropertiesAsyncIterator(5), True),
+            (BlobPropertiesAsyncIterator(0), False),
+        ],
     )
-    mock_blob_client.return_value.get_blob_properties.assert_called()
+    @mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
+    async def test_check_for_prefix(self, mock_service_client, blobs, expected_result):
+        """Test check_for_prefix function with mocked response."""
+        hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
+        mock_container_client = mock_service_client.return_value.get_container_client
 
+        mock_container_client.return_value.walk_blobs.return_value = blobs
+        response = await hook.check_for_prefix_async(
+            container_name=TEST_DATA_STORAGE_CONTAINER_NAME, prefix=TEST_DATA_STORAGE_BLOB_PREFIX
+        )
+        assert response == expected_result
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "blobs, expected_result",
-    [
-        (BlobPropertiesAsyncIterator(5), True),
-        (BlobPropertiesAsyncIterator(0), False),
-    ],
-)
-@mock.patch("astronomer.providers.microsoft.azure.hooks.wasb.BlobServiceClient")
-async def test_check_for_prefix(mock_service_client, blobs, expected_result):
-    """Test check_for_prefix function with mocked response."""
-    hook = WasbHookAsync(wasb_conn_id=TEST_WASB_CONN_ID)
-    mock_container_client = mock_service_client.return_value.get_container_client
-
-    mock_container_client.return_value.walk_blobs.return_value = blobs
-    response = await hook.check_for_prefix_async(
-        container_name=TEST_DATA_STORAGE_CONTAINER_NAME, prefix=TEST_DATA_STORAGE_BLOB_PREFIX
-    )
-    assert response == expected_result
-
-    mock_container_client.assert_called_once_with(TEST_DATA_STORAGE_CONTAINER_NAME)
-    mock_container_client.return_value.walk_blobs.assert_called()
+        mock_container_client.assert_called_once_with(TEST_DATA_STORAGE_CONTAINER_NAME)
+        mock_container_client.return_value.walk_blobs.assert_called()
