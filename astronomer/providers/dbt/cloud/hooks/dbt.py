@@ -1,3 +1,4 @@
+import warnings
 from functools import wraps
 from inspect import signature
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, cast
@@ -58,7 +59,19 @@ class DbtCloudHookAsync(BaseHook):
         """Get Headers, tenants from the connection details"""
         headers: Dict[str, Any] = {}
         connection: Connection = await sync_to_async(self.get_connection)(self.dbt_cloud_conn_id)
-        tenant: str = connection.schema if connection.schema else "cloud"
+        if connection.schema:
+            warnings.warn(
+                "The `schema` parameter is deprecated and use within a dbt Cloud connection will be removed "
+                "in a future version. Please use `host` instead and specify the entire tenant domain name.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            # Prior to deprecation, the connection.schema value could _only_ modify the third-level
+            # domain value while '.getdbt.com' was always used as the remainder of the domain name.
+            tenant = f"{connection.schema}.getdbt.com"
+        else:
+            tenant = connection.host or "cloud.getdbt.com"
+
         provider_info = get_provider_info()
         package_name = provider_info["package-name"]
         version = provider_info["versions"]
@@ -74,19 +87,16 @@ class DbtCloudHookAsync(BaseHook):
         """
         Form URL from base url and endpoint url
 
-        :param tenant: The tenant name which is need to be replaced in base url.
+        :param tenant: The tenant domain name which is need to be replaced in base url.
         :param endpoint: Endpoint url to be requested.
         :param include_related: Optional. List of related fields to pull with the run.
             Valid values are "trigger", "job", "repository", and "environment".
         """
         data: Dict[str, Any] = {}
-        base_url = f"https://{tenant}.getdbt.com/api/v2/accounts/"
+        base_url = f"https://{tenant}/api/v2/accounts/"
         if include_related:
             data = {"include_related": include_related}
-        if base_url and not base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
-            url = base_url + "/" + endpoint
-        else:
-            url = (base_url or "") + (endpoint or "")
+        url = base_url + (endpoint or "")
         return url, data
 
     @provide_account_id
