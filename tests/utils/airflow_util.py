@@ -30,13 +30,14 @@ def get_conn() -> Connection:
 def create_context(task, dag=None):
     if dag is None:
         dag = DAG(dag_id="dag")
-    tzinfo = pendulum.timezone("Europe/Amsterdam")
-    execution_date = timezone.datetime(2016, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    tzinfo = pendulum.timezone("UTC")
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     dag_run = DagRun(
         dag_id=dag.dag_id,
         execution_date=execution_date,
         run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
     )
+
     task_instance = TaskInstance(task=task)
     task_instance.dag_run = dag_run
     task_instance.xcom_push = mock.Mock()
@@ -48,4 +49,7 @@ def create_context(task, dag=None):
         "task_instance": task_instance,
         "run_id": dag_run.run_id,
         "dag_run": dag_run,
+        "execution_date": execution_date,
+        "data_interval_end": execution_date,
+        "logical_date": execution_date,
     }
