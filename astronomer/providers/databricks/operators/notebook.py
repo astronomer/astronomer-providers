@@ -37,9 +37,11 @@ class DatabricksNotebookOperator(BaseOperator):
         :type job_cluster_key: dict
         """
         result = {
-            "task_key": self.task_id.replace(".", "__"),
+            "task_key": self.dag_id + "__" + self.task_id.replace(".", "__"),
             "depends_on": [
-                {"task_key": t.replace(".", "__")} for t in self.upstream_task_ids if t in relevant_upstreams
+                {"task_key": self.dag_id + "__" + t.replace(".", "__")}
+                for t in self.upstream_task_ids
+                if t in relevant_upstreams
             ],
             "job_cluster_key": self.job_cluster_key,
             "timeout_seconds": 0,
@@ -59,21 +61,26 @@ class DatabricksNotebookOperator(BaseOperator):
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
         api_client = ApiClient(
-            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
+            host=databricks_conn.host,
+            token=databricks_conn.password,
         )
         runs_api = RunsApi(api_client)
         current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[
-            self.task_id.replace(".", "__")
+            self.dag_id + "__" + self.task_id.replace(".", "__")
         ]
         while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "PENDING":
-            print("job pending")
+            print(f"task {self.task_id.replace('.', '__')} pending")
             time.sleep(5)
 
         while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "RUNNING":
-            print("job running")
+            print(f"task {self.task_id.replace('.', '__')} running")
             time.sleep(5)
 
         final_state = runs_api.get_run(current_task["run_id"])["state"]
+        if final_state.get("life_cycle_state", None) != "TERMINATED":
+            raise AirflowException(
+                f"Databricks job failed with state {final_state}. Message: {final_state['state_message']}"
+            )
         if final_state["result_state"] != "SUCCESS":
             raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
 

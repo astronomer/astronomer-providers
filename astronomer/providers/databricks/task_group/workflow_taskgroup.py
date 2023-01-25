@@ -46,10 +46,6 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
         self.databricks_run_id = None
         super().__init__(task_id=task_id, **kwargs)
 
-    @property
-    def job_name(self):
-        return self.dag_id + "_" + self.task_group.group_id + "_" + self.task_id
-
     def add_task(self, task: BaseOperator):
         """
         Adds a task to the list of tasks to convert to a workflow
@@ -68,39 +64,41 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
             for task in self.tasks_to_convert
         ]
         full_json = {
-            "name": self.job_name,
+            "name": self.databricks_job_name,
             "email_notifications": {"no_alert_for_skipped_runs": False},
             "timeout_seconds": 0,
             "max_concurrent_runs": 1,
             "tasks": task_json,
             "format": "MULTI_TASK",
+            "job_clusters": self.job_clusters,
         }
         return full_json
+
+    @property
+    def databricks_job_name(self):
+        return self.dag_id + "." + self.task_group.group_id
 
     def execute(self, context: Context) -> Any:
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
-        api_client = ApiClient(
-            user=databricks_conn.login, password=databricks_conn.password, host=databricks_conn.host
-        )
+        api_client = ApiClient(token=databricks_conn.password, host=databricks_conn.host)
         jobs_api = JobsApi(api_client)
-        job_name = self.dag_id + "_" + self.task_group.group_id + self.task_id
-        job = _get_job_by_name(job_name, jobs_api)
+        job = _get_job_by_name(self.databricks_job_name, jobs_api)
         job_id = job["job_id"] if job else None
         current_job_spec = self.create_workflow_json()
         if not isinstance(self.task_group, DatabricksWorkflowTaskGroup):
             raise AirflowException("Task group must be a DatabricksWorkflowTaskGroup")
         if job_id:
-            jobs_api.reset_job({"new_settings": current_job_spec}, job_id)
+            jobs_api.reset_job(json={"job_id": job_id, "new_settings": current_job_spec})
         else:
-            jobs_api.create_job(json=current_job_spec)
+            job_id = jobs_api.create_job(json=current_job_spec)["job_id"]
         run_id = jobs_api.run_now(
             job_id=job_id,
             jar_params=self.task_group.jar_params,
             notebook_params=self.task_group.notebook_params,
             python_params=self.task_group.python_params,
             spark_submit_params=self.task_group.spark_submit_params,
-        )
+        )["run_id"]
         runs_api = RunsApi(api_client)
 
         while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
