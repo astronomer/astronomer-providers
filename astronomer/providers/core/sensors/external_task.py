@@ -50,7 +50,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
             )
         else:
             self.defer(
-                timeout=self.execution_timeout,
+                timeout=datetime.timedelta(seconds=self.timeout),
                 trigger=TaskStateTrigger(
                     dag_id=self.external_dag_id,
                     task_id=self.external_task_id,
