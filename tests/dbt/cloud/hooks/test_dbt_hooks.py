@@ -140,11 +140,11 @@ class TestDbtCloudJobRunHookAsync:
     @pytest.mark.parametrize(
         "mock_endpoint, mock_param, expected_url, expected_param",
         [
-            ("1234/run/1234", None, "https://localhost.getdbt.com/api/v2/accounts/1234/run/1234", {}),
+            ("1234/run/1234", None, "https://localhost/api/v2/accounts/1234/run/1234", {}),
             (
                 "1234/run/1234",
                 ["test"],
-                "https://localhost.getdbt.com/api/v2/accounts/1234/run/1234",
+                "https://localhost/api/v2/accounts/1234/run/1234",
                 {"include_related": ["test"]},
             ),
         ],
@@ -158,10 +158,43 @@ class TestDbtCloudJobRunHookAsync:
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
-    async def test_get_headers_tenants_from_connection(self, mock_get_connection):
+    async def test_get_headers_tenants_from_connection_host(self, mock_get_connection):
         """
         Test get_headers_tenants_from_connection function to assert the
         headers response with mocked connection details"""
+        mock_get_connection.return_value = Connection(
+            conn_id=self.CONN_ID,
+            conn_type="test",
+            login=1234,
+            password="newT0k3n",
+            host="Tenant",
+            extra=json.dumps(
+                {
+                    "login": "test",
+                    "password": "newT0k3n",
+                    "schema": "Tenant",
+                }
+            ),
+        )
+        provider_info = get_provider_info()
+        package_name = provider_info["package-name"]
+        version = provider_info["versions"]
+        HEADERS["User-Agent"] = f"{package_name}-v{version}"
+        hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
+        headers, tenant = await hook.get_headers_tenants_from_connection()
+        assert headers == HEADERS
+        assert tenant == "Tenant"
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.dbt.cloud.hooks.dbt.DbtCloudHookAsync.get_connection")
+    async def test_get_headers_tenants_from_connection_schema(self, mock_get_connection):
+        """
+        Test get_headers_tenants_from_connection function to assert the
+        headers response with mocked connection details.
+
+        TODO: This test can be removed once using `schema` from a dbt Cloud connection has been removed from
+        the OSS dbt Cloud provider.
+        """
         mock_get_connection.return_value = Connection(
             conn_id=self.CONN_ID,
             conn_type="test",
@@ -181,6 +214,7 @@ class TestDbtCloudJobRunHookAsync:
         version = provider_info["versions"]
         HEADERS["User-Agent"] = f"{package_name}-v{version}"
         hook = DbtCloudHookAsync(dbt_cloud_conn_id=self.CONN_ID)
-        headers, tenant = await hook.get_headers_tenants_from_connection()
+        with pytest.warns(DeprecationWarning):
+            headers, tenant = await hook.get_headers_tenants_from_connection()
         assert headers == HEADERS
-        assert tenant == "Tenant"
+        assert tenant == "Tenant.getdbt.com"

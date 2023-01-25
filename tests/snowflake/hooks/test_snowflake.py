@@ -46,6 +46,46 @@ class TestPytestSnowflakeHookAsync:
         assert hook.query_ids == expected_query_ids
         cur.close.assert_called()
 
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    def test_run_empty_query_list(self, mock_conn):
+        hook = SnowflakeHookAsync()
+        mock_conn.return_value = mock.MagicMock()
+        with pytest.raises(ValueError) as exc_info:
+            hook.run([], parameters={})
+        assert str(exc_info.value) == "List of SQL statements is empty"
+
+    @pytest.mark.parametrize(
+        "sql,expected_sql,expected_query_ids",
+        [
+            ("select * from table", ["select * from table"], ["uuid"]),
+            (
+                "select * from table;select * from table2",
+                ["select * from table;", "select * from table2"],
+                ["uuid1", "uuid2"],
+            ),
+            (["select * from table;"], ["select * from table;"], ["uuid1"]),
+            (
+                ["select * from table;", "select * from table2;"],
+                ["select * from table;", "select * from table2;"],
+                ["uuid1", "uuid2"],
+            ),
+        ],
+    )
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    def test_run_storing_query_ids_manual_commit(self, mock_conn, sql, expected_sql, expected_query_ids):
+        """Test run method and store, return the query ids with manual commit"""
+        hook = SnowflakeHookAsync()
+        conn = mock_conn.return_value
+        cur = mock.MagicMock(rowcount=0)
+        conn.cursor.return_value = cur
+        type(cur).sfqid = mock.PropertyMock(side_effect=expected_query_ids)
+        mock_params = {"mock_param": "mock_param"}
+        hook.run(sql, parameters=mock_params, autocommit=False)
+
+        cur.execute_async.assert_has_calls([mock.call(query, mock_params) for query in expected_sql])
+        assert hook.query_ids == expected_query_ids
+        cur.close.assert_called()
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "query_ids, expected_state, expected_result",
@@ -166,6 +206,37 @@ class TestPytestSnowflakeHookAsync:
         conn.cursor.return_value = cur
         type(cur).sfqid = mock.PropertyMock(side_effect=expected_query_ids)
         hook.run(sql)
+
+        cur.execute_async.assert_has_calls([mock.call(query) for query in expected_sql])
+        assert hook.query_ids == expected_query_ids
+        cur.close.assert_called()
+
+    @pytest.mark.parametrize(
+        "sql,expected_sql,expected_query_ids",
+        [
+            ("select * from table", ["select * from table"], ["uuid"]),
+            (
+                "select * from table;select * from table2",
+                ["select * from table;", "select * from table2"],
+                ["uuid1", "uuid2"],
+            ),
+            (["select * from table;"], ["select * from table;"], ["uuid1"]),
+            (
+                ["select * from table;", "select * from table2;"],
+                ["select * from table;", "select * from table2;"],
+                ["uuid1", "uuid2"],
+            ),
+        ],
+    )
+    @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_conn")
+    def test_run_storing_query_ids_with_return_dict(self, mock_conn, sql, expected_sql, expected_query_ids):
+        """Test run method with return_dictionaries = True"""
+        hook = SnowflakeHookAsync()
+        conn = mock_conn.return_value
+        cur = mock.MagicMock(rowcount=0)
+        conn.cursor.return_value = cur
+        type(cur).sfqid = mock.PropertyMock(side_effect=expected_query_ids)
+        hook.run(sql, return_dictionaries=True)
 
         cur.execute_async.assert_has_calls([mock.call(query) for query in expected_sql])
         assert hook.query_ids == expected_query_ids
