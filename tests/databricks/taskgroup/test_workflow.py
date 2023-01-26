@@ -3,7 +3,7 @@ from unittest import mock
 from astronomer.providers.databricks.operators.notebook import (
     DatabricksNotebookOperator,
 )
-from astronomer.providers.databricks.task_group.workflow_taskgroup import (
+from astronomer.providers.databricks.task_group.workflow import (
     DatabricksWorkflowTaskGroup,
 )
 
@@ -38,9 +38,9 @@ expected_workflow_json = {
 }
 
 
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.DatabricksHook")
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.ApiClient")
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.JobsApi")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.DatabricksHook")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.ApiClient")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.JobsApi")
 def test_create_workflow_from_notebooks(mock_jobs_api, mock_api, mock_hook, dag):
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
@@ -84,10 +84,10 @@ def test_create_workflow_from_notebooks(mock_jobs_api, mock_api, mock_hook, dag)
     )
 
 
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.DatabricksHook")
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.ApiClient")
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup.JobsApi")
-@mock.patch("astronomer.providers.databricks.task_group.workflow_taskgroup._get_job_by_name")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.DatabricksHook")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.ApiClient")
+@mock.patch("astronomer.providers.databricks.task_group.workflow.JobsApi")
+@mock.patch("astronomer.providers.databricks.task_group.workflow._get_job_by_name")
 def test_create_workflow_from_notebooks_existing_job(mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag):
     mock_get_jobs.return_value = {"job_id": 1}
     with dag:
