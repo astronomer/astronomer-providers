@@ -1,3 +1,4 @@
+"""DatabricksWorkflowTaskGroup for submitting jobs to Databricks."""
 from __future__ import annotations
 
 from logging import Logger
@@ -27,13 +28,25 @@ def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
     return None
 
 
-class CreateDatabricksWorkflowOperator(BaseOperator):
+class _CreateDatabricksWorkflowOperator(BaseOperator):
+    """Creates a databricks workflow from a DatabricksWorkflowTaskGroup.
+
+    :param task_id: The task id of the operator
+    :param databricks_conn_id: The databricks connection id
+    :param job_clusters: A list of job clusters to use in the workflow
+    :param existing_clusters: A list of existing clusters to use in the workflow
+    :param max_concurrent_runs: The maximum number of concurrent runs
+    :param tasks_to_convert: A list of tasks to convert to a workflow. This list can also
+    be populated after initialization by calling add_task.
+    """
+
     def __init__(
         self,
         task_id,
         databricks_conn_id,
         job_clusters: list[dict[str, object]] = None,
         existing_clusters: list[str] = None,
+        max_concurrent_runs: int = 1,
         tasks_to_convert: list[BaseOperator] = None,
         **kwargs,
     ):
@@ -44,20 +57,22 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
         self.relevant_upstreams = [task_id]
         self.databricks_conn_id = databricks_conn_id
         self.databricks_run_id = None
+        self.max_concurrent_runs = max_concurrent_runs
         super().__init__(task_id=task_id, **kwargs)
 
     def add_task(self, task: BaseOperator):
         """
-        Adds a task to the list of tasks to convert to a workflow
+        Add a task to the list of tasks to convert to a workflow.
+
         :param task:
         :return:
         """
         self.tasks_to_convert.append(task)
 
     def create_workflow_json(self) -> dict[str, object]:
-        """
-        Creates a workflow json that can be submitted to databricks
-        :return:
+        """Create a workflow json that can be submitted to databricks.
+
+        :return: A workflow json
         """
         task_json = [
             task.convert_to_databricks_workflow_task(relevant_upstreams=self.relevant_upstreams)
@@ -67,10 +82,10 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
             "name": self.databricks_job_name,
             "email_notifications": {"no_alert_for_skipped_runs": False},
             "timeout_seconds": 0,
-            "max_concurrent_runs": 1,
             "tasks": task_json,
             "format": "MULTI_TASK",
             "job_clusters": self.job_clusters,
+            "max_concurrent_runs": self.max_concurrent_runs,
         }
         return full_json
 
@@ -108,8 +123,94 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
 
 
 class DatabricksWorkflowTaskGroup(TaskGroup):
+    """
+    A task group that takes a list of tasks and creates a databricks workflow.
+
+    The DatabricksWorkflowTaskGroup takes a list of tasks and creates a databricks workflow
+    based on the metadata produced by those tasks. For a task to be eligible for this
+    TaskGroup, it must contain the ``convert_to_databricks_workflow_task`` method. If any tasks
+    do not contain this method then the Taskgroup will raise an error at parse time.
+
+    Here is an example of what a DAG looks like with a DatabricksWorkflowTaskGroup:
+
+    .. code-block:: python
+
+        job_clusters = [
+            {
+                "job_cluster_key": "Shared_job_cluster",
+                "new_cluster": {
+                    "cluster_name": "",
+                    "spark_version": "11.3.x-scala2.12",
+                    "aws_attributes": {
+                        "first_on_demand": 1,
+                        "availability": "SPOT_WITH_FALLBACK",
+                        "zone_id": "us-east-2b",
+                        "spot_bid_price_percent": 100,
+                        "ebs_volume_count": 0,
+                    },
+                    "node_type_id": "i3.xlarge",
+                    "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
+                    "enable_elastic_disk": False,
+                    "data_security_mode": "LEGACY_SINGLE_USER_STANDARD",
+                    "runtime_engine": "STANDARD",
+                    "num_workers": 8,
+                },
+            }
+        ]
+
+    with dag:
+        task_group = DatabricksWorkflowTaskGroup(
+            group_id="test_workflow",
+            databricks_conn_id="databricks_conn",
+            job_clusters=job_cluster_spec,
+            notebook_params=[],
+        )
+        with task_group:
+            notebook_1 = DatabricksNotebookOperator(
+                task_id="notebook_1",
+                databricks_conn_id="databricks_conn",
+                notebook_path="/Users/<user>/Test workflow",
+                source="WORKSPACE",
+                job_cluster_key="Shared_job_cluster",
+            )
+            notebook_2 = DatabricksNotebookOperator(
+                task_id="notebook_2",
+                databricks_conn_id="databricks_conn",
+                notebook_path="/Users/<user>/Test workflow",
+                source="WORKSPACE",
+                job_cluster_key="Shared_job_cluster",
+                notebook_params={
+                    "foo": "bar",
+                },
+            )
+            notebook_1 >> notebook_2
+
+    With this example, Airflow will produce a job named <dag_name>.test_workflow that will
+    run notebook_1 and then notebook_2. The job will be created in the databricks workspace
+    if it does not already exist. If the job already exists, it will be updated to match
+    the workflow defined in the DAG.
+
+    To minimize update conflicts, we recommend that you keep parameters in the ``notebook_params`` of the
+    ``DatabricksWorkflowTaskGroup`` and not in the ``DatabricksNotebookOperator`` whenever possible. This is because tasks in the
+    ``DatabricksWorkflowTaskGroup`` are passed in at the job trigger time and do not modify the job definition.
+
+    :param group_id: The name of the task group
+    :param databricks_conn_id: The name of the databricks connection to use
+    :param job_clusters: A list of job clusters to use for this workflow.
+    :param notebook_params: A list of notebook parameters to pass to the workflow.These parameters will be passed to
+    all notebook tasks in the workflow.
+    :param jar_params: A list of jar parameters to pass to the workflow. These parameters will be passed to all jar tasks
+    in the workflow.
+    :param python_params: A list of python parameters to pass to the workflow. These parameters will be passed to all python tasks
+    in the workflow.
+    :param spark_submit_params: A list of spark submit parameters to pass to the workflow. These parameters will be passed to all spark submit tasks
+    :param max_concurrent_runs: The maximum number of concurrent runs for this workflow.
+
+    """
+
     @property
     def log(self) -> Logger:
+        """Returns logger."""
         pass
 
     is_databricks = True
@@ -123,8 +224,24 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         notebook_params: list = None,
         python_params: list = None,
         spark_submit_params: list = None,
+        max_concurrent_runs: int = 1,
         **kwargs,
     ):
+        """
+        Create a new DatabricksWorkflowTaskGroup.
+
+        :param group_id: The name of the task group
+        :param databricks_conn_id: The name of the databricks connection to use
+        :param job_clusters: A list of job clusters to use for this workflow.
+        :param notebook_params: A list of notebook parameters to pass to the workflow.These parameters will be passed to
+        all notebook tasks in the workflow.
+        :param jar_params: A list of jar parameters to pass to the workflow. These parameters will be passed to all jar tasks
+        in the workflow.
+        :param python_params: A list of python parameters to pass to the workflow. These parameters will be passed to all python tasks
+        in the workflow.
+        :param spark_submit_params: A list of spark submit parameters to pass to the workflow. These parameters will be passed to all spark submit tasks
+        :param max_concurrent_runs: The maximum number of concurrent runs for this workflow.
+        """
         self.databricks_conn_id = databricks_conn_id
         self.existing_clusters = existing_clusters or []
         self.job_clusters = job_clusters or []
@@ -132,16 +249,20 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         self.python_params = python_params or []
         self.spark_submit_params = spark_submit_params or []
         self.jar_params = jar_params or []
+        self.max_concurrent_runs = max_concurrent_runs
         super().__init__(**kwargs)
 
     def __exit__(self, _type, _value, _tb):
+        """Exit the context manager and add tasks to a single _CreateDatabricksWorkflowOperator."""
         roots = self.roots
-        create_databricks_workflow_task: CreateDatabricksWorkflowOperator = CreateDatabricksWorkflowOperator(
-            dag=self.dag,
-            task_id="launch",
-            databricks_conn_id=self.databricks_conn_id,
-            job_clusters=self.job_clusters,
-            existing_clusters=self.existing_clusters,
+        create_databricks_workflow_task: _CreateDatabricksWorkflowOperator = (
+            _CreateDatabricksWorkflowOperator(
+                dag=self.dag,
+                task_id="launch",
+                databricks_conn_id=self.databricks_conn_id,
+                job_clusters=self.job_clusters,
+                existing_clusters=self.existing_clusters,
+            )
         )
 
         for task in roots:

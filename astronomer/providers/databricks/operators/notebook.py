@@ -1,3 +1,4 @@
+"""DatabricksNotebookOperator for submitting notebook jobs to databricks."""
 from __future__ import annotations
 
 import time
@@ -13,7 +14,8 @@ from astronomer.providers.utils.typing_compat import Context
 
 
 class DatabricksNotebookOperator(BaseOperator):
-    """Launches a notebook to databricks using an Airflow operator.
+    """
+    Launches a notebook to databricks using an Airflow operator.
 
     The DatabricksNotebookOperator allows users to launch and monitor notebook deployments on Databricks as Aiflow tasks.
     It can be used as a part of a DatabricksWorkflowTaskGroup to take advantage of job clusters,
@@ -21,7 +23,7 @@ class DatabricksNotebookOperator(BaseOperator):
 
     Here is an example of running a notebook as a part of a workflow task group:
 
-    ..code-block: python
+    .. code-block: python
 
         with dag:
             task_group = DatabricksWorkflowTaskGroup(
@@ -49,6 +51,17 @@ class DatabricksNotebookOperator(BaseOperator):
                     },
                 )
                 notebook_1 >> notebook_2
+
+
+        :param notebook_path: the path to the notebook in Databricks
+        :param source: Optional location type of the notebook. When set to WORKSPACE, the notebook will be retrieved
+        from the local Databricks workspace. When set to GIT, the notebook will be retrieved from a Git repository
+        defined in git_source. If the value is empty, the task will use GIT if git_source is defined
+        and WORKSPACE otherwise. For more information please visit
+        https://docs.databricks.com/dev-tools/api/latest/jobs.html#operation/JobsCreate
+        :param databricks_conn_id: the connection id to use to connect to Databricks
+        :param notebook_params: the parameters to pass to the notebook
+        :param kwargs:
     """
 
     template_fields = "databricks_run_id"
