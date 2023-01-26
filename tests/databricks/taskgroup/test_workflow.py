@@ -10,19 +10,20 @@ from astronomer.providers.databricks.task_group.workflow import (
 expected_workflow_json = {
     "email_notifications": {"no_alert_for_skipped_runs": False},
     "format": "MULTI_TASK",
+    "job_clusters": [{"job_cluster_key": "foo"}],
     "max_concurrent_runs": 1,
-    "name": "unit_test_dag_test_workflow_test_workflow.launch",
+    "name": "unit_test_dag.test_workflow",
     "tasks": [
         {
             "depends_on": [],
             "email_notifications": {},
             "job_cluster_key": "foo",
             "notebook_task": {"base_parameters": {}, "notebook_path": "/foo/bar", "source": "WORKSPACE"},
-            "task_key": "test_workflow__notebook_1",
+            "task_key": "unit_test_dag__test_workflow__notebook_1",
             "timeout_seconds": 0,
         },
         {
-            "depends_on": [{"task_key": "test_workflow__notebook_1"}],
+            "depends_on": [{"task_key": "unit_test_dag__test_workflow__notebook_1"}],
             "email_notifications": {},
             "job_cluster_key": "foo",
             "notebook_task": {
@@ -30,7 +31,7 @@ expected_workflow_json = {
                 "notebook_path": "/foo/bar",
                 "source": "WORKSPACE",
             },
-            "task_key": "test_workflow__notebook_2",
+            "task_key": "unit_test_dag__test_workflow__notebook_2",
             "timeout_seconds": 0,
         },
     ],
@@ -41,7 +42,8 @@ expected_workflow_json = {
 @mock.patch("astronomer.providers.databricks.task_group.workflow.DatabricksHook")
 @mock.patch("astronomer.providers.databricks.task_group.workflow.ApiClient")
 @mock.patch("astronomer.providers.databricks.task_group.workflow.JobsApi")
-def test_create_workflow_from_notebooks(mock_jobs_api, mock_api, mock_hook, dag):
+def test_create_workflow_from_notebooks_with_create(mock_jobs_api, mock_api, mock_hook, dag):
+    mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
             group_id="test_workflow",
@@ -76,7 +78,7 @@ def test_create_workflow_from_notebooks(mock_jobs_api, mock_api, mock_hook, dag)
         json=expected_workflow_json,
     )
     mock_jobs_api.return_value.run_now.assert_called_once_with(
-        job_id=None,
+        job_id=1,
         jar_params=[],
         notebook_params=[{"notebook_path": "/foo/bar"}],
         python_params=[],
@@ -121,7 +123,7 @@ def test_create_workflow_from_notebooks_existing_job(mock_get_jobs, mock_jobs_ap
     assert task_group.children["test_workflow.launch"].create_workflow_json() == expected_workflow_json
     task_group.children["test_workflow.launch"].execute(context={})
     mock_jobs_api.return_value.reset_job.assert_called_once_with(
-        json=expected_workflow_json,
+        json={"job_id": 1, "new_settings": expected_workflow_json},
     )
     mock_jobs_api.return_value.run_now.assert_called_once_with(
         job_id=1,
