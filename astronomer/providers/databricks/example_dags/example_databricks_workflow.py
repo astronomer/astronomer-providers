@@ -5,10 +5,10 @@ from datetime import timedelta
 from airflow.models.dag import DAG
 from airflow.utils.timezone import datetime
 
-EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 from astronomer.providers.databricks.operators.notebook import DatabricksNotebookOperator
 from astronomer.providers.databricks.task_group.workflow import DatabricksWorkflowTaskGroup
 
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
