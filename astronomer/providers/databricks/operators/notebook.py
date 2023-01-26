@@ -13,6 +13,44 @@ from astronomer.providers.utils.typing_compat import Context
 
 
 class DatabricksNotebookOperator(BaseOperator):
+    """Launches a notebook to databricks using an Airflow operator.
+
+    The DatabricksNotebookOperator allows users to launch and monitor notebook deployments on Databricks as Aiflow tasks.
+    It can be used as a part of a DatabricksWorkflowTaskGroup to take advantage of job clusters,
+    which allows users to run their tasks on cheaper clusters that can be shared between tasks.
+
+    Here is an example of running a notebook as a part of a workflow task group:
+
+    ..code-block: python
+
+        with dag:
+            task_group = DatabricksWorkflowTaskGroup(
+                group_id="test_workflow",
+                databricks_conn_id="databricks_conn",
+                job_clusters=job_cluster_spec,
+                notebook_params=[],
+            )
+            with task_group:
+                notebook_1 = DatabricksNotebookOperator(
+                    task_id="notebook_1",
+                    databricks_conn_id="databricks_conn",
+                    notebook_path="/Users/daniel@astronomer.io/Test workflow",
+                    source="WORKSPACE",
+                    job_cluster_key="Shared_job_cluster",
+                )
+                notebook_2 = DatabricksNotebookOperator(
+                    task_id="notebook_2",
+                    databricks_conn_id="databricks_conn",
+                    notebook_path="/Users/daniel@astronomer.io/Test workflow",
+                    source="WORKSPACE",
+                    job_cluster_key="Shared_job_cluster",
+                    notebook_params={
+                        "foo": "bar",
+                    },
+                )
+                notebook_1 >> notebook_2
+    """
+
     template_fields = "databricks_run_id"
 
     def __init__(
@@ -23,6 +61,19 @@ class DatabricksNotebookOperator(BaseOperator):
         notebook_params: dict | None = None,
         **kwargs,
     ):
+        """
+        Create a Databricks notebook operator.
+
+        :param notebook_path: the path to the notebook in Databricks
+        :param source: Optional location type of the notebook. When set to WORKSPACE, the notebook will be retrieved
+        from the local Databricks workspace. When set to GIT, the notebook will be retrieved from a Git repository
+        defined in git_source. If the value is empty, the task will use GIT if git_source is defined
+        and WORKSPACE otherwise. For more information please visit
+        https://docs.databricks.com/dev-tools/api/latest/jobs.html#operation/JobsCreate
+        :param databricks_conn_id: the connection id to use to connect to Databricks
+        :param notebook_params: the parameters to pass to the notebook
+        :param kwargs:
+        """
         self.notebook_path = notebook_path
         self.source = source
         self.notebook_params = notebook_params or {}
@@ -33,8 +84,8 @@ class DatabricksNotebookOperator(BaseOperator):
 
     def convert_to_databricks_workflow_task(self, relevant_upstreams):
         """
-        Converts the operator to a Databricks workflow task. This is used to create a Databricks workflow
-        when the task is inside a workflow task group
+        Convert the operator to a Databricks workflow task that can be task in a workflow.
+
         :type relevant_upstreams: list[BaseOperator]
         :type job_cluster_key: dict
         """
@@ -57,9 +108,7 @@ class DatabricksNotebookOperator(BaseOperator):
         return result
 
     def monitor_databricks_job(self):
-        """
-        Monitor the Databricks job until it completes. Raises Airflow exception if the job fails
-        """
+        """Monitor the Databricks job until it completes. Raises Airflow exception if the job fails."""
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
         api_client = ApiClient(
@@ -87,10 +136,7 @@ class DatabricksNotebookOperator(BaseOperator):
             raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
 
     def launch_notebook_job(self):
-        """
-        Launches the notebook as a one-time job to Databricks
-        :type job_cluster_key: string
-        """
+        """Launch the notebook as a one-time job to Databricks."""
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
         api_client = ApiClient(
@@ -110,6 +156,16 @@ class DatabricksNotebookOperator(BaseOperator):
         return run
 
     def execute(self, context: Context) -> Any:
+        """
+        Execute the DataBricksNotebookOperator.
+
+        Executes the DataBricksNotebookOperator. If the task is inside of a
+        DatabricksWorkflowTaskGroup, it assumes the notebook is already launched
+        and proceeds to monitor the running notebook.
+
+        :param context:
+        :return:
+        """
         if not (hasattr(self.task_group, "is_databricks") and getattr(self.task_group, "is_databricks")):
             self.launch_notebook_job()
         self.monitor_databricks_job()
