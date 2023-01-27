@@ -48,6 +48,7 @@ dag = DAG(
 )
 
 with dag:
+    # [START howto_databricks_workflow_notebook]
     task_group = DatabricksWorkflowTaskGroup(
         group_id="test_workflow",
         databricks_conn_id=DATABRICKS_CONN_ID,
@@ -55,6 +56,7 @@ with dag:
         notebook_params=[],
     )
     with task_group:
+
         notebook_1 = DatabricksNotebookOperator(
             task_id="notebook_1",
             databricks_conn_id=DATABRICKS_CONN_ID,
@@ -73,6 +75,7 @@ with dag:
             },
         )
         notebook_1 >> notebook_2
+    # [END howto_databricks_workflow_notebook]
 
 if __name__ == "__main__":
     dag.test()
