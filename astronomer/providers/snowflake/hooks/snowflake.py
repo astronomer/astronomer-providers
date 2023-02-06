@@ -80,9 +80,7 @@ class SnowflakeHookAsync(SnowflakeHook):
             self.set_autocommit(conn, autocommit)
             self.log.debug("Executing %d statements against Snowflake DB", len(sql))
             with self._get_cursor(conn, return_dictionaries) as cur:
-
                 for sql_statement in sql:
-
                     self.log.info("Running statement: %s, parameters: %s", sql_statement, parameters)
                     if parameters:
                         cur.execute_async(sql_statement, parameters)

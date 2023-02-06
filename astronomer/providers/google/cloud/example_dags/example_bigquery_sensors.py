@@ -50,7 +50,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "bigquery", "sensors"],
 ) as dag:
-
     create_dataset = BigQueryCreateEmptyDatasetOperator(
         task_id="create-dataset", dataset_id=DATASET_NAME, project_id=PROJECT_ID
     )

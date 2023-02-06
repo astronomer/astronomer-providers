@@ -97,7 +97,6 @@ class TestGKEStartPodOperatorAsync:
         assert self.OPERATOR.execute_complete(context=create_context(self.OPERATOR), event={}) is None
 
     def test_execute_complete_fail(self, context):
-
         with pytest.raises(AirflowException):
             """assert that execute_complete_success raise exception when a task fail"""
             self.OPERATOR.execute_complete(

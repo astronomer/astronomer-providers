@@ -31,7 +31,6 @@ def provide_bucket_name_async(func: T) -> T:
         if "bucket_name" not in bound_args.arguments:
             self = args[0]
             if self.aws_conn_id:
-
                 connection = await sync_to_async(self.get_connection)(self.aws_conn_id)
                 if connection.schema:
                     bound_args.arguments["bucket_name"] = connection.schema

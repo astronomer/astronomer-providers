@@ -99,7 +99,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "Azure Pipeline"],
 ) as dag:
-
     create_data_storage_container = PythonOperator(
         task_id="create_data_storage_container",
         python_callable=create_azure_data_storage_container_callable,
