@@ -105,7 +105,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "redshift"],
 ) as dag:
-
     config = BashOperator(
         task_id="aws_config",
         bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
