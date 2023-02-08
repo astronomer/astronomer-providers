@@ -26,7 +26,6 @@ extra_doc = """
 
 
 for extra in sorted(all_extras):
-
     extra_doc += f"""
    * - ``{extra}``
      - ``pip install 'astronomer-providers[{extra}]'``

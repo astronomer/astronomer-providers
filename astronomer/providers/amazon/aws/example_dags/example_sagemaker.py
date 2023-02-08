@@ -222,7 +222,7 @@ def set_up(role_arn: str) -> None:
     ti.xcom_push(key="transform_job_name", value=transform_job_name)
 
 
-def delete_logs(task_instance: "TaskInstance") -> None:
+def delete_logs(task_instance: TaskInstance) -> None:
     """Delete the cloud watch log based on the log group name"""
     import boto3
     from botocore.exceptions import ClientError
@@ -250,7 +250,7 @@ def delete_logs(task_instance: "TaskInstance") -> None:
             raise e
 
 
-def get_aws_sagemaker_session(task_instance: "TaskInstance") -> None:
+def get_aws_sagemaker_session(task_instance: TaskInstance) -> None:
     """Get session details by using env variables credentials details"""
     import boto3
     from botocore.exceptions import ClientError
@@ -266,7 +266,7 @@ def get_aws_sagemaker_session(task_instance: "TaskInstance") -> None:
         raise e
 
 
-def setup_sagemaker_connection_details(task_instance: "TaskInstance") -> None:
+def setup_sagemaker_connection_details(task_instance: TaskInstance) -> None:
     """
     Checks if airflow connection exists, if yes then deletes it.
     Then, create a new aws_sagemaker_default connection.
@@ -306,7 +306,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "sagemaker", "async", "AWS"],
 ) as dag:
-
     get_aws_sagemaker_session_details = PythonOperator(
         task_id="get_aws_sagemaker_session_details", python_callable=get_aws_sagemaker_session
     )
