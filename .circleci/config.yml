@@ -118,7 +118,6 @@ jobs:
           name: Install Dependencies for sasl
           command: |
             sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
       - run:
@@ -150,7 +149,6 @@ jobs:
           name: Install Dependencies for sasl
           command: |
             sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
       - run:
@@ -188,7 +186,6 @@ jobs:
           name: Install Dependencies for sasl
           command: |
             sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
       - run:
