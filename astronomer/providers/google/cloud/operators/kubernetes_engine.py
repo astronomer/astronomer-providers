@@ -131,7 +131,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             method_name=self.trigger_reentry.__name__,
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any: # type: ignore[override]
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:  # type: ignore[override]
         """Callback for trigger once task reach terminal state"""
         self.trigger_reentry(context=context, event=event)
 
