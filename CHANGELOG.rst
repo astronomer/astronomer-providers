@@ -27,13 +27,13 @@ Enhancements
 
 - Support tags param in ``EmrContainerOperatorAsync``.
   (`#836 <https://github.com/astronomer/astronomer-providers/pull/836>`_)
-- Enhance dbt cloud connection to accept entire tenant domain name.
+- Enhance ``DbtCloudHookAsync`` to accept tenant domain name while making connection.
   (`#855 <https://github.com/astronomer/astronomer-providers/pull/855>`_)
 
 Bug Fixes
 """""""""
 
-- Make ``DataprocLink`` to be visible for the dataproc jobs in ``DataprocSubmitJobOperatorAsync``.
+- Ensure ``DataprocLink`` is visible for tracking the dataproc jobs status in ``DataprocSubmitJobOperatorAsync``.
   (`#835 <https://github.com/astronomer/astronomer-providers/pull/835>`_)
 - Handle ``SnowflakeHookAsync`` when a empty sql list is passed`.
   (`#838 <https://github.com/astronomer/astronomer-providers/pull/838>`_)
