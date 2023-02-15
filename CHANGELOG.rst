@@ -1,6 +1,46 @@
 Changelog
 =========
 
+1.15.0 (2023-02-15)
+-------------------
+
+New Operators
+"""""""""""""
+
+This release adds the following 1 new async sensor.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Sensor Class
+     - Import Path
+     - Example DAG
+
+   * - ``SnowflakeSensorAsync``
+     - .. code-block:: python
+
+        from astronomer.providers.snowflake.sensors.snowflake import SnowflakeSensorAsync
+     - `Example DAG <https://github.com/astronomer/astronomer-providers/blob/main/astronomer/providers/snowflake/example_dags/example_snowflake_sensor.py>`__
+
+Enhancements
+""""""""""""
+
+- Support tags param in ``EmrContainerOperatorAsync``.
+  (`#836 <https://github.com/astronomer/astronomer-providers/pull/836>`_)
+- Enhance dbt cloud connection to accept entire tenant domain name.
+  (`#855 <https://github.com/astronomer/astronomer-providers/pull/855>`_)
+
+Bug Fixes
+"""""""""
+
+- Make ``DataprocLink`` to be visible for the dataproc jobs in ``DataprocSubmitJobOperatorAsync``.
+  (`#835 <https://github.com/astronomer/astronomer-providers/pull/835>`_)
+- Handle ``SnowflakeHookAsync`` when a empty sql list is passed`.
+  (`#838 <https://github.com/astronomer/astronomer-providers/pull/838>`_)
+- Use ``timeout`` instead of ``execution_timeout`` with ``ExternalTaskSensor`` when sensing task_id`.
+  (`#858 <https://github.com/astronomer/astronomer-providers/pull/858>`_)
+
+
 1.14.0 (2023-01-09)
 -------------------
 
