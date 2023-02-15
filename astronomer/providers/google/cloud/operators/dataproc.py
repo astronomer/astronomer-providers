@@ -379,7 +379,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]] = None) -> Any:
+    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, Any]] = None) -> Any:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
