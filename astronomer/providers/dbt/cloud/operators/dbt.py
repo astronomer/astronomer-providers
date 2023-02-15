@@ -33,7 +33,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :return: The ID of the triggered dbt Cloud job run.
     """
 
-    def execute(self, context: "Context") -> None:  # type: ignore[override]
+    def execute(self, context: "Context") -> None:
         """Submits a job which generates a run_id and gets deferred"""
         if self.trigger_reason is None:
             self.trigger_reason = (
