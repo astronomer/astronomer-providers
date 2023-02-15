@@ -7,7 +7,7 @@ Changelog
 New Operators
 """""""""""""
 
-This release adds the following 1 new async sensor.
+This release adds a new async sensor ``SnowflakeSensorAsync``.
 
 .. list-table::
    :header-rows: 1
