@@ -1,7 +1,4 @@
-"""
-Example Airflow DAG which uses impersonation and delegate_to
-parameters for authenticating with Google BigQuery service
-"""
+"""Example Airflow DAG which uses impersonation parameters for authenticating with Google BigQuery service."""
 import os
 from datetime import datetime, timedelta
 
@@ -24,8 +21,6 @@ GCP_IMPERSONATION_CONN_ID = os.getenv("GCP_IMPERSONATION_CONN_ID", "google_imper
 LOCATION = os.getenv("GCP_LOCATION", "us")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 IMPERSONATION_CHAIN = os.getenv("IMPERSONATION_CHAIN", "")
-DELEGATE_TO = os.getenv("DELEGATE_TO", "")
-
 
 TABLE_1 = "table1"
 TABLE_2 = "table2"
@@ -115,7 +110,6 @@ with DAG(
         location=LOCATION,
         gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
         impersonation_chain=IMPERSONATION_CHAIN,
-        delegate_to=DELEGATE_TO,
     )
     # [END howto_operator_bigquery_select_job_async]
 
@@ -126,7 +120,6 @@ with DAG(
         use_legacy_sql=False,
         location=LOCATION,
         gcp_conn_id=GCP_IMPERSONATION_CONN_ID,
-        impersonation_chain=IMPERSONATION_CHAIN,
     )
     # [END howto_operator_bigquery_check_async]
 
