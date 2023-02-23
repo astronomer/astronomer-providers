@@ -35,7 +35,7 @@ class ImportCrawler(NodeVisitor):
 def get_all_provider_files() -> list[PosixPath]:
     """Retrieve all eligible provider module files."""
     provider_files = []
-    for (root, _, file_names) in os.walk(PROVIDERS_ROOT):
+    for root, _, file_names in os.walk(PROVIDERS_ROOT):
         for file_name in file_names:
             file_path = Path(root, file_name)
             if (

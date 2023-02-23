@@ -38,7 +38,6 @@ with DAG(
     tags=["example", "async", "snowflake"],
     catchup=False,
 ) as dag:
-
     # Creating a table and inserting data
     snowflake_op_sql_str = SnowflakeOperatorAsync(
         task_id="snowflake_op_sql_str",

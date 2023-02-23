@@ -220,7 +220,6 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "sftp"],
 ) as dag:
-
     create_ec2_instance = PythonOperator(
         task_id="create_ec2_instance", python_callable=create_instance_with_security_group
     )
