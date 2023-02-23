@@ -66,7 +66,6 @@ with DAG(
 
     # [START howto_external_deployment_trigger_dag_run]
     external_deployment_trigger_dag_run = ExternalDeploymentTriggerDagRunOperator(
-
         http_conn_id=DEPLOYMENT_CONN_ID,
         trigger_dag_id=TRIGGER_DAG_ID,
         trigger_run_id=TRIGGER_RUN_ID,
@@ -81,7 +80,3 @@ with DAG(
     # [END howto_external_deployment_trigger_dag_run]
 
     generate_header_access_token >> external_deployment_trigger_dag_run
-
-
-
-
