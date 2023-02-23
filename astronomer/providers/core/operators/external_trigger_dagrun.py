@@ -58,6 +58,7 @@ class ExternalDeploymentTriggerDagRunLink(BaseOperatorLink):
     name = "Triggered DAG"
 
     def get_link(self, operator: BaseOperator, *, ti_key: TaskInstanceKey) -> str:
+        """Provide link to browse externally triggered Dag run."""
         # TODO: Figure out how to achieve this.
         # Potential issues:
         #  - version compatibility
@@ -135,8 +136,8 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         allowed_states: list | None = None,
         failed_states: list | None = None,
         **kwargs,
-    ) -> None:
-        """"""
+    ) -> None:  # noqa: D107
+        """Initialize the Operator."""
         super().__init__(**kwargs)
         self.http_conn_id = http_conn_id
         self.headers = headers
