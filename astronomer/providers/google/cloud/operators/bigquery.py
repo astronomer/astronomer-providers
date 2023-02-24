@@ -77,10 +77,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             delegate_to=self.delegate_to,
             impersonation_chain=self.impersonation_chain,
             location=self.location,
-<<<<<<< HEAD
-=======
             use_legacy_sql=self.use_legacy_sql,
->>>>>>> 3ce4876fc8fc7215976fc0f06bdae0fa51e9ea06
         )
 
         self.hook = hook
