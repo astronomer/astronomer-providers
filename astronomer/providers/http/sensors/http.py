@@ -107,8 +107,9 @@ class HttpSensorAsync(HttpSensor):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=HttpTrigger(
-                    method=self.hook.method,  # TODO: Fix this to directly get method from ctor
                     endpoint=self.endpoint,
+                    http_conn_id=self.http_conn_id,
+                    method=self.hook.method,  # TODO: Fix this to directly get method from ctor
                     data=self.request_params,
                     headers=self.headers,
                     extra_options=self.extra_options,
