@@ -204,6 +204,8 @@ class TestAzureDataFactoryHookAsync:
         assert get_field(extras, "subscriptionId", strict=True) == "subscriptionId"
         assert get_field(extras, "resource_group_name", strict=True) == RESOURCE_GROUP_NAME
         assert get_field(extras, "factory_name", strict=True) == DATAFACTORY_NAME
+        with pytest.raises(ValueError):
+            get_field(extras, "extra__azure_data_factory__tenantId", strict=True)
         with pytest.raises(KeyError):
             get_field(extras, "non-existent-field", strict=True)
 
@@ -226,5 +228,7 @@ class TestAzureDataFactoryHookAsync:
         assert get_field(extras, "subscriptionId", strict=True) == "subscriptionId"
         assert get_field(extras, "resource_group_name", strict=True) == RESOURCE_GROUP_NAME
         assert get_field(extras, "factory_name", strict=True) == DATAFACTORY_NAME
+        with pytest.raises(ValueError):
+            get_field(extras, "extra__azure_data_factory__tenantId", strict=True)
         with pytest.raises(KeyError):
             get_field(extras, "non-existent-field", strict=True)
