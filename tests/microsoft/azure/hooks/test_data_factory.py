@@ -6,9 +6,7 @@ from airflow import AirflowException
 from airflow.models.connection import Connection
 from azure.mgmt.datafactory.aio import DataFactoryManagementClient
 
-from astronomer.providers.microsoft.azure.hooks.data_factory import (
-    AzureDataFactoryHookAsync,
-)
+from astronomer.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHookAsync, get_field
 
 DEFAULT_RESOURCE_GROUP = "defaultResourceGroup"
 AZURE_DATA_FACTORY_CONN_ID = "azure_data_factory_default"
@@ -186,3 +184,47 @@ class TestAzureDataFactoryHookAsync:
         hook = AzureDataFactoryHookAsync(AZURE_DATA_FACTORY_CONN_ID)
         with pytest.raises(ValueError):
             await hook.get_async_conn()
+
+    def test_get_field_prefixed_extras(self):
+        """Test get_field function for retrieving prefixed extra fields"""
+        mock_conn = Connection(
+            conn_id=DEFAULT_CONNECTION_CLIENT_SECRET,
+            conn_type="azure_data_factory",
+            extra=json.dumps(
+                {
+                    "extra__azure_data_factory__tenantId": "tenantId",
+                    "extra__azure_data_factory__subscriptionId": "subscriptionId",
+                    "extra__azure_data_factory__resource_group_name": RESOURCE_GROUP_NAME,
+                    "extra__azure_data_factory__factory_name": DATAFACTORY_NAME,
+                }
+            ),
+        )
+        extras = mock_conn.extra_dejson
+        assert get_field(extras, "tenantId", strict=True) == "tenantId"
+        assert get_field(extras, "subscriptionId", strict=True) == "subscriptionId"
+        assert get_field(extras, "resource_group_name", strict=True) == RESOURCE_GROUP_NAME
+        assert get_field(extras, "factory_name", strict=True) == DATAFACTORY_NAME
+        with pytest.raises(KeyError):
+            get_field(extras, "non-existent-field", strict=True)
+
+    def test_get_field_non_prefixed_extras(self):
+        """Test get_field function for retrieving non-prefixed extra fields"""
+        mock_conn = Connection(
+            conn_id=DEFAULT_CONNECTION_CLIENT_SECRET,
+            conn_type="azure_data_factory",
+            extra=json.dumps(
+                {
+                    "tenantId": "tenantId",
+                    "subscriptionId": "subscriptionId",
+                    "resource_group_name": RESOURCE_GROUP_NAME,
+                    "factory_name": DATAFACTORY_NAME,
+                }
+            ),
+        )
+        extras = mock_conn.extra_dejson
+        assert get_field(extras, "tenantId", strict=True) == "tenantId"
+        assert get_field(extras, "subscriptionId", strict=True) == "subscriptionId"
+        assert get_field(extras, "resource_group_name", strict=True) == RESOURCE_GROUP_NAME
+        assert get_field(extras, "factory_name", strict=True) == DATAFACTORY_NAME
+        with pytest.raises(KeyError):
+            get_field(extras, "non-existent-field", strict=True)

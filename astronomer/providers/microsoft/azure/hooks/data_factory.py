@@ -1,9 +1,10 @@
+"""This module contains the Azure Data Factory hook's asynchronous implementation."""
 import inspect
 from functools import wraps
 from typing import Any, Optional, TypeVar, Union, cast
 
 from airflow.exceptions import AirflowException
-from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
+from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook, get_field
 from asgiref.sync import sync_to_async
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.datafactory.aio import DataFactoryManagementClient
@@ -48,26 +49,28 @@ def provide_targeted_factory_async(func: T) -> T:
 
 class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     """
-    An Async Hook connects to Azure DataFactory to perform pipeline operations
+    An Async Hook connects to Azure DataFactory to perform pipeline operations.
 
     :param azure_data_factory_conn_id: The :ref:`Azure Data Factory connection id<howto/connection:adf>`.
     """
 
     def __init__(self, azure_data_factory_conn_id: str):
+        """Initialize the hook instance."""
         self._async_conn: DataFactoryManagementClient = None
         self.conn_id = azure_data_factory_conn_id
         super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
 
     async def get_async_conn(self) -> DataFactoryManagementClient:
-        """Get async connection and connect to azure data factory"""
+        """Get async connection and connect to azure data factory."""
         if self._conn is not None:
             return self._conn
 
         conn = await sync_to_async(self.get_connection)(self.conn_id)
-        tenant = conn.extra_dejson.get("extra__azure_data_factory__tenantId")
+        extras = conn.extra_dejson
+        tenant = get_field(extras, "tenantId")
 
         try:
-            subscription_id = conn.extra_dejson["extra__azure_data_factory__subscriptionId"]
+            subscription_id = get_field(extras, "subscriptionId", strict=True)
         except KeyError:
             raise ValueError("A Subscription ID is required to connect to Azure Data Factory.")
 
@@ -96,7 +99,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
         **config: Any,
     ) -> PipelineRun:
         """
-        Connects to Azure Data Factory asynchronously to get the pipeline run details by run id
+        Connect to Azure Data Factory asynchronously to get the pipeline run details by run id.
 
         :param run_id: The pipeline run identifier.
         :param resource_group_name: The resource group name.
@@ -113,7 +116,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
         self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
     ) -> str:
         """
-        Connects to Azure Data Factory asynchronously and gets the pipeline status by run_id
+        Connect to Azure Data Factory asynchronously and get the pipeline status by run_id.
 
         :param run_id: The pipeline run identifier.
         :param resource_group_name: The resource group name.
