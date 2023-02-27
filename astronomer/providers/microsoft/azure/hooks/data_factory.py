@@ -1,7 +1,9 @@
 """This module contains the Azure Data Factory hook's asynchronous implementation."""
+from __future__ import annotations
+
 import inspect
 from functools import wraps
-from typing import Any, Optional, TypeVar, Union, cast
+from typing import Any, TypeVar, Union, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
@@ -15,7 +17,7 @@ Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 T = TypeVar("T", bound=Any)
 
 
-def get_field(extras: dict[str, Any], field_name: str, strict: bool = False):
+def get_field(extras: dict[str, Any], field_name: str, strict: bool = False) -> Any:
     """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
     backward_compatibility_prefix = "extra__azure_data_factory__"
     if field_name.startswith("extra__"):
@@ -111,8 +113,8 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     async def get_pipeline_run(
         self,
         run_id: str,
-        resource_group_name: Optional[str] = None,
-        factory_name: Optional[str] = None,
+        resource_group_name: str | None = None,
+        factory_name: str | None = None,
         **config: Any,
     ) -> PipelineRun:
         """
@@ -130,7 +132,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 raise AirflowException(e)
 
     async def get_adf_pipeline_run_status(
-        self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
+        self, run_id: str, resource_group_name: str | None = None, factory_name: str | None = None
     ) -> str:
         """
         Connect to Azure Data Factory asynchronously and get the pipeline status by run_id.
