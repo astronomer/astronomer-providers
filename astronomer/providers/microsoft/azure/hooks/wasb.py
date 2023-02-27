@@ -52,7 +52,11 @@ class WasbHookAsync(WasbHook):
             # use Active Directory auth
             app_id = conn.login
             app_secret = conn.password
-            token_credential = ClientSecretCredential(tenant, app_id, app_secret)
+            token_credential = ClientSecretCredential(
+                tenant_id=tenant,
+                client_id=app_id,
+                client_secret=app_secret,
+            )
             return BlobServiceClient(account_url=conn.host, credential=token_credential, **extra)
 
         sas_token = extra.pop("sas_token", extra.pop("extra__wasb__sas_token", None))
