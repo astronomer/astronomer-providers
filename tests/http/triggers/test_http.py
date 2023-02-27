@@ -4,9 +4,7 @@ from astronomer.providers.http.triggers.http import HttpTrigger
 
 
 class TestHttpTrigger:
-    @pytest.mark.parametrize(
-        "conn", ["http_default", "http_connection"]
-    )
+    @pytest.mark.parametrize("conn", ["http_default", "http_connection"])
     def test_serialization(self, conn):
         """Asserts that the HttpTrigger correctly serializes its arguments and classpath."""
         trigger = HttpTrigger(
