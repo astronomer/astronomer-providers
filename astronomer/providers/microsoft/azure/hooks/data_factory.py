@@ -15,7 +15,7 @@ Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 T = TypeVar("T", bound=Any)
 
 
-def get_field(extras: dict, field_name: str, strict: bool = False):
+def get_field(extras: dict[str, Any], field_name: str, strict: bool = False):
     """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
     backward_compatibility_prefix = "extra__azure_data_factory__"
     if field_name.startswith("extra__"):
