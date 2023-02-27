@@ -5,13 +5,13 @@ from astronomer.providers.http.triggers.http import HttpTrigger
 
 class TestHttpTrigger:
     @pytest.mark.parametrize(
-        "input_conn,output_conn", [(None, "http_default"), ("http_connection", "http_connection")]
+        "input_conn,output_conn", ["http_default", "http_connection"]
     )
-    def test_serialization(self, input_conn, output_conn):
+    def test_serialization(self, conn):
         """Asserts that the HttpTrigger correctly serializes its arguments and classpath."""
         trigger = HttpTrigger(
             endpoint="test-endpoint",
-            http_conn_id=input_conn,
+            http_conn_id=conn,
             method="GET",
             headers={"Content-Type": "application/json"},
         )
@@ -22,6 +22,6 @@ class TestHttpTrigger:
             "endpoint": "test-endpoint",
             "extra_options": {},
             "headers": {"Content-Type": "application/json"},
-            "http_conn_id": output_conn,
+            "http_conn_id": conn,
             "poke_interval": 5.0,
         }
