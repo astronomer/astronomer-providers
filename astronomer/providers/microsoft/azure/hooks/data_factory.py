@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Any, Optional, TypeVar, Union, cast
 
 from airflow.exceptions import AirflowException
-from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook, get_field
+from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
 from asgiref.sync import sync_to_async
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.datafactory.aio import DataFactoryManagementClient
@@ -13,6 +13,23 @@ from azure.mgmt.datafactory.models import PipelineRun
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 
 T = TypeVar("T", bound=Any)
+
+
+def get_field(extras: dict, field_name: str, strict: bool = False):
+    """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
+    backward_compatibility_prefix = "extra__azure_data_factory__"
+    if field_name.startswith("extra__"):
+        raise ValueError(
+            f"Got prefixed name {field_name}; please remove the '{backward_compatibility_prefix}' prefix "
+            "when using this method."
+        )
+    if field_name in extras:
+        return extras[field_name] or None
+    prefixed_name = f"{backward_compatibility_prefix}{field_name}"
+    if prefixed_name in extras:
+        return extras[prefixed_name] or None
+    if strict:
+        raise KeyError(f"Field {field_name} not found in extras")
 
 
 def provide_targeted_factory_async(func: T) -> T:
