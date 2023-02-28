@@ -1,3 +1,4 @@
+"""This module contains the Azure WASB hook's asynchronous implementation."""
 from typing import Any, List, Optional, Union
 
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
@@ -22,12 +23,13 @@ class WasbHookAsync(WasbHook):
         wasb_conn_id: str = "wasb_default",
         public_read: bool = False,
     ) -> None:
+        """Initialize the hook instance."""
         self.conn_id = wasb_conn_id
         self.public_read = public_read
         self.blob_service_client: BlobServiceClient = self.get_conn()
 
     def get_conn(self) -> BlobServiceClient:
-        """Returns the async BlobServiceClient object."""
+        """Return the async BlobServiceClient object."""
         conn = self.get_connection(self.conn_id)
         extra = conn.extra_dejson or {}
 
@@ -53,7 +55,9 @@ class WasbHookAsync(WasbHook):
             app_id = conn.login
             app_secret = conn.password
             token_credential = ClientSecretCredential(tenant, app_id, app_secret)
-            return BlobServiceClient(account_url=conn.host, credential=token_credential, **extra)
+            return BlobServiceClient(
+                account_url=conn.host, credential=token_credential, **extra  # type:ignore[arg-type]
+            )
 
         sas_token = extra.pop("sas_token", extra.pop("extra__wasb__sas_token", None))
         if sas_token:
@@ -77,7 +81,7 @@ class WasbHookAsync(WasbHook):
 
     def _get_blob_client(self, container_name: str, blob_name: str) -> BlobClient:
         """
-        Instantiates a blob client.
+        Instantiate a blob client.
 
         :param container_name: the name of the blob container
         :param blob_name: the name of the blob. This needs not be existing
@@ -100,7 +104,7 @@ class WasbHookAsync(WasbHook):
 
     def _get_container_client(self, container_name: str) -> ContainerClient:
         """
-        Instantiates a container client.
+        Instantiate a container client.
 
         :param container_name: the name of the container
         """

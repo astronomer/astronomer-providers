@@ -81,7 +81,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         self.pod: k8s.V1Pod = self.get_or_create_pod(self.pod_request_obj, context)
         self.defer()
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:  # type: ignore[override]
         """Deprecated; replaced by trigger_reentry."""
         warnings.warn(
             "Method `execute_complete` is deprecated and replaced with method `trigger_reentry`.",

@@ -1,6 +1,9 @@
+"""This module contains the Azure Data Factory hook's asynchronous implementation."""
+from __future__ import annotations
+
 import inspect
 from functools import wraps
-from typing import Any, Optional, TypeVar, Union, cast
+from typing import Any, TypeVar, Union, cast
 
 from airflow.exceptions import AirflowException
 from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
@@ -12,6 +15,23 @@ from azure.mgmt.datafactory.models import PipelineRun
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 
 T = TypeVar("T", bound=Any)
+
+
+def get_field(extras: dict[str, Any], field_name: str, strict: bool = False) -> Any:
+    """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
+    backward_compatibility_prefix = "extra__azure_data_factory__"
+    if field_name.startswith("extra__"):
+        raise ValueError(
+            f"Got prefixed name {field_name}; please remove the '{backward_compatibility_prefix}' prefix "
+            "when using this method."
+        )
+    if field_name in extras:
+        return extras[field_name] or None
+    prefixed_name = f"{backward_compatibility_prefix}{field_name}"
+    if prefixed_name in extras:
+        return extras[prefixed_name] or None
+    if strict:
+        raise KeyError(f"Field {field_name} not found in extras")
 
 
 def provide_targeted_factory_async(func: T) -> T:
@@ -48,26 +68,28 @@ def provide_targeted_factory_async(func: T) -> T:
 
 class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     """
-    An Async Hook connects to Azure DataFactory to perform pipeline operations
+    An Async Hook connects to Azure DataFactory to perform pipeline operations.
 
     :param azure_data_factory_conn_id: The :ref:`Azure Data Factory connection id<howto/connection:adf>`.
     """
 
     def __init__(self, azure_data_factory_conn_id: str):
+        """Initialize the hook instance."""
         self._async_conn: DataFactoryManagementClient = None
         self.conn_id = azure_data_factory_conn_id
         super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
 
     async def get_async_conn(self) -> DataFactoryManagementClient:
-        """Get async connection and connect to azure data factory"""
+        """Get async connection and connect to azure data factory."""
         if self._conn is not None:
             return self._conn
 
         conn = await sync_to_async(self.get_connection)(self.conn_id)
-        tenant = conn.extra_dejson.get("extra__azure_data_factory__tenantId")
+        extras = conn.extra_dejson
+        tenant = get_field(extras, "tenantId")
 
         try:
-            subscription_id = conn.extra_dejson["extra__azure_data_factory__subscriptionId"]
+            subscription_id = get_field(extras, "subscriptionId", strict=True)
         except KeyError:
             raise ValueError("A Subscription ID is required to connect to Azure Data Factory.")
 
@@ -91,12 +113,12 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     async def get_pipeline_run(
         self,
         run_id: str,
-        resource_group_name: Optional[str] = None,
-        factory_name: Optional[str] = None,
+        resource_group_name: str | None = None,
+        factory_name: str | None = None,
         **config: Any,
     ) -> PipelineRun:
         """
-        Connects to Azure Data Factory asynchronously to get the pipeline run details by run id
+        Connect to Azure Data Factory asynchronously to get the pipeline run details by run id.
 
         :param run_id: The pipeline run identifier.
         :param resource_group_name: The resource group name.
@@ -110,10 +132,10 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 raise AirflowException(e)
 
     async def get_adf_pipeline_run_status(
-        self, run_id: str, resource_group_name: Optional[str] = None, factory_name: Optional[str] = None
+        self, run_id: str, resource_group_name: str | None = None, factory_name: str | None = None
     ) -> str:
         """
-        Connects to Azure Data Factory asynchronously and gets the pipeline status by run_id
+        Connect to Azure Data Factory asynchronously and get the pipeline status by run_id.
 
         :param run_id: The pipeline run identifier.
         :param resource_group_name: The resource group name.
