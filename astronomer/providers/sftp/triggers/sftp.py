@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
@@ -65,18 +66,28 @@ class SFTPTrigger(BaseTrigger):
         _newer_than = convert_to_utc(self.newer_than) if self.newer_than else None
         while True:
             try:
-                actual_file_to_check = self.path
                 if self.file_pattern:
-                    file_returned_by_hook = await hook.get_file_by_pattern(
+                    files_returned_by_hook = await hook.get_files_by_pattern(
                         path=self.path, fnmatch_pattern=self.file_pattern
                     )
-                    actual_file_to_check = file_returned_by_hook
-                mod_time = await hook.get_mod_time(actual_file_to_check)
-                if _newer_than:
-                    _mod_time = convert_to_utc(datetime.strptime(mod_time, "%Y%m%d%H%M%S"))
-                    if _newer_than > _mod_time:
+                    actual_files_to_check = [
+                        os.path.join(self.path, file_from_hook) for file_from_hook in files_returned_by_hook
+                    ]
+                else:
+                    actual_files_to_check = [self.path]
+                for actual_file_to_check in actual_files_to_check:
+                    mod_time = await hook.get_mod_time(actual_file_to_check)
+                    if _newer_than:
+                        _mod_time = convert_to_utc(datetime.strptime(mod_time, "%Y%m%d%H%M%S"))
+                        if _newer_than <= _mod_time:
+                            yield TriggerEvent(
+                                {"status": "success", "message": f"Sensed file: {actual_file_to_check}"}
+                            )
                         await asyncio.sleep(self.poke_interval)
-                yield TriggerEvent({"status": "success", "message": f"Sensed file: {actual_file_to_check}"})
+                    else:
+                        yield TriggerEvent(
+                            {"status": "success", "message": f"Sensed file: {actual_file_to_check}"}
+                        )
             except AirflowException:
                 await asyncio.sleep(self.poke_interval)
             except Exception as e:
