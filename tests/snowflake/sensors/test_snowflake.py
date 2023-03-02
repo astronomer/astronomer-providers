@@ -4,7 +4,6 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
-
 from airflow.providers.common.sql.hooks.sql import DbApiHook
 
 from astronomer.providers.snowflake.sensors.snowflake import SnowflakeSensorAsync
@@ -36,13 +35,9 @@ class TestPytestSnowflakeSensorAsync:
             timeout=TASK_TIMEOUT * 60,
         )
 
-        mock_hook.get_connection.return_value.get_hook.return_value = (
-            mock.MagicMock(spec=DbApiHook)
-        )
+        mock_hook.get_connection.return_value.get_hook.return_value = mock.MagicMock(spec=DbApiHook)
 
-        mock_get_records = (
-            mock_hook.get_connection.return_value.get_hook.return_value.get_records
-        )
+        mock_get_records = mock_hook.get_connection.return_value.get_hook.return_value.get_records
 
         mock_get_records.return_value = []
 
@@ -109,6 +104,4 @@ class TestPytestSnowflakeSensorAsync:
 
         with mock.patch.object(operator.log, "info") as mock_log_info:
             operator.execute_complete(context=None)
-        mock_log_info.assert_called_with(
-            "%s completed successfully.", "execute_complete"
-        )
+        mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
