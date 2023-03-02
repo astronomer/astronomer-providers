@@ -138,11 +138,11 @@ class TestSFTPTrigger:
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
-    async def test_sftp_trigger_run_trigger_failure_state(self, get_files_by_pattern):
+    async def test_sftp_trigger_run_trigger_failure_state(self, mock_get_files_by_pattern):
         """
         Mock the hook to raise other than an AirflowException and assert that a TriggerEvent with a failure status
         """
-        get_files_by_pattern.side_effect = Exception("An unexpected exception")
+        mock_get_files_by_pattern.side_effect = Exception("An unexpected exception")
 
         trigger = SFTPTrigger(path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file")
 
@@ -161,9 +161,10 @@ class TestSFTPTrigger:
         Assert that a the task does not complete if the hook raises an AirflowException,
         indicating that the task needs to be deferred
         """
-        mock_get_files_by_pattern.side_effect = AirflowException("No files at path found...")
 
-        trigger = SFTPTrigger(path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file")
+        mock_get_files_by_pattern.side_effect = AirflowException("No files at path /test/path/ found...")
+
+        trigger = SFTPTrigger(path="/test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file")
 
         task = asyncio.create_task(trigger.run().__anext__())
         await asyncio.sleep(0.5)
