@@ -198,9 +198,9 @@ class TestSFTPHookAsync:
         mock_hook_get_conn.return_value = MockSSHClient()
         hook = SFTPHookAsync()
 
-        file = await hook.get_file_by_pattern(path="/path/exists/", fnmatch_pattern="file")
+        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file")
 
-        assert file == "file"
+        assert file == ["file"]
 
     @pytest.mark.asyncio
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
@@ -210,11 +210,9 @@ class TestSFTPHookAsync:
         """
         mock_hook_get_conn.return_value = MockSSHClient()
         hook = SFTPHookAsync()
+        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file_does_not_exist")
 
-        with pytest.raises(AirflowException) as exc:
-            await hook.get_file_by_pattern(path="/path/exists/", fnmatch_pattern="file_does_not_exist")
-
-        assert str(exc.value) == "No files matching file pattern were found at /path/exists/ — Deferring"
+        assert file == []
 
     @pytest.mark.asyncio
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")

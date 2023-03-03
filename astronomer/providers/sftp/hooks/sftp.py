@@ -28,7 +28,7 @@ class SFTPHookAsync(BaseHook):
     default_conn_name = "sftp_default"
     conn_type = "sftp"
     hook_name = "SFTP"
-    default_known_hosts = '"~/.ssh/known_hosts"'
+    default_known_hosts = "none"
 
     def __init__(  # nosec: B107
         self,
@@ -118,23 +118,16 @@ class SFTPHookAsync(BaseHook):
         except asyncssh.SFTPNoSuchFile:
             return None
 
-    async def get_file_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> str:
+    async def get_files_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> List[str]:
         """
         Returns the name of a file matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
         """
         files_list = await self.list_directory(path)
-
         if files_list is None:
             raise AirflowException(f"No files at path {path} found...")
-
-        for file in files_list:
-            if not fnmatch(file, fnmatch_pattern):
-                pass
-            else:
-                return file
-
-        raise AirflowException(f"No files matching file pattern were found at {path} — Deferring")
+        matched_files = [file for file in files_list if fnmatch(file, fnmatch_pattern)]
+        return matched_files
 
     async def get_mod_time(self, path: str) -> str:
         """
