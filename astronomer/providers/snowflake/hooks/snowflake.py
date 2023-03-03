@@ -16,7 +16,7 @@ from snowflake.connector.util_text import split_statements
 
 def fetch_all_snowflake_handler(
     cursor: SnowflakeCursor,
-) -> list[tuple[Any, ...]] | list[dict[str, Any]] | None:
+) -> list[dict[str, Any] | tuple[Any, ...] | None]: 
     """Handler for SnowflakeCursor to return results"""
     return cursor.fetchall()
 
@@ -69,7 +69,7 @@ class SnowflakeHookAsync(SnowflakeHook):
         :param autocommit: What to set the connection's autocommit setting to before executing the query.
         :param parameters: The parameters to render the SQL query with.
         """
-        self.query_ids = []
+        self.query_ids: list[str] = []
         with closing(self.get_conn()) as conn:
             self.log.info("SQL statement to be executed: %s ", sql)
             if isinstance(sql, str):
