@@ -86,7 +86,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                         cur.execute_async(sql_statement, parameters)
                     else:
                         cur.execute_async(sql_statement)
-                    query_id = cur.sfqid # type: ignore[assignment]
+                    query_id = cur.sfqid  # type: ignore[assignment]
                     self.log.info("Snowflake query id: %s", query_id)
                     self.query_ids.append(query_id)
 
