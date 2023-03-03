@@ -171,6 +171,7 @@ with DAG(
     snowflake_task_info = [
         {"snowflake_dag": "example_snowflake"},
         {"snowflake_sql_api_dag": "example_snowflake_sql_api"},
+        {"example_snowflake_sensor": "example_snowflake_sensor"},
     ]
     snowflake_trigger_tasks, ids = prepare_dag_dependency(snowflake_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
