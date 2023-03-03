@@ -16,7 +16,7 @@ from snowflake.connector.util_text import split_statements
 
 def fetch_all_snowflake_handler(
     cursor: SnowflakeCursor,
-) -> list[dict[str, Any] | tuple[Any, ...] | None]: 
+) -> list[dict[str, Any] | tuple[Any, ...] | None]:
     """Handler for SnowflakeCursor to return results"""
     return cursor.fetchall()
 
@@ -86,7 +86,7 @@ class SnowflakeHookAsync(SnowflakeHook):
                         cur.execute_async(sql_statement, parameters)
                     else:
                         cur.execute_async(sql_statement)
-                    query_id: str  = cur.sfqid
+                    query_id: str = cur.sfqid
                     self.log.info("Snowflake query id: %s", query_id)
                     self.query_ids.append(query_id)
 
