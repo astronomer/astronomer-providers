@@ -231,6 +231,7 @@ class TestSagemakerTransformOperatorAsync:
         task = SageMakerTransformOperatorAsync(
             config=CONFIG,
             task_id=self.TASK_ID,
+            check_if_job_exists=False,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
@@ -250,6 +251,7 @@ class TestSagemakerTransformOperatorAsync:
         task = SageMakerTransformOperatorAsync(
             config=CONFIG,
             task_id=self.TASK_ID,
+            check_if_job_exists=False,
             check_interval=self.CHECK_INTERVAL,
         )
         with pytest.raises(AirflowException):
@@ -321,6 +323,7 @@ class TestSagemakerTrainingOperatorAsync:
         task = SageMakerTrainingOperatorAsync(
             config=TRAINING_CONFIG,
             task_id=self.TASK_ID,
+            check_if_job_exists=False,
             print_log=mock_print_log_attr,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
@@ -340,6 +343,7 @@ class TestSagemakerTrainingOperatorAsync:
         task = SageMakerTrainingOperatorAsync(
             config=TRAINING_CONFIG,
             task_id=self.TASK_ID,
+            check_if_job_exists=False,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
