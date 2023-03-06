@@ -152,7 +152,16 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         model_config = self.config.get("Model")
         transform_config = self.config.get("Transform", self.config)
         if self.check_if_job_exists:
-            self._check_if_transform_job_exists()
+            try:
+                # for apache-airflow-providers-amazon<=7.2.1
+                self._check_if_transform_job_exists()
+            except AttributeError: # pragma: no cover
+                # for apache-airflow-providers-amazon>=7.3.0
+                transform_config["TransformJobName"] = self._get_unique_job_name(
+                transform_config["TransformJobName"],
+                self.action_if_job_exists == "fail",
+                self.hook.describe_transform_job,
+                )
         if model_config:
             self.log.info("Creating SageMaker Model %s for transform job", model_config["ModelName"])
             self.hook.create_model(model_config)
@@ -231,7 +240,17 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         """
         self.preprocess_config()
         if self.check_if_job_exists:
-            self._check_if_job_exists()
+            try:
+                # for apache-airflow-providers-amazon<=7.2.1
+                self._check_if_job_exists()
+            except TypeError: # pragma: no cover
+                # for apache-airflow-providers-amazon>=7.3.0
+                self.config["TrainingJobName"] = self._get_unique_job_name(
+                self.config["TrainingJobName"],
+                self.action_if_job_exists == "fail",
+                self.hook.describe_training_job,
+            )
+
         self.log.info("Creating SageMaker training job %s.", self.config["TrainingJobName"])
         response = self.hook.create_training_job(
             self.config,
