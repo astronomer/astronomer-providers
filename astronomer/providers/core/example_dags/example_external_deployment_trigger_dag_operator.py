@@ -9,7 +9,9 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.log.secrets_masker import mask_secret
 from airflow.utils.timezone import datetime
 
-from astronomer.providers.core.operators.external_dag import ExternalDeploymentTriggerDagRunOperator
+from astronomer.providers.core.operators.external_trigger_dagrun import (
+    ExternalDeploymentTriggerDagRunOperator,
+)
 
 DEPLOYMENT_CONN_ID = os.getenv("ASTRO_DEPLOYMENT_CONN_ID", "deployment_conn_id")
 ASTRONOMER_KEY_ID = os.getenv("ASTRONOMER_KEY_ID", "")
@@ -70,7 +72,7 @@ with DAG(
         trigger_dag_id=TRIGGER_DAG_ID,
         trigger_run_id=TRIGGER_RUN_ID,
         conf={},
-        logical_date="{{ ds }}",
+        execution_date="{{ ds }}",
         reset_dag_run=True,
         wait_for_completion=True,
         headers=generate_header_access_token.output,
