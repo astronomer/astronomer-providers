@@ -151,11 +151,11 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         self.preprocess_config()
         model_config = self.config.get("Model")
         transform_config = self.config.get("Transform", self.config)
-        if self.check_if_job_exists:
+        if self.check_if_job_exists:  # pragma: no branch
             try:
                 # for apache-airflow-providers-amazon<=7.2.1
                 self._check_if_transform_job_exists()  # type: ignore[attr-defined]
-            except AttributeError:  # pragma: no cover
+            except AttributeError:
                 # for apache-airflow-providers-amazon>=7.3.0
                 transform_config["TransformJobName"] = self._get_unique_job_name(
                     transform_config["TransformJobName"],
@@ -239,11 +239,11 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         control to trigger and polls for the status of the training job in async
         """
         self.preprocess_config()
-        if self.check_if_job_exists:
+        if self.check_if_job_exists:  # pragma: no branch
             try:
                 # for apache-airflow-providers-amazon<=7.2.1
                 self._check_if_job_exists()  # type: ignore[call-arg]
-            except TypeError:  # pragma: no cover
+            except TypeError:
                 # for apache-airflow-providers-amazon>=7.3.0
                 self.config["TrainingJobName"] = self._get_unique_job_name(
                     self.config["TrainingJobName"],
