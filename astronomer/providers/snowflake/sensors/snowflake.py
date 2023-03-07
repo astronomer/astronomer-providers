@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any, Sequence
 
 from airflow import AirflowException
-from airflow.sensors.base import BaseSensorOperator
+from airflow.providers.common.sql.sensors.sql import SqlSensor
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSensorTrigger,
@@ -12,7 +12,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-class SnowflakeSensorAsync(BaseSensorOperator):
+class SnowflakeSensorAsync(SqlSensor):
     """
     Runs a sql statement repeatedly until a criteria is met. It will keep trying until
     success or failure criteria are met, or if the first cell returned from the query
@@ -60,26 +60,35 @@ class SnowflakeSensorAsync(BaseSensorOperator):
         self.failure = failure
         self.fail_on_empty = fail_on_empty
         self.hook_params = hook_params
-        super().__init__(**kwargs)
+        super().__init__(
+            conn_id=snowflake_conn_id,
+            sql=sql,
+            success=success,
+            failure=failure,
+            fail_on_empty=fail_on_empty,
+            hook_params=hook_params,
+            **kwargs,
+        )
 
     def execute(self, context: Context) -> None:
         """Check for query result in Snowflake by deferring using the trigger"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=SnowflakeSensorTrigger(
-                sql=self.sql,
-                poke_interval=self.poke_interval,
-                parameters=self.parameters,
-                success=self.success,
-                failure=self.failure,
-                fail_on_empty=self.fail_on_empty,
-                dag_id=context["dag"].dag_id,
-                task_id=context["task"].task_id,
-                run_id=context["dag_run"].run_id,
-                snowflake_conn_id=self.snowflake_conn_id,
-            ),
-            method_name=self.execute_complete.__name__,
-        )
+        if not self.poke(context=context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=SnowflakeSensorTrigger(
+                    sql=self.sql,
+                    poke_interval=self.poke_interval,
+                    parameters=self.parameters,
+                    success=self.success,
+                    failure=self.failure,
+                    fail_on_empty=self.fail_on_empty,
+                    dag_id=context["dag"].dag_id,
+                    task_id=context["task"].task_id,
+                    run_id=context["dag_run"].run_id,
+                    snowflake_conn_id=self.snowflake_conn_id,
+                ),
+                method_name=self.execute_complete.__name__,
+            )
 
     def execute_complete(
         self,

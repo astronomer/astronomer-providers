@@ -32,34 +32,35 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
 
         # Work out if we are a DAG sensor or a Task sensor
         # Defer to our trigger
-        if (
-            not self.external_task_id
-        ):  # Tempting to explicitly check for None, but this captures falsely values
-            self.defer(
-                timeout=datetime.timedelta(seconds=self.timeout),
-                trigger=DagStateTrigger(
-                    dag_id=self.external_dag_id,
-                    # The trigger does not do pass/fail, only "a state was reached",
-                    # so we pass it all states that might make us pass or fail, and
-                    # then work out which result we have in execute_complete.
-                    states=self.allowed_states + self.failed_states,
-                    execution_dates=execution_dates,
-                    poll_interval=self.poke_interval,
-                ),
-                method_name="execute_complete",
-            )
-        else:
-            self.defer(
-                timeout=datetime.timedelta(seconds=self.timeout),
-                trigger=TaskStateTrigger(
-                    dag_id=self.external_dag_id,
-                    task_id=self.external_task_id,
-                    states=self.allowed_states + self.failed_states,
-                    execution_dates=execution_dates,
-                    poll_interval=self.poke_interval,
-                ),
-                method_name="execute_complete",
-            )
+        if not self.poke(context=context):
+            if (
+                not self.external_task_id
+            ):  # Tempting to explicitly check for None, but this captures falsely values
+                self.defer(
+                    timeout=datetime.timedelta(seconds=self.timeout),
+                    trigger=DagStateTrigger(
+                        dag_id=self.external_dag_id,
+                        # The trigger does not do pass/fail, only "a state was reached",
+                        # so we pass it all states that might make us pass or fail, and
+                        # then work out which result we have in execute_complete.
+                        states=self.allowed_states + self.failed_states,
+                        execution_dates=execution_dates,
+                        poll_interval=self.poke_interval,
+                    ),
+                    method_name="execute_complete",
+                )
+            else:
+                self.defer(
+                    timeout=datetime.timedelta(seconds=self.timeout),
+                    trigger=TaskStateTrigger(
+                        dag_id=self.external_dag_id,
+                        task_id=self.external_task_id,
+                        states=self.allowed_states + self.failed_states,
+                        execution_dates=execution_dates,
+                        poll_interval=self.poke_interval,
+                    ),
+                    method_name="execute_complete",
+                )
 
     @provide_session
     def execute_complete(
@@ -115,19 +116,20 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=ExternalDeploymentTaskTrigger(
-                http_conn_id=self.http_conn_id,
-                method=self.hook.method,
-                endpoint=self.endpoint,
-                data=self.request_params,
-                headers=self.headers,
-                extra_options=self.extra_options,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context=context):
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=ExternalDeploymentTaskTrigger(
+                    http_conn_id=self.http_conn_id,
+                    method=self.hook.method,
+                    endpoint=self.endpoint,
+                    data=self.request_params,
+                    headers=self.headers,
+                    extra_options=self.extra_options,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: "Context", event: Optional[Dict[str, Any]] = None) -> Any:
         """

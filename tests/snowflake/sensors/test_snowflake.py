@@ -4,11 +4,10 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
+from airflow.providers.common.sql.hooks.sql import DbApiHook
 
 from astronomer.providers.snowflake.sensors.snowflake import SnowflakeSensorAsync
-from astronomer.providers.snowflake.triggers.snowflake_trigger import (
-    SnowflakeSensorTrigger,
-)
+from astronomer.providers.snowflake.triggers.snowflake_trigger import SnowflakeSensorTrigger
 from tests.utils.airflow_util import create_context
 
 TASK_ID = "snowflake_check"
@@ -20,7 +19,8 @@ TEST_SQL = "select * from any;"
 
 class TestPytestSnowflakeSensorAsync:
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
-    def test_snowflake_execute_operator_async(self, mock_sql):
+    @mock.patch("airflow.providers.common.sql.sensors.sql.BaseHook")
+    def test_snowflake_execute_operator_async(self, mock_hook, mock_sql):
         """
         Asserts that a task is deferred and an SnowflakeSensorTrigger will be fired
         when the SnowflakeSensorAsync is executed.
@@ -35,7 +35,14 @@ class TestPytestSnowflakeSensorAsync:
             timeout=TASK_TIMEOUT * 60,
         )
 
+        mock_hook.get_connection.return_value.get_hook.return_value = mock.MagicMock(spec=DbApiHook)
+
+        mock_get_records = mock_hook.get_connection.return_value.get_hook.return_value.get_records
+
+        mock_get_records.return_value = []
+
         with pytest.raises(TaskDeferred) as exc:
+            operator.poke(None)
             operator.execute(create_context(operator, dag=dag))
 
         assert isinstance(
