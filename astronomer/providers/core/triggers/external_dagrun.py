@@ -10,7 +10,7 @@ from astronomer.providers.http.triggers.http import HttpTrigger
 class ExternalDeploymentDagRunTrigger(HttpTrigger):
     """Inherits from HttpTrigger and make Async http call to get the Dag Run state."""
 
-    def __init__(self, dag_id: str, run_id: str, endpoint: str, **kwargs):
+    def __init__(self, dag_id: str, run_id: str, endpoint: str, **kwargs: Any):
         super().__init__(endpoint, **kwargs)
         self.dag_id = dag_id
         self.run_id = run_id

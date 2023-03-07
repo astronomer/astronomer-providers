@@ -46,7 +46,7 @@ class ExternalDeploymentTriggerDagRunLink(BaseOperatorLink):
         endpoint = DAGRUN_ENDPOINT.format(dag_id=dag_id, run_id=run_id)
         hook = HttpHook(method="GET", http_conn_id=http_conn_id)
 
-        return hook.url_from_endpoint(endpoint=endpoint)
+        return cast(str, hook.url_from_endpoint(endpoint=endpoint))
 
 
 class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
@@ -118,7 +118,7 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         poke_interval: int = 60,
         allowed_states: list[Any] | None = None,
         failed_states: list[Any] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize the Operator."""
         super().__init__(**kwargs)
@@ -146,7 +146,7 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         except TypeError as e:
             raise AirflowException("conf parameter should be JSON Serializable") from e
 
-    def execute(self, context: dict[str, Any]) -> None:
+    def execute(self, context: Context) -> None:
         """
         Trigger a DAG run on an external deployment.
         :param context: Airflow context
@@ -245,7 +245,7 @@ def parse_execution_date(execution_date: datetime | str) -> datetime:
     if isinstance(execution_date, datetime):
         return execution_date
     elif isinstance(execution_date, str):
-        return timezone.parse(execution_date)
+        return cast(datetime, timezone.parse(execution_date))
 
 
 def parse_dag(json_dict: dict[str, Any]) -> DAG:
@@ -270,6 +270,10 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
     """
     data_interval_start = json_dict.get("data_interval_start")
     data_interval_end = json_dict.get("data_interval_end")
+    if data_interval_start and data_interval_end:
+        data_interval = (timezone.parse(data_interval_start), timezone.parse(data_interval_end))
+    else:
+        data_interval = None
 
     dag_run = DagRun(
         dag_id=json_dict.get("dag_id"),
@@ -283,10 +287,7 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
         run_type=json_dict.get("run_type"),
         dag_hash=json_dict.get("dag_hash"),
         creating_job_id=json_dict.get("creating_job_id"),
-        data_interval=(
-            timezone.parse(data_interval_start) if data_interval_start else None,
-            timezone.parse(data_interval_end) if data_interval_end else None,
-        ),
+        data_interval=data_interval,
     )
     return dag_run
 
@@ -321,7 +322,7 @@ class AirflowApiClient:
         self.tcp_keep_alive_interval = tcp_keep_alive_interval
 
     def call_api(
-        self, endpoint: str, method: str, data: dict | str | None, extra_options: dict
+        self, endpoint: str, method: str, data: dict[str, Any] | str | None, extra_options: dict[str, Any]
     ) -> requests.Response:
         """
         Call the External Airflow API Endpoint.
@@ -357,7 +358,7 @@ class AirflowApiClient:
 
         logging.debug(f"Response: {response.status_code} - {response.json()}")
 
-        return response
+        return cast(requests.Response, response)
 
     def trigger_dag(
         self, dag_id: str, run_id: str, execution_date: str | datetime, conf: dict[str, Any]
