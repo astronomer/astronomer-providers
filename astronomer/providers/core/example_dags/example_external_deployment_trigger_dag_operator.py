@@ -13,11 +13,9 @@ from astronomer.providers.core.operators.external_trigger_dagrun import (
     ExternalDeploymentTriggerDagRunOperator,
 )
 
-DEPLOYMENT_CONN_ID = os.getenv("ASTRO_DEPLOYMENT_CONN_ID", "deployment_conn_id")
-ASTRONOMER_KEY_ID = os.getenv("ASTRONOMER_KEY_ID", "")
-ASTRONOMER_KEY_SECRET = os.getenv("ASTRONOMER_KEY_SECRET", "")
+DEPLOYMENT_CONN_ID = os.getenv("ASTRO_DEPLOYMENT_CONN_ID", "")
+ASTRO_AUTH_CONN_ID = os.getenv("ASTRO_AUTH_CONN_ID", "")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
-DAG_ID = os.getenv("DAG_ID", "")
 TRIGGER_DAG_ID = os.getenv("TRIGGER_DAG_ID", "")
 TRIGGER_RUN_ID = os.getenv("TRIGGER_RUN_ID", "")
 
@@ -30,12 +28,12 @@ default_args = {
 
 def astro_access_token() -> Dict[str, Any]:
     """Get the Headers with access token by making post request with client_id and client_secret"""
-    conn = BaseHook.get_connection(DEPLOYMENT_CONN_ID)
+    conn = BaseHook.get_connection(ASTRO_AUTH_CONN_ID)
     _json = {
         "audience": "astronomer-ee",
         "grant_type": "client_credentials",
-        "client_id": ASTRONOMER_KEY_ID,
-        "client_secret": ASTRONOMER_KEY_SECRET,
+        "client_id": conn.login,
+        "client_secret": conn.get_password(),
     }
     token_resp = requests.post(
         url=conn.host,
@@ -48,12 +46,12 @@ def astro_access_token() -> Dict[str, Any]:
         "cache-control": "no-cache",
         "content-type": "application/json",
         "accept": "application/json",
-        "Authorization": "Bearer " + masked_access_token,
+        "Authorization": f"Bearer {masked_access_token}",
     }
 
 
 with DAG(
-    dag_id="example_async_deployment_task_sensor",
+    dag_id="example_external_deployment_trigger_dag_operator",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
@@ -68,6 +66,7 @@ with DAG(
 
     # [START howto_external_deployment_trigger_dag_run]
     external_deployment_trigger_dag_run = ExternalDeploymentTriggerDagRunOperator(
+        task_id="external_deployment_trigger_dag_run",
         http_conn_id=DEPLOYMENT_CONN_ID,
         trigger_dag_id=TRIGGER_DAG_ID,
         trigger_run_id=TRIGGER_RUN_ID,
@@ -76,8 +75,7 @@ with DAG(
         reset_dag_run=True,
         wait_for_completion=True,
         headers=generate_header_access_token.output,
-        poke_interval=10,
-        note="This DAG was triggered by ExternalDeploymentTriggerDagRunOperator.",
+        poke_interval=5,
     )
     # [END howto_external_deployment_trigger_dag_run]
 
