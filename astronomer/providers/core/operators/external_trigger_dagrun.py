@@ -190,14 +190,12 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         if dag_run is None:
             raise RuntimeError("The dag_run should be set here!")
 
-        logging.info(f"/api/v1/dags/{dag_run.dag_id}/dagRuns/{dag_run.run_id}")
-
         self.defer(
             timeout=self.execution_timeout,
             trigger=ExternalDeploymentDagRunTrigger(
                 http_conn_id=self.http_conn_id,
                 method="GET",
-                endpoint=f"/api/v1/dags/{dag_run.dag_id}/dagRuns/{dag_run.run_id}",
+                endpoint=DAGRUN_ENDPOINT.format(dag_run.dag_id, dag_run.run_id),
                 data=None,
                 headers=self.headers,
                 extra_options=self.extra_options,
@@ -218,7 +216,6 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         :param context: Airflow context
         :param event: Trigger Event
         """
-        logging.info(event)
         state = event.get("state")
         dag_id = event.get("dag_id")
         run_id = event.get("run_id")
@@ -260,7 +257,6 @@ def parse_dag(json_dict: dict[str, Any]) -> DAG:
     :param json_dict: Dictionary containing Dag properties to parse
     """
     dag = DAG(**json_dict)
-    logging.debug(f"Decoded Dag: {dag}")
     return dag
 
 
@@ -292,7 +288,6 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
             timezone.parse(data_interval_end) if data_interval_end else None,
         ),
     )
-    logging.debug(f"Decoded Dag Run: {dag_run}")
     return dag_run
 
 
@@ -378,7 +373,7 @@ class AirflowApiClient:
         data = {"dag_run_id": run_id, "execution_date": execution_date_str, "conf": conf}
 
         response = self.call_api(endpoint, "POST", json.dumps(data), self.extra_options)
-        logging.info(response.json())
+
         if response.status_code == 409:
             raise DagRunAlreadyExists(
                 DagRun(dag_id=dag_id, run_id=run_id, execution_date=execution_date), execution_date, run_id
