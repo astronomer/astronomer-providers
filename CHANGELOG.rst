@@ -1,6 +1,28 @@
 Changelog
 =========
 
+
+1.15.1 (2023-03-09)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Support retriveing extra fields which do not have extra prefix set in ``AzureDataFactoryHookAsync``.
+  (`#899 <https://github.com/astronomer/astronomer-providers/pull/899>`_)
+- Pass connection_id in ``HttpTrigger``.
+  (`#896 <https://github.com/astronomer/astronomer-providers/pull/896>`_)
+- Fix ``SFTPSensorAsync`` using newer_than doesn't work well with file_pattern and
+  set ``SFTPHookAsync`` default_known_hosts to None.
+  (`#905 <https://github.com/astronomer/astronomer-providers/pull/905>`_)
+- Make ``SageMakerTransformOperatorAsync`` and ``SageMakerTrainingOperatorAsync`` compatible with ``apache-airflow-providers-amazon>=7.3.0``.
+  (`#912 <https://github.com/astronomer/astronomer-providers/pull/912>`_)
+- Fix ``BigQueryInsertJobOperatorAsync`` to send location parameter to hook.
+  (`#866 <https://github.com/astronomer/astronomer-providers/pull/866>`_)
+- Update ``ExternalTaskSensorAsync`` and ``SnowflakeSensorAsync`` to check on worker first
+  (`#908 <https://github.com/astronomer/astronomer-providers/pull/908>`_)
+
+
 1.15.0 (2023-02-15)
 -------------------
 
