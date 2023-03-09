@@ -8,7 +8,7 @@ Changelog
 Bug Fixes
 """""""""
 
-- Support retriveing extra fields which do not have extra prefix set in ``AzureDataFactoryHookAsync``.
+- Allow and prefer non-prefixed extra fields for ``AzureDataFactoryHookAsync``.
   (`#899 <https://github.com/astronomer/astronomer-providers/pull/899>`_)
 - Pass connection_id in ``HttpTrigger``.
   (`#896 <https://github.com/astronomer/astronomer-providers/pull/896>`_)
