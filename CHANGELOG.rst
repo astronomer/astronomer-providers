@@ -19,7 +19,7 @@ Bug Fixes
   (`#912 <https://github.com/astronomer/astronomer-providers/pull/912>`_)
 - Fix ``BigQueryInsertJobOperatorAsync`` to send location parameter to hook.
   (`#866 <https://github.com/astronomer/astronomer-providers/pull/866>`_)
-- Mitigate race condition on deferrable sensors ExternalTaskSensorAsync and SnowflakeSensorAsync immediately getting successful,
+- Mitigate race condition on deferrable sensors ``ExternalTaskSensorAsync`` and ``SnowflakeSensorAsync`` immediately getting successful,
   by making the changes to these sensors to check on the worker first, then defer if the condition is not met.
   (`#908 <https://github.com/astronomer/astronomer-providers/pull/908>`_)
 
