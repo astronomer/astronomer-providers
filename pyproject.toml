@@ -82,3 +82,8 @@ combine-as-imports = true
 known-first-party = ["astronomer", "tests"]
 # TODO: for now, https://github.com/charliermarsh/ruff/issues/1817
 known-third-party = ["google", "gcloud"]
+
+[tool.bandit]
+# Skip missing timeout in requests API.
+# TODO: remove it in future
+skips = ["B113"]

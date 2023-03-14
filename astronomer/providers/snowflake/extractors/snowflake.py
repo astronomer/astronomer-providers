@@ -101,12 +101,10 @@ class SnowflakeAsyncExtractor(BaseExtractor):
         database = self.operator.database
         if not database:
             database = self._get_database()
-        # fmt: off
-        sql = (  # nosec
-            f"SELECT table_schema, table_name, column_name, ordinal_position, "
-            f"data_type FROM {database}.information_schema.columns WHERE table_name IN ({table_names});"
-        )
-        # fmt: on
+        sql = f"""
+                SELECT table_schema, table_name, column_name, ordinal_position, "
+                data_type FROM {database}.information_schema.columns WHERE table_name IN ({table_names});
+            """  # nosec
         return sql
 
     def _get_database(self) -> str:
