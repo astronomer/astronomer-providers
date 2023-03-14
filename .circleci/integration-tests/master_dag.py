@@ -1,3 +1,4 @@
+"""Master Dag to run all the example dags."""
 import logging
 import os
 import time
@@ -20,7 +21,7 @@ SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
-    """Fetch dags run details and generate report"""
+    """Fetch dags run details and generate report."""
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
         message_list: List[str] = []
@@ -60,7 +61,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
 
 
 def prepare_dag_dependency(task_info, execution_time):
-    """Prepare list of TriggerDagRunOperator task and dags run ids for dags of same providers"""
+    """Prepare list of TriggerDagRunOperator task and dags run ids for dags of same providers."""
     _dag_run_ids = []
     _task_list = []
     for _example_dag in task_info:
@@ -206,6 +207,14 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*sftp_trigger_tasks)
 
+    # DBT
+    dbt_task_info = [
+        {"dbt_dag": "example_dbt_cloud"},
+    ]
+    dbt_trigger_tasks, ids = prepare_dag_dependency(dbt_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*dbt_trigger_tasks)
+
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -234,6 +243,7 @@ with DAG(
         hive_trigger_tasks[0],
         azure_trigger_tasks[0],
         sftp_trigger_tasks[0],
+        dbt_trigger_tasks[0],
     ]
 
     last_task = [
@@ -251,6 +261,7 @@ with DAG(
         hive_trigger_tasks[-1],
         azure_trigger_tasks[-1],
         sftp_trigger_tasks[-1],
+        dbt_trigger_tasks[-1],
     ]
 
     last_task >> end
