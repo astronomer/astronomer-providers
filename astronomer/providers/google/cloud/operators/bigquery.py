@@ -122,7 +122,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 project_id=self.project_id,
                 delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
-                poll_interval=self.poll_interval
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
         )
