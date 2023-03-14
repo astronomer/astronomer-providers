@@ -95,6 +95,7 @@ repos:
       - id: bandit
         # Excluding Example DAGs temporarily until they can be fixed
         exclude: ^tests/.*\.py$|.*example_dags/.*
+        args: ["-c", "./pyproject.toml"]
 
   - repo: local
     hooks:
