@@ -69,6 +69,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
+    :param poll_interval: polling period in seconds to check for the status of job
     """
 
     def execute(self, context: Context) -> None:  # noqa: D102
@@ -121,6 +122,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 project_id=self.project_id,
                 delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
+                poll_interval=self.poll_interval
             ),
             method_name="execute_complete",
         )
