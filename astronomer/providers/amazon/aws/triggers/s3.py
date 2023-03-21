@@ -67,10 +67,11 @@ class S3KeyTrigger(BaseTrigger):
                     if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
                         if self.check_fn is None:
                             yield TriggerEvent({"status": "success"})
-                        s3_objects = await hook.get_files(
-                            client, self.bucket_name, self.bucket_key, self.wildcard_match
-                        )
-                        yield TriggerEvent({"status": "success", "s3_objects": s3_objects})
+                        else:
+                            s3_objects = await hook.get_files(
+                                client, self.bucket_name, self.bucket_key, self.wildcard_match
+                            )
+                            yield TriggerEvent({"status": "success", "s3_objects": s3_objects})
                     await asyncio.sleep(self.poke_interval)
 
         except Exception as e:
