@@ -119,6 +119,7 @@ class HttpHookAsync(BaseHook):
                 )
                 try:
                     response.raise_for_status()
+                    await session.close()
                     return response
                 except ClientResponseError as e:
                     self.log.warning(
@@ -131,6 +132,7 @@ class HttpHookAsync(BaseHook):
                         self.log.exception("HTTP error with status: %s", e.status)
                         # In this case, the user probably made a mistake.
                         # Don't retry.
+                        await session.close()
                         raise AirflowException(str(e.status) + ":" + e.message)
 
                 attempt_num += 1
