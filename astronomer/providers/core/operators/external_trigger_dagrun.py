@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import json
 import logging
 from datetime import datetime
@@ -20,6 +21,7 @@ from astronomer.providers.core.triggers.external_dagrun import ExternalDeploymen
 from astronomer.providers.utils.typing_compat import Context
 
 XCOM_EXECUTION_DATE_ISO = "trigger_execution_date_iso"
+XCOM_DAG_ID = "trigger_dag_id"
 XCOM_RUN_ID = "trigger_run_id"
 
 if TYPE_CHECKING:
@@ -168,7 +170,7 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
             if self.unpause_dag:
                 api.unpause_dag(dag_id=self.trigger_dag_id)
 
-            dag_run = api.trigger_dag(
+            dag_run = api.trigger_dag_run(
                 dag_id=self.trigger_dag_id,
                 run_id=self.trigger_run_id,
                 conf=self.conf,
@@ -189,13 +191,15 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
 
         if dag_run is None:
             raise RuntimeError("The dag_run should be set here!")
+        logging.warning(type(dag_run))
+        logging.warning(inspect.getmembers(dag_run))
 
         self.defer(
             timeout=self.execution_timeout,
             trigger=ExternalDeploymentDagRunTrigger(
                 http_conn_id=self.http_conn_id,
                 method="GET",
-                endpoint=DAGRUN_ENDPOINT.format(dag_run.dag_id, dag_run.run_id),
+                endpoint=DAGRUN_ENDPOINT.format(dag_id=dag_run.dag_id, run_id=dag_run.run_id),
                 data=None,
                 headers=self.headers,
                 extra_options=self.extra_options,
@@ -221,13 +225,15 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         run_id = event.get("run_id")
         execution_date = event.get("execution_date")
         if state in self.allowed_states:
-            self.log.info(f"Dag Run Succeeded with response: {event['state']}")
+            self.log.info(f"Dag Run Succeeded with response: {event}")
+            if dag_id:
+                context["ti"].xcom_push(key=XCOM_DAG_ID, value=dag_id)
             if run_id:
                 context["ti"].xcom_push(key=XCOM_RUN_ID, value=run_id)
             if execution_date:
                 context["ti"].xcom_push(key=XCOM_EXECUTION_DATE_ISO, value=execution_date)
             return
-        raise AirflowException(f"{dag_id} failed with failed state {state}")
+        raise AirflowException(f"Dag Run Failed with response: {event}")
 
 
 #######################################
@@ -252,8 +258,6 @@ def parse_dag(json_dict: dict[str, Any]) -> DAG:
     """
     Parse JSON dictionary to DAG object.
 
-    Can be used directly with json object_hook. E.g. : json.loads(..., object_hook=parse_dag)
-
     :param json_dict: Dictionary containing Dag properties to parse
     """
     dag = DAG(**json_dict)
@@ -263,8 +267,6 @@ def parse_dag(json_dict: dict[str, Any]) -> DAG:
 def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
     """
     Parse JSON dictionary to DagRun object.
-
-    Can be used directly with json object_hook. E.g. : json.loads(..., object_hook=parse_dag_run)
 
     :param json_dict: Dictionary containing DagRun properties to parse
     """
@@ -303,14 +305,14 @@ class AirflowApiClient:
 
     def __init__(
         self,
-        http_conn_id: str,
-        auth_type: type[AuthBase],
         headers: dict[str, Any],
-        extra_options: dict[str, Any],
-        tcp_keep_alive: bool,
-        tcp_keep_alive_idle: int,
-        tcp_keep_alive_count: int,
-        tcp_keep_alive_interval: int,
+        http_conn_id: str = "http_default",
+        auth_type: type[AuthBase] = HTTPBasicAuth,
+        extra_options: dict[str, Any] | None = None,
+        tcp_keep_alive: bool = True,
+        tcp_keep_alive_idle: int = 120,
+        tcp_keep_alive_count: int = 20,
+        tcp_keep_alive_interval: int = 30,
     ) -> None:
         self.http_conn_id = http_conn_id
         self.auth_type = auth_type
@@ -321,9 +323,7 @@ class AirflowApiClient:
         self.tcp_keep_alive_count = tcp_keep_alive_count
         self.tcp_keep_alive_interval = tcp_keep_alive_interval
 
-    def call_api(
-        self, endpoint: str, method: str, data: dict[str, Any] | str | None, extra_options: dict[str, Any]
-    ) -> requests.Response:
+    def call_api(self, endpoint: str, method: str, data: dict[str, Any] | str | None) -> requests.Response:
         """
         Call the External Airflow API Endpoint.
 
@@ -348,10 +348,10 @@ class AirflowApiClient:
         logging.debug(f"Endpoint: {endpoint}")
         logging.debug(f"Data: {data}")
         logging.debug(f"Headers: {self.headers}")
-        logging.debug(f"Extras: {extra_options}")
+        logging.debug(f"Extras: {self.extra_options}")
 
         # Do not raise_for_status if Dagrun already exist
-        _extra_options = extra_options | {"check_response": False}
+        _extra_options = self.extra_options | {"check_response": False}
         response = hook.run(endpoint, data, self.headers, _extra_options)
         if response.status_code != 409:
             hook.check_response(response)
@@ -360,7 +360,7 @@ class AirflowApiClient:
 
         return cast(requests.Response, response)
 
-    def trigger_dag(
+    def trigger_dag_run(
         self, dag_id: str, run_id: str, execution_date: str | datetime, conf: dict[str, Any]
     ) -> DagRun:
         """Trigger a Dag Run."""
@@ -373,21 +373,21 @@ class AirflowApiClient:
         endpoint = DAGRUNS_ENDPOINT.format(dag_id=dag_id)
         data = {"dag_run_id": run_id, "execution_date": execution_date_str, "conf": conf}
 
-        response = self.call_api(endpoint, "POST", json.dumps(data), self.extra_options)
+        response = self.call_api(endpoint, "POST", json.dumps(data))
 
         if response.status_code == 409:
             raise DagRunAlreadyExists(
                 DagRun(dag_id=dag_id, run_id=run_id, execution_date=execution_date), execution_date, run_id
             )
 
-        return response.json(object_hook=parse_dag_run)
+        return parse_dag_run(response.json())
 
     def get_dag_run(self, dag_id: str, run_id: str) -> DagRun:
         """Fetch a Dag Run from its dag_id and dag_run_id."""
         logging.info(f"Get Dag run {run_id} for DAG {dag_id}")
         endpoint = DAGRUN_ENDPOINT.format(dag_id=dag_id, run_id=run_id)
-        response = self.call_api(endpoint, "GET", None, self.extra_options)
-        return response.json(object_hook=parse_dag_run)
+        response = self.call_api(endpoint, "GET", None)
+        return parse_dag_run(response.json())
 
     def get_dag_run_by_date(self, dag_id: str, execution_date: datetime | str) -> DagRun:
         """Fetch a Dag Run from its dag_id and execution_date."""
@@ -400,7 +400,7 @@ class AirflowApiClient:
             "execution_date_gte": execution_date,
             "execution_date_lte": execution_date,
         }
-        response = self.call_api(endpoint, "GET", data, self.extra_options)
+        response = self.call_api(endpoint, "GET", data)
         resp_json = response.json()
         return parse_dag_run(resp_json.get("dag_runs")[0])
 
@@ -412,7 +412,7 @@ class AirflowApiClient:
         logging.info(f"Clearing Dag run {run_id} for DAG {dag_id}")
         endpoint = CLEAR_DAGRUN_ENDPOINT.format(dag_id=dag_id, run_id=run_id)
         data = {"dry_run": False}
-        self.call_api(endpoint, "POST", json.dumps(data), self.extra_options)
+        self.call_api(endpoint, "POST", json.dumps(data))
 
     def unpause_dag(self, dag_id: str) -> None:
         """Unpause a Dag based on dag_id.
@@ -421,4 +421,4 @@ class AirflowApiClient:
         logging.info(f"Unpausing Dag {dag_id}")
         endpoint = DAG_ENDPOINT.format(dag_id=dag_id)
         data = {"is_paused": False}
-        self.call_api(endpoint, "PATCH", json.dumps(data), self.extra_options)
+        self.call_api(endpoint, "PATCH", json.dumps(data))
