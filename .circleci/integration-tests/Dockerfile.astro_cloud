@@ -70,7 +70,9 @@ ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
 ENV PATH $PATH:$JAVA_HOME/bin::$HIVE_HOME/bin:$HADOOP_HOME/bin
 
 COPY astronomer-providers /tmp/astronomer-providers
-RUN pip install /tmp/astronomer-providers[all]
+RUN  python3 -m pip install --upgrade pip
+# Ideally we should install using constraints file
+RUN pip install  --upgrade --force-reinstall  --no-cache-dir /tmp/astronomer-providers[all]
 RUN pip install apache-airflow[slack]
 
 
