@@ -109,31 +109,29 @@ class HttpHookAsync(BaseHook):
 
             attempt_num = 1
             while True:
-                response = await request_func(
+                async with request_func(
                     url,
                     json=data if self.method in ("POST", "PATCH") else None,
                     params=data if self.method == "GET" else None,
                     headers=headers,
                     auth=auth,
                     **extra_options,
-                )
-                try:
-                    response.raise_for_status()
-                    await session.close()
-                    return response
-                except ClientResponseError as e:
-                    self.log.warning(
-                        "[Try %d of %d] Request to %s failed.",
-                        attempt_num,
-                        self.retry_limit,
-                        url,
-                    )
-                    if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
-                        self.log.exception("HTTP error with status: %s", e.status)
-                        # In this case, the user probably made a mistake.
-                        # Don't retry.
-                        await session.close()
-                        raise AirflowException(str(e.status) + ":" + e.message)
+                ) as response:
+                    try:
+                        response.raise_for_status()
+                        return response
+                    except ClientResponseError as e:
+                        self.log.warning(
+                          "[Try %d of %d] Request to %s failed.",
+                            attempt_num,
+                            self.retry_limit,
+                            url,
+                        )
+                        if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
+                            self.log.exception("HTTP error with status: %s", e.status)
+                            # In this case, the user probably made a mistake.
+                            # Don't retry.
+                            raise AirflowException(str(e.status) + ":" + e.message)
 
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
