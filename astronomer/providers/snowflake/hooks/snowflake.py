@@ -16,7 +16,7 @@ from snowflake.connector.util_text import split_statements
 
 def fetch_all_snowflake_handler(
     cursor: SnowflakeCursor,
-) -> list[dict[str, Any] | tuple[Any, ...] | None]:
+) ->  list[tuple[Any]] | list[dict[str, Any]]:
     """Handler for SnowflakeCursor to return results"""
     return cursor.fetchall()
 
