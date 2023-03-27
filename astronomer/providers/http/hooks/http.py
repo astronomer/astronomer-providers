@@ -122,7 +122,7 @@ class HttpHookAsync(BaseHook):
                         return response
                     except ClientResponseError as e:
                         self.log.warning(
-                          "[Try %d of %d] Request to %s failed.",
+                            "[Try %d of %d] Request to %s failed.",
                             attempt_num,
                             self.retry_limit,
                             url,
