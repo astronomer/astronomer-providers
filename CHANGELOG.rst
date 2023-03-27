@@ -2,6 +2,18 @@ Changelog
 =========
 
 
+1.15.2 (2023-03-27)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Fix ``S3KeyTrigger`` to return only one trigger event when ``check_fn`` is set to none.
+  (`#925 <https://github.com/astronomer/astronomer-providers/pull/925>`_)
+- Handle unclosed connection errors in ``HttpTrigger`` .
+  (`#927 <https://github.com/astronomer/astronomer-providers/pull/927>`_)
+
+
 1.15.1 (2023-03-09)
 -------------------
 
