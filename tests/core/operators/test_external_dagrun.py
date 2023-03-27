@@ -1,10 +1,11 @@
 import json
+from datetime import datetime, timezone
 from unittest import mock
 from unittest.mock import patch
 
 import pytest
 from airflow.exceptions import DagRunAlreadyExists
-from airflow.models import DAG, DagRun
+from airflow.models import DagRun
 from airflow.utils.state import DagRunState, State
 from airflow.utils.timezone import datetime
 from requests.auth import HTTPBasicAuth
@@ -15,7 +16,6 @@ from astronomer.providers.core.operators.external_trigger_dagrun import (  # Ext
     parse_dag_run,
     parse_execution_date,
 )
-from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -30,6 +30,7 @@ def api_client() -> AirflowApiClient:
         tcp_keep_alive_count=5,
         tcp_keep_alive_interval=5,
     )
+
 
 @pytest.fixture
 def dagrun() -> DagRun:
@@ -51,7 +52,11 @@ def dagrun() -> DagRun:
     "input, expected, exception",
     [
         ("2023-01-01T00:00:00+00:00", datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), None),
-        (datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), None),
+        (
+            datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            None,
+        ),
         (None, None, TypeError),
     ],
 )
@@ -93,7 +98,10 @@ def test_parse_execution_date(input, expected, exception):
                 external_trigger=True,
                 conf={},
                 state=State.SUCCESS,
-                data_interval=(datetime(2022, 12, 31,0,0,0, tzinfo=timezone.utc), datetime(2023, 1, 1,0,0,0, tzinfo=timezone.utc)),
+                data_interval=(
+                    datetime(2022, 12, 31, 0, 0, 0, tzinfo=timezone.utc),
+                    datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                ),
             ),
             None,
         )
@@ -140,8 +148,8 @@ class TestAirflowApiClient:
         mock_run.assert_called_once_with(
             endpoint=endpoint,
             data=data,
-            headers={'Content-Type': 'application/json'},
-            extra_options={"check_response": False}
+            headers={"Content-Type": "application/json"},
+            extra_options={"check_response": False},
         )
 
     def test_trigger_dag_run(self, api_client):
@@ -163,7 +171,7 @@ class TestAirflowApiClient:
             "start_date": None,
             "state": "queued",
         }
-        with patch.object(api_client, 'call_api', return_value=response) as mock_call_api:
+        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
             endpoint = "/api/v1/dags/{dag_id}/dagRuns".format(dag_id="test_dag")
             data = {"dag_run_id": "test_run", "execution_date": "2023-01-01T00:00:00+00:00", "conf": {}}
             api_client.trigger_dag_run("test_dag", "test_run", "2023-01-01T00:00:00+00:00", conf={})
@@ -176,12 +184,11 @@ class TestAirflowApiClient:
             "detail": "DAGRun with DAG ID: 'example_dag_basic' and DAGRun logical date: '2023-01-01 00:00:00+00:00' already exists",
             "status": 409,
             "title": "Conflict",
-            "type": "Errors/AlreadyExists"
+            "type": "Errors/AlreadyExists",
         }
-        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
+        with patch.object(api_client, "call_api", return_value=response):
             with pytest.raises(DagRunAlreadyExists):
                 api_client.trigger_dag_run("test_dag", "test_run", "2023-01-01T00:00:00+00:00", conf={})
-
 
     def test_get_dag_run(self, api_client, dagrun):
         response = mock.Mock(spec=Response)
@@ -203,12 +210,11 @@ class TestAirflowApiClient:
             "state": "success",
         }
 
-        with patch.object(api_client, 'call_api', return_value=response) as mock_call_api:
+        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
             endpoint = "/api/v1/dags/{dag_id}/dagRuns/{dag_run}".format(dag_id="test-dag", dag_run="test_run")
             api_client.get_dag_run("test-dag", "test_run")
             # TODO: Add assert to compare DagRun objects
         mock_call_api.assert_called_once_with(endpoint, "GET", None)
-
 
     def test_get_dag_run(self, api_client, dagrun):
         response = mock.Mock(spec=Response)
@@ -233,7 +239,7 @@ class TestAirflowApiClient:
                 }
             ]
         }
-        with patch.object(api_client, 'call_api', return_value=response) as mock_call_api:
+        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
             endpoint = "/api/v1/dags/{dag_id}/dagRuns".format(dag_id="test-dag")
             api_client.get_dag_run_by_date("test-dag", "2023-01-01")
             execution_date = "2023-01-01"
@@ -253,12 +259,14 @@ class TestAirflowApiClient:
                     "dag_id": "test_dag",
                     "dag_run_id": "test_run",
                     "execution_date": "2023-01-01T00:00:00.000000+00:00",
-                    "task_id": "hello"
+                    "task_id": "hello",
                 }
             ]
         }
-        with patch.object(api_client, 'call_api', return_value=response) as mock_call_api:
-            endpoint = "/api/v1/dags/{dag_id}/dagRuns/{run_id}/clear".format(dag_id="test_dag", run_id="test_run")
+        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
+            endpoint = "/api/v1/dags/{dag_id}/dagRuns/{run_id}/clear".format(
+                dag_id="test_dag", run_id="test_run"
+            )
             data = {"dry_run": False}
             api_client.clear_dag_run("test_dag", "test_run")
         mock_call_api.assert_called_once_with(endpoint, "POST", json.dumps(data))
@@ -272,12 +280,14 @@ class TestAirflowApiClient:
             "is_active": True,
             "is_subdag": False,
         }
-        with patch.object(api_client, 'call_api', return_value=response) as mock_call_api:
+        with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
             endpoint = "/api/v1/dags/{dag_id}".format(dag_id="test_dag")
             data = {"is_paused": False}
             api_client.unpause_dag("test_dag")
         mock_call_api.assert_called_once_with(endpoint, "PATCH", json.dumps(data))
+
     #
+
 
 # class TestExternalDeploymentTriggerDagRunOperator:
 

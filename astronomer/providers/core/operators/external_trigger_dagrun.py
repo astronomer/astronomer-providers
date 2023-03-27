@@ -16,8 +16,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from requests.auth import AuthBase, HTTPBasicAuth
 
-from astronomer.providers.core.triggers.external_dagrun import \
-    ExternalDeploymentDagRunTrigger
+from astronomer.providers.core.triggers.external_dagrun import ExternalDeploymentDagRunTrigger
 from astronomer.providers.utils.typing_compat import Context
 
 XCOM_EXECUTION_DATE_ISO = "trigger_execution_date_iso"
@@ -348,10 +347,7 @@ class AirflowApiClient:
 
         # Do not raise_for_status if Dagrun already exist
         _extra_options = self.extra_options | {"check_response": False}
-        response = hook.run(endpoint=endpoint,
-                            data=data,
-                            headers=self.headers,
-                            extra_options=_extra_options)
+        response = hook.run(endpoint=endpoint, data=data, headers=self.headers, extra_options=_extra_options)
         if response.status_code != 409:
             hook.check_response(response)
 
