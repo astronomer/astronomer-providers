@@ -10,7 +10,7 @@ Bug Fixes
 
 - Fix ``S3KeyTrigger`` to return only one trigger event when ``check_fn`` is set to none.
   (`#925 <https://github.com/astronomer/astronomer-providers/pull/925>`_)
-- Fix ``HttpTrigger`` throwing unclosed connection error.
+- Handle unclosed connection errors in ``HttpTrigger`` .
   (`#927 <https://github.com/astronomer/astronomer-providers/pull/927>`_)
 
 
