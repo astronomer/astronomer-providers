@@ -10,14 +10,14 @@ import requests
 from airflow.exceptions import AirflowException, DagRunAlreadyExists
 from airflow.models import XCom
 from airflow.models.baseoperator import BaseOperator, BaseOperatorLink
-from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.utils import timezone
 from airflow.utils.state import State
 from requests.auth import AuthBase, HTTPBasicAuth
 
-from astronomer.providers.core.triggers.external_dagrun import ExternalDeploymentDagRunTrigger
+from astronomer.providers.core.triggers.external_dagrun import \
+    ExternalDeploymentDagRunTrigger
 from astronomer.providers.utils.typing_compat import Context
 
 XCOM_EXECUTION_DATE_ISO = "trigger_execution_date_iso"
@@ -244,24 +244,14 @@ def parse_execution_date(execution_date: datetime | str) -> datetime:
     :param execution_date: Execution date
     :return: Execution date as datetime object
     """
-    if execution_date is not None and not isinstance(execution_date, (str, datetime)):
-        raise TypeError(
-            f"Expected str or datetime.datetime type for execution_date.Got {type(execution_date)}"
-        )
     if isinstance(execution_date, datetime):
         return execution_date
     elif isinstance(execution_date, str):
         return cast(datetime, timezone.parse(execution_date))
-
-
-def parse_dag(json_dict: dict[str, Any]) -> DAG:
-    """
-    Parse JSON dictionary to DAG object.
-
-    :param json_dict: Dictionary containing Dag properties to parse
-    """
-    dag = DAG(**json_dict)
-    return dag
+    else:
+        raise TypeError(
+            f"Expected str or datetime.datetime type for execution_date.Got {type(execution_date)}"
+        )
 
 
 def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
@@ -270,19 +260,26 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
 
     :param json_dict: Dictionary containing DagRun properties to parse
     """
-    data_interval_start = json_dict.get("data_interval_start")
-    data_interval_end = json_dict.get("data_interval_end")
-    if data_interval_start and data_interval_end:
-        data_interval = (timezone.parse(data_interval_start), timezone.parse(data_interval_end))
+    if (data_interval_start := json_dict.get("data_interval_start")) and (
+        data_interval_end := json_dict.get("data_interval_end")
+    ):
+        data_interval = (
+            timezone.parse(data_interval_start),
+            timezone.parse(data_interval_end),
+        )
     else:
         data_interval = None
 
-    dag_run = DagRun(
+    queued_at = datetime.fromisoformat(x) if (x := json_dict.get("queued_at")) else None
+    execution_date = datetime.fromisoformat(x) if (x := json_dict.get("execution_date")) else None
+    start_date = datetime.fromisoformat(x) if (x := json_dict.get("start_date")) else None
+
+    return DagRun(
         dag_id=json_dict.get("dag_id"),
         run_id=json_dict.get("dag_run_id"),
-        queued_at=json_dict.get("queued_at"),
-        execution_date=json_dict.get("execution_date"),
-        start_date=json_dict.get("start_date"),
+        queued_at=queued_at,
+        execution_date=execution_date,
+        start_date=start_date,
         external_trigger=json_dict.get("external_trigger"),
         conf=json_dict.get("conf"),
         state=json_dict.get("state"),
@@ -291,7 +288,6 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
         creating_job_id=json_dict.get("creating_job_id"),
         data_interval=data_interval,
     )
-    return dag_run
 
 
 DAG_ENDPOINT = "/api/v1/dags/{dag_id}"
@@ -352,7 +348,10 @@ class AirflowApiClient:
 
         # Do not raise_for_status if Dagrun already exist
         _extra_options = self.extra_options | {"check_response": False}
-        response = hook.run(endpoint, data, self.headers, _extra_options)
+        response = hook.run(endpoint=endpoint,
+                            data=data,
+                            headers=self.headers,
+                            extra_options=_extra_options)
         if response.status_code != 409:
             hook.check_response(response)
 
