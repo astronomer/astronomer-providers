@@ -58,6 +58,7 @@ with DAG(
             {"Key": "Purpose", "Value": "ProviderTest"},
         ],
         wait_for_completion=True,
+        max_attempt=30,
         aws_conn_id=AWS_CONN_ID,
     )
 
