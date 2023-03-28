@@ -47,7 +47,7 @@ class ExternalDeploymentTriggerDagRunLink(BaseOperatorLink):
         endpoint = DAGRUN_ENDPOINT.format(dag_id=dag_id, run_id=run_id)
         hook = HttpHook(method="GET", http_conn_id=http_conn_id)
 
-        return cast(str, hook.url_from_endpoint(endpoint=endpoint))
+        return hook.url_from_endpoint(endpoint=endpoint)
 
 
 class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
@@ -346,7 +346,8 @@ class AirflowApiClient:
         logging.debug(f"Extras: {self.extra_options}")
 
         # Do not raise_for_status if Dagrun already exist
-        _extra_options = self.extra_options | {"check_response": False}
+        _extra_options = self.extra_options.copy()
+        _extra_options.update({"check_response": False})
         response = hook.run(endpoint=endpoint, data=data, headers=self.headers, extra_options=_extra_options)
         if response.status_code != 409:
             hook.check_response(response)
@@ -356,13 +357,10 @@ class AirflowApiClient:
         return cast(requests.Response, response)
 
     def trigger_dag_run(
-        self, dag_id: str, run_id: str, execution_date: str | datetime, conf: dict[str, Any]
+        self, dag_id: str, run_id: str, execution_date: datetime, conf: dict[str, Any]
     ) -> DagRun:
         """Trigger a Dag Run."""
-        if isinstance(execution_date, datetime):
-            execution_date_str = execution_date.isoformat()
-        else:
-            execution_date_str = execution_date
+        execution_date_str = execution_date.isoformat()
 
         logging.info(f"Triggering Dag {dag_id}")
         endpoint = DAGRUNS_ENDPOINT.format(dag_id=dag_id)

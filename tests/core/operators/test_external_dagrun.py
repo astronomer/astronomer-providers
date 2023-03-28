@@ -7,7 +7,6 @@ import pytest
 from airflow.exceptions import DagRunAlreadyExists
 from airflow.models import DagRun
 from airflow.utils.state import DagRunState, State
-from airflow.utils.timezone import datetime
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
 
@@ -174,7 +173,9 @@ class TestAirflowApiClient:
         with patch.object(api_client, "call_api", return_value=response) as mock_call_api:
             endpoint = "/api/v1/dags/{dag_id}/dagRuns".format(dag_id="test_dag")
             data = {"dag_run_id": "test_run", "execution_date": "2023-01-01T00:00:00+00:00", "conf": {}}
-            api_client.trigger_dag_run("test_dag", "test_run", "2023-01-01T00:00:00+00:00", conf={})
+            api_client.trigger_dag_run(
+                "test_dag", "test_run", datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), conf={}
+            )
         mock_call_api.assert_called_once_with(endpoint, "POST", json.dumps(data))
 
     def test_trigger_dag_run_already_exists(self, api_client):
@@ -188,7 +189,9 @@ class TestAirflowApiClient:
         }
         with patch.object(api_client, "call_api", return_value=response):
             with pytest.raises(DagRunAlreadyExists):
-                api_client.trigger_dag_run("test_dag", "test_run", "2023-01-01T00:00:00+00:00", conf={})
+                api_client.trigger_dag_run(
+                    "test_dag", "test_run", datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), conf={}
+                )
 
     def test_get_dag_run(self, api_client, dagrun):
         response = mock.Mock(spec=Response)
@@ -216,7 +219,7 @@ class TestAirflowApiClient:
             # TODO: Add assert to compare DagRun objects
         mock_call_api.assert_called_once_with(endpoint, "GET", None)
 
-    def test_get_dag_run(self, api_client, dagrun):
+    def test_get_dag_run_by_date(self, api_client, dagrun):
         response = mock.Mock(spec=Response)
         response.status_code = 200
         response.json.return_value = {
