@@ -86,12 +86,10 @@ class TaskStateTrigger(BaseTrigger):
 
 class DagStateTrigger(BaseTrigger):
     """
-    Waits asynchronously for a task in a different DAG to complete for a
+    Waits asynchronously for a different DAG to complete for a
     specific logical date.
 
     :param dag_id: The dag_id that contains the task you want to wait for
-    :param task_id: The task_id that contains the task you want to
-        wait for. If ``None`` (default value) the sensor waits for the DAG
     :param states: allowed states, default is ``['success']``
     :param execution_dates: The logical date at which DAG run.
     :param poll_interval: The time interval in seconds to check the state.
