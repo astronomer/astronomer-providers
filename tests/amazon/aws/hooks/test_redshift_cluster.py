@@ -128,6 +128,7 @@ class TestRedshiftHookAsync:
 
         assert task == cluster_state
 
+    @pytest.mark.asyncio
     @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
     async def test_delete_cluster_when_cluster_not_exist(self, mock_client):
         mock_client.return_value.__aenter__.return_value.delete_cluster.side_effect = ClientError(
