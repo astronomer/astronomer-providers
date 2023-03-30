@@ -133,8 +133,10 @@ class TestRedshiftHookAsync:
     async def test_delete_cluster_when_cluster_not_exist(self, mock_client):
         mock_client.return_value.__aenter__.return_value.delete_cluster.side_effect = ClientError(
             {
-                "Code": "ClusterNotFound",
-                "Message": "cluster not found",
+                "Error": {
+                    "Code": "ClusterNotFound",
+                    "Message": "cluster not found",
+                }
             },
             operation_name="DeleteCluster",
         )
