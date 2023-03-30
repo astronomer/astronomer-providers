@@ -128,6 +128,20 @@ class TestRedshiftHookAsync:
 
         assert task == cluster_state
 
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
+    async def test_delete_cluster_when_cluster_not_exist(self, mock_client):
+        mock_client.return_value.__aenter__.return_value.delete_cluster.side_effect = ClientError(
+            {
+                "Code": "ClusterNotFound",
+                "Message": "cluster not found",
+            },
+            operation_name="DeleteCluster",
+        )
+        hook = RedshiftHookAsync(aws_conn_id="test_aws_connection_id")
+        response = await hook.delete_cluster(cluster_identifier="test_cluster")
+
+        assert {"status": "success", "cluster_state": "cluster_not_found"} == response
+
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_cluster.RedshiftHookAsync.get_client_async")
     async def test_delete_cluster_exception(self, mock_client):
