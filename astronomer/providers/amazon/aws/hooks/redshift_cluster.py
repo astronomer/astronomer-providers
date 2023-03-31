@@ -71,6 +71,8 @@ class RedshiftHookAsync(AwsBaseHookAsync):
                             return expected_response
                 return {"status": "error", "cluster_state": status}
         except botocore.exceptions.ClientError as error:
+            if error.response.get("Error", {}).get("Code", "") == "ClusterNotFound":
+                return {"status": "success", "cluster_state": "cluster_not_found"}
             return {"status": "error", "message": str(error)}
 
     async def pause_cluster(
