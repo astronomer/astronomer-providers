@@ -30,7 +30,7 @@ workflows:
           matrix:
             parameters:
               python_version: ["3.8", "3.9", "3.10"]
-              airflow_version: ["2.3.4", "2.4.2", "2.5.2"]
+              airflow_version: ["2.3.4", "2.4.2", "2.5.3"]
           <<: *all_branches_and_version_tag
       - build-docs:
           <<: *all_branches_and_version_tag
