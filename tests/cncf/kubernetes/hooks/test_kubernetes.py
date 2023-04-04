@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import Connection
 from kubernetes_asyncio import client
 
-from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
+from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync, get_field
 from tests.utils.airflow_util import get_conn
 
 
@@ -127,3 +127,47 @@ class TestKubernetesHookAsync:
         actual = await hook._load_config()
         mock_load_kube_config.assert_awaited()
         assert isinstance(actual, client.ApiClient)
+
+    def test_get_field_prefixed_extras(self):
+        """Test get_field function for retrieving prefixed extra fields"""
+        mock_conn = Connection(
+            conn_id="test_conn",
+            conn_type="kubernetes",
+            extra={
+                "extra__kubernetes__in_cluster": True,
+                "extra__kubernetes__cluster_context": "cluster_context",
+                "extra__kubernetes__kube_config_path": "config_path",
+                "extra__kubernetes__kube_config": "config_file",
+            },
+        )
+        extras = mock_conn.extra_dejson
+        assert get_field(extras, "in_cluster", strict=True) is True
+        assert get_field(extras, "cluster_context", strict=True) == "cluster_context"
+        assert get_field(extras, "kube_config_path", strict=True) == "config_path"
+        assert get_field(extras, "kube_config", strict=True) == "config_file"
+        with pytest.raises(ValueError):
+            get_field(extras, "extra__kubernetes__in_cluster", strict=True)
+        with pytest.raises(KeyError):
+            get_field(extras, "non-existent-field", strict=True)
+
+    def test_get_field_non_prefixed_extras(self):
+        """Test get_field function for retrieving non-prefixed extra fields"""
+        mock_conn = Connection(
+            conn_id="test_conn",
+            conn_type="kubernetes",
+            extra={
+                "in_cluster": True,
+                "cluster_context": "cluster_context",
+                "kube_config_path": "config_path",
+                "kube_config": "config_file",
+            },
+        )
+        extras = mock_conn.extra_dejson
+        assert get_field(extras, "in_cluster", strict=True) is True
+        assert get_field(extras, "cluster_context", strict=True) == "cluster_context"
+        assert get_field(extras, "kube_config_path", strict=True) == "config_path"
+        assert get_field(extras, "kube_config", strict=True) == "config_file"
+        with pytest.raises(ValueError):
+            get_field(extras, "extra__kubernetes__in_cluster", strict=True)
+        with pytest.raises(KeyError):
+            get_field(extras, "non-existent-field", strict=True)

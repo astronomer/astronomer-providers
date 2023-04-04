@@ -1,7 +1,26 @@
+from typing import Any, Dict
+
 import aiofiles
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
+
+
+def get_field(extras: Dict[str, Any], field_name: str, strict: bool = False) -> Any:
+    """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
+    backward_compatibility_prefix = "extra__kubernetes__"
+    if field_name.startswith("extra__"):
+        raise ValueError(
+            f"Got prefixed name {field_name}; please remove the '{backward_compatibility_prefix}' prefix "
+            "when using this method."
+        )
+    if field_name in extras:
+        return extras[field_name] or None
+    prefixed_name = f"{backward_compatibility_prefix}{field_name}"
+    if prefixed_name in extras:
+        return extras[prefixed_name] or None
+    if strict:
+        raise KeyError(f"Field {field_name} not found in extras")
 
 
 class KubernetesHookAsync(KubernetesHook):  # noqa: D101
@@ -17,16 +36,10 @@ class KubernetesHookAsync(KubernetesHook):  # noqa: D101
             extras = connection.extra_dejson
         else:
             extras = {}
-        in_cluster = self._coalesce_param(
-            self.in_cluster, extras.get("extra__kubernetes__in_cluster") or None
-        )
-        cluster_context = self._coalesce_param(
-            self.cluster_context, extras.get("extra__kubernetes__cluster_context") or None
-        )
-        kubeconfig_path = self._coalesce_param(
-            self.config_file, extras.get("extra__kubernetes__kube_config_path") or None
-        )
-        kubeconfig = extras.get("extra__kubernetes__kube_config") or None
+        in_cluster = self._coalesce_param(self.in_cluster, get_field(extras, "in_cluster"))
+        cluster_context = self._coalesce_param(self.cluster_context, get_field(extras, "cluster_context"))
+        kubeconfig_path = self._coalesce_param(self.config_file, get_field(extras, "kube_config_path"))
+        kubeconfig = get_field(extras, "kube_config") or None
         num_selected_configuration = len([o for o in [in_cluster, kubeconfig, kubeconfig_path] if o])
 
         if num_selected_configuration > 1:
