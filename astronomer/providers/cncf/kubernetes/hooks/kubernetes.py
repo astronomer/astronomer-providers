@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 import aiofiles
 from airflow.exceptions import AirflowException
@@ -6,7 +6,7 @@ from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
 
 
-def get_field(extras: dict[str, Any], field_name: str, strict: bool = False) -> Any:
+def get_field(extras: Dict[str, Any], field_name: str, strict: bool = False) -> Any:
     """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
     backward_compatibility_prefix = "extra__kubernetes__"
     if field_name.startswith("extra__"):
