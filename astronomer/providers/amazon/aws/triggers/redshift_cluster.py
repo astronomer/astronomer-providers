@@ -26,7 +26,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         aws_conn_id: str,
         cluster_identifier: str,
         operation_type: str,
-        polling_period_seconds: float = 5.0,
+        polling_period_seconds: int = 5.0,
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
     ):
