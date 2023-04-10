@@ -73,7 +73,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Dict[str, Any], event: Dict[str, str]) -> str:
+    def execute_complete(self, context: Context, event: Dict[str, str]) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

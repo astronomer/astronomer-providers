@@ -106,7 +106,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
     def __init__(
         self,
         *,
-        poll_interval: float = 5,
+        poll_interval: int = 5,
         **kwargs: Any,
     ):
         self.poll_interval = poll_interval
@@ -172,7 +172,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
     def __init__(
         self,
         *,
-        poll_interval: float = 5,
+        poll_interval: int = 5,
         **kwargs: Any,
     ):
         self.poll_interval = poll_interval
