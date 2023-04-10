@@ -96,6 +96,7 @@ repos:
         # Excluding Example DAGs temporarily until they can be fixed
         exclude: ^tests/.*\.py$|.*example_dags/.*
         args: ["-c", "./pyproject.toml"]
+        additional_dependencies: [".[toml]"]
 
   - repo: local
     hooks:
