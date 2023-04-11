@@ -69,8 +69,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
-    :param poll_interval: Deferrable mode only) polling period in seconds to check for the status of job.
-        Defaults to 4 seconds.
+    :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
     def execute(self, context: Context) -> None:  # noqa: D102
@@ -248,8 +247,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         If set as a sequence, the identities from the list must grant
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
-    param poll_interval: (Deferrable mode only) polling period in seconds to check for the status of job.
-        Defaults to 4 seconds
+    param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds
     """
 
     def _submit_job(  # type: ignore[override]
@@ -352,8 +350,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
     :param labels: a dictionary containing labels for the table, passed to BigQuery
-    :param poll_interval: (Deferrable mode only) polling period in seconds to check for the status of job.
-        Defaults to 4 seconds.
+    :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
     def _submit_job(
