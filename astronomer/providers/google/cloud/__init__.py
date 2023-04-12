@@ -13,7 +13,7 @@ KUBE_CONFIG_ENV_VAR = "KUBECONFIG"
 
 
 @contextmanager
-def _get_gke_config_file(
+def _get_gke_config_file(  # pragma: no cover
     gcp_conn_id: str,
     project_id: str | None,
     cluster_name: str,
