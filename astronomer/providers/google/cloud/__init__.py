@@ -13,7 +13,7 @@ KUBE_CONFIG_ENV_VAR = "KUBECONFIG"
 
 
 @contextmanager
-def _get_gke_config_file(  # pragma: no cover
+def _get_gke_config_file(
     gcp_conn_id: str,
     project_id: str | None,
     cluster_name: str,
@@ -21,7 +21,7 @@ def _get_gke_config_file(  # pragma: no cover
     regional: bool,
     location: str,
     use_internal_ip: bool,
-) -> Generator[str, None, None]:
+) -> Generator[str, None, None]: # pragma: no cover
     hook = GoogleBaseHook(gcp_conn_id=gcp_conn_id)
     project_id = project_id or hook.project_id
 
