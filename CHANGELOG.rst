@@ -2,6 +2,18 @@ Changelog
 =========
 
 
+1.15.3 (2023-04-12)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Allow and prefer non-prefixed extra fields for ``KubernetesHookAsync``
+  (`#944 <https://github.com/astronomer/astronomer-providers/pull/944>`_)
+- Make ``GKEStartPodOperatorAsync`` compatible with ``apache-airflow-providers-google>=9.0.0``.
+  (`#954 <https://github.com/astronomer/astronomer-providers/pull/954>`_)
+
+
 1.15.2 (2023-03-27)
 -------------------
 
