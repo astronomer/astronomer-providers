@@ -21,7 +21,7 @@ def _get_gke_config_file(
     regional: bool,
     location: str,
     use_internal_ip: bool,
-) -> Generator[str, None, None]: # pragma: no cover
+) -> Generator[str, None, None]:  # pragma: no cover
     hook = GoogleBaseHook(gcp_conn_id=gcp_conn_id)
     project_id = project_id or hook.project_id
 
