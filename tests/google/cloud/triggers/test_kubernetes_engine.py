@@ -75,7 +75,7 @@ class TestGKEStartPodTrigger:
     @mock.patch(
         "astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async"
     )
-    @mock.patch(f"{MODULE_GOOGLE}.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file")
+    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
     async def test_run(self, mock_tmp, get_api_client_async, wait_for_pod_start, mock_state, expected_value):
         """assert that when wait_for_pod_start succeeded run method yield correct event"""
         my_tmp = mock_tmp.__enter__()
@@ -93,7 +93,7 @@ class TestGKEStartPodTrigger:
     @mock.patch(
         "astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async"
     )
-    @mock.patch(f"{MODULE_GOOGLE}.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file")
+    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
     async def test_run_pending(
         self, mock_tmp, get_api_client_async, wait_for_pod_start, wait_for_container_completion
     ):
@@ -107,7 +107,7 @@ class TestGKEStartPodTrigger:
         assert await self.TRIGGER.run().__anext__() == TriggerEvent({"status": "done"})
 
     @pytest.mark.asyncio
-    @mock.patch(f"{MODULE_GOOGLE}.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file")
+    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
     async def test_run_exception(self, mock_tmp):
         """assert that run raise exception when fail to fetch GKE kube config file"""
         my_tmp = mock_tmp.__enter__()

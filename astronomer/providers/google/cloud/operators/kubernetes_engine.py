@@ -5,9 +5,6 @@ from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
-from airflow.providers.google.cloud.operators.kubernetes_engine import (
-    GKEStartPodOperator,
-)
 from kubernetes.client import models as k8s
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -16,6 +13,7 @@ from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
 )
+from astronomer.providers.google.cloud import _get_gke_config_file
 from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
     GKEStartPodTrigger,
 )
@@ -92,7 +90,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
 
     def _get_or_create_pod(self, context: Context) -> None:
         """A wrapper to fetch GKE config and get or create a pod"""
-        with GKEStartPodOperator.get_gke_config_file(
+        with _get_gke_config_file(
             gcp_conn_id=self.gcp_conn_id,
             project_id=self.project_id,
             cluster_name=self.cluster_name,
@@ -158,7 +156,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         remote_pod = None
         self.raise_for_trigger_status(event)
         try:
-            with GKEStartPodOperator.get_gke_config_file(
+            with _get_gke_config_file(
                 gcp_conn_id=self.gcp_conn_id,
                 project_id=self.project_id,
                 cluster_name=self.cluster_name,

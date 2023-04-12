@@ -53,9 +53,7 @@ class TestGKEStartPodOperatorAsync:
         get_logs=True,
     )
 
-    @mock.patch(
-        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
-    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
     @mock.patch(
         "airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.build_pod_request_obj"
     )
@@ -122,9 +120,7 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
     @mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
-    @mock.patch(
-        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
-    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.extract_xcom"
     )
@@ -167,9 +163,7 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
     @mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
-    @mock.patch(
-        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
-    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
     def test_no_pod(
         self,
         mock_gke_config,

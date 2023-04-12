@@ -1,9 +1,6 @@
 from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
-from airflow.providers.google.cloud.operators.kubernetes_engine import (
-    GKEStartPodOperator,
-)
 from airflow.triggers.base import TriggerEvent
 from kubernetes_asyncio.client import CoreV1Api
 
@@ -11,6 +8,7 @@ from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
+from astronomer.providers.google.cloud import _get_gke_config_file
 
 
 class GKEStartPodTrigger(WaitContainerTrigger):
@@ -99,7 +97,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
     async def run(self) -> AsyncIterator["TriggerEvent"]:
         """Wait for pod to reach terminal state"""
         try:
-            with GKEStartPodOperator.get_gke_config_file(
+            with _get_gke_config_file(
                 gcp_conn_id=self.gcp_conn_id,
                 project_id=self.project_id,
                 cluster_name=self.cluster_name,
