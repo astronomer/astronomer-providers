@@ -4,6 +4,7 @@ import os
 import pickle  # nosec
 import uuid
 from datetime import date, datetime
+from io import BytesIO
 from typing import Any
 
 import pandas as pd
@@ -91,6 +92,8 @@ class _GCSXComBackend:
         if conf.getboolean("core", "enable_xcom_pickling"):
             return pickle.loads(data)  # nosec
         elif filename.endswith(_GCSXComBackend.PANDAS_DATAFRAME):
+            if isinstance(data, bytes):
+                return pd.read_json(BytesIO(data))
             return pd.read_json(data)
         elif filename.endswith(_GCSXComBackend.DATETIME_OBJECT):
             return datetime.fromisoformat(str(data))

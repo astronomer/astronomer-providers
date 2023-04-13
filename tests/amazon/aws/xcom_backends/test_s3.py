@@ -162,25 +162,29 @@ class TestS3XComBackend:
         assert result == job_id
 
     @pytest.mark.parametrize(
-        "job_id",
-        ["gcs_xcom_1234_dataframe"],
+        "job_id, mock_df_data",
+        [
+            ("s3_xcom_1234_dataframe", pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()),
+            (
+                "s3_xcom_1234_dataframe",
+                bytes(pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json(), "utf-8"),
+            ),
+        ],
     )
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
     @mock.patch("builtins.open", create=True)
-    def test_download_and_read_value_pandas(self, mock_open, mock_download, job_id):
+    def test_download_and_read_value_pandas(self, mock_open, mock_download, job_id, mock_df_data):
         """
         Asserts that custom xcom is read the pandas data and validate it.
         """
-        mock_open.side_effect = [
-            mock.mock_open(read_data=pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()).return_value
-        ]
+        mock_open.side_effect = [mock.mock_open(read_data=mock_df_data).return_value]
         mock_download.return_value = job_id
         result = _S3XComBackend().download_and_read_value(job_id)
         assert_frame_equal(result, pd.DataFrame({"numbers": [1], "colors": ["red"]}))
 
     @pytest.mark.parametrize(
         "job_id",
-        ["gcs_xcom_1234_datetime"],
+        ["s3_xcom_1234_datetime"],
     )
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
     @mock.patch("builtins.open", create=True)
@@ -197,7 +201,7 @@ class TestS3XComBackend:
     @conf_vars({("core", "enable_xcom_pickling"): "True"})
     @pytest.mark.parametrize(
         "job_id",
-        ["gcs_xcom_1234"],
+        ["s3_xcom_1234"],
     )
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
     @mock.patch("builtins.open", create=True)
@@ -212,7 +216,7 @@ class TestS3XComBackend:
 
     @pytest.mark.parametrize(
         "job_id",
-        ["gcs_xcom_1234"],
+        ["s3_xcom_1234"],
     )
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
     @mock.patch("builtins.open", create=True)
@@ -227,7 +231,7 @@ class TestS3XComBackend:
 
     @pytest.mark.parametrize(
         "job_id",
-        ["gcs_xcom_1234.gz"],
+        ["s3_xcom_1234.gz"],
     )
     @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.download_file")
     @mock.patch("builtins.open", create=True)

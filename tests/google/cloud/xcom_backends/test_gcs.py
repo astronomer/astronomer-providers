@@ -132,13 +132,19 @@ class TestGCSXComBackend:
         assert result == job_id
 
     @pytest.mark.parametrize(
-        "job_id",
-        ["gcs_xcom_1234_dataframe"],
+        "job_id, mock_df_data",
+        [
+            ("gcs_xcom_1234_dataframe", pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()),
+            (
+                "gcs_xcom_1234_dataframe",
+                bytes(pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json(), "utf-8"),
+            ),
+        ],
     )
     @mock.patch("airflow.providers.google.cloud.hooks.gcs.GCSHook.download")
-    def test_custom_xcom_gcs_deserialize_pandas(self, mock_read_value, job_id):
+    def test_custom_xcom_gcs_deserialize_pandas(self, mock_read_value, job_id, mock_df_data):
         """Asserts that custom xcom is deserialized and check for data"""
-        mock_read_value.return_value = pd.DataFrame({"numbers": [1], "colors": ["red"]}).to_json()
+        mock_read_value.return_value = mock_df_data
         result = _GCSXComBackend.download_and_read_value(job_id)
         assert_frame_equal(result, pd.DataFrame({"numbers": [1], "colors": ["red"]}))
 
