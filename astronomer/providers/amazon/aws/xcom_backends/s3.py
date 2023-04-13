@@ -100,7 +100,7 @@ class _S3XComBackend:
             return pickle.loads(data)  # nosec
         elif filename.endswith(_S3XComBackend.PANDAS_DATAFRAME):
             if isinstance(data, bytes):
-                data = BytesIO(data)
+                return pd.read_json(BytesIO(data))
             return pd.read_json(data)
         elif filename.endswith(_S3XComBackend.DATETIME_OBJECT):
             return datetime.fromisoformat(str(data))

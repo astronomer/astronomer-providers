@@ -93,7 +93,7 @@ class _GCSXComBackend:
             return pickle.loads(data)  # nosec
         elif filename.endswith(_GCSXComBackend.PANDAS_DATAFRAME):
             if isinstance(data, bytes):
-                data = BytesIO(data)
+                return pd.read_json(BytesIO(data))
             return pd.read_json(data)
         elif filename.endswith(_GCSXComBackend.DATETIME_OBJECT):
             return datetime.fromisoformat(str(data))
