@@ -12,6 +12,8 @@ Bug Fixes
   (`#944 <https://github.com/astronomer/astronomer-providers/pull/944>`_)
 - Make ``GKEStartPodOperatorAsync`` compatible with ``apache-airflow-providers-google>=9.0.0``.
   (`#954 <https://github.com/astronomer/astronomer-providers/pull/954>`_)
+- BigQuery Async Operators accepts poll_interval as argument to override trigger's default poll_interval.
+  (`#953 <https://github.com/astronomer/astronomer-providers/pull/953>`_)
 
 
 1.15.2 (2023-03-27)
