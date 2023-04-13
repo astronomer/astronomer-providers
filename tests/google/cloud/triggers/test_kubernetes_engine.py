@@ -4,7 +4,10 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 from kubernetes_asyncio import client
 
-from astronomer.providers.google.cloud.triggers.kubernetes_engine import GKEStartPodTrigger
+from astronomer.providers.google.cloud import google_provider_version_lt_9
+from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
+    GKEStartPodTrigger,
+)
 
 PROJECT_ID = "astronomer-***-providers"
 LOCATION = "us-west1"
@@ -33,6 +36,10 @@ class TestGKEStartPodTrigger:
         logging_interval=None,
     )
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     def test_serialization(self):
         """asserts that the GKEStartPodTrigger correctly serializes its argument and classpath."""
 
@@ -55,6 +62,10 @@ class TestGKEStartPodTrigger:
             "logging_interval": None,
         }
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "mock_state, expected_value",
@@ -75,7 +86,9 @@ class TestGKEStartPodTrigger:
     @mock.patch(
         "astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async"
     )
-    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     async def test_run(self, mock_tmp, get_api_client_async, wait_for_pod_start, mock_state, expected_value):
         """assert that when wait_for_pod_start succeeded run method yield correct event"""
         my_tmp = mock_tmp.__enter__()
@@ -85,6 +98,10 @@ class TestGKEStartPodTrigger:
 
         assert await self.TRIGGER.run().__anext__() == TriggerEvent(expected_value)
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @pytest.mark.asyncio
     @mock.patch(
         f"{MODULE_CNCF}.kubernetes.triggers.wait_container.WaitContainerTrigger.wait_for_container_completion"
@@ -93,7 +110,9 @@ class TestGKEStartPodTrigger:
     @mock.patch(
         "astronomer.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHookAsync.get_api_client_async"
     )
-    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     async def test_run_pending(
         self, mock_tmp, get_api_client_async, wait_for_pod_start, wait_for_container_completion
     ):
@@ -106,8 +125,14 @@ class TestGKEStartPodTrigger:
 
         assert await self.TRIGGER.run().__anext__() == TriggerEvent({"status": "done"})
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @pytest.mark.asyncio
-    @mock.patch("astronomer.providers.google.cloud.triggers.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     async def test_run_exception(self, mock_tmp):
         """assert that run raise exception when fail to fetch GKE kube config file"""
         my_tmp = mock_tmp.__enter__()
@@ -119,3 +144,12 @@ class TestGKEStartPodTrigger:
                 "message": "Invalid kube-config file. Expected key current-context in kube-config",
             }
         )
+
+    @pytest.mark.skipif(
+        google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google >= 9.0.0",
+    )
+    def test_import_GKEStartPodTrigger_from_airflow_google_provider(self):
+        from airflow.providers.google.cloud.triggers import GKEStartPodTrigger as OSSGKEStartPodTrigger
+
+        assert GKEStartPodTrigger is OSSGKEStartPodTrigger

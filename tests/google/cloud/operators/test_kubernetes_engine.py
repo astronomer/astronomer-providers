@@ -4,6 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodLoggingStatus
+from airflow.providers.google.cloud.operators.kubernetes_engine import (
+    GKEStartPodOperator,
+)
 from kubernetes.client import models as k8s
 from kubernetes.client.models.v1_object_meta import V1ObjectMeta
 
@@ -13,6 +16,7 @@ from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
 )
+from astronomer.providers.google.cloud import google_provider_version_lt_9
 from astronomer.providers.google.cloud.operators.kubernetes_engine import (
     GKEStartPodOperatorAsync,
 )
@@ -53,7 +57,13 @@ class TestGKEStartPodOperatorAsync:
         get_logs=True,
     )
 
-    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     @mock.patch(
         "airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.build_pod_request_obj"
     )
@@ -71,6 +81,10 @@ class TestGKEStartPodOperatorAsync:
 
         assert self.OPERATOR._get_or_create_pod(context=context) is None
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync._get_or_create_pod"
     )
@@ -85,6 +99,10 @@ class TestGKEStartPodOperatorAsync:
             self.OPERATOR.execute(context)
         assert isinstance(exc.value.trigger, GKEStartPodTrigger), "Trigger is not a GKEStartPodTrigger"
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.trigger_reentry"
     )
@@ -94,6 +112,10 @@ class TestGKEStartPodOperatorAsync:
 
         assert self.OPERATOR.execute_complete(context=create_context(self.OPERATOR), event={}) is None
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     def test_execute_complete_fail(self, context):
         with pytest.raises(AirflowException):
             """assert that execute_complete_success raise exception when a task fail"""
@@ -101,10 +123,18 @@ class TestGKEStartPodOperatorAsync:
                 context=context, event={"status": "error", "description": "Pod not found"}
             )
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     def test_raise_for_trigger_status_done(self):
         """Assert trigger don't raise exception in case of status is done"""
         assert self.OPERATOR.raise_for_trigger_status({"status": "done"}) is None
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.cleanup"
@@ -120,7 +150,9 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
     @mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
-    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.extract_xcom"
     )
@@ -148,6 +180,10 @@ class TestGKEStartPodOperatorAsync:
         self.OPERATOR1.trigger_reentry(context, {"namespace": NAMESPACE})
         fetch_container_logs.is_called_with(pod, "base")
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     @mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.cleanup"
@@ -163,7 +199,9 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
     @mock.patch("airflow.providers.cncf.kubernetes.hooks.kubernetes.KubernetesHook._get_default_client")
-    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator.get_gke_config_file"
+    )
     def test_no_pod(
         self,
         mock_gke_config,
@@ -183,6 +221,10 @@ class TestGKEStartPodOperatorAsync:
         with pytest.raises(PodNotFoundException):
             self.OPERATOR1.trigger_reentry(context, {"namespace": NAMESPACE})
 
+    @pytest.mark.skipif(
+        not google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google < 9.0.0",
+    )
     def test_trigger_error(self, context):
         """Assert that trigger_reentry raise exception in case of error"""
 
@@ -195,3 +237,28 @@ class TestGKEStartPodOperatorAsync:
                     "description": "any message",
                 },
             )
+
+    @pytest.mark.skipif(
+        google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google >= 9.0.0",
+    )
+    def test_inherit_from_airflow_GKEStartPodOperator(self):
+        assert issubclass(GKEStartPodOperatorAsync, GKEStartPodOperator)
+
+    @pytest.mark.skipif(
+        google_provider_version_lt_9,
+        reason="This behavior only exists for apache-airflow-providers-google >= 9.0.0",
+    )
+    def test_deferrable_is_true(self):
+        OPERATOR = GKEStartPodOperatorAsync(
+            task_id="start_pod",
+            project_id=PROJECT_ID,
+            location=LOCATION,
+            cluster_name=GKE_CLUSTER_NAME,
+            name="astro_k8s_gke_test_pod",
+            namespace=NAMESPACE,
+            image="ubuntu",
+            gcp_conn_id=GCP_CONN_ID,
+        )
+
+        assert OPERATOR.deferrable is True
