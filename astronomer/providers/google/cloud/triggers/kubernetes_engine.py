@@ -8,14 +8,14 @@ from airflow.triggers.base import TriggerEvent
 from kubernetes_asyncio.client import CoreV1Api
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
-from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
-    WaitContainerTrigger,
-)
 from astronomer.providers.google.cloud import google_provider_version_lt_9
 
 if google_provider_version_lt_9:
+    from astronomer.providers.cncf.kubernetes.triggers.wait_container import (  # pragma: no cover
+        WaitContainerTrigger,
+    )
 
-    class GKEStartPodTrigger(WaitContainerTrigger):
+    class GKEStartPodTrigger(WaitContainerTrigger):  # pragma: no cover
         """
         Fetch GKE cluster config and wait for pod to start up.
 
@@ -140,6 +140,6 @@ if google_provider_version_lt_9:
                 yield TriggerEvent({"status": "error", "message": str(e)})
 
 else:
-    from airflow.providers.google.cloud.triggers.kubernetes_engine import (  # type: ignore[attr-defined, no-redef] # noqa: F401
+    from airflow.providers.google.cloud.triggers.kubernetes_engine import (  # type: ignore[attr-defined, no-redef] # noqa: F401 # pragma: no cover
         GKEStartPodTrigger,
     )

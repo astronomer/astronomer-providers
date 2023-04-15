@@ -211,11 +211,11 @@ if google_provider_version_lt_9:
                 return result
 
 else:
-    from airflow.providers.google.cloud.operators.kubernetes_engine import (
+    from airflow.providers.google.cloud.operators.kubernetes_engine import (  # pragma: no cover
         GKEStartPodOperator,
     )
 
-    class GKEStartPodOperatorAsync(GKEStartPodOperator):  # type: ignore[no-redef]
+    class GKEStartPodOperatorAsync(GKEStartPodOperator):  # type: ignore[no-redef] # pragma: no cover
         """
         Executes a task in a Kubernetes pod in the specified Google Kubernetes
         Engine cluster
