@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.15.3 (2023-04-12)
+1.15.3 (2023-04-17)
 -------------------
 
 Bug Fixes
@@ -14,6 +14,8 @@ Bug Fixes
   (`#954 <https://github.com/astronomer/astronomer-providers/pull/954>`_)
 - BigQuery Async Operators accepts poll_interval as argument to override trigger's default poll_interval.
   (`#953 <https://github.com/astronomer/astronomer-providers/pull/953>`_)
+- Pinning snowflake-sqlalchemy to greater than or equal to 1.4.4
+  (`#962 <https://github.com/astronomer/astronomer-providers/pull/962>`_)
 
 
 1.15.2 (2023-03-27)
