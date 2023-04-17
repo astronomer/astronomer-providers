@@ -14,6 +14,8 @@ Bug Fixes
   (`#954 <https://github.com/astronomer/astronomer-providers/pull/954>`_)
 - BigQuery Async Operators accepts poll_interval as argument to override trigger's default poll_interval.
   (`#953 <https://github.com/astronomer/astronomer-providers/pull/953>`_)
+- Fix S3 and GCS custom XCOM backend json loading issue
+  (`#961 <https://github.com/astronomer/astronomer-providers/pull/961>`_)
 - Pinning snowflake-sqlalchemy to greater than or equal to 1.4.4
   (`#962 <https://github.com/astronomer/astronomer-providers/pull/962>`_)
 
