@@ -73,7 +73,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval = kwargs.pop("poll_interval", None)
+        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
 
     def execute(self, context: Context) -> None:  # noqa: D102
@@ -153,7 +153,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval = kwargs.pop("poll_interval", None)
+        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
 
     def _submit_job(
@@ -259,7 +259,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval = kwargs.pop("poll_interval", None)
+        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
 
     def _submit_job(  # type: ignore[override]
@@ -366,7 +366,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval = kwargs.pop("poll_interval", None)
+        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
 
     def _submit_job(
@@ -433,7 +433,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval = kwargs.pop("poll_interval", None)
+        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
 
     def _submit_job(
