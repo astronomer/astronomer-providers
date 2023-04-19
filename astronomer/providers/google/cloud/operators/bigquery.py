@@ -73,8 +73,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
+        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
+        self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:  # noqa: D102
         hook = BigQueryHook(
@@ -153,8 +154,9 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
+        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
+        self.poll_interval = poll_interval
 
     def _submit_job(
         self,
@@ -259,8 +261,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
+        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
+        self.poll_interval = poll_interval
 
     def _submit_job(  # type: ignore[override]
         self,
@@ -366,8 +369,9 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
+        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
+        self.poll_interval = poll_interval
 
     def _submit_job(
         self,
@@ -433,8 +437,9 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.poll_interval: float = kwargs.pop("poll_interval", 4.0)
+        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, **kwargs)
+        self.poll_interval = poll_interval
 
     def _submit_job(
         self,
