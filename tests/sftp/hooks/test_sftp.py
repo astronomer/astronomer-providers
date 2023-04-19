@@ -196,6 +196,27 @@ class TestSFTPHookAsync:
 
         assert str(exc.value) == "Must check host key when provided"
 
+    @patch("paramiko.SSHClient.connect", side_effect=Exception("mocked error"))
+    @patch("asyncssh.import_private_key")
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @pytest.mark.asyncio
+    async def test_extra_dejson_fields_for_connection_retry_upon_error(
+        self, mock_get_connection, mock_connect, mock_import_pkey, mock_paramiko_connect
+    ):
+        """
+        Assert than paramiko connect is retried upon failure.
+        """
+        host_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"
+        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(
+            host_key=host_key, no_host_key_check=False
+        )
+        hook = SFTPHookAsync()
+        with pytest.raises(Exception):
+            await hook._get_conn()
+
+        assert len(mock_paramiko_connect.mock_calls) == 3
+
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
     @pytest.mark.asyncio
