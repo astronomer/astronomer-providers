@@ -21,6 +21,7 @@ You will need to update it in:
 
 * ``setup.cfg`` - in ``version`` key of ``[metadata]`` section
 * ``docs/conf.py`` - ``release`` variable
+* ``astronomer/providers/package.py`` - ``get_provider_info`` method return value ``version``
 
 
 Write the changelog
