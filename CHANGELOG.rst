@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+1.15.4 (2023-04-19)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Fix backward compatibility issue with BigQuery Async Operators
+  (`#967 <https://github.com/astronomer/astronomer-providers/pull/967>`_)
+
+
 1.15.3 (2023-04-17)
 -------------------
 
