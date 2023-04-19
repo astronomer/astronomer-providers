@@ -72,6 +72,10 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
+    def __init__(self, *args, **kwargs):
+        self.poll_interval = kwargs.pop("poll_interval", None)
+        super().__init__(*args, **kwargs)
+
     def execute(self, context: Context) -> None:  # noqa: D102
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
@@ -147,6 +151,10 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     BigQueryCheckOperatorAsync is asynchronous operator, submit the job and check
     for the status in async mode by using the job id
     """
+
+    def __init__(self, *args, **kwargs):
+        self.poll_interval = kwargs.pop("poll_interval", None)
+        super().__init__(*args, **kwargs)
 
     def _submit_job(
         self,
@@ -249,6 +257,10 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         account from the list granting this role to the originating account (templated).
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds
     """
+
+    def __init__(self, *args, **kwargs):
+        self.poll_interval = kwargs.pop("poll_interval", None)
+        super().__init__(*args, **kwargs)
 
     def _submit_job(  # type: ignore[override]
         self,
@@ -353,6 +365,10 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
+    def __init__(self, *args, **kwargs):
+        self.poll_interval = kwargs.pop("poll_interval", None)
+        super().__init__(*args, **kwargs)
+
     def _submit_job(
         self,
         hook: BigQueryHook,
@@ -416,6 +432,10 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
+    def __init__(self, *args, **kwargs):
+        self.poll_interval = kwargs.pop("poll_interval", None)
+        super().__init__(*args, **kwargs)
+
     def _submit_job(
         self,
         hook: BigQueryHook,
