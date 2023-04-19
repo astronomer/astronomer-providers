@@ -72,7 +72,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.poll_interval = kwargs.pop("poll_interval", None)
         super().__init__(*args, **kwargs)
 
@@ -152,7 +152,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     for the status in async mode by using the job id
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.poll_interval = kwargs.pop("poll_interval", None)
         super().__init__(*args, **kwargs)
 
@@ -258,7 +258,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.poll_interval = kwargs.pop("poll_interval", None)
         super().__init__(*args, **kwargs)
 
@@ -365,7 +365,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.poll_interval = kwargs.pop("poll_interval", None)
         super().__init__(*args, **kwargs)
 
@@ -432,7 +432,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.poll_interval = kwargs.pop("poll_interval", None)
         super().__init__(*args, **kwargs)
 
