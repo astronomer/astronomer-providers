@@ -87,3 +87,11 @@ known-third-party = ["google", "gcloud"]
 # Skip missing timeout in requests API.
 # TODO: remove it in future
 skips = ["B113"]
+
+[tool.commitizen]
+version = "1.15.4"
+version_files = [
+    "docs/conf.py",
+    "astronomer/providers/package.py",
+    "setup.cfg",
+]

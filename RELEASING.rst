@@ -21,6 +21,9 @@ You will need to update it in:
 
 * ``setup.cfg`` - in ``version`` key of ``[metadata]`` section
 * ``docs/conf.py`` - ``release`` variable
+* ``astronomer/providers/package.py`` - ``get_provider_info`` method return value ``versions``
+
+You can also use `commitizen <https://github.com/commitizen-tools/commitizen>`_ to update the version in these files
 
 
 Write the changelog
