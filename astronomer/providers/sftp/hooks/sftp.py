@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from base64 import decodebytes
 from datetime import datetime
 from fnmatch import fnmatch
-from typing import List, Optional
+from typing import Any
 
 import asyncssh
+import paramiko
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from asgiref.sync import sync_to_async
+from paramiko.config import SSH_PORT
+from tenacity import Retrying, stop_after_attempt, wait_fixed, wait_random
 
 
 class SFTPHookAsync(BaseHook):
@@ -30,6 +36,13 @@ class SFTPHookAsync(BaseHook):
     hook_name = "SFTP"
     default_known_hosts = "none"
 
+    _host_key_mappings = {
+        "rsa": paramiko.RSAKey,
+        "dss": paramiko.DSSKey,
+        "ecdsa": paramiko.ECDSAKey,
+        "ed25519": paramiko.Ed25519Key,
+    }
+
     def __init__(  # nosec: B107
         self,
         sftp_conn_id: str = default_conn_name,
@@ -51,6 +64,8 @@ class SFTPHookAsync(BaseHook):
         self.key_file = key_file
         self.passphrase = passphrase
         self.private_key = private_key
+        self.no_host_key_check = True
+        self.host_key = None
 
     async def _get_conn(self) -> asyncssh.SSHClientConnection:
         """
@@ -81,6 +96,69 @@ class SFTPHookAsync(BaseHook):
                 if "private_key" in extra_options:
                     self.private_key = extra_options.get("private_key")
 
+                host_key = extra_options.get("host_key")
+                no_host_key_check = extra_options.get("no_host_key_check")
+
+                if no_host_key_check is not None:
+                    no_host_key_check = str(no_host_key_check).lower() == "true"
+                    if host_key is not None and no_host_key_check:
+                        raise ValueError("Must check host key when provided")
+
+                    self.no_host_key_check = no_host_key_check
+
+                if host_key is not None:
+                    if host_key.startswith("ssh-"):
+                        key_type, host_key = host_key.split(None)[:2]
+                        key_constructor = self._host_key_mappings[key_type[4:]]
+                    else:
+                        key_constructor = paramiko.RSAKey
+                    decoded_host_key = decodebytes(host_key.encode("utf-8"))
+                    self.host_key = key_constructor(data=decoded_host_key)
+                    self.no_host_key_check = False
+
+            if self.no_host_key_check:
+                self.log.warning(
+                    "No Host Key Verification. This won't protect against Man-In-The-Middle attacks"
+                )
+            elif self.host_key is not None:
+                # The asyncssh client we use does not support host key verification other than the ones given in
+                # known_hosts file(Ref: https://github.com/ronf/asyncssh/issues/176). Hence, we use a paramiko client to
+                # validate the provided host key before proceeding for further operation.
+                with paramiko.SSHClient() as paramiko_client:
+                    client_host_keys = paramiko_client.get_host_keys()
+                    if conn.port == SSH_PORT:
+                        client_host_keys.add(conn.host, self.host_key.get_name(), self.host_key)
+                    else:
+                        client_host_keys.add(
+                            f"[{conn.host}]:{conn.port}", self.host_key.get_name(), self.host_key
+                        )
+                    connect_kwargs: dict[str, Any] = {
+                        "hostname": conn.host,
+                        "username": conn.login,
+                        "password": conn.password,
+                        "port": conn.port,
+                    }
+
+                    if self.private_key:
+                        connect_kwargs.update(pkey=self.private_key)
+
+                    if self.key_file:
+                        connect_kwargs.update(key_filename=self.key_file)
+
+                    def log_before_sleep(retry_state):
+                        return self.log.info(
+                            "Failed to connect. Sleeping before retry attempt %d", retry_state.attempt_number
+                        )
+
+                    for attempt in Retrying(
+                        reraise=True,
+                        wait=wait_fixed(3) + wait_random(0, 2),
+                        stop=stop_after_attempt(3),
+                        before_sleep=log_before_sleep,
+                    ):
+                        with attempt:
+                            paramiko_client.connect(**connect_kwargs)
+
             conn_config = {
                 "host": conn.host,
                 "port": conn.port,
@@ -108,7 +186,7 @@ class SFTPHookAsync(BaseHook):
 
             return ssh_client
 
-    async def list_directory(self, path: str = "") -> Optional[List[str]]:
+    async def list_directory(self, path: str = "") -> list[str] | None:
         """Returns a list of files on the SFTP server at the provided path"""
         ssh_conn = await self._get_conn()
         sftp_client = await ssh_conn.start_sftp_client()
@@ -118,7 +196,7 @@ class SFTPHookAsync(BaseHook):
         except asyncssh.SFTPNoSuchFile:
             return None
 
-    async def get_files_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> List[str]:
+    async def get_files_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> list[str]:
         """
         Returns the name of a file matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
