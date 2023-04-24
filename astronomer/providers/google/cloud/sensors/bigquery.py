@@ -25,9 +25,9 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
     :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
-    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
-        delegation of authority, if any. For this to work, the service account making the request must have domain-wide
-        delegation enabled.
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
+        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
+        account making the request must have domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
        credentials, or chained list of accounts required to get the access_token
        of the last account in the list, which will be impersonated in the request.
