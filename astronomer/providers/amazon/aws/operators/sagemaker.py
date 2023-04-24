@@ -61,7 +61,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         self.preprocess_config()
         processing_job_name = self.config["ProcessingJobName"]
         try:
-            if bool(self.hook.count_processing_jobs_by_name(processing_job_name)):
+            if self.hook.count_processing_jobs_by_name(processing_job_name):
                 raise AirflowException(
                     f"A SageMaker processing job with name {processing_job_name} already exists."
                 )
