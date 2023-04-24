@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import logging
 import typing
+from contextlib import closing
 from datetime import timedelta
 from typing import Any, Callable, List
 
 from airflow.exceptions import AirflowException
+
+from snowflake.connector import SnowflakeConnection
+from snowflake.connector.constants import QueryStatus
 
 try:
     from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
@@ -29,6 +34,14 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     get_db_hook,
 )
 from astronomer.providers.utils.typing_compat import Context
+
+
+def check_queries_success(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
+    with closing(conn) as conn:
+        succeeded_before_defer = all(
+            [conn.get_query_status(query_id) == QueryStatus.SUCCESS for query_id in query_ids]
+        )
+    return succeeded_before_defer
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
@@ -169,16 +182,20 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         if self.do_xcom_push:
             context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=SnowflakeTrigger(
-                task_id=self.task_id,
-                poll_interval=self.poll_interval,
-                query_ids=self.query_ids,
-                snowflake_conn_id=self.snowflake_conn_id,
-            ),
-            method_name="execute_complete",
-        )
+        if not check_queries_success(hook.get_conn(), self.query_ids):
+            logging.info("Task deferred")
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=SnowflakeTrigger(
+                    task_id=self.task_id,
+                    poll_interval=self.poll_interval,
+                    query_ids=self.query_ids,
+                    snowflake_conn_id=self.snowflake_conn_id,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            logging.info("Queries finish before deferred")
 
     def execute_complete(self, context: Context, event: dict[str, str | list[str]] | None = None) -> Any:
         """
