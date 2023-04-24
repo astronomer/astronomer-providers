@@ -31,7 +31,7 @@ class TestBatchOperatorAsync:
             parameters=None,
             overrides={},
             array_properties=None,
-            aws_conn_id="airflow_test",
+            aws_conn_id="aws_default",
             region_name="eu-west-1",
             tags={},
         )
@@ -53,7 +53,7 @@ class TestBatchOperatorAsync:
             parameters=None,
             overrides={},
             array_properties=None,
-            aws_conn_id="airflow_test",
+            aws_conn_id="aws_default",
             region_name="eu-west-1",
             tags={},
         )
@@ -78,7 +78,7 @@ class TestBatchOperatorAsync:
             parameters=None,
             overrides={},
             array_properties=None,
-            aws_conn_id="airflow_test",
+            aws_conn_id="aws_default",
             region_name="eu-west-1",
             tags={},
         )
