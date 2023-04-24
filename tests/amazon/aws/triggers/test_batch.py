@@ -29,7 +29,7 @@ class TestBatchOperatorTrigger:
         max_retries=MAX_RETRIES,
         status_retries=STATUS_RETRIES,
         parameters={},
-        overrides={},
+        container_overrides={},
         array_properties={},
         region_name="eu-west-1",
         aws_conn_id="airflow_test",
