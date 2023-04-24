@@ -27,12 +27,14 @@ class BatchOperatorAsync(BatchOperator):
     :param job_name: the name for the job that will run on AWS Batch (templated)
     :param job_definition: the job definition name on AWS Batch
     :param job_queue: the queue name on AWS Batch
-    :param overrides: the `containerOverrides` parameter for boto3 (templated)
+    :param overrides: DEPRECATED, use container_overrides instead with the same value.
+    :param container_overrides: the `containerOverrides` parameter for boto3 (templated)
+    :param node_overrides: the `nodeOverrides` parameter for boto3 (templated)
     :param array_properties: the `arrayProperties` parameter for boto3
     :param parameters: the `parameters` for boto3 (templated)
     :param job_id: the job ID, usually unknown (None) until the
         submit_job operation gets the jobId defined by AWS Batch
-    :param waiters: an :class:`.BatchWaiters` object (see note below);
+    :param waiters: an :py:class:`.BatchWaiters` object (see note below);
         if None, polling is used with max_retries and status_retries.
     :param max_retries: exponential back-off retries, 4200 = 48 hours;
         polling is only used when waiters is None
@@ -59,6 +61,11 @@ class BatchOperatorAsync(BatchOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self.submit_job(context)
+        container_overrides = (
+            self.container_overrides
+            if hasattr(self, "container_overrides")
+            else self.overrides  # type: ignore[attr-defined]
+        )
         self.defer(
             timeout=self.execution_timeout,
             trigger=BatchOperatorTrigger(
@@ -66,8 +73,8 @@ class BatchOperatorAsync(BatchOperator):
                 job_name=self.job_name,
                 job_definition=self.job_definition,
                 job_queue=self.job_queue,
-                overrides=self.overrides,
-                array_properties=self.array_properties,
+                container_overrides=container_overrides,
+                array_properties=self.array_properties,  # type: ignore[arg-type]
                 parameters=self.parameters,
                 waiters=self.waiters,
                 tags=self.tags,
