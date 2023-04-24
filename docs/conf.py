@@ -27,7 +27,7 @@ project = "Astronomer Providers"
 author = "Astronomer Inc."
 
 # The full version, including alpha/beta/rc tags
-release = "1.16.0dev"
+release = "1.15.5"
 
 
 # -- General configuration ---------------------------------------------------

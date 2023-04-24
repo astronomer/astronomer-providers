@@ -2,6 +2,20 @@ Changelog
 =========
 
 
+1.15.5 (2023-04-24)
+-------------------
+
+Bug Fixes
+"""""""""
+
+- Support host key verification for ``SFTPSensorAsync`` (`#963 <https://github.com/astronomer/astronomer-providers/pull/963>`_)
+- Make BigQuery & Google Cloud Storage async operators & sensors compatible with ``apache-airflow-providers-google>=10.0.0``
+  (`#981 <https://github.com/astronomer/astronomer-providers/pull/981>`_)
+- Make ``SageMakerProcessingOperatorAsync`` compatible with ``apache-airflow-providers-amazon>=8.0.0``
+  (`#979 <https://github.com/astronomer/astronomer-providers/pull/979>`_)
+- Make ``BatchOperatorAsync`` compatible with ``apache-airflow-providers-amazon>=8.0.0``
+
+
 1.15.4 (2023-04-19)
 -------------------
 
