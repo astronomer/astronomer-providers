@@ -140,7 +140,7 @@ class TestSagemakerProcessingOperatorAsync:
         "create_processing_job",
         return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
     )
-    @mock.patch.object(SageMakerHook, "find_processing_job_by_name", return_value=False)
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
     def test_sagemakerprocessing_op_async(self, mock_hook, mock_processing, context):
         """Assert SageMakerProcessingOperatorAsync deferred properlu"""
         task = SageMakerProcessingOperatorAsync(
@@ -155,7 +155,7 @@ class TestSagemakerProcessingOperatorAsync:
             exc.value.trigger, SagemakerProcessingTrigger
         ), "Trigger is not a SagemakerProcessingTrigger"
 
-    @mock.patch.object(SageMakerHook, "find_processing_job_by_name", return_value=True)
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=True)
     def test_sagemakerprocessing_op_async_duplicate_failure(self, mock_hook, context):
         """Tests that an AirflowException is raised in case of error event from find_processing_job_name"""
         task = SageMakerProcessingOperatorAsync(
@@ -171,7 +171,7 @@ class TestSagemakerProcessingOperatorAsync:
         "create_processing_job",
         return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 404}},
     )
-    @mock.patch.object(SageMakerHook, "find_processing_job_by_name", return_value=False)
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
     def test_sagemakerprocessing_op_async_failure(self, mock_hook, mock_processing_job, context):
         """Tests that an AirflowException is raised in case of error event from create_processing_job"""
         task = SageMakerProcessingOperatorAsync(
