@@ -49,8 +49,17 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
                 raise AirflowException(f"FAILED_WITH_ERROR {FAILED_WITH_ERROR_MESSAGE}")
             elif status == QueryStatus.SUCCESS:
                 pass
-            else:
+            elif status in (
+                QueryStatus.RUNNING,
+                QueryStatus.QUEUED,
+                QueryStatus.DISCONNECTED,
+                QueryStatus.RESUMING_WAREHOUSE,
+                QueryStatus.BLOCKED,
+                QueryStatus.NO_DATA,
+            ):
                 return False
+            else:
+                raise ValueError(f"Unexpected QueryStatus: {str(status)}")
 
     return True
 
