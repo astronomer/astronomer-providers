@@ -1,5 +1,7 @@
 """This module contains Google BigQueryAsync providers."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -57,9 +59,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param project_id: Google Cloud Project where the job is running
     :param location: location the job is running
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-        if any. For this to work, the service account making the request must have
-        domain-wide delegation enabled.
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
+        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
+        account making the request must have domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or chained list of accounts required to get the access_token
         of the last account in the list, which will be impersonated in the request.
@@ -78,11 +80,14 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:  # noqa: D102
+        kwargs: dict[Any, Any] = {}
+        if hasattr(self, "delegate_to"):
+            kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
             impersonation_chain=self.impersonation_chain,
             location=self.location,
+            **kwargs,
         )
 
         self.hook = hook
@@ -125,14 +130,14 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
                 project_id=self.project_id,
-                delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
                 poll_interval=self.poll_interval,
+                **kwargs,
             ),
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -193,7 +198,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -245,9 +250,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     :param selected_fields: List of fields to return (comma-separated). If
         unspecified, all fields are returned.
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-        if any. For this to work, the service account making the request must have
-        domain-wide delegation enabled.
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
+        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
+        account making the request must have domain-wide delegation enabled.
     :param location: The location used for the operation.
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or chained list of accounts required to get the access_token
@@ -269,7 +274,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         self,
         hook: BigQueryHook,
         job_id: str,
-        configuration: Dict[str, Any],
+        configuration: dict[str, Any],
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
         return hook.insert_job(
@@ -296,12 +301,14 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     def execute(self, context: Context) -> None:  # noqa: D102
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
-
+        kwargs: dict[Any, Any] = {}
+        if hasattr(self, "delegate_to"):
+            kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
             location=self.location,
             impersonation_chain=self.impersonation_chain,
+            **kwargs,
         )
 
         self.hook = hook
@@ -316,14 +323,14 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
                 dataset_id=self.dataset_id,
                 table_id=self.table_id,
                 project_id=hook.project_id,
-                delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
                 poll_interval=self.poll_interval,
+                **kwargs,
             ),
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -419,7 +426,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -484,7 +491,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
