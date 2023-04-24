@@ -1,5 +1,7 @@
 """This module contains Google BigQueryAsync providers."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -78,7 +80,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:  # noqa: D102
-        kwargs = {}
+        kwargs: dict[Any, Any] = {}
         if hasattr(self, "delegate_to"):
             kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
@@ -135,7 +137,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -196,7 +198,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -272,7 +274,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         self,
         hook: BigQueryHook,
         job_id: str,
-        configuration: Dict[str, Any],
+        configuration: dict[str, Any],
     ) -> BigQueryJob:
         """Submit a new job and get the job id for polling the status using Triggerer."""
         return hook.insert_job(
@@ -299,7 +301,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     def execute(self, context: Context) -> None:  # noqa: D102
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
-        kwargs = {}
+        kwargs: dict[Any, Any] = {}
         if hasattr(self, "delegate_to"):
             kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
@@ -328,7 +330,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -424,7 +426,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -489,7 +491,7 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):  # noqa: D101
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
