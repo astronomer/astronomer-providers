@@ -61,11 +61,11 @@ class BatchOperatorAsync(BatchOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self.submit_job(context)
-        container_overrides = (
-            self.container_overrides
-            if hasattr(self, "container_overrides")
-            else self.overrides  # type: ignore[attr-defined]
-        )
+        try:
+            container_overrides = self.container_overrides
+        except AttributeError:  # pragma: no cover
+            # For apache-airflow-providers-amazon<8.0.0
+            container_overrides = self.overrides
         self.defer(
             timeout=self.execution_timeout,
             trigger=BatchOperatorTrigger(
