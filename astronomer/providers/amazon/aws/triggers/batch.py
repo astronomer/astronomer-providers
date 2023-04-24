@@ -16,7 +16,7 @@ class BatchOperatorTrigger(BaseTrigger):
     :param job_name: the name for the job that will run on AWS Batch (templated)
     :param job_definition: the job definition name on AWS Batch
     :param job_queue: the queue name on AWS Batch
-    :param overrides: the `containerOverrides` parameter for boto3 (templated)
+    :param container_overrides: the `containerOverrides` parameter for boto3 (templated)
     :param array_properties: the `arrayProperties` parameter for boto3
     :param parameters: the `parameters` for boto3 (templated)
     :param waiters: a :class:`.BatchWaiters` object (see note below);
@@ -39,7 +39,7 @@ class BatchOperatorTrigger(BaseTrigger):
         job_name: str,
         job_definition: str,
         job_queue: str,
-        overrides: Dict[str, str],
+        container_overrides: Dict[str, str],
         array_properties: Dict[str, str],
         parameters: Dict[str, str],
         waiters: Any,
@@ -54,7 +54,7 @@ class BatchOperatorTrigger(BaseTrigger):
         self.job_name = job_name
         self.job_definition = job_definition
         self.job_queue = job_queue
-        self.overrides = overrides or {}
+        self.container_overrides = container_overrides or {}
         self.array_properties = array_properties or {}
         self.parameters = parameters or {}
         self.waiters = waiters
@@ -73,7 +73,7 @@ class BatchOperatorTrigger(BaseTrigger):
                 "job_name": self.job_name,
                 "job_definition": self.job_definition,
                 "job_queue": self.job_queue,
-                "overrides": self.overrides,
+                "container_overrides": self.container_overrides,
                 "array_properties": self.array_properties,
                 "parameters": self.parameters,
                 "waiters": self.waiters,
