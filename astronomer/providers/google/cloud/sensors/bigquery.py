@@ -25,9 +25,9 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
     :param bigquery_conn_id: (Deprecated) The connection ID used to connect to Google Cloud.
        This parameter has been deprecated. You should pass the gcp_conn_id parameter instead.
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-       if any. For this to work, the service account making the request must have
-       domain-wide delegation enabled.
+    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+        delegation of authority, if any. For this to work, the service account making the request must have domain-wide
+        delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
        credentials, or chained list of accounts required to get the access_token
        of the last account in the list, which will be impersonated in the request.
@@ -59,6 +59,9 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
+        hook_params = {"impersonation_chain": self.impersonation_chain}
+        if hasattr(self, "delegate_to"):  # pragma: no cover
+            hook_params["delegate_to"] = self.delegate_to
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=BigQueryTableExistenceTrigger(
@@ -67,10 +70,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
                 project_id=self.project_id,
                 poke_interval=self.poke_interval,
                 gcp_conn_id=self.gcp_conn_id,
-                hook_params={
-                    "delegate_to": self.delegate_to,
-                    "impersonation_chain": self.impersonation_chain,
-                },
+                hook_params=hook_params,
             ),
             method_name="execute_complete",
         )

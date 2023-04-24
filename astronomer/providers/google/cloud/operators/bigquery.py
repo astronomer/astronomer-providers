@@ -57,8 +57,8 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param project_id: Google Cloud Project where the job is running
     :param location: location the job is running
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-        if any. For this to work, the service account making the request must have
+    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+        delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
         credentials, or chained list of accounts required to get the access_token
@@ -78,11 +78,14 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         self.poll_interval = poll_interval
 
     def execute(self, context: Context) -> None:  # noqa: D102
+        kwargs = {}
+        if hasattr(self, "delegate_to"):
+            kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
             impersonation_chain=self.impersonation_chain,
             location=self.location,
+            **kwargs,
         )
 
         self.hook = hook
@@ -125,9 +128,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
                 conn_id=self.gcp_conn_id,
                 job_id=self.job_id,
                 project_id=self.project_id,
-                delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
                 poll_interval=self.poll_interval,
+                **kwargs,
             ),
             method_name="execute_complete",
         )
@@ -245,8 +248,8 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     :param selected_fields: List of fields to return (comma-separated). If
         unspecified, all fields are returned.
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param delegate_to: The account to impersonate using domain-wide delegation of authority,
-        if any. For this to work, the service account making the request must have
+    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+        delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param location: The location used for the operation.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -296,12 +299,14 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     def execute(self, context: Context) -> None:  # noqa: D102
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
-
+        kwargs = {}
+        if hasattr(self, "delegate_to"):
+            kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
-            delegate_to=self.delegate_to,
             location=self.location,
             impersonation_chain=self.impersonation_chain,
+            **kwargs,
         )
 
         self.hook = hook
@@ -316,9 +321,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
                 dataset_id=self.dataset_id,
                 table_id=self.table_id,
                 project_id=hook.project_id,
-                delegate_to=self.delegate_to,
                 impersonation_chain=self.impersonation_chain,
                 poll_interval=self.poll_interval,
+                **kwargs,
             ),
             method_name="execute_complete",
         )
