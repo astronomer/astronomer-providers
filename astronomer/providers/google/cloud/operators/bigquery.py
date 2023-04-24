@@ -79,7 +79,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
     def execute(self, context: Context) -> None:  # noqa: D102
         kwargs = {}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,
@@ -300,7 +300,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         get_query = self.generate_query()
         configuration = {"query": {"query": get_query}}
         kwargs = {}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             kwargs["delegate_to"] = self.delegate_to
         hook = BigQueryHook(
             gcp_conn_id=self.gcp_conn_id,

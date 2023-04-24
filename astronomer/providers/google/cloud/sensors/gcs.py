@@ -59,7 +59,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     def execute(self, context: "Context") -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
         self.defer(
             timeout=timedelta(seconds=self.timeout),
@@ -129,7 +129,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
     def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
         self.defer(
             timeout=timedelta(seconds=self.timeout),
@@ -212,7 +212,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
         self.defer(
             timeout=timedelta(seconds=self.timeout),
@@ -287,7 +287,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
-        if hasattr(self, "delegate_to")  # pragma: no cover:
+        if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
         self.defer(
             timeout=timedelta(seconds=self.timeout),
