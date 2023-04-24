@@ -61,10 +61,10 @@ class BatchOperatorAsync(BatchOperator):
         """
         self.submit_job(context)
         try:
-            container_overrides = self.container_overrides
+            container_overrides = self.container_overrides  # type: ignore[attr-defined]
         except AttributeError:  # pragma: no cover
             # For apache-airflow-providers-amazon<8.0.0
-            container_overrides = self.overrides  # type: ignore[attr-defined]
+            container_overrides = self.overrides
         self.defer(
             timeout=self.execution_timeout,
             trigger=BatchOperatorTrigger(
