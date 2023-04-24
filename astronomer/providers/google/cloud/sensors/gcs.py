@@ -27,7 +27,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     :param bucket: The Google Cloud Storage bucket where the object is.
     :param object: The name of the object to check in the Google cloud storage bucket.
     :param google_cloud_conn_id: The connection ID to use when connecting to Google Cloud Storage.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -96,7 +96,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
     :param bucket: The Google Cloud Storage bucket where the object is.
     :param prefix: The name of the prefix to check in the Google cloud storage bucket.
     :param google_cloud_conn_id: The connection ID to use when connecting to Google Cloud Storage.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -179,7 +179,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         when this happens. If false an error will be raised.
     :param google_cloud_conn_id: The connection ID to use when connecting
         to Google Cloud Storage.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -255,7 +255,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         as parameter.
     :param google_cloud_conn_id: The connection ID to use when
         connecting to Google Cloud Storage.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term

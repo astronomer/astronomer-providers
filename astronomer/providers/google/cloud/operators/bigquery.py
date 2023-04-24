@@ -59,7 +59,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
     :param project_id: Google Cloud Project where the job is running
     :param location: location the job is running
     :param gcp_conn_id: The connection ID used to connect to Google Cloud.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -250,7 +250,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     :param selected_fields: List of fields to return (comma-separated). If
         unspecified, all fields are returned.
     :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param delegate_to: (Previously deprecated and removed in 10.0.0) The account to impersonate using domain-wide
+    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead) The account to impersonate using domain-wide
         delegation of authority, if any. For this to work, the service account making the request must have
         domain-wide delegation enabled.
     :param location: The location used for the operation.
