@@ -22,6 +22,8 @@ except ImportError:  # pragma: no cover
     )
 
 from astronomer.providers.snowflake.hooks.snowflake import (
+    ABORTING_MESSAGE,
+    FAILED_WITH_ERROR_MESSAGE,
     SnowflakeHookAsync,
     fetch_all_snowflake_handler,
 )
@@ -36,12 +38,21 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-def check_queries_success(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
+def _check_queries_success(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
     with closing(conn) as conn:
-        succeeded_before_defer = all(
-            [conn.get_query_status(query_id) == QueryStatus.SUCCESS for query_id in query_ids]
-        )
-    return succeeded_before_defer
+        for query_id in query_ids:
+            status = conn.get_query_status(query_id)
+
+            if status == QueryStatus.ABORTING:
+                raise AirflowException(f"ABORTING {ABORTING_MESSAGE}")
+            elif status == QueryStatus.FAILED_WITH_ERROR:
+                raise AirflowException(f"FAILED_WITH_ERROR {FAILED_WITH_ERROR_MESSAGE}")
+            elif status == QueryStatus.SUCCESS:
+                pass
+            else:
+                return False
+
+    return True
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
@@ -182,7 +193,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         if self.do_xcom_push:
             context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
-        if not check_queries_success(hook.get_conn(), self.query_ids):
+        if not _check_queries_success(hook.get_conn(), self.query_ids):
             logging.info("Task deferred")
             self.defer(
                 timeout=self.execution_timeout,
@@ -206,7 +217,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL in execute_complete: %s", self.sql)
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{}: {}".format(event["type"], event["message"])
+                msg = f"{event['type']}: {event['message']}"
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()

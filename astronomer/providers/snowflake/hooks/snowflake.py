@@ -26,6 +26,10 @@ def fetch_one_snowflake_handler(cursor: SnowflakeCursor) -> dict[str, Any] | tup
     return cursor.fetchone()
 
 
+ABORTING_MESSAGE = "The query is in the process of being aborted on the server side."
+FAILED_WITH_ERROR_MESSAGE = "The query finished unsuccessfully."
+
+
 class SnowflakeHookAsync(SnowflakeHook):
     """
     A client to interact with Snowflake.
@@ -143,14 +147,14 @@ class SnowflakeHookAsync(SnowflakeHook):
                         elif status == QueryStatus.ABORTING:
                             return {
                                 "status": "error",
-                                "message": "The query is in the process of being aborted on the server side.",
+                                "message": ABORTING_MESSAGE,
                                 "type": "ABORTING",
                                 "query_id": query_id,
                             }
                         elif status == QueryStatus.FAILED_WITH_ERROR:
                             return {
                                 "status": "error",
-                                "message": "The query finished unsuccessfully.",
+                                "message": FAILED_WITH_ERROR_MESSAGE,
                                 "type": "FAILED_WITH_ERROR",
                                 "query_id": query_id,
                             }
