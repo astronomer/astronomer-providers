@@ -27,7 +27,7 @@ class BatchOperatorAsync(BatchOperator):
     :param job_name: the name for the job that will run on AWS Batch (templated)
     :param job_definition: the job definition name on AWS Batch
     :param job_queue: the queue name on AWS Batch
-    :param overrides: DEPRECATED and removed in 8.0.0, use container_overrides instead with the same value.
+    :param overrides: Removed in apache-airflow-providers-amazon release 8.0.0, use container_overrides instead with the same value.
     :param container_overrides: the `containerOverrides` parameter for boto3 (templated)
     :param array_properties: the `arrayProperties` parameter for boto3
     :param parameters: the `parameters` for boto3 (templated)
