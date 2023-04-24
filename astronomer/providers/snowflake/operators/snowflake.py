@@ -38,7 +38,7 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-def _check_queries_success(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
+def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
     with closing(conn) as conn:
         for query_id in query_ids:
             status = conn.get_query_status(query_id)
@@ -193,7 +193,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         if self.do_xcom_push:
             context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
-        if not _check_queries_success(hook.get_conn(), self.query_ids):
+        if not _check_queries_finish(hook.get_conn(), self.query_ids):
             logging.info("Task deferred")
             self.defer(
                 timeout=self.execution_timeout,

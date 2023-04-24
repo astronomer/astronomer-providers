@@ -33,14 +33,14 @@ class TestSnowflakeOperatorAsync:
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.defer")
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
-    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_success")
+    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_finish")
     def test_snowflake_execute_operator_async_finish_before_deferred(
         self, mock_check, mock_db_hook, mock_defer, mock_sql, caplog
     ):
         """
         Asserts that a task is not finished before it's deferred
         """
-        # _check_queries_success
+        # _check_queries_finish
         dag = DAG("test_snowflake_async_execute_complete_failure", start_date=datetime.datetime(2023, 1, 1))
         operator = SnowflakeOperatorAsync(
             task_id="execute_run",
@@ -56,7 +56,7 @@ class TestSnowflakeOperatorAsync:
 
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
-    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_success")
+    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_finish")
     def test_snowflake_execute_operator_async_deffered(self, mock_check, mock_db_hook, mock_sql):
         """
         Asserts that a task is deferred and an SnowflakeTrigger will be fired
