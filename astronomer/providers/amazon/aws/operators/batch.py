@@ -65,7 +65,7 @@ class BatchOperatorAsync(BatchOperator):
             container_overrides = self.container_overrides
         except AttributeError:  # pragma: no cover
             # For apache-airflow-providers-amazon<8.0.0
-            container_overrides = self.overrides
+            container_overrides = self.overrides  # type: ignore[attr-defined]
         self.defer(
             timeout=self.execution_timeout,
             trigger=BatchOperatorTrigger(
@@ -73,7 +73,7 @@ class BatchOperatorAsync(BatchOperator):
                 job_name=self.job_name,
                 job_definition=self.job_definition,
                 job_queue=self.job_queue,
-                container_overrides=container_overrides,
+                container_overrides=container_overrides,  # type: ignore[arg-type]
                 array_properties=self.array_properties,  # type: ignore[arg-type]
                 parameters=self.parameters,
                 waiters=self.waiters,
