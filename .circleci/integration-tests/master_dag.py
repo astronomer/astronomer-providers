@@ -29,7 +29,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
         airflow_version_message = (
-            f"Airflow version for the below run is `{airflow_version} on {airflow_executor}`\n\n"
+            f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
         )
         message_list.append(airflow_version_message)
 
