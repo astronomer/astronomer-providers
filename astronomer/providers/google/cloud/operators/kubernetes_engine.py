@@ -5,6 +5,9 @@ from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
+from airflow.providers.google.cloud.operators.kubernetes_engine import (
+    GKEStartPodOperator,
+)
 from kubernetes.client import models as k8s
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -20,9 +23,6 @@ from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
 from astronomer.providers.utils.typing_compat import Context
 
 if google_provider_version_lt_9:
-    from airflow.providers.google.cloud.operators.kubernetes_engine import (
-        GKEStartPodOperator,
-    )
 
     class GKEStartPodOperatorAsync(KubernetesPodOperator):
         """
@@ -211,9 +211,6 @@ if google_provider_version_lt_9:
                 return result
 
 else:
-    from airflow.providers.google.cloud.operators.kubernetes_engine import (  # pragma: no cover
-        GKEStartPodOperator,
-    )
 
     class GKEStartPodOperatorAsync(GKEStartPodOperator):  # type: ignore[no-redef] # pragma: no cover
         """
