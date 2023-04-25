@@ -45,9 +45,9 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
             status = conn.get_query_status(query_id)
 
             if status == QueryStatus.ABORTING:
-                raise AirflowException(f"ABORTING {ABORTING_MESSAGE}")
+                raise AirflowException(f"sfquid: {query_id}, ABORTING: {ABORTING_MESSAGE}")
             elif status == QueryStatus.FAILED_WITH_ERROR:
-                raise AirflowException(f"FAILED_WITH_ERROR {FAILED_WITH_ERROR_MESSAGE}")
+                raise AirflowException(f"sfquid {query_id}, FAILED_WITH_ERROR: {FAILED_WITH_ERROR_MESSAGE}")
             elif status == QueryStatus.SUCCESS:
                 pass
             elif status in (
@@ -227,7 +227,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL in execute_complete: %s", self.sql)
         if event:
             if "status" in event and event["status"] == "error":
-                msg = f"{event['type']}: {event['message']}"
+                msg = f"sfquid: {event['query_id']}, {event['type']}: {event['message']}"
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()

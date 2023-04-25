@@ -128,7 +128,12 @@ class TestSnowflakeOperatorAsync:
         with pytest.raises(AirflowException):
             operator.execute_complete(
                 context=None,
-                event={"status": "error", "message": "Test failure message", "type": ""},
+                event={
+                    "status": "error",
+                    "message": "Test failure message",
+                    "type": "",
+                    "query_id": "test_id",
+                },
             )
 
     @pytest.mark.parametrize(
