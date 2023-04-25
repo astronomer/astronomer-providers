@@ -27,7 +27,10 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        airflow_version_message = f"Airflow version for the below run is `{airflow_version}` \n\n"
+        airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
+        airflow_version_message = (
+            f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
+        )
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
@@ -103,6 +106,12 @@ with DAG(
 
     get_airflow_version = BashOperator(
         task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
+    )
+
+    get_airflow_executor = BashOperator(
+        task_id="get_airflow_executor",
+        bash_command="airflow config get-value core executor",
+        do_xcom_push=True,
     )
 
     dag_run_ids = []
@@ -240,6 +249,7 @@ with DAG(
     start >> [
         list_installed_pip_packages,
         get_airflow_version,
+        get_airflow_executor,
         emr_trigger_tasks[0],
         aws_misc_dags_tasks[0],
         amazon_trigger_tasks[0],
@@ -259,6 +269,7 @@ with DAG(
     last_task = [
         list_installed_pip_packages,
         get_airflow_version,
+        get_airflow_executor,
         amazon_trigger_tasks[-1],
         emr_trigger_tasks[-1],
         aws_misc_dags_tasks[-1],
