@@ -13,19 +13,9 @@ class BatchOperatorTrigger(BaseTrigger):
 
     :param job_id: the job ID, usually unknown (None) until the
         submit_job operation gets the jobId defined by AWS Batch
-    :param job_name: the name for the job that will run on AWS Batch (templated)
-    :param job_definition: the job definition name on AWS Batch
-    :param job_queue: the queue name on AWS Batch
-    :param container_overrides: the `containerOverrides` parameter for boto3 (templated)
-    :param array_properties: the `arrayProperties` parameter for boto3
-    :param parameters: the `parameters` for boto3 (templated)
     :param waiters: a :class:`.BatchWaiters` object (see note below);
         if None, polling is used with max_retries and status_retries.
-    :param tags: collection of tags to apply to the AWS Batch job submission
-        if None, no tags are submitted
     :param max_retries: exponential back-off retries, 4200 = 48 hours;
-        polling is only used when waiters is None
-    :param status_retries: number of HTTP retries to get job status, 10;
         polling is only used when waiters is None
     :param aws_conn_id: connection id of AWS credentials / region name. If None,
         credential boto3 strategy will be used.
@@ -36,31 +26,15 @@ class BatchOperatorTrigger(BaseTrigger):
     def __init__(
         self,
         job_id: Optional[str],
-        job_name: str,
-        job_definition: str,
-        job_queue: str,
-        container_overrides: Dict[str, str],
-        array_properties: Dict[str, str],
-        parameters: Dict[str, str],
         waiters: Any,
-        tags: Dict[str, str],
         max_retries: int,
-        status_retries: int,
         region_name: Optional[str],
         aws_conn_id: Optional[str] = "aws_default",
     ):
         super().__init__()
         self.job_id = job_id
-        self.job_name = job_name
-        self.job_definition = job_definition
-        self.job_queue = job_queue
-        self.container_overrides = container_overrides or {}
-        self.array_properties = array_properties or {}
-        self.parameters = parameters or {}
         self.waiters = waiters
-        self.tags = tags or {}
         self.max_retries = max_retries
-        self.status_retries = status_retries
         self.aws_conn_id = aws_conn_id
         self.region_name = region_name
 
@@ -70,16 +44,8 @@ class BatchOperatorTrigger(BaseTrigger):
             "astronomer.providers.amazon.aws.triggers.batch.BatchOperatorTrigger",
             {
                 "job_id": self.job_id,
-                "job_name": self.job_name,
-                "job_definition": self.job_definition,
-                "job_queue": self.job_queue,
-                "container_overrides": self.container_overrides,
-                "array_properties": self.array_properties,
-                "parameters": self.parameters,
                 "waiters": self.waiters,
-                "tags": self.tags,
                 "max_retries": self.max_retries,
-                "status_retries": self.status_retries,
                 "aws_conn_id": self.aws_conn_id,
                 "region_name": self.region_name,
             },

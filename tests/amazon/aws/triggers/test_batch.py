@@ -21,16 +21,8 @@ REGION_NAME = "eu-west-1"
 class TestBatchOperatorTrigger:
     TRIGGER = BatchOperatorTrigger(
         job_id=JOB_ID,
-        job_name=JOB_NAME,
-        job_definition="hello-world",
-        job_queue="queue",
         waiters=None,
-        tags={},
         max_retries=MAX_RETRIES,
-        status_retries=STATUS_RETRIES,
-        parameters={},
-        container_overrides={},
-        array_properties={},
         region_name="eu-west-1",
         aws_conn_id="airflow_test",
     )
@@ -45,16 +37,8 @@ class TestBatchOperatorTrigger:
         assert classpath == "astronomer.providers.amazon.aws.triggers.batch.BatchOperatorTrigger"
         assert kwargs == {
             "job_id": JOB_ID,
-            "job_name": JOB_NAME,
-            "job_definition": "hello-world",
-            "job_queue": "queue",
             "waiters": None,
-            "tags": {},
             "max_retries": MAX_RETRIES,
-            "status_retries": STATUS_RETRIES,
-            "parameters": {},
-            "container_overrides": {},
-            "array_properties": {},
             "region_name": "eu-west-1",
             "aws_conn_id": "airflow_test",
         }
