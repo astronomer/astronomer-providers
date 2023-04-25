@@ -48,6 +48,16 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
                 raise AirflowException(f"sfquid: {query_id}, ABORTING: {ABORTING_MESSAGE}")
             elif status == QueryStatus.FAILED_WITH_ERROR:
                 raise AirflowException(f"sfquid {query_id}, FAILED_WITH_ERROR: {FAILED_WITH_ERROR_MESSAGE}")
+            elif status == QueryStatus.DISCONNECTED:
+                # even though disconncedted is not actually a finshed status,
+                # it's going to fail.
+                # by including it into this function, we can catch the error in an
+                # earlier stage
+                raise AirflowException(
+                    f"sfquid {query_id}, "
+                    "DISCONNECTED: The session’s connection is broken. "
+                    "The query’s state will change to “FAILED_WITH_ERROR” soon."
+                )
             elif status == QueryStatus.SUCCESS:
                 pass
             elif status in (

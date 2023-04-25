@@ -43,7 +43,6 @@ def test__check_queries_finish_success():
     (
         QueryStatus.RUNNING,
         QueryStatus.QUEUED,
-        QueryStatus.DISCONNECTED,
         QueryStatus.RESUMING_WAREHOUSE,
         QueryStatus.BLOCKED,
         QueryStatus.NO_DATA,
@@ -56,7 +55,14 @@ def test__check_queries_finish_when_not_finished(mock_status):
     assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is False
 
 
-@pytest.mark.parametrize("mock_status", (QueryStatus.FAILED_WITH_ERROR, QueryStatus.ABORTING))
+@pytest.mark.parametrize(
+    "mock_status",
+    (
+        QueryStatus.FAILED_WITH_ERROR,
+        QueryStatus.ABORTING,
+        QueryStatus.DISCONNECTED,
+    ),
+)
 def test__check_queries_finish_failed(mock_status):
     mock_conn = MagicMock()
     mock_conn.get_query_status.return_value = mock_status
