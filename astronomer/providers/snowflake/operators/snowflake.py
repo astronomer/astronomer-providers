@@ -57,6 +57,7 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
                 QueryStatus.RESUMING_WAREHOUSE,
                 QueryStatus.BLOCKED,
                 QueryStatus.NO_DATA,
+                QueryStatus.FAILED_WITH_INCIDENT,
             ):
                 return False
             else:

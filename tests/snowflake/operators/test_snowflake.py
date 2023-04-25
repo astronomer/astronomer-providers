@@ -47,6 +47,7 @@ def test__check_queries_finish_success():
         QueryStatus.RESUMING_WAREHOUSE,
         QueryStatus.BLOCKED,
         QueryStatus.NO_DATA,
+        QueryStatus.FAILED_WITH_INCIDENT,
     ),
 )
 def test__check_queries_finish_when_not_finished(mock_status):
