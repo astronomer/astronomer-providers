@@ -1,5 +1,5 @@
 ---
-name: deploy-integeration-tests-to-cloud
+name: deploy-integration-tests-to-astro-cloud
 
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
@@ -30,7 +30,7 @@ on:  # yamllint disable-line rule:truthy
         default: ''
 
 jobs:
-  deploy-integeration-tests-to-cloud:
+  deploy-integration-tests-to-astro-cloud:
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
@@ -38,7 +38,7 @@ jobs:
         with:
           ref: '${{ github.event.inputs.git_rev }}'
 
-      - name: delploy
+      - name: deploy
         working-directory: .circleci/integration-tests
         run: |
           bash script.sh astro-cloud \
