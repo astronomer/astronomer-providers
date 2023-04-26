@@ -47,7 +47,7 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: deploy-to-providers-integration-tests-on-KE
+      - name: deploy
         working-directory: .circleci/integration-tests
         run: |
           echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
