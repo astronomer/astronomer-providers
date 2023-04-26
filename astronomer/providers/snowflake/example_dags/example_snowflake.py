@@ -24,10 +24,12 @@ SNOWFLAKE_SLACK_MESSAGE = (
     "Results in an ASCII table:\n```{{ results_df | tabulate(tablefmt='pretty', headers='keys') }}```"
 )
 
+
+SNOWFLAKE_SAMPLE_TABLE_MULTI = os.getenv("SNOWFLAKE_SAMPLE_TABLE_MULTI", "sample_table_multi")
 MULTIPLE_QUERY_IN_ONE_RUN = (
-    "CREATE OR REPLACE TRANSIENT TABLE sample_table (name VARCHAR(250), id INT);"
-    "INSERT INTO sample_table VALUES ('name', 1);"
-    "DROP TABLE sample_table;"
+    f"CREATE OR REPLACE TRANSIENT TABLE {SNOWFLAKE_SAMPLE_TABLE_MULTI} (name VARCHAR(250), id INT);"
+    f"INSERT INTO {SNOWFLAKE_SAMPLE_TABLE_MULTI} VALUES ('name', 1);"
+    f"DROP TABLE {SNOWFLAKE_SAMPLE_TABLE_MULTI};"
 )
 
 default_args = {
