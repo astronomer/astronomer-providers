@@ -9,20 +9,29 @@ on:  # yamllint disable-line rule:truthy
         required: true
         type: choice
         options:
+          - both
           - providers-integration-tests
           - providers-integration-tests-on-KE
 
 jobs:
-  deploy-integration-tests-to-astro-cloud:
+  deploy-to-providers-integration-tests:
+    if: |
+      ${{
+        contains(
+          fromJSON(
+            '["both", "providers-integration-tests"]'
+          ),
+          inputs.environment_to_deploy
+        )
+      }}
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: '${{ github.event.inputs.git_rev }}'
+          ref: '${{ inputs.git_rev }}'
 
-      - if: ${{ github.events.inputs.environment_to_deploy }} == 'providers-integration-tests'
-        name: deploy-to-providers-integration-tests
+      - name: deploy
         working-directory: .circleci/integration-tests
         run: |
           bash script.sh astro-cloud \
@@ -32,8 +41,24 @@ jobs:
               ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
               ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
 
-      - if: ${{ github.events.inputs.environment_to_deploy }} == 'providers-integration-tests-on-KE'
-        name: deploy-to-providers-integration-tests-on-KE
+  deploy-to-providers-integration-tests-on-KE:
+    if: |
+      ${{
+        contains(
+          fromJSON(
+            '["both", "providers-integration-tests-on-KE"]'
+          ),
+          inputs.environment_to_deploy
+        )
+      }}
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: '${{ inputs.git_rev }}'
+
+      - name: deploy-to-providers-integration-tests-on-KE
         working-directory: .circleci/integration-tests
         run: |
           bash script.sh astro-cloud \
