@@ -24,6 +24,12 @@ SNOWFLAKE_SLACK_MESSAGE = (
     "Results in an ASCII table:\n```{{ results_df | tabulate(tablefmt='pretty', headers='keys') }}```"
 )
 
+MULTIPLE_QUERY_IN_ONE_RUN = (
+    "CREATE OR REPLACE TRANSIENT TABLE sample_table (name VARCHAR(250), id INT);"
+    "INSERT INTO sample_table VALUES ('name', 1);"
+    "DROP TABLE sample_table;"
+)
+
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "snowflake_conn_id": SNOWFLAKE_CONN_ID,
@@ -66,8 +72,13 @@ with DAG(
         task_id="snowflake_op_sql_select_stmts", sql=SNOWFLAKE_SLACK_SQL, return_last=False
     )
 
+    snowflake_op_multiple_query_in_one_run = SnowflakeOperatorAsync(
+        task_id="snowflake_op_multiple_query_in_one_run", sql=MULTIPLE_QUERY_IN_ONE_RUN, return_last=False
+    )
+
     (
         snowflake_op_sql_str
         >> [snowflake_op_with_params, snowflake_op_sql_list, snowflake_op_sql_multiple_stmts]
         >> snowflake_op_sql_select_stmts
+        >> snowflake_op_multiple_query_in_one_run
     )
