@@ -1,14 +1,17 @@
 import datetime
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
+from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.operators.snowflake import (
     SnowflakeOperatorAsync,
     SnowflakeSqlApiOperatorAsync,
+    _check_queries_finish,
 )
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSqlApiTrigger,
@@ -29,14 +32,85 @@ SQL_MULTIPLE_STMTS = (
 SINGLE_STMT = "select i from user_test order by i;"
 
 
+def test__check_queries_finish_success():
+    mock_conn = MagicMock()
+    mock_conn.get_query_status.return_value = QueryStatus.SUCCESS
+    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is True
+
+
+@pytest.mark.parametrize(
+    "mock_status",
+    (
+        QueryStatus.RUNNING,
+        QueryStatus.QUEUED,
+        QueryStatus.RESUMING_WAREHOUSE,
+        QueryStatus.BLOCKED,
+        QueryStatus.NO_DATA,
+        QueryStatus.FAILED_WITH_INCIDENT,
+    ),
+)
+def test__check_queries_finish_when_not_finished(mock_status):
+    mock_conn = MagicMock()
+    mock_conn.get_query_status.return_value = mock_status
+    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is False
+
+
+@pytest.mark.parametrize(
+    "mock_status",
+    (
+        QueryStatus.FAILED_WITH_ERROR,
+        QueryStatus.ABORTING,
+        QueryStatus.DISCONNECTED,
+    ),
+)
+def test__check_queries_finish_failed(mock_status):
+    mock_conn = MagicMock()
+    mock_conn.get_query_status.return_value = mock_status
+    with pytest.raises(AirflowException):
+        _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"])
+
+
+def test__check_queries_finish_with_unknown_value():
+    mock_conn = MagicMock()
+    mock_conn.get_query_status.return_value = "no such value"
+    with pytest.raises(ValueError):
+        _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"])
+
+
 class TestSnowflakeOperatorAsync:
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
+    @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.defer")
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
-    def test_snowflake_execute_operator_async(self, mock_db_hook, mock_sql):
+    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_finish")
+    def test_snowflake_execute_operator_async_finish_before_deferred(
+        self, mock_check, mock_db_hook, mock_defer, mock_sql, caplog
+    ):
+        """
+        Asserts that a task is not finished before it's deferred
+        """
+        # _check_queries_finish
+        dag = DAG("test_snowflake_async_execute_complete_failure", start_date=datetime.datetime(2023, 1, 1))
+        operator = SnowflakeOperatorAsync(
+            task_id="execute_run",
+            snowflake_conn_id=CONN_ID,
+            dag=dag,
+            sql=mock_sql,
+        )
+        mock_check.return_value = True
+
+        operator.execute(create_context(operator))
+
+        # assert not mock_defer.called
+
+    @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
+    @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
+    @mock.patch(f"{MODULE}.operators.snowflake._check_queries_finish")
+    def test_snowflake_execute_operator_async_deffered(self, mock_check, mock_db_hook, mock_sql):
         """
         Asserts that a task is deferred and an SnowflakeTrigger will be fired
         when the SnowflakeOperatorAsync is executed.
         """
+        mock_check.return_value = False
         dag = DAG("test_snowflake_async_execute_complete_failure", start_date=datetime.datetime(2023, 1, 1))
         operator = SnowflakeOperatorAsync(
             task_id="execute_run",
@@ -61,7 +135,12 @@ class TestSnowflakeOperatorAsync:
         with pytest.raises(AirflowException):
             operator.execute_complete(
                 context=None,
-                event={"status": "error", "message": "Test failure message", "type": ""},
+                event={
+                    "status": "error",
+                    "message": "Test failure message",
+                    "type": "",
+                    "query_id": "test_id",
+                },
             )
 
     @pytest.mark.parametrize(

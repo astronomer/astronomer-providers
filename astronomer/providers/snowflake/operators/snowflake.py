@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import logging
 import typing
+from contextlib import closing
 from datetime import timedelta
 from typing import Any, Callable, List
 
 from airflow.exceptions import AirflowException
+
+from snowflake.connector import SnowflakeConnection
+from snowflake.connector.constants import QueryStatus
 
 try:
     from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
@@ -17,6 +22,8 @@ except ImportError:  # pragma: no cover
     )
 
 from astronomer.providers.snowflake.hooks.snowflake import (
+    ABORTING_MESSAGE,
+    FAILED_WITH_ERROR_MESSAGE,
     SnowflakeHookAsync,
     fetch_all_snowflake_handler,
 )
@@ -29,6 +36,44 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     get_db_hook,
 )
 from astronomer.providers.utils.typing_compat import Context
+
+
+def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
+    """Check whether snowflake queries finish (in aborting, failed_with_error or success)"""
+    with closing(conn) as conn:
+        for query_id in query_ids:
+            status = conn.get_query_status(query_id)
+
+            if status == QueryStatus.ABORTING:
+                raise AirflowException(f"sfquid: {query_id}, ABORTING: {ABORTING_MESSAGE}")
+            elif status == QueryStatus.FAILED_WITH_ERROR:
+                raise AirflowException(f"sfquid {query_id}, FAILED_WITH_ERROR: {FAILED_WITH_ERROR_MESSAGE}")
+            elif status == QueryStatus.DISCONNECTED:
+                # even though disconncedted is not actually a finished status,
+                # it's going to fail.
+                # by including it into this function, we can catch the error in an
+                # earlier stage
+                raise AirflowException(
+                    f"sfquid {query_id}, "
+                    "DISCONNECTED: The session’s connection is broken. "
+                    "The query’s state will change to “FAILED_WITH_ERROR” soon."
+                )
+            elif status == QueryStatus.SUCCESS:
+                pass
+            elif status in (
+                QueryStatus.RUNNING,
+                QueryStatus.QUEUED,
+                QueryStatus.DISCONNECTED,
+                QueryStatus.RESUMING_WAREHOUSE,
+                QueryStatus.BLOCKED,
+                QueryStatus.NO_DATA,
+                QueryStatus.FAILED_WITH_INCIDENT,
+            ):
+                return False
+            else:
+                raise ValueError(f"Unexpected QueryStatus: {str(status)}")
+
+    return True
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
@@ -169,16 +214,20 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         if self.do_xcom_push:
             context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=SnowflakeTrigger(
-                task_id=self.task_id,
-                poll_interval=self.poll_interval,
-                query_ids=self.query_ids,
-                snowflake_conn_id=self.snowflake_conn_id,
-            ),
-            method_name="execute_complete",
-        )
+        if not _check_queries_finish(hook.get_conn(), self.query_ids):
+            logging.info("Task deferred")
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=SnowflakeTrigger(
+                    task_id=self.task_id,
+                    poll_interval=self.poll_interval,
+                    query_ids=self.query_ids,
+                    snowflake_conn_id=self.snowflake_conn_id,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            logging.info("Queries finish before deferred")
 
     def execute_complete(self, context: Context, event: dict[str, str | list[str]] | None = None) -> Any:
         """
@@ -189,7 +238,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL in execute_complete: %s", self.sql)
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{}: {}".format(event["type"], event["message"])
+                msg = f"sfquid: {event['query_id']}, {event['type']}: {event['message']}"
                 raise AirflowException(msg)
             elif "status" in event and event["status"] == "success":
                 hook = self.get_db_hook()
