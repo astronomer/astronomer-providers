@@ -4,30 +4,13 @@ name: deploy-integration-tests-to-astro-cloud
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
-      git_rev:
-        description: 'The git revision to deploy'
+      environment_to_deploy:
+        description: ''
         required: true
-        default: ''
-      docker_registry:
-        description: 'docker_registry'
-        required: true
-        default: ''
-      organization_id:
-        description: 'organization_id'
-        required: true
-        default: ''
-      deployment_id:
-        description: 'deployment_id'
-        required: true
-        default: ''
-      astronomer_key_id:
-        description: 'astronomer_key_id'
-        required: true
-        default: ''
-      astronomer_key_secret:
-        description: 'astronomer_key_secret'
-        required: true
-        default: ''
+        type: choice
+        options:
+          - providers-integration-tests
+          - providers-integration-tests-on-KE
 
 jobs:
   deploy-integration-tests-to-astro-cloud:
@@ -38,12 +21,24 @@ jobs:
         with:
           ref: '${{ github.event.inputs.git_rev }}'
 
-      - name: deploy
+      - if: ${{ github.events.inputs.environment_to_deploy }} == 'providers-integration-tests'
+        name: deploy-to-providers-integration-tests
         working-directory: .circleci/integration-tests
         run: |
           bash script.sh astro-cloud \
-              ${{ secrets[github.event.inputs.docker_registry] }} \
-              ${{ secrets[github.event.inputs.organization_id] }} \
-              ${{ secrets[github.event.inputs.deployment_id] }} \
-              ${{ secrets[github.event.inputs.astronomer_key_id] }} \
-              ${{ secrets[github.event.inputs.astronomer_key_secret] }}
+              ${{ secrets.DOCKER_REGISTRY }} \
+              ${{ secrets.ORGANIZATION_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+
+      - if: ${{ github.events.inputs.environment_to_deploy }} == 'providers-integration-tests-on-KE'
+        name: deploy-to-providers-integration-tests-on-KE
+        working-directory: .circleci/integration-tests
+        run: |
+          bash script.sh astro-cloud \
+              ${{ secrets.DOCKER_REGISTRY }} \
+              ${{ secrets.ORGANIZATION_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
+              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
