@@ -4,8 +4,12 @@ name: deploy-integration-tests-to-astro-cloud
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        required: true
+        default: ''
       environment_to_deploy:
-        description: ''
+        description: 'astro cloud deployment to deploy to'
         required: true
         type: choice
         options:
@@ -15,55 +19,41 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   deploy-to-providers-integration-tests:
-    if: |
-      ${{
-        contains(
-          fromJSON(
-            '["both", "providers-integration-tests"]'
-          ),
-          inputs.environment_to_deploy
-        )
-      }}
+    if: contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy)
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: '${{ inputs.git_rev }}'
+          ref: ${{ inputs.git_rev }}
 
       - name: deploy
         working-directory: .circleci/integration-tests
         run: |
+          echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
           bash script.sh astro-cloud \
-              ${{ secrets.DOCKER_REGISTRY }} \
-              ${{ secrets.ORGANIZATION_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+            ${{ secrets.DOCKER_REGISTRY }} \
+            ${{ secrets.ORGANIZATION_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
 
   deploy-to-providers-integration-tests-on-KE:
-    if: |
-      ${{
-        contains(
-          fromJSON(
-            '["both", "providers-integration-tests-on-KE"]'
-          ),
-          inputs.environment_to_deploy
-        )
-      }}
+    if: contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy)
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: '${{ inputs.git_rev }}'
+          ref: ${{ inputs.git_rev }}
 
       - name: deploy-to-providers-integration-tests-on-KE
         working-directory: .circleci/integration-tests
         run: |
+          echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
           bash script.sh astro-cloud \
-              ${{ secrets.DOCKER_REGISTRY }} \
-              ${{ secrets.ORGANIZATION_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
-              ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
+            ${{ secrets.DOCKER_REGISTRY }} \
+            ${{ secrets.ORGANIZATION_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
