@@ -2,7 +2,7 @@
 from typing import Any, Dict
 
 from airflow.exceptions import AirflowException
-from airflow.providers.apache.livy.operators.livy import LivyOperator
+from airflow.providers.apache.livy.operators.livy import BatchState, LivyOperator
 
 from astronomer.providers.apache.livy.triggers.livy import LivyTrigger
 from astronomer.providers.utils.typing_compat import Context
@@ -40,7 +40,7 @@ class LivyOperatorAsync(LivyOperator):
             See Tenacity documentation at https://github.com/jd/tenacity
     """
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> Any:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
@@ -48,18 +48,30 @@ class LivyOperatorAsync(LivyOperator):
         self._batch_id = self.get_hook().post_batch(**self.spark_params)
         self.log.info("Generated batch-id is %s", self._batch_id)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=LivyTrigger(
-                batch_id=self._batch_id,
-                spark_params=self.spark_params,
-                livy_conn_id=self._livy_conn_id,
-                polling_interval=self._polling_interval,
-                extra_options=self._extra_options,
-                extra_headers=self._extra_headers,
-            ),
-            method_name="execute_complete",
-        )
+        hook = self.get_hook()
+        state = hook.get_batch_state(self._batch_id, retry_args=self.retry_args)
+        self.log.debug("Batch with id %s is in state: %s", self._batch_id, state.value)
+        if state not in hook.TERMINAL_STATES:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=LivyTrigger(
+                    batch_id=self._batch_id,
+                    spark_params=self.spark_params,
+                    livy_conn_id=self._livy_conn_id,
+                    polling_interval=self._polling_interval,
+                    extra_options=self._extra_options,
+                    extra_headers=self._extra_headers,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            self.log.info("Batch with id %s terminated with state: %s", self._batch_id, state.value)
+            hook.dump_batch_logs(self._batch_id)
+            if state != BatchState.SUCCESS:
+                raise AirflowException(f"Batch {self._batch_id} did not succeed")
+
+            context["ti"].xcom_push(key="app_id", value=self.get_hook().get_batch(self._batch_id)["appId"])
+            return self._batch_id
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         """

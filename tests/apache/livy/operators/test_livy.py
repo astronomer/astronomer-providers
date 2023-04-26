@@ -41,8 +41,20 @@ class TestLivyOperatorAsync:
         mock_dump_logs.assert_called_with(BATCH_ID)
         assert mock_livy.call_count == 3
 
+    @pytest.mark.parametrize(
+        "mock_state",
+        (
+            BatchState.NOT_STARTED,
+            BatchState.STARTING,
+            BatchState.RUNNING,
+            BatchState.IDLE,
+            BatchState.SHUTTING_DOWN,
+        ),
+    )
     @patch("airflow.providers.apache.livy.operators.livy.LivyHook.post_batch", return_value=BATCH_ID)
-    def test_livy_operator_async(self, mock_post, dag):
+    @patch("airflow.providers.apache.livy.operators.livy.LivyHook.get_batch_state")
+    def test_livy_operator_async(self, mock_get_batch_state, mock_post, mock_state, dag):
+        mock_get_batch_state.retun_value = mock_state
         task = LivyOperatorAsync(
             livy_conn_id="livyunittest",
             file="sparkapp",
@@ -55,6 +67,63 @@ class TestLivyOperatorAsync:
             task.execute({})
 
         assert isinstance(exc.value.trigger, LivyTrigger), "Trigger is not a LivyTrigger"
+
+    @patch(
+        "airflow.providers.apache.livy.operators.livy.LivyHook.dump_batch_logs",
+        return_value=None,
+    )
+    @patch("astronomer.providers.apache.livy.operators.livy.LivyOperatorAsync.defer")
+    @patch(
+        "airflow.providers.apache.livy.operators.livy.LivyHook.get_batch", return_value={"appId": BATCH_ID}
+    )
+    @patch("airflow.providers.apache.livy.operators.livy.LivyHook.post_batch", return_value=BATCH_ID)
+    @patch(
+        "airflow.providers.apache.livy.operators.livy.LivyHook.get_batch_state",
+        return_value=BatchState.SUCCESS,
+    )
+    def test_livy_operator_async_finish_before_deferred_success(
+        self, mock_get_batch_state, mock_post, mock_get, mock_defer, mock_dump_logs, dag
+    ):
+        mock_context = {"ti": MagicMock()}
+        task = LivyOperatorAsync(
+            livy_conn_id="livyunittest",
+            file="sparkapp",
+            polling_interval=1,
+            dag=dag,
+            task_id="livy_example",
+        )
+        assert task.execute(context=mock_context) == BATCH_ID
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize(
+        "mock_state",
+        (
+            BatchState.ERROR,
+            BatchState.DEAD,
+            BatchState.KILLED,
+        ),
+    )
+    @patch(
+        "airflow.providers.apache.livy.operators.livy.LivyHook.dump_batch_logs",
+        return_value=None,
+    )
+    @patch("astronomer.providers.apache.livy.operators.livy.LivyOperatorAsync.defer")
+    @patch("airflow.providers.apache.livy.operators.livy.LivyHook.post_batch", return_value=BATCH_ID)
+    @patch("airflow.providers.apache.livy.operators.livy.LivyHook.get_batch_state")
+    def test_livy_operator_async_finish_before_deferred_not_success(
+        self, mock_get_batch_state, mock_post, mock_defer, mock_dump_logs, mock_state, dag
+    ):
+        mock_get_batch_state.return_value = mock_state
+        task = LivyOperatorAsync(
+            livy_conn_id="livyunittest",
+            file="sparkapp",
+            polling_interval=1,
+            dag=dag,
+            task_id="livy_example",
+        )
+        with pytest.raises(AirflowException):
+            task.execute({})
+        assert not mock_defer.called
 
     @patch("airflow.providers.apache.livy.operators.livy.LivyHook.post_batch", return_value=BATCH_ID)
     def test_livy_operator_async_execute_complete_success(self, mock_post, dag):

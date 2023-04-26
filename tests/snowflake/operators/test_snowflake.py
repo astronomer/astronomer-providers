@@ -99,8 +99,7 @@ class TestSnowflakeOperatorAsync:
         mock_check.return_value = True
 
         operator.execute(create_context(operator))
-
-        # assert not mock_defer.called
+        assert not mock_defer.called
 
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
     @mock.patch(f"{MODULE}.operators.snowflake.SnowflakeOperatorAsync.get_db_hook")
