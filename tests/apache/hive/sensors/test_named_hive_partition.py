@@ -21,12 +21,36 @@ def context():
     yield context
 
 
+MODULE = "astronomer.providers.apache.hive.sensors.named_hive_partition"
+
+
 class TestNamedHivePartitionSensorAsync:
-    def test_named_hive_partition_sensor_async(self):
+    @mock.patch(f"{MODULE}.NamedHivePartitionSensorAsync.defer")
+    @mock.patch(
+        "astronomer.providers.apache.hive.sensors.named_hive_partition.HiveCliHookAsync",
+    )
+    def test_named_hive_partition_sensor_async_finish_before_deferred(self, mock_hook, mock_defer, context):
+        mock_hook.return_value.parse_partition_name.return_value = ("", "", "")
+        mock_hook.return_value.check_partition_exists.return_value = True
+        task = NamedHivePartitionSensorAsync(
+            task_id="task-id",
+            partition_names=TEST_PARTITION,
+            metastore_conn_id=TEST_METASTORE_CONN_ID,
+        )
+        task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch(
+        "astronomer.providers.apache.hive.sensors.named_hive_partition.HiveCliHookAsync",
+    )
+    def test_named_hive_partition_sensor_async(self, mock_hook):
         """
         Asserts that a task is deferred and a NamedHivePartitionTrigger will be fired
         when the NamedHivePartitionSensorAsync is executed.
         """
+        mock_hook.return_value.parse_partition_name.return_value = ("", "", "")
+        mock_hook.return_value.check_partition_exists.return_value = False
         task = NamedHivePartitionSensorAsync(
             task_id="task-id",
             partition_names=TEST_PARTITION,

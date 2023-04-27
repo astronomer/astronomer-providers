@@ -8,7 +8,7 @@ except ImportError:  # pragma: no cover
     # For apache-airflow-providers-amazon > 6.0.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
     # path won't be available in current setup
-    from airflow.providers.common.sql.operators.sql import (
+    from airflow.providers.common.sql.operators.sql import (  # type: ignore[assignment]
         SQLExecuteQueryOperator as RedshiftSQLOperator,
     )
 
