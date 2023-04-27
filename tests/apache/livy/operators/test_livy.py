@@ -84,7 +84,6 @@ class TestLivyOperatorAsync:
     def test_livy_operator_async_finish_before_deferred_success(
         self, mock_get_batch_state, mock_post, mock_get, mock_defer, mock_dump_logs, dag
     ):
-        mock_context = {"ti": MagicMock()}
         task = LivyOperatorAsync(
             livy_conn_id="livyunittest",
             file="sparkapp",
@@ -92,7 +91,7 @@ class TestLivyOperatorAsync:
             dag=dag,
             task_id="livy_example",
         )
-        assert task.execute(context=mock_context) == BATCH_ID
+        assert task.execute(context={"ti": MagicMock()}) == BATCH_ID
         assert not mock_defer.called
 
     @pytest.mark.parametrize(
@@ -114,6 +113,7 @@ class TestLivyOperatorAsync:
         self, mock_get_batch_state, mock_post, mock_defer, mock_dump_logs, mock_state, dag
     ):
         mock_get_batch_state.return_value = mock_state
+
         task = LivyOperatorAsync(
             livy_conn_id="livyunittest",
             file="sparkapp",
@@ -125,10 +125,12 @@ class TestLivyOperatorAsync:
             task.execute({})
         assert not mock_defer.called
 
+    @patch(
+        "airflow.providers.apache.livy.operators.livy.LivyHook.get_batch", return_value={"appId": BATCH_ID}
+    )
     @patch("airflow.providers.apache.livy.operators.livy.LivyHook.post_batch", return_value=BATCH_ID)
-    def test_livy_operator_async_execute_complete_success(self, mock_post, dag):
+    def test_livy_operator_async_execute_complete_success(self, mock_post, mock_get, dag):
         """Asserts that a task is completed with success status."""
-
         task = LivyOperatorAsync(
             livy_conn_id="livyunittest",
             file="sparkapp",
@@ -138,7 +140,7 @@ class TestLivyOperatorAsync:
         )
         assert (
             task.execute_complete(
-                context={},
+                context={"ti": MagicMock()},
                 event={
                     "status": "success",
                     "log_lines": None,
