@@ -75,6 +75,8 @@ RUN  python3 -m pip install --upgrade pip
 RUN pip install  --upgrade --force-reinstall  --no-cache-dir /tmp/astronomer-providers[all]
 RUN pip install apache-airflow[slack]
 
+# Install astronomer-starship-provider needed for the astronomer_migration_dag to transfer Airflow metadata between deployments
+RUN pip install astronomer-starship-provider
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 COPY . .

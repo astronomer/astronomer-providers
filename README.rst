@@ -75,10 +75,6 @@ Extras
      - ``pip install 'astronomer-providers[apache.livy]'``
      - Apache Livy
 
-   * - ``astronomer.starship``
-     - ``pip install 'astronomer-providers[astronomer.starship]'``
-     - Astronomer Starship
-
    * - ``cncf.kubernetes``
      - ``pip install 'astronomer-providers[cncf.kubernetes]'``
      - Cncf Kubernetes
