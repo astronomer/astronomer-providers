@@ -103,7 +103,7 @@ class HttpSensorAsync(HttpSensor):
         if self.response_check:
             self.log.warning("Since response_check param is passed, using the sync version of the sensor.")
             super().execute(context=context)
-        else:
+        elif not self.poke(context=context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=HttpTrigger(
