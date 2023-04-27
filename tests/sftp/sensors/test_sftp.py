@@ -1,11 +1,24 @@
+from unittest import mock
+
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 
 from astronomer.providers.sftp.sensors.sftp import SFTPSensorAsync
 from astronomer.providers.sftp.triggers.sftp import SFTPTrigger
 
+MODULE = "astronomer.providers.sftp.sensors.sftp"
+
 
 class TestSFTPSensorAsync:
+    @mock.patch(f"{MODULE}.SFTPSensorAsync.defer")
+    @mock.patch(f"{MODULE}.SFTPSensorAsync.poke", return_value=True)
+    def test_sftp_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        task = SFTPSensorAsync(task_id="run_now", path="/test/path/", file_pattern="test_file")
+        task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.SFTPSensorAsync.poke", return_value=False)
     def test_sftp_run_now_sensor_async(self, context):
         """
         Asserts that a task is deferred and a SFTPTrigger will be fired
