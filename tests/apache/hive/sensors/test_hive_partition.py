@@ -15,12 +15,35 @@ TEST_PARTITION = "state='FL'"
 TEST_METASTORE_CONN_ID = "test_metastore_default"
 
 
+MODULE = "astronomer.providers.apache.hive.sensors.hive_partition"
+
+
 class TestHivePartitionSensorAsync:
-    def test_hive_partition_sensor_async(self, context):
+    @mock.patch(f"{MODULE}.HivePartitionSensorAsync.defer")
+    @mock.patch(
+        "astronomer.providers.apache.hive.sensors.hive_partition.HiveCliHookAsync",
+    )
+    def test_hive_partition_sensor_async_finish_before_deferred(self, mock_hook, mock_defer, context):
+        mock_hook.return_value.check_partition_exists.return_value = True
+        task = HivePartitionSensorAsync(
+            task_id="task-id",
+            table=TEST_TABLE,
+            partition=TEST_PARTITION,
+            metastore_conn_id=TEST_METASTORE_CONN_ID,
+        )
+        task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch(
+        "astronomer.providers.apache.hive.sensors.hive_partition.HiveCliHookAsync",
+    )
+    def test_hive_partition_sensor_async(self, mock_hook, context):
         """
         Asserts that a task is deferred and a HivePartitionTrigger will be fired
         when the HivePartitionSensorAsync is executed.
         """
+        mock_hook.return_value.check_partition_exists.return_value = False
         task = HivePartitionSensorAsync(
             task_id="task-id",
             table=TEST_TABLE,

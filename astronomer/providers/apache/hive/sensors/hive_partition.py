@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
 
+from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
@@ -42,17 +43,19 @@ class HivePartitionSensorAsync(HivePartitionSensor):
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=HivePartitionTrigger(
-                table=self.table,
-                schema=self.schema,
-                partition=self.partition,
-                polling_interval=self.poke_interval,
-                metastore_conn_id=self.metastore_conn_id,
-            ),
-            method_name="execute_complete",
-        )
+        hook = HiveCliHookAsync(metastore_conn_id=self.metastore_conn_id)
+        if not hook.check_partition_exists(schema=self.schema, table=self.table, partition=self.partition):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=HivePartitionTrigger(
+                    table=self.table,
+                    schema=self.schema,
+                    partition=self.partition,
+                    polling_interval=self.poke_interval,
+                    metastore_conn_id=self.metastore_conn_id,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> str:
         """
