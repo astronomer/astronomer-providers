@@ -25,6 +25,17 @@ You will need to update it in:
 
 You can also use `commitizen <https://github.com/commitizen-tools/commitizen>`_ to update the version in these files
 
+Install commitizen on mac
+
+```
+brew install commitizen
+```
+
+Bump versions locally
+
+```
+make ASTRO_PROVIDER_VERSION=patch bump-version
+```
 
 Write the changelog
 -------------------

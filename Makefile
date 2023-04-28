@@ -1,6 +1,8 @@
 .PHONY: dev logs stop clean build build-emr_eks_container_example_dag-image build-aws build-google-cloud build-run docs
 .PHONY: restart restart-all run-tests run-static-checks run-mypy run-local-lineage-server test-rc-deps shell help
 
+ASTRO_PROVIDER_VERSION ?= "dev"
+
 # If the first argument is "run"...
 ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
   # use the rest as arguments for "run"
@@ -97,6 +99,13 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 
 shell:  ## Runs a shell within a container (Allows interactive session)
 	docker compose -f dev/docker-compose.yaml run --rm airflow-scheduler bash
+
+bump-version:  ## Bump versions in files locally. By default bump to DEV. set env ASTRO_PROVIDER_VERSION to change default value (dev | patch | major | minor).
+	@if [ $(ASTRO_PROVIDER_VERSION) = "dev" ]; then\
+		cz bump --version-type semver --increment minor --devrelease 1 --files-only;\
+	else \
+	  cz bump --version-type semver --files-only --increment $(ASTRO_PROVIDER_VERSION);\
+    fi
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
