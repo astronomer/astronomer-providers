@@ -34,7 +34,7 @@ DB_TABLE_SCHEMA = DbTableSchema(
 
 DAG_ID = "email_discounts"
 
-DAG = DAG(DAG_ID, schedule_interval="@weekly", start_date=datetime.datetime(2023, 1, 1))
+DAG = DAG(DAG_ID, schedule="@weekly", start_date=datetime.datetime(2023, 1, 1))
 
 TASK_ID = "select"
 TASK = SnowflakeOperatorAsync(

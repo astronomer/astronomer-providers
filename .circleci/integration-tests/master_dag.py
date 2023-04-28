@@ -90,7 +90,7 @@ def prepare_dag_dependency(task_info, execution_time):
 
 with DAG(
     dag_id="example_master_dag",
-    schedule_interval=MASTER_DAG_SCHEDULE,
+    schedule=MASTER_DAG_SCHEDULE,
     start_date=datetime(2022, 1, 1),
     catchup=False,
     tags=["master_dag"],

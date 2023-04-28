@@ -71,7 +71,7 @@ def gcloud_nuke_callable() -> None:
 with DAG(
     dag_id="example_gcp_nuke",
     start_date=datetime(2022, 1, 1),
-    schedule_interval="30 20 * * *",
+    schedule="30 20 * * *",
     catchup=False,
     default_args=default_args,
     tags=["example", "gcp", "nuke"],

@@ -36,7 +36,7 @@ default_args = {
 with DAG(
     "example_async_gcs_sensors",
     start_date=datetime(2022, 1, 1),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "async", "gcs"],

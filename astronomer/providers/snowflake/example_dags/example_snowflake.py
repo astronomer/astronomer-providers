@@ -42,7 +42,7 @@ default_args = {
 with DAG(
     dag_id="example_snowflake",
     start_date=datetime(2022, 1, 1),
-    schedule_interval=None,
+    schedule=None,
     default_args=default_args,
     tags=["example", "async", "snowflake"],
     catchup=False,

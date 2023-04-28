@@ -44,7 +44,7 @@ default_args = {
 
 with DAG(
     dag_id="example_bigquery_sensors",
-    schedule_interval=None,  # Override to match your needs
+    schedule=None,  # Override to match your needs
     start_date=datetime(2021, 1, 1),
     catchup=False,
     default_args=default_args,

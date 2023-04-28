@@ -94,7 +94,7 @@ def delete_blob_callable(container_name: str, blob_name: str) -> None:
 with DAG(
     dag_id="example_wasb_sensors",
     start_date=datetime(2021, 8, 13),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "async", "Azure Pipeline"],

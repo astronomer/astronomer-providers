@@ -61,7 +61,7 @@ DEFAULT_ARGS = {
 
 with DAG(
     dag_id="example_emr_sensor",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime(2022, 1, 1),
     default_args=DEFAULT_ARGS,
     tags=["example", "async", "emr"],
