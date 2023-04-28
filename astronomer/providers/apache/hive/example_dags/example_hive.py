@@ -285,7 +285,7 @@ default_args = {
 
 with DAG(
     dag_id="example_hive_dag",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
     default_args=default_args,

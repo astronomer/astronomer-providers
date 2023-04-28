@@ -301,7 +301,7 @@ def setup_sagemaker_connection_details(task_instance: TaskInstance) -> None:
 with DAG(
     dag_id="example_async_sagemaker",
     start_date=datetime(2021, 8, 13),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "sagemaker", "async", "AWS"],

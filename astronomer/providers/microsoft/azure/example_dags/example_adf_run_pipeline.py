@@ -174,7 +174,7 @@ def delete_azure_data_factory_storage_pipeline() -> None:
 with DAG(
     dag_id="example_async_adf_run_pipeline",
     start_date=datetime(2021, 8, 13),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "async", "Azure Pipeline"],

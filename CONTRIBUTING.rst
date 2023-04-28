@@ -262,7 +262,7 @@ Guideline to write an example DAG
 - The example DAG should be self-sufficient as it is tested as part of the CI. For example, while implementing example DAG for ``S3KeySensorAsync``, the DAG should first create bucket, then upload s3 key, the check for key using ``S3KeySensorAsync`` and then finally delete the bucket once sensor found the key.
 - Read resource names for clusters, databases, files, etc. from environment variables and avoid hard-coding it.
 - Read Airflow connection-id from environment variable and pass the value in respective task. We recommend to not depend on default connection-id.
-- Since we trigger the DAGs externally, set the DAG ``schedule_interval`` parameter to ``None`` to avoid unnecessary runs.
+- Since we trigger the DAGs externally, set the DAG ``schedule`` parameter to ``None`` to avoid unnecessary runs.
 - Set the DAG ``catchup`` parameter to ``False`` to avoid any backfill.
 - Add appropriate tags for the DAG. This will help to group and search DAGs effectively.
 - Do not mention AWS keys or credentials in the example DAG.

@@ -55,7 +55,7 @@ def astro_access_token() -> Dict[str, Any]:
 with DAG(
     dag_id="example_async_deployment_task_sensor",
     start_date=datetime(2022, 1, 1),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "async", "http"],

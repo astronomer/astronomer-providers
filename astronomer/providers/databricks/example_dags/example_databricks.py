@@ -48,7 +48,7 @@ new_cluster = {
 with DAG(
     dag_id="example_async_databricks",
     start_date=datetime(2022, 1, 1),
-    schedule_interval=None,
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "async", "databricks"],
