@@ -18,6 +18,7 @@ from airflow.utils.session import create_session
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
+MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", "0 0 * * *")
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
@@ -89,7 +90,7 @@ def prepare_dag_dependency(task_info, execution_time):
 
 with DAG(
     dag_id="example_master_dag",
-    schedule_interval="@daily",
+    schedule_interval=MASTER_DAG_SCHEDULE,
     start_date=datetime(2022, 1, 1),
     catchup=False,
     tags=["master_dag"],
