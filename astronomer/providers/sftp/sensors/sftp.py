@@ -43,17 +43,18 @@ class SFTPSensorAsync(SFTPSensor):
         Logic that the sensor uses to correctly identify which trigger to
         execute, and defer execution as expected.
         """
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=SFTPTrigger(
-                path=self.path,
-                file_pattern=self.file_pattern,
-                sftp_conn_id=self.sftp_conn_id,
-                poke_interval=self.poke_interval,
-                newer_than=self.newer_than,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context=context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=SFTPTrigger(
+                    path=self.path,
+                    file_pattern=self.file_pattern,
+                    sftp_conn_id=self.sftp_conn_id,
+                    poke_interval=self.poke_interval,
+                    newer_than=self.newer_than,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         """
