@@ -35,18 +35,19 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
 
     def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        end_time = time.time() + self.timeout
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DbtCloudRunJobTrigger(
-                run_id=self.run_id,
-                conn_id=self.dbt_cloud_conn_id,
-                account_id=self.account_id,
-                poll_interval=self.poll_interval,
-                end_time=end_time,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context=context):
+            end_time = time.time() + self.timeout
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DbtCloudRunJobTrigger(
+                    run_id=self.run_id,
+                    conn_id=self.dbt_cloud_conn_id,
+                    account_id=self.account_id,
+                    poll_interval=self.poll_interval,
+                    end_time=end_time,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: "Context", event: Dict[str, Any]) -> int:
         """
