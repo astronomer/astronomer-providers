@@ -7,9 +7,38 @@ from airflow.exceptions import TaskDeferred
 from astronomer.providers.http.sensors.http import HttpSensorAsync
 from astronomer.providers.http.triggers.http import HttpTrigger
 
+MODULE = "astronomer.providers.http.sensors.http"
+
 
 class TestHttpSensorAsync:
-    def test_http_run_now_sensor_async(self):
+    @mock.patch(f"{MODULE}.HttpSensorAsync.defer")
+    @mock.patch(
+        f"{MODULE}.HttpSensorAsync.poke",
+        return_value=True,
+    )
+    def test_http_sensor_async_finish_before_deferred(
+        self,
+        mock_poke,
+        mock_defer,
+    ):
+        """
+        Asserts that a task is deferred and a HttpTrigger will be fired
+        when the HttpSensorAsync is executed.
+        """
+
+        task = HttpSensorAsync(
+            task_id="run_now",
+            endpoint="test-endpoint",
+        )
+
+        task.execute({})
+        assert not mock_defer.called
+
+    @mock.patch(
+        f"{MODULE}.HttpSensorAsync.poke",
+        return_value=False,
+    )
+    def test_http_run_now_sensor_async(self, mock_poke):
         """
         Asserts that a task is deferred and a HttpTrigger will be fired
         when the HttpSensorAsync is executed.
