@@ -2,6 +2,8 @@
 name: deploy-integration-tests-to-astro-cloud
 
 on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron:  "0 19 * * *"
   workflow_dispatch:
     inputs:
       git_rev:
@@ -19,7 +21,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   deploy-to-providers-integration-tests:
-    if: contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy)
+    if: contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy) || github.event_name == 'schedule'
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
@@ -39,7 +41,7 @@ jobs:
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
 
   deploy-to-providers-integration-tests-on-KE:
-    if: contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy)
+    if: contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy) || github.event_name == 'schedule'
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
