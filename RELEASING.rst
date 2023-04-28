@@ -34,7 +34,7 @@ brew install commitizen
 Bump versions locally
 
 ```
-make ASTRO_PROVIDER_VERSION=patch bump-version
+make ASTRO_PROVIDER_VERSION=(1.0.0 | 1.1.0 | 1.1.1) bump-version
 ```
 
 Write the changelog
