@@ -100,7 +100,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 shell:  ## Runs a shell within a container (Allows interactive session)
 	docker compose -f dev/docker-compose.yaml run --rm airflow-scheduler bash
 
-bump-version:  ## Bump versions in files locally. By default bump to DEV. set env ASTRO_PROVIDER_VERSION to change default version (1.0.0 | 1.1.0 | 1.1.1).
+bump-version:  ## Bump versions in files locally. By default bump to DEV. set env ASTRO_PROVIDER_VERSION to change default version. see docs https://github.com/astronomer/astronomer-providers/blob/main/RELEASING.rst#update-the-version-number
 	@if [ $(ASTRO_PROVIDER_VERSION) = "dev" ]; then\
 		cz bump --version-type semver --increment minor --devrelease 1 --files-only;\
 	else \
