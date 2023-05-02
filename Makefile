@@ -103,8 +103,8 @@ shell:  ## Runs a shell within a container (Allows interactive session)
 bump-version:  ## Bump versions in files locally. By default bump to DEV. set env ASTRO_PROVIDER_VERSION to change default version. see docs https://github.com/astronomer/astronomer-providers/blob/main/RELEASING.rst#update-the-version-number
 	@if [ $(ASTRO_PROVIDER_VERSION) = "dev" ]; then\
 		cz bump --version-type semver --increment minor --devrelease 1 --files-only;\
-	else \
-	  cz bump $(ASTRO_PROVIDER_VERSION) --files-only;\
+	else\
+		cz bump $(ASTRO_PROVIDER_VERSION) --files-only;\
     fi
 
 help: ## Prints this message
