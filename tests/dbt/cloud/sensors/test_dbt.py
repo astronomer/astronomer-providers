@@ -7,6 +7,8 @@ from airflow.exceptions import TaskDeferred
 from astronomer.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensorAsync
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
 
+MODULE = "astronomer.providers.dbt.cloud.sensors.dbt"
+
 
 class TestDbtCloudJobRunSensorAsync:
     TASK_ID = "dbt_cloud_run_job"
@@ -14,6 +16,21 @@ class TestDbtCloudJobRunSensorAsync:
     DBT_RUN_ID = 1234
     TIMEOUT = 300
 
+    @mock.patch(f"{MODULE}.DbtCloudJobRunSensorAsync.defer")
+    @mock.patch(f"{MODULE}.DbtCloudJobRunSensorAsync.poke", return_value=True)
+    def test_DbtCloudJobRunSensorAsync_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        task = DbtCloudJobRunSensorAsync(
+            dbt_cloud_conn_id=self.CONN_ID,
+            task_id=self.TASK_ID,
+            run_id=self.DBT_RUN_ID,
+            timeout=self.TIMEOUT,
+        )
+        task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.DbtCloudJobRunSensorAsync.poke", return_value=False)
     def test_dbt_job_run_sensor_async(self, context):
         """Assert execute method defer for Dbt cloud job run status sensors"""
         task = DbtCloudJobRunSensorAsync(
