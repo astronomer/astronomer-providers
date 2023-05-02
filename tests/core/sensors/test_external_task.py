@@ -141,8 +141,10 @@ class TestExternalDeploymentTaskSensorAsync:
     CONN_ID = "http_default"
     ENDPOINT = "test-endpoint/"
 
-    def test_external_deployment_run(self):
+    @mock.patch("airflow.providers.http.sensors.http.HttpSensor.poke")
+    def test_external_deployment_run(self, mock_poke):
         """Assert execute method defer for external deployment task run status sensors"""
+        mock_poke.return_value = False
         task = ExternalDeploymentTaskSensorAsync(
             task_id=self.TASK_ID,
             http_conn_id=self.CONN_ID,

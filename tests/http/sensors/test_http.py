@@ -1,4 +1,3 @@
-import datetime
 from unittest import mock
 
 import pytest
@@ -54,29 +53,25 @@ class TestHttpSensorAsync:
 
         assert isinstance(exc.value.trigger, HttpTrigger), "Trigger is not a HttpTrigger"
 
-    def test_http_response_check_does_not_run_async(self):
-        """Asserts that a task is not deferred when response_check arg is passed to HttpSensorAsync."""
-
+    @mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer")
+    @mock.patch("airflow.sensors.base.BaseSensorOperator.execute")
+    def test_sensor_not_defer(self, mock_execute, mock_defer):
         task = HttpSensorAsync(
             task_id="run_now",
             endpoint="test-endpoint",
             response_check=lambda response: "httpbin" in response.text,
         )
-
-        with mock.patch(
-            "astronomer.providers.http.sensors.http.HttpSensorAsync.defer"
-        ) as mock_defer, mock.patch("airflow.sensors.base.BaseSensorOperator.execute"):
-            task.execute({})
-
+        task.execute({})
+        mock_execute.assert_called_once()
         mock_defer.assert_not_called()
 
+    @mock.patch("airflow.providers.http.sensors.http.HttpSensor.poke")
+    def test_sensor_defer(self, mock_poke):
+        mock_poke.return_value = False
         task = HttpSensorAsync(task_id="run_now", endpoint="test-endpoint")
-
-        with mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer") as mock_defer:
+        with pytest.raises(TaskDeferred) as exc:
             task.execute({})
-            mock_defer.assert_called_once_with(
-                timeout=datetime.timedelta(days=7), trigger=mock.ANY, method_name="execute_complete"
-            )
+        assert isinstance(exc.value.trigger, HttpTrigger), "Trigger is not a HttpTrigger"
 
     @mock.patch("astronomer.providers.http.sensors.http.HttpSensor")
     def test_http_sensor_async_hook_initialisation_attribute_error(self, mock_http_sensor):
