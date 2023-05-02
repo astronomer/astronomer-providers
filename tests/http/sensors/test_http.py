@@ -53,8 +53,9 @@ class TestHttpSensorAsync:
 
         assert isinstance(exc.value.trigger, HttpTrigger), "Trigger is not a HttpTrigger"
 
+    @mock.patch("astronomer.providers.http.sensors.http.HttpSensorAsync.defer")
     @mock.patch("airflow.sensors.base.BaseSensorOperator.execute")
-    def test_sensor_not_defer(self, mock_execute):
+    def test_sensor_not_defer(self, mock_execute, mock_defer):
         task = HttpSensorAsync(
             task_id="run_now",
             endpoint="test-endpoint",
@@ -62,6 +63,7 @@ class TestHttpSensorAsync:
         )
         task.execute({})
         mock_execute.assert_called_once()
+        mock_defer.assert_not_called()
 
     @mock.patch("airflow.providers.http.sensors.http.HttpSensor.poke")
     def test_sensor_defer(self, mock_poke):
