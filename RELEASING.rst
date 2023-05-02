@@ -34,8 +34,10 @@ brew install commitizen
 Bump versions locally
 
 ```
-make ASTRO_PROVIDER_VERSION=(1.0.0 | 1.1.0 | 1.1.1) bump-version
+make ASTRO_PROVIDER_VERSION=<RELEASE_VERSION> bump-version
 ```
+
+Note: ```RELEASE_VERSION``` is the software version you want to release.
 
 Write the changelog
 -------------------
