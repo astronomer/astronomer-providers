@@ -299,4 +299,6 @@ with DAG(
         dbt_trigger_tasks[-1],
     ]
 
-    last_task >> report >> end_test >> aws_nuke_trigger_tasks[0] >> end
+    last_task >> end_test >> end
+    last_task >> report >> end
+    [end_test, report] >> aws_nuke_trigger_tasks[0] >> end
