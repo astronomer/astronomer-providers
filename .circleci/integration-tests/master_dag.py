@@ -242,6 +242,18 @@ with DAG(
         provide_context=True,
     )
 
+    end_test = DummyOperator(
+        task_id="end_test",
+        trigger_rule="all_success",
+    )
+
+    aws_nuke_task_info = [
+        {"aws_nuke_dag": "example_aws_nuke"},
+    ]
+    aws_nuke_trigger_tasks, ids = prepare_dag_dependency(aws_nuke_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*aws_nuke_trigger_tasks)
+
     end = DummyOperator(
         task_id="end",
         trigger_rule="all_success",
@@ -287,5 +299,6 @@ with DAG(
         dbt_trigger_tasks[-1],
     ]
 
-    last_task >> end
-    last_task >> report
+    last_task >> end_test >> end
+    last_task >> report >> end
+    [end_test, report] >> aws_nuke_trigger_tasks[0] >> end
