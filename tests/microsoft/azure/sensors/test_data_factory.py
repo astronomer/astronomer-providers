@@ -6,8 +6,12 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from astronomer.providers.microsoft.azure.sensors.data_factory import (
     AzureDataFactoryPipelineRunStatusSensorAsync,
 )
-from astronomer.providers.microsoft.azure.triggers.data_factory import ADFPipelineRunStatusSensorTrigger
+from astronomer.providers.microsoft.azure.triggers.data_factory import (
+    ADFPipelineRunStatusSensorTrigger,
+)
 from tests.utils.airflow_util import create_context
+
+MODULE = "astronomer.providers.microsoft.azure.sensors.data_factory"
 
 
 class TestAzureDataFactoryPipelineRunStatusSensorAsync:
@@ -17,7 +21,19 @@ class TestAzureDataFactoryPipelineRunStatusSensorAsync:
         run_id=RUN_ID,
     )
 
-    def test_adf_pipeline_status_sensor_async(self):
+    @mock.patch(f"{MODULE}.AzureDataFactoryPipelineRunStatusSensorAsync.defer")
+    @mock.patch(f"{MODULE}.AzureDataFactoryPipelineRunStatusSensorAsync.poke", return_value=True)
+    def test_adf_pipeline_status_sensor_async_finish_before_deferred(
+        self,
+        mock_poke,
+        mock_defer,
+    ):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.SENSOR.execute(create_context(self.SENSOR))
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.AzureDataFactoryPipelineRunStatusSensorAsync.poke", return_value=False)
+    def test_adf_pipeline_status_sensor_async(self, mock_poke):
         """Assert execute method defer for Azure Data factory pipeline run status sensor"""
 
         with pytest.raises(TaskDeferred) as exc:
