@@ -77,6 +77,10 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
+                      "text": "*Input git_rev*:\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ inputs.git_rev }}|${{ inputs.git_rev }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
                       "text": "*Link to workflow run:*\n<${{ github.server_url }}//${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
                     },
                     {
@@ -102,30 +106,14 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "*Event name:*\n${{ github.event_name }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*---Ref Detail---*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Ref Type:*\n${{ github.ref_type }}"
+                      "text": "*Worflow Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
                     }
                   ]
                 }
@@ -160,6 +148,10 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
+                      "text": "*Input git_rev*:\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ inputs.git_rev }}|${{ inputs.git_rev }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
                       "text": "*Link to workflow run:*\n<${{ github.server_url }}//${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
                     },
                     {
@@ -185,30 +177,14 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "*Event name:*\n${{ github.event_name }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*---Ref Detail---*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Ref Type:*\n${{ github.ref_type }}"
+                      "text": "*Worflow Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
                     }
                   ]
                 }
