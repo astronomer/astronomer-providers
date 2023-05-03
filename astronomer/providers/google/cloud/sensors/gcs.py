@@ -214,21 +214,22 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=GCSUploadSessionTrigger(
-                bucket=self.bucket,
-                prefix=self.prefix,
-                poke_interval=self.poke_interval,
-                google_cloud_conn_id=self.google_cloud_conn_id,
-                inactivity_period=self.inactivity_period,
-                min_objects=self.min_objects,
-                previous_objects=self.previous_objects,
-                allow_delete=self.allow_delete,
-                hook_params=hook_params,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=GCSUploadSessionTrigger(
+                    bucket=self.bucket,
+                    prefix=self.prefix,
+                    poke_interval=self.poke_interval,
+                    google_cloud_conn_id=self.google_cloud_conn_id,
+                    inactivity_period=self.inactivity_period,
+                    min_objects=self.min_objects,
+                    previous_objects=self.previous_objects,
+                    allow_delete=self.allow_delete,
+                    hook_params=hook_params,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """
