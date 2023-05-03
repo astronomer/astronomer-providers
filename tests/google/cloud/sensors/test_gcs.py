@@ -23,6 +23,8 @@ TEST_GCP_CONN_ID = "TEST_GCP_CONN_ID"
 TEST_INACTIVITY_PERIOD = 5
 TEST_MIN_OBJECTS = 1
 
+MODULE = "astronomer.providers.google.cloud.sensors.gcs"
+
 
 class TestGCSObjectExistenceSensorAsync:
     OPERATOR = GCSObjectExistenceSensorAsync(
@@ -32,6 +34,14 @@ class TestGCSObjectExistenceSensorAsync:
         google_cloud_conn_id=TEST_GCP_CONN_ID,
     )
 
+    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.defer")
+    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.poke", return_value=True)
+    def test_gcs_object_existence_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.OPERATOR.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.poke", return_value=False)
     def test_gcs_object_existence_sensor_async(self, context):
         """
         Asserts that a task is deferred and a GCSBlobTrigger will be fired
