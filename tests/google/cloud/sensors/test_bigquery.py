@@ -14,6 +14,8 @@ PROJECT_ID = "test-astronomer-airflow-providers"
 DATASET_NAME = "test-astro_dataset"
 TABLE_NAME = "test-partitioned_table"
 
+MODULE = "astronomer.providers.google.cloud.sensors.bigquery"
+
 
 class TestBigQueryTableExistenceSensorAsync:
     SENSOR = BigQueryTableExistenceSensorAsync(
@@ -23,6 +25,16 @@ class TestBigQueryTableExistenceSensorAsync:
         table_id=TABLE_NAME,
     )
 
+    @mock.patch(f"{MODULE}.BigQueryTableExistenceSensorAsync.defer")
+    @mock.patch(f"{MODULE}.BigQueryTableExistenceSensorAsync.poke", return_value=True)
+    def test_big_query_table_existence_sensor_async_finish_before_deferred(
+        self, mock_poke, mock_defer, context
+    ):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.SENSOR.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.BigQueryTableExistenceSensorAsync.poke", return_value=False)
     def test_big_query_table_existence_sensor_async(self, context):
         """
         Asserts that a task is deferred and a BigQueryTableExistenceTrigger will be fired
