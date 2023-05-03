@@ -62,18 +62,20 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=BigQueryTableExistenceTrigger(
-                dataset_id=self.dataset_id,
-                table_id=self.table_id,
-                project_id=self.project_id,
-                poke_interval=self.poke_interval,
-                gcp_conn_id=self.gcp_conn_id,
-                hook_params=hook_params,
-            ),
-            method_name="execute_complete",
-        )
+
+        if not self.poke(context=context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=BigQueryTableExistenceTrigger(
+                    dataset_id=self.dataset_id,
+                    table_id=self.table_id,
+                    project_id=self.project_id,
+                    poke_interval=self.poke_interval,
+                    gcp_conn_id=self.gcp_conn_id,
+                    hook_params=hook_params,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
         """
