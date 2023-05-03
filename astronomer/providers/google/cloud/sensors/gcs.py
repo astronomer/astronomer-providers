@@ -56,7 +56,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
             )
         super().__init__(**kwargs)
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
@@ -126,22 +126,23 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             )
         super().__init__(**kwargs)
 
-    def execute(self, context: Dict[str, Any]) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:  # type: ignore[override]
         """Airflow runs this method on the worker and defers using the trigger."""
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=GCSPrefixBlobTrigger(
-                bucket=self.bucket,
-                prefix=self.prefix,
-                poke_interval=self.poke_interval,
-                google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=hook_params,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=GCSPrefixBlobTrigger(
+                    bucket=self.bucket,
+                    prefix=self.prefix,
+                    poke_interval=self.poke_interval,
+                    google_cloud_conn_id=self.google_cloud_conn_id,
+                    hook_params=hook_params,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(
         self, context: Dict[str, Any], event: Dict[str, Union[str, List[str]]]
