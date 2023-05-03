@@ -17,6 +17,8 @@ TEST_DATA_STORAGE_BLOB_NAME = "test_blob_providers_team.txt"
 TEST_DATA_STORAGE_CONTAINER_NAME = "test-container-providers-team"
 TEST_DATA_STORAGE_BLOB_PREFIX = TEST_DATA_STORAGE_BLOB_NAME[:10]
 
+MODULE = "astronomer.providers.microsoft.azure.sensors.wasb"
+
 
 class TestWasbBlobSensorAsync:
     SENSOR = WasbBlobSensorAsync(
@@ -73,7 +75,16 @@ class TestWasbPrefixSensorAsync:
         prefix=TEST_DATA_STORAGE_BLOB_PREFIX,
     )
 
-    def test_wasb_prefix_sensor_async(self):
+    @mock.patch(f"{MODULE}.WasbPrefixSensorAsync.defer")
+    @mock.patch(f"{MODULE}.WasbPrefixSensorAsync.poke", return_value=True)
+    def test_wasb_prefix_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.SENSOR.execute(create_context(self.SENSOR))
+
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.WasbPrefixSensorAsync.poke", return_value=False)
+    def test_wasb_prefix_sensor_async(self, mock_poke):
         """Assert execute method defer for wasb prefix sensor"""
 
         with pytest.raises(TaskDeferred) as exc:

@@ -125,19 +125,20 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=WasbPrefixSensorTrigger(
-                container_name=self.container_name,
-                prefix=self.prefix,
-                include=self.include,
-                delimiter=self.delimiter,
-                wasb_conn_id=self.wasb_conn_id,
-                public_read=self.public_read,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=WasbPrefixSensorTrigger(
+                    container_name=self.container_name,
+                    prefix=self.prefix,
+                    include=self.include,
+                    delimiter=self.delimiter,
+                    wasb_conn_id=self.wasb_conn_id,
+                    public_read=self.public_read,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
