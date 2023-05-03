@@ -59,17 +59,6 @@ workflows:
             - Needs-Approval
           <<: *version_tag_only
 
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 19 * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - deploy
-
 executors:
   docker-executor:
     parameters:
@@ -281,18 +270,3 @@ jobs:
       - store_artifacts:
           path: /tmp/workspace/dist/
           destination: dist
-
-  deploy:
-    executor:
-      name: docker-executor
-      python_version: "3.9"
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: 20.10.12
-      - run:
-          name: Deploy to Astro Cloud (Gen 2)
-          command: >
-            cd .circleci/integration-tests &&
-            bash script.sh $DEPLOYMENT_INSTANCE $DOCKER_REGISTRY $ORGANIZATION_ID $DEPLOYMENT_ID
-            $ASTRONOMER_KEY_ID $ASTRONOMER_KEY_SECRET
