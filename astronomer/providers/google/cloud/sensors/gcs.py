@@ -61,17 +61,18 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=GCSBlobTrigger(
-                bucket=self.bucket,
-                object_name=self.object,
-                poke_interval=self.poke_interval,
-                google_cloud_conn_id=self.google_cloud_conn_id,
-                hook_params=hook_params,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=GCSBlobTrigger(
+                    bucket=self.bucket,
+                    object_name=self.object,
+                    poke_interval=self.poke_interval,
+                    google_cloud_conn_id=self.google_cloud_conn_id,
+                    hook_params=hook_params,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, str]) -> str:
         """
