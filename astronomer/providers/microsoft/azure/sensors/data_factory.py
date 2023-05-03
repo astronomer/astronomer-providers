@@ -43,17 +43,18 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=ADFPipelineRunStatusSensorTrigger(
-                run_id=self.run_id,
-                azure_data_factory_conn_id=self.azure_data_factory_conn_id,
-                resource_group_name=self.resource_group_name,
-                factory_name=self.factory_name,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=ADFPipelineRunStatusSensorTrigger(
+                    run_id=self.run_id,
+                    azure_data_factory_conn_id=self.azure_data_factory_conn_id,
+                    resource_group_name=self.resource_group_name,
+                    factory_name=self.factory_name,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
