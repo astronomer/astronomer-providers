@@ -20,6 +20,8 @@ JOB_ID = "j-T0CT8Z0C20NT"
 AWS_CONN_ID = "aws_default"
 STEP_ID = "s-34RJO0CKERRPL"
 
+MODULE = "astronomer.providers.amazon.aws.sensors.emr"
+
 
 class TestEmrContainerSensorAsync:
     TASK = EmrContainerSensorAsync(
@@ -112,7 +114,15 @@ class TestEmrStepSensorAsync:
         step_id=STEP_ID,
     )
 
-    def test_emr_step_sensor_async(self, context):
+    @mock.patch(f"{MODULE}.EmrStepSensorAsync.defer")
+    @mock.patch(f"{MODULE}.EmrStepSensorAsync.poke", return_value=True)
+    def test_emr_step_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.TASK.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.EmrStepSensorAsync.poke", return_value=False)
+    def test_emr_step_sensor_async(self, mock_poke, context):
         """Assert execute method defer for EmrStepSensorAsync sensor"""
 
         with pytest.raises(TaskDeferred) as exc:
