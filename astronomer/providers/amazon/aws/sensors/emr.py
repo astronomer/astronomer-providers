@@ -33,17 +33,18 @@ class EmrContainerSensorAsync(EmrContainerSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=EmrContainerSensorTrigger(
-                virtual_cluster_id=self.virtual_cluster_id,
-                job_id=self.job_id,
-                max_tries=self.max_retries,
-                aws_conn_id=self.aws_conn_id,
-                poll_interval=self.poll_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=EmrContainerSensorTrigger(
+                    virtual_cluster_id=self.virtual_cluster_id,
+                    job_id=self.job_id,
+                    max_tries=self.max_retries,
+                    aws_conn_id=self.aws_conn_id,
+                    poll_interval=self.poll_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
