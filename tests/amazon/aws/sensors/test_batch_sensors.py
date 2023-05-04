@@ -6,6 +6,8 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from astronomer.providers.amazon.aws.sensors.batch import BatchSensorAsync
 from astronomer.providers.amazon.aws.triggers.batch import BatchSensorTrigger
 
+MODULE = "astronomer.providers.amazon.aws.sensors.batch"
+
 
 class TestBatchSensorAsync:
     JOB_ID = "8ba9d676-4108-4474-9dca-8bbac1da9b19"
@@ -18,6 +20,14 @@ class TestBatchSensorAsync:
         region_name=REGION_NAME,
     )
 
+    @mock.patch(f"{MODULE}.BatchSensorAsync.defer")
+    @mock.patch(f"{MODULE}.BatchSensorAsync.poke", return_value=True)
+    def test_batch_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.TASK.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.BatchSensorAsync.poke", return_value=False)
     def test_batch_sensor_async(self, context):
         """
         Asserts that a task is deferred and a BatchSensorTrigger will be fired

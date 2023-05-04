@@ -45,16 +45,17 @@ class BatchSensorAsync(BatchSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure or a success state"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=BatchSensorTrigger(
-                job_id=self.job_id,
-                aws_conn_id=self.aws_conn_id,
-                region_name=self.region_name,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=BatchSensorTrigger(
+                    job_id=self.job_id,
+                    aws_conn_id=self.aws_conn_id,
+                    region_name=self.region_name,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
