@@ -172,22 +172,23 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
 
     def execute(self, context: Context) -> None:
         """Defers Trigger class to check for changes in the number of objects at prefix in AWS S3"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=S3KeysUnchangedTrigger(
-                bucket_name=self.bucket_name,
-                prefix=self.prefix,
-                inactivity_period=self.inactivity_period,
-                min_objects=self.min_objects,
-                previous_objects=self.previous_objects,
-                inactivity_seconds=self.inactivity_seconds,
-                allow_delete=self.allow_delete,
-                aws_conn_id=self.aws_conn_id,
-                verify=self.verify,
-                last_activity_time=self.last_activity_time,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=S3KeysUnchangedTrigger(
+                    bucket_name=self.bucket_name,
+                    prefix=self.prefix,
+                    inactivity_period=self.inactivity_period,
+                    min_objects=self.min_objects,
+                    previous_objects=self.previous_objects,
+                    inactivity_seconds=self.inactivity_seconds,
+                    allow_delete=self.allow_delete,
+                    aws_conn_id=self.aws_conn_id,
+                    verify=self.verify,
+                    last_activity_time=self.last_activity_time,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Any = None) -> None:
         """
