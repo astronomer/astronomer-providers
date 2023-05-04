@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from airflow import AirflowException
 from airflow.providers.amazon.aws.sensors.emr import (
@@ -46,7 +48,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -94,7 +96,7 @@ class EmrStepSensorAsync(EmrStepSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -135,6 +137,18 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        emr_client = self.hook.conn
+        self.log.info("Poking cluster %s", self.job_flow_id)
+        response = emr_client.describe_cluster(ClusterId=self.job_flow_id)
+        state = response["Cluster"]["Status"]["State"]
+        self.log.info("Job flow currently %s", state)
+
+        if state == "TERMINATED":
+            return None
+
+        if state == "TERMINATED_WITH_ERRORS":
+            raise AirflowException(f"EMR job failed: {self.failure_message_from_response(response)}")
+
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=EmrJobFlowSensorTrigger(
@@ -147,7 +161,7 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, str]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
