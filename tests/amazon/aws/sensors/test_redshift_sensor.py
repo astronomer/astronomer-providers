@@ -13,6 +13,8 @@ from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
 TASK_ID = "redshift_sensor_check"
 POLLING_PERIOD_SECONDS = 1.0
 
+MODULE = "astronomer.providers.amazon.aws.sensors.redshift_cluster"
+
 
 class TestRedshiftClusterSensorAsync:
     TASK = RedshiftClusterSensorAsync(
@@ -21,6 +23,14 @@ class TestRedshiftClusterSensorAsync:
         target_status="available",
     )
 
+    @mock.patch(f"{MODULE}.RedshiftClusterSensorAsync.defer")
+    @mock.patch(f"{MODULE}.RedshiftClusterSensorAsync.poke", return_value=True)
+    def test_redshift_cluster_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        self.TASK.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.RedshiftClusterSensorAsync.poke", return_value=False)
     def test_redshift_cluster_sensor_async(self, context):
         """Test RedshiftClusterSensorAsync that a task with wildcard=True
         is deferred and an RedshiftClusterSensorTrigger will be fired when executed method is called"""

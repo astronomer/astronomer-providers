@@ -38,17 +38,18 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
 
     def execute(self, context: Context) -> None:
         """Check for the target_status and defers using the trigger"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=RedshiftClusterSensorTrigger(
-                task_id=self.task_id,
-                aws_conn_id=self.aws_conn_id,
-                cluster_identifier=self.cluster_identifier,
-                target_status=self.target_status,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=RedshiftClusterSensorTrigger(
+                    task_id=self.task_id,
+                    aws_conn_id=self.aws_conn_id,
+                    cluster_identifier=self.cluster_identifier,
+                    target_status=self.target_status,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Optional[Dict[Any, Any]] = None) -> None:
         """
