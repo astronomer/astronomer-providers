@@ -78,19 +78,20 @@ class S3KeySensorAsync(BaseSensorOperator):
 
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=S3KeyTrigger(
-                bucket_name=cast(str, self.bucket_name),
-                bucket_key=self.bucket_key,
-                wildcard_match=self.wildcard_match,
-                check_fn=self.check_fn,
-                aws_conn_id=self.aws_conn_id,
-                verify=self.verify,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=S3KeyTrigger(
+                    bucket_name=cast(str, self.bucket_name),
+                    bucket_key=self.bucket_key,
+                    wildcard_match=self.wildcard_match,
+                    check_fn=self.check_fn,
+                    aws_conn_id=self.aws_conn_id,
+                    verify=self.verify,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Any = None) -> Optional[bool]:
         """
