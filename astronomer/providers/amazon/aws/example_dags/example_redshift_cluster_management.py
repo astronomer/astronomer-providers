@@ -67,7 +67,7 @@ with DAG(
         snapshot_identifier=f"{REDSHIFT_CLUSTER_IDENTIFIER}-snapshot",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         wait_for_completion=True,
-        max_attempt=40,
+        max_attempt=100,
         aws_conn_id=AWS_CONN_ID,
     )
 
