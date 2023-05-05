@@ -79,18 +79,19 @@ class EmrStepSensorAsync(EmrStepSensor):
 
     def execute(self, context: Context) -> None:
         """Deferred and give control to trigger"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=EmrStepSensorTrigger(
-                job_flow_id=self.job_flow_id,
-                step_id=self.step_id,
-                target_states=self.target_states,
-                failed_states=self.failed_states,
-                aws_conn_id=self.aws_conn_id,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=EmrStepSensorTrigger(
+                    job_flow_id=self.job_flow_id,
+                    step_id=self.step_id,
+                    target_states=self.target_states,
+                    failed_states=self.failed_states,
+                    aws_conn_id=self.aws_conn_id,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
