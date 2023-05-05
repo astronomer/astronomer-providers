@@ -487,6 +487,21 @@ class TestBigQueryValueCheckOperatorAsync:
             use_legacy_sql=use_legacy_sql,
         )
 
+    @mock.patch("airflow.providers.google.cloud.operators.bigquery.BigQueryValueCheckOperator.execute")
+    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryValueCheckOperatorAsync.defer")
+    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
+    def test_bigquery_value_check_async_finish_before_deferred(self, mock_hook, mock_defer, mock_execute):
+        operator = self._get_value_check_async_operator(True)
+        job_id = "123456"
+        hash_ = "hash"
+        real_job_id = f"{job_id}_{hash_}"
+        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
+        mock_hook.return_value.insert_job.return_value.running.return_value = False
+
+        operator.execute(create_context(operator))
+        assert not mock_defer.called
+        assert mock_execute.called
+
     @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
     def test_bigquery_value_check_async(self, mock_hook):
         """
