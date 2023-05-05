@@ -29,18 +29,14 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
-    set_aws_config = BashOperator(
-        task_id="aws_config",
-        bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
-        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
-        f"aws configure set default.region {AWS_DEFAULT_REGION}; ",
-    )
-
     execute_aws_nuke = BashOperator(
         task_id="execute_aws_nuke",
-        bash_command="aws-nuke -c /usr/local/airflow/dags/nuke-config.yml --profile default --force --no-dry-run; ",
+        bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
+        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
+        f"aws configure set default.region {AWS_DEFAULT_REGION}; "
+        f"aws-nuke -c /usr/local/airflow/dags/nuke-config.yml --profile default --force --no-dry-run; ",
     )
 
     end = DummyOperator(task_id="end")
 
-    start >> set_aws_config >> execute_aws_nuke >> end
+    start >> execute_aws_nuke >> end
