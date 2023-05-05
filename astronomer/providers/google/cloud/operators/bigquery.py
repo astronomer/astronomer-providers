@@ -407,24 +407,27 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
 
         self.log.info("Executing SQL check: %s", self.sql2)
         job_2 = self._submit_job(hook, sql=self.sql2, job_id="")
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryIntervalCheckTrigger(
-                conn_id=self.gcp_conn_id,
-                first_job_id=job_1.job_id,
-                second_job_id=job_2.job_id,
-                project_id=hook.project_id,
-                table=self.table,
-                metrics_thresholds=self.metrics_thresholds,
-                date_filter_column=self.date_filter_column,
-                days_back=self.days_back,
-                ratio_formula=self.ratio_formula,
-                ignore_zero=self.ignore_zero,
-                impersonation_chain=self.impersonation_chain,
-                poll_interval=self.poll_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if job_1.running() or job_2.running():
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=BigQueryIntervalCheckTrigger(
+                    conn_id=self.gcp_conn_id,
+                    first_job_id=job_1.job_id,
+                    second_job_id=job_2.job_id,
+                    project_id=hook.project_id,
+                    table=self.table,
+                    metrics_thresholds=self.metrics_thresholds,
+                    date_filter_column=self.date_filter_column,
+                    days_back=self.days_back,
+                    ratio_formula=self.ratio_formula,
+                    ignore_zero=self.ignore_zero,
+                    impersonation_chain=self.impersonation_chain,
+                    poll_interval=self.poll_interval,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            super().execute(context=context)
 
     def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
         """
