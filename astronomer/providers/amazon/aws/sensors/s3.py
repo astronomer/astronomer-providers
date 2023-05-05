@@ -185,7 +185,7 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
                     allow_delete=self.allow_delete,
                     aws_conn_id=self.aws_conn_id,
                     verify=self.verify,
-                    last_activity_time=self.last_activity_time,
+                    last_activity_time=None,
                 ),
                 method_name="execute_complete",
             )
