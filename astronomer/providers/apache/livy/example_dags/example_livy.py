@@ -246,6 +246,7 @@ def get_cluster_details(task_instance: Any) -> None:
 
 
 def dag_final_status(**kwargs):
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
     for task_instance in kwargs["dag_run"].get_task_instances():
         if (
             task_instance.current_state() != State.SUCCESS
