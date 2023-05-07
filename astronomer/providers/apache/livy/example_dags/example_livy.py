@@ -245,7 +245,7 @@ def get_cluster_details(task_instance: Any) -> None:
     )
 
 
-def dag_final_status(**kwargs):
+def check_dag_status(**kwargs: Any) -> None:
     """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
     for task_instance in kwargs["dag_run"].get_task_instances():
         if (
@@ -336,7 +336,7 @@ with DAG(
     dag_final_status = PythonOperator(
         task_id="dag_final_status",
         provide_context=True,
-        python_callable=dag_final_status,
+        python_callable=check_dag_status,
         trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
         dag=dag,
         retries=0,
