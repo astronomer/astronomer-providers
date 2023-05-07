@@ -5,7 +5,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from airflow import DAG, settings
 from airflow.decorators import task
@@ -21,6 +21,7 @@ from airflow.providers.amazon.aws.operators.sagemaker import (
     SageMakerDeleteModelOperator,
 )
 from airflow.utils.json import AirflowJsonEncoder
+from airflow.utils.state import State
 from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.operators.sagemaker import (
@@ -298,6 +299,16 @@ def setup_sagemaker_connection_details(task_instance: TaskInstance) -> None:
     logging.info("Connection %s is created", str(SAGEMAKER_CONN_ID))
 
 
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 with DAG(
     dag_id="example_async_sagemaker",
     start_date=datetime(2021, 8, 13),
@@ -394,6 +405,15 @@ with DAG(
         task_id="delete_logs_step", trigger_rule=TriggerRule.ALL_DONE, python_callable=delete_logs
     )
 
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
+
     chain(
         # TEST SETUP
         get_aws_sagemaker_session_details,
@@ -411,4 +431,5 @@ with DAG(
         delete_model,
         delete_bucket,
         delete_logs_step,
+        dag_final_status,
     )
