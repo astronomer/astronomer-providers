@@ -3,11 +3,14 @@ from datetime import datetime, timedelta
 from typing import Any, List
 
 from airflow.models.dag import DAG
+from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.s3 import (
     S3CreateBucketOperator,
     S3CreateObjectOperator,
     S3DeleteBucketOperator,
 )
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.sensors.s3 import (
     S3KeySensorAsync,
@@ -38,6 +41,17 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
 
 with DAG(
     dag_id="example_s3_sensor",
@@ -134,10 +148,20 @@ with DAG(
         aws_conn_id=AWS_CONN_ID,
     )
 
-(
-    create_bucket
-    >> create_object
-    >> [sensor_one_key, create_object_for_key2, sensor_two_keys, sensor_key_with_function]
-    >> check_s3_key_unchanged_sensor
-    >> delete_bucket
-)
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
+
+    (
+        create_bucket
+        >> create_object
+        >> [sensor_one_key, create_object_for_key2, sensor_two_keys, sensor_key_with_function]
+        >> check_s3_key_unchanged_sensor
+        >> delete_bucket
+        >> dag_final_status
+    )
