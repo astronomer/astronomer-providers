@@ -27,6 +27,7 @@ resource-types:
     - EKSCluster
     - S3MultipartUpload
     - RedshiftCluster
+    - SageMakerModel
 accounts:
   '396807896376':  # aws-airflow-providers-main
     filters:       # won't delete the filtered resources
