@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 from unittest import mock
 
+import pendulum
 import pytest
 from botocore.exceptions import ClientError
 
@@ -331,6 +332,37 @@ class TestS3HookAsync:
             inactivity_seconds=0,
             allow_delete=True,
             last_activity_time=datetime(2020, 8, 14, 17, 19, 34),
+        )
+
+        assert response == {
+            "message": (
+                "SUCCESS: Sensor found 1 objects at test_bucket/test. "
+                "Waited at least 1 seconds, with no new objects uploaded."
+            ),
+            "status": "success",
+        }
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_client_async")
+    @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync._list_keys")
+    async def test_s3_key_hook_is_keys_unchanged_true_with_tz_info(self, mock_list_keys, mock_client):
+        """
+        Test is_key_unchanged gives AirflowException
+        :return:
+        """
+        mock_list_keys.return_value = ["test_file"]
+
+        s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+        response = await s3_hook_async.is_keys_unchanged(
+            client=mock_client.return_value,
+            bucket_name="test_bucket",
+            prefix="test",
+            inactivity_period=1,
+            min_objects=1,
+            previous_objects=set("t"),
+            inactivity_seconds=0,
+            allow_delete=True,
+            last_activity_time=pendulum.datetime(2020, 8, 14, 17, 19, 34),
         )
 
         assert response == {

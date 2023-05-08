@@ -21,6 +21,8 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeyTrigger,
 )
 
+MODULE = "astronomer.providers.amazon.aws.sensors.s3"
+
 
 class TestS3KeySensorAsync:
     def test_bucket_name_none_and_bucket_key_as_relative_path(self, context):
@@ -223,8 +225,18 @@ class TestS3KeySensorAsync:
 
 
 class TestS3KeysUnchangedSensorAsync:
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.defer")
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.poke", return_value=True)
+    def test_s3_keys_unchanged_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        S3KeysUnchangedSensorAsync(
+            task_id="s3_keys_unchanged_sensor", bucket_name="test_bucket", prefix="test"
+        )
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_keys_unchanged_sensor_check_trigger_instance(self, mock_hook, context):
+    def test_s3_keys_unchanged_sensor_check_trigger_instance(self, mock_hook, mock_poke, context):
         """
         Asserts that a task is deferred and an S3KeysUnchangedTrigger will be fired
         when the S3KeysUnchangedSensorAsync is executed.
@@ -243,8 +255,9 @@ class TestS3KeysUnchangedSensorAsync:
         ), "Trigger is not a S3KeysUnchangedTrigger"
 
     @parameterized.expand([["bucket", "test"]])
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_keys_unchanged_sensor_execute_complete_success(self, bucket, prefix, mock_hook):
+    def test_s3_keys_unchanged_sensor_execute_complete_success(self, bucket, prefix, mock_hook, mock_poke):
         """
         Asserts that a task completed with success status
         """
@@ -258,8 +271,9 @@ class TestS3KeysUnchangedSensorAsync:
         assert sensor.execute_complete(context={}, event={"status": "success"}) is None
 
     @parameterized.expand([["bucket", "test"]])
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_keys_unchanged_sensor_execute_complete_error(self, bucket, prefix, mock_hook):
+    def test_s3_keys_unchanged_sensor_execute_complete_error(self, bucket, prefix, mock_hook, mock_poke):
         """
         Asserts that a task is completed with error.
         """
@@ -273,7 +287,8 @@ class TestS3KeysUnchangedSensorAsync:
         with pytest.raises(AirflowException):
             sensor.execute_complete(context={}, event={"status": "error", "message": "Mocked error"})
 
-    def test_s3_keys_unchanged_sensor_raise_value_error(self):
+    @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.poke", return_value=False)
+    def test_s3_keys_unchanged_sensor_raise_value_error(self, mock_poke):
         """
         Test if the S3KeysUnchangedTrigger raises Value error for negative inactivity_period.
         """
