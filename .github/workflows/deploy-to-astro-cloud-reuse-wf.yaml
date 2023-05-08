@@ -42,6 +42,10 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
+      - name: get git revision
+        id: get_git_revision
+        run: echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: deploy
         working-directory: .circleci/integration-tests
         run: |
@@ -77,11 +81,15 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Link to workflow run:*\n<${{ github.server_url }}//${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                      "text": "*Deployed git revision*:\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ steps.get_git_revision.outputs.git_rev }}|${{ steps.get_git_revision.outputs.git_rev }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Triggered by:*\n<${{ github.server_url }}//${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
+                      "text": "*Link to workflow run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n<${{ github.server_url }}/${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
                     }
                   ]
                 },
@@ -102,30 +110,14 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "*Event name:*\n${{ github.event_name }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*---Ref Detail---*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Ref Type:*\n${{ github.ref_type }}"
+                      "text": "*Workflow Sha:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
                     }
                   ]
                 }
@@ -160,11 +152,15 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Link to workflow run:*\n<${{ github.server_url }}//${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                      "text": "*Deployed git revision*:\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ steps.get_git_revision.outputs.git_rev }}|${{ steps.get_git_revision.outputs.git_rev }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Triggered by:*\n<${{ github.server_url }}//${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
+                      "text": "*Link to workflow run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n<${{ github.server_url }}/${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
                     }
                   ]
                 },
@@ -185,30 +181,14 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "*Event name:*\n${{ github.event_name }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*---Ref Detail---*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Ref:*\n<${{ github.server_url }}//${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Sha:*\n<${{ github.server_url }}//${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Ref Type:*\n${{ github.ref_type }}"
+                      "text": "*Workflow Sha:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
                     }
                   ]
                 }
