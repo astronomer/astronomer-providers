@@ -14,6 +14,8 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrTerminateJobFlowOperator,
 )
 from airflow.providers.apache.hive.operators.hive import HiveOperator
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 from requests import get
 
 from astronomer.providers.apache.hive.sensors.hive_partition import (
@@ -277,6 +279,16 @@ def get_cluster_details(task_instance: Any) -> None:
     )
 
 
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
@@ -375,6 +387,16 @@ with DAG(
         trigger_rule="all_done",
     )
     # [END howto_operator_emr_terminate_job_flow]
+
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
+
     (
         cluster_creator
         >> describe_created_cluster
@@ -386,4 +408,5 @@ with DAG(
         >> hive_sensor
         >> wait_for_partition
         >> remove_cluster
+        >> dag_final_status
     )
