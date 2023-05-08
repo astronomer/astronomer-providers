@@ -21,7 +21,7 @@ default_args = {
 with DAG(
     dag_id="example_aws_nuke",
     start_date=datetime(2022, 1, 1),
-    schedule="30 20 * * *",
+    schedule=None,
     catchup=False,
     default_args=default_args,
     tags=["example", "aws-nuke"],
