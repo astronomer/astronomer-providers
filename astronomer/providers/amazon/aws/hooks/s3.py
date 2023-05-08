@@ -350,7 +350,13 @@ class S3HookAsync(AwsBaseHookAsync):
             }
 
         if last_activity_time:
-            inactivity_seconds = int((datetime.now() - last_activity_time).total_seconds())
+            try:
+                inactivity_seconds = int((datetime.now() - last_activity_time).total_seconds())
+            except TypeError:
+                # TypeError: can't subtract offset-naive and offset-aware datetimes
+                inactivity_seconds = int(
+                    (datetime.now(last_activity_time.tzinfo) - last_activity_time).total_seconds()
+                )
         else:
             # Handles the first poke where last inactivity time is None.
             last_activity_time = datetime.now()
