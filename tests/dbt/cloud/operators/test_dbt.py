@@ -4,6 +4,10 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models import DAG, DagRun, TaskInstance
+from airflow.providers.dbt.cloud.hooks.dbt import (
+    DbtCloudJobRunException,
+    DbtCloudJobRunStatus,
+)
 from airflow.utils import timezone
 from airflow.utils.types import DagRunType
 
@@ -39,16 +43,74 @@ class TestDbtCloudRunJobOperatorAsync:
             "task_instance": task_instance,
         }
 
+    @mock.patch(
+        "airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_job_run_status",
+        return_value=DbtCloudJobRunStatus.SUCCESS.value,
+    )
+    @mock.patch("astronomer.providers.dbt.cloud.operators.dbt.DbtCloudRunJobOperatorAsync.defer")
     @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_connection")
     @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.trigger_job_run")
-    def test_dbt_run_job_op_async(self, mock_dbt_hook, mock_trigger_job_run):
+    def test_dbt_run_job_op_async_succeeded_before_deferred(
+        self, mock_trigger_job_run, mock_dbt_hook, mock_defer, mock_job_run_status
+    ):
+        dbt_op = DbtCloudRunJobOperatorAsync(
+            dbt_cloud_conn_id=self.CONN_ID,
+            task_id=f"{self.TASK_ID}",
+            job_id=self.DBT_RUN_ID,
+            check_interval=self.CHECK_INTERVAL,
+            timeout=self.TIMEOUT,
+            dag=self.dag,
+        )
+        dbt_op.execute(self.create_context(dbt_op))
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize(
+        "status", (DbtCloudJobRunStatus.CANCELLED.value, DbtCloudJobRunStatus.ERROR.value)
+    )
+    @mock.patch(
+        "airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_job_run_status",
+    )
+    @mock.patch("astronomer.providers.dbt.cloud.operators.dbt.DbtCloudRunJobOperatorAsync.defer")
+    @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_connection")
+    @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.trigger_job_run")
+    def test_dbt_run_job_op_async_failed_before_deferred(
+        self, mock_trigger_job_run, mock_dbt_hook, mock_defer, mock_job_run_status, status
+    ):
+        mock_job_run_status.return_value = status
+        dbt_op = DbtCloudRunJobOperatorAsync(
+            dbt_cloud_conn_id=self.CONN_ID,
+            task_id=f"{self.TASK_ID}{status}",
+            job_id=self.DBT_RUN_ID,
+            check_interval=self.CHECK_INTERVAL,
+            timeout=self.TIMEOUT,
+            dag=self.dag,
+        )
+        with pytest.raises(DbtCloudJobRunException):
+            dbt_op.execute(self.create_context(dbt_op))
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize(
+        "status",
+        (
+            DbtCloudJobRunStatus.QUEUED.value,
+            DbtCloudJobRunStatus.STARTING.value,
+            DbtCloudJobRunStatus.RUNNING.value,
+        ),
+    )
+    @mock.patch(
+        "airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_job_run_status",
+    )
+    @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.get_connection")
+    @mock.patch("airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook.trigger_job_run")
+    def test_dbt_run_job_op_async(self, mock_trigger_job_run, mock_dbt_hook, mock_job_run_status, status):
         """
         Asserts that a task is deferred and an DbtCloudRunJobTrigger will be fired
         when the DbtCloudRunJobOperatorAsync is provided with all required arguments
         """
+        mock_job_run_status.return_value = status
         dbt_op = DbtCloudRunJobOperatorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
-            task_id=self.TASK_ID,
+            task_id=f"{self.TASK_ID}{status}",
             job_id=self.DBT_RUN_ID,
             check_interval=self.CHECK_INTERVAL,
             timeout=self.TIMEOUT,

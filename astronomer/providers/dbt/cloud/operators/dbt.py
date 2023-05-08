@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 import time
-from typing import Any, Dict
+from typing import Any
 
 from airflow import AirflowException
-from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudHook
+from airflow.providers.dbt.cloud.hooks.dbt import (
+    DbtCloudHook,
+    DbtCloudJobRunException,
+    DbtCloudJobRunStatus,
+    JobRunInfo,
+)
 from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
@@ -33,7 +40,7 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     :return: The ID of the triggered dbt Cloud job run.
     """
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> Any:
         """Submits a job which generates a run_id and gets deferred"""
         if self.trigger_reason is None:
             self.trigger_reason = (
@@ -53,19 +60,28 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
 
         context["ti"].xcom_push(key="job_run_url", value=job_run_url)
         end_time = time.time() + self.timeout
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DbtCloudRunJobTrigger(
-                conn_id=self.dbt_cloud_conn_id,
-                run_id=run_id,
-                end_time=end_time,
-                account_id=self.account_id,
-                poll_interval=self.check_interval,
-            ),
-            method_name="execute_complete",
-        )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> int:
+        job_run_info = JobRunInfo(account_id=self.account_id, run_id=run_id)
+        job_run_status = hook.get_job_run_status(**job_run_info)
+        if not DbtCloudJobRunStatus.is_terminal(job_run_status):
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DbtCloudRunJobTrigger(
+                    conn_id=self.dbt_cloud_conn_id,
+                    run_id=run_id,
+                    end_time=end_time,
+                    account_id=self.account_id,
+                    poll_interval=self.check_interval,
+                ),
+                method_name="execute_complete",
+            )
+        elif job_run_status == DbtCloudJobRunStatus.SUCCESS.value:
+            self.log.info("Job run %s has completed successfully.", str(run_id))
+            return run_id
+        elif job_run_status in (DbtCloudJobRunStatus.CANCELLED.value, DbtCloudJobRunStatus.ERROR.value):
+            raise DbtCloudJobRunException(f"Job run {run_id} has failed or has been cancelled.")
+
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> int:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
