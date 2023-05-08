@@ -93,7 +93,7 @@ with DAG(
     # [START howto_operator_emr_add_steps]
     add_steps = EmrAddStepsOperator(
         task_id="add_steps",
-        job_flow_id=create_job_flow.output,
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         steps=SPARK_STEPS,
         aws_conn_id=AWS_CONN_ID,
     )
@@ -108,7 +108,7 @@ with DAG(
     # [START howto_sensor_emr_step_async]
     watch_step = EmrStepSensorAsync(
         task_id="watch_step",
-        job_flow_id=create_job_flow.output,
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[0] }}",
         aws_conn_id=AWS_CONN_ID,
     )
@@ -117,7 +117,7 @@ with DAG(
     # [START howto_operator_emr_terminate_job_flow]
     remove_job_flow = EmrTerminateJobFlowOperator(
         task_id="remove_job_flow",
-        job_flow_id=create_job_flow.output,
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         aws_conn_id=AWS_CONN_ID,
         trigger_rule="all_done",
     )
