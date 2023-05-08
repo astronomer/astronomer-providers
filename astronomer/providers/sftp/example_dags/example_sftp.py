@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, List
 from airflow import DAG, AirflowException, settings
 from airflow.models import Connection, Variable
 from airflow.operators.python import PythonOperator, get_current_context
+from airflow.utils.state import State
 from airflow.utils.timezone import datetime
 from airflow.utils.trigger_rule import TriggerRule
 from requests import get
@@ -212,6 +213,16 @@ def terminate_instance(task_instance: "TaskInstance") -> None:
     )
 
 
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 with DAG(
     dag_id="example_async_sftp_sensor",
     start_date=datetime(2022, 1, 1),
@@ -268,6 +279,15 @@ with DAG(
         task_id="terminate_instance", trigger_rule=TriggerRule.ALL_DONE, python_callable=terminate_instance
     )
 
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
+
     (
         create_ec2_instance
         >> get_and_add_ip_address_for_inbound_rules
@@ -275,4 +295,5 @@ with DAG(
         >> create_sftp_default_airflow_connection
         >> [async_sftp_sensor, async_sftp_sensor_without_pattern]
         >> terminate_ec2_instance
+        >> dag_final_status
     )
