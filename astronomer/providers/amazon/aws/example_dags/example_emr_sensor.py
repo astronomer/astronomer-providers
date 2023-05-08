@@ -2,13 +2,17 @@
 
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from airflow import DAG
+from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.emr import (
     EmrAddStepsOperator,
     EmrCreateJobFlowOperator,
     EmrTerminateJobFlowOperator,
 )
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.sensors.emr import (
     EmrJobFlowSensorAsync,
@@ -59,6 +63,16 @@ DEFAULT_ARGS = {
 }
 
 
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 with DAG(
     dag_id="example_emr_sensor",
     schedule=None,
@@ -69,7 +83,7 @@ with DAG(
 ) as dag:
     # For apache-airflow-providers-amazon < 4.1.0 you will also have to pass emr_conn_id param
     # [START howto_operator_emr_create_job_flow_steps_tasks]
-    cluster_creator = EmrCreateJobFlowOperator(
+    create_job_flow = EmrCreateJobFlowOperator(
         task_id="create_job_flow",
         job_flow_overrides=JOB_FLOW_OVERRIDES,
         aws_conn_id=AWS_CONN_ID,
@@ -77,9 +91,9 @@ with DAG(
     # [END howto_operator_emr_create_job_flow_steps_tasks]
 
     # [START howto_operator_emr_add_steps]
-    step_adder = EmrAddStepsOperator(
+    add_steps = EmrAddStepsOperator(
         task_id="add_steps",
-        job_flow_id=str(cluster_creator.output),
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         steps=SPARK_STEPS,
         aws_conn_id=AWS_CONN_ID,
     )
@@ -87,27 +101,36 @@ with DAG(
 
     # [START howto_sensor_emr_job_flow_async]
     job_flow_sensor = EmrJobFlowSensorAsync(
-        task_id="job_flow_sensor", job_flow_id=cluster_creator.output, aws_conn_id=AWS_CONN_ID
+        task_id="job_flow_sensor", job_flow_id=create_job_flow.output, aws_conn_id=AWS_CONN_ID
     )
     # [END howto_sensor_emr_job_flow_async]
 
     # [START howto_sensor_emr_step_async]
-    step_checker = EmrStepSensorAsync(
+    watch_step = EmrStepSensorAsync(
         task_id="watch_step",
-        job_flow_id=str(cluster_creator.output),
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[0] }}",
         aws_conn_id=AWS_CONN_ID,
     )
     # [END howto_sensor_emr_step_async]
 
     # [START howto_operator_emr_terminate_job_flow]
-    cluster_remover = EmrTerminateJobFlowOperator(
-        task_id="remove_cluster",
-        job_flow_id=str(cluster_creator.output),
+    remove_job_flow = EmrTerminateJobFlowOperator(
+        task_id="remove_job_flow",
+        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         aws_conn_id=AWS_CONN_ID,
         trigger_rule="all_done",
     )
     # [END howto_operator_emr_terminate_job_flow]
 
-    [job_flow_sensor, step_checker] >> cluster_remover
-    step_adder >> step_checker
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
+
+    add_steps >> watch_step
+    [job_flow_sensor, watch_step] >> remove_job_flow >> dag_final_status
