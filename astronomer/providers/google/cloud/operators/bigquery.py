@@ -79,7 +79,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
         super().__init__(*args, **kwargs)
         self.poll_interval = poll_interval
 
-    def execute(self, context: Context) -> None:  # noqa: D102
+    def execute(self, context: Context) -> Any:  # noqa: D102
         kwargs: dict[Any, Any] = {}
         if hasattr(self, "delegate_to"):
             kwargs["delegate_to"] = self.delegate_to
@@ -124,20 +124,25 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
 
         self.job_id = job.job_id
         context["ti"].xcom_push(key="job_id", value=self.job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryInsertJobTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                project_id=self.project_id,
-                impersonation_chain=self.impersonation_chain,
-                poll_interval=self.poll_interval,
-                **kwargs,
-            ),
-            method_name="execute_complete",
-        )
+        if job.running():
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=BigQueryInsertJobTrigger(
+                    conn_id=self.gcp_conn_id,
+                    job_id=self.job_id,
+                    project_id=self.project_id,
+                    impersonation_chain=self.impersonation_chain,
+                    poll_interval=self.poll_interval,
+                    **kwargs,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            job.result()
+            self._handle_job_error(job)
+            return self.job_id
 
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -150,6 +155,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             self.task_id,
             event["message"],
         )
+        return self.job_id
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
