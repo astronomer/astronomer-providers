@@ -2,7 +2,12 @@ import time
 from typing import Dict
 
 from airflow.exceptions import AirflowException
-from airflow.providers.microsoft.azure.hooks.data_factory import AzureDataFactoryHook
+from airflow.providers.microsoft.azure.hooks.data_factory import (
+    AzureDataFactoryHook,
+    AzureDataFactoryPipelineRunException,
+    AzureDataFactoryPipelineRunStatus,
+    PipelineRunInfo,
+)
 from airflow.providers.microsoft.azure.operators.data_factory import (
     AzureDataFactoryRunPipelineOperator,
 )
@@ -61,19 +66,33 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
         run_id = vars(response)["run_id"]
         context["ti"].xcom_push(key="run_id", value=run_id)
         end_time = time.time() + self.timeout
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=AzureDataFactoryTrigger(
-                azure_data_factory_conn_id=self.azure_data_factory_conn_id,
-                run_id=run_id,
-                wait_for_termination=self.wait_for_termination,
-                resource_group_name=self.resource_group_name,
-                factory_name=self.factory_name,
-                check_interval=self.check_interval,
-                end_time=end_time,
-            ),
-            method_name="execute_complete",
+
+        pipeline_run_info = PipelineRunInfo(
+            run_id=run_id,
+            factory_name=self.factory_name,
+            resource_group_name=self.resource_group_name,
         )
+        pipeline_run_status = hook.get_pipeline_run_status(**pipeline_run_info)
+        if pipeline_run_status not in AzureDataFactoryPipelineRunStatus.TERMINAL_STATUSES:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=AzureDataFactoryTrigger(
+                    azure_data_factory_conn_id=self.azure_data_factory_conn_id,
+                    run_id=run_id,
+                    wait_for_termination=self.wait_for_termination,
+                    resource_group_name=self.resource_group_name,
+                    factory_name=self.factory_name,
+                    check_interval=self.check_interval,
+                    end_time=end_time,
+                ),
+                method_name="execute_complete",
+            )
+        elif pipeline_run_status == AzureDataFactoryPipelineRunStatus.SUCCEEDED:
+            self.log.info("Pipeline run %s has completed successfully.", run_id)
+        elif pipeline_run_status in AzureDataFactoryPipelineRunStatus.FAILURE_STATES:
+            raise AzureDataFactoryPipelineRunException(
+                f"Pipeline run {run_id} has failed or has been cancelled."
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, str]) -> None:
         """
