@@ -104,9 +104,10 @@ class MockAirflowConnectionWithPrivate:
 class TestSFTPHookAsync:
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._validate_host_key_using_paramiko")
     @pytest.mark.asyncio
     async def test_extra_dejson_fields_for_connection_building_known_hosts_none(
-        self, mock_get_connection, mock_connect, caplog
+        self, mock_paramiko_validation, mock_get_connection, mock_connect, caplog
     ):
         """
         Assert that connection details passed through the extra field in the Airflow connection
@@ -129,7 +130,6 @@ class TestSFTPHookAsync:
         }
 
         mock_connect.assert_called_with(**expected_connection_details)
-        assert "No Host Key Verification. This won't protect against Man-In-The-Middle attacks" in caplog.text
 
     @pytest.mark.parametrize(
         "mock_port, mock_host_key",
@@ -194,7 +194,7 @@ class TestSFTPHookAsync:
         with pytest.raises(ValueError) as exc:
             await hook._get_conn()
 
-        assert str(exc.value) == "Must check host key when provided"
+        assert str(exc.value) == "Must check host key when provided."
 
     @patch("paramiko.SSHClient.connect", side_effect=Exception("mocked error"))
     @patch("asyncssh.import_private_key")
@@ -219,8 +219,11 @@ class TestSFTPHookAsync:
 
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._validate_host_key_using_paramiko")
     @pytest.mark.asyncio
-    async def test_extra_dejson_fields_for_connection_building(self, mock_get_connection, mock_connect):
+    async def test_extra_dejson_fields_for_connection_building(
+        self, mock_paramiko_validation, mock_get_connection, mock_connect
+    ):
         """
         Assert that connection details passed through the extra field in the Airflow connection
         are properly passed when creating SFTP connection
@@ -247,7 +250,10 @@ class TestSFTPHookAsync:
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("asyncssh.import_private_key")
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
-    async def test_connection_private(self, mock_get_connection, mock_import_private_key, mock_connect):
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._validate_host_key_using_paramiko")
+    async def test_connection_private(
+        self, mock_paramiko_validation, mock_get_connection, mock_import_private_key, mock_connect
+    ):
         """
         Assert that connection details with private key passed through the extra field in the Airflow connection
         are properly passed when creating SFTP connection
