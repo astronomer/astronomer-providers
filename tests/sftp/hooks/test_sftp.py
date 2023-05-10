@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import os.path
 from unittest.mock import AsyncMock, patch
 
+import paramiko.ssh_exception
 import pytest
 from airflow.exceptions import AirflowException
 from asyncssh import SFTPAttrs, SFTPNoSuchFile
@@ -61,7 +63,7 @@ class MockAirflowConnection:
 
 
 class MockAirflowConnectionWithHostKey:
-    def __init__(self, host_key: str | None = None, no_host_key_check: bool = True, port: int = 22):
+    def __init__(self, host_key: str | None = None, no_host_key_check: bool = False, port: int = 22):
         self.host = "localhost"
         self.port = port
         self.login = "username"
@@ -136,6 +138,11 @@ class TestSFTPHookAsync:
         [
             (22, "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"),
             (2222, "AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"),
+            (
+                2222,
+                "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDDsXFe87LsBA1Hfi+mtw"
+                "/EoQkv8bXVtfOwdMP1ETpHVsYpm5QG/7tsLlKdE8h6EoV/OFw7XQtoibNZp/l5ABjE=",
+            ),
         ],
     )
     @patch("paramiko.SSHClient.connect")
@@ -174,6 +181,9 @@ class TestSFTPHookAsync:
             "key_filename": "~/keys/my_key",
         }
 
+        if len(mock_host_key.split(" ")) > 1:
+            assert hook.host_key.get_name() == mock_host_key.split(" ")[0]
+            assert hook.host_key.get_base64() == mock_host_key.split(" ")[1]
         mock_paramiko_connect.assert_called_with(**expected_connection_details)
 
     @patch("paramiko.SSHClient.connect")
@@ -188,13 +198,55 @@ class TestSFTPHookAsync:
         should be unset when host_key is given and the host_key needs to be validated.
         """
         host_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"
-        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(host_key=host_key)
+        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(
+            host_key=host_key, no_host_key_check=True
+        )
 
         hook = SFTPHookAsync()
         with pytest.raises(ValueError) as exc:
             await hook._get_conn()
 
         assert str(exc.value) == "Must check host key when provided."
+
+    @patch("paramiko.SSHClient.connect")
+    @patch("asyncssh.import_private_key")
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @pytest.mark.asyncio
+    async def test_no_host_key_check_set_logs_warning(
+        self, mock_get_connection, mock_connect, mock_import_pkey, mock_ssh_connect, caplog
+    ):
+        """Assert that when no_host_key_check is set, a warning is logged for MITM attacks possibility."""
+        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(no_host_key_check=True)
+
+        hook = SFTPHookAsync()
+        await hook._get_conn()
+        assert "No Host Key Verification. This won't protect against Man-In-The-Middle attacks" in caplog.text
+
+    @patch("paramiko.SSHClient.connect")
+    @patch("asyncssh.import_private_key")
+    @patch("asyncssh.connect", new_callable=AsyncMock)
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
+    @pytest.mark.asyncio
+    async def test_host_key_validation_exception_message(
+        self, mock_get_connection, mock_connect, mock_import_pkey, mock_paramiko_connect
+    ):
+        """Assert expected failure logs when host key validation fails."""
+        host_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"
+        mock_airflow_connection = MockAirflowConnectionWithHostKey(host_key=host_key)
+        mock_get_connection.return_value = mock_airflow_connection
+
+        mock_paramiko_connect.side_effect = paramiko.ssh_exception.SSHException()
+        hook = SFTPHookAsync()
+        with pytest.raises(paramiko.ssh_exception.SSHException) as exc:
+            await hook._get_conn()
+        assert f"Given host key '{host_key}' for server 'localhost' does not match!" in str(exc.value)
+        known_hosts_path = "~/.ssh/known_hosts"
+        assert (
+            f"None of the host keys in the 'known_hosts' file "
+            f"'{os.path.expanduser(known_hosts_path)}' match!"
+        ) in str(exc.value)
+        print(exc.value)
 
     @patch("paramiko.SSHClient.connect", side_effect=Exception("mocked error"))
     @patch("asyncssh.import_private_key")
