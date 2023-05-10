@@ -16,6 +16,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocUpdateClusterOperator,
 )
 from google.api_core.exceptions import AlreadyExists
+from google.cloud.dataproc_v1 import Cluster
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -73,7 +74,7 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
         super().__init__(**kwargs)
         self.polling_interval = polling_interval
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> Any:
         """Call create cluster API and defer to DataprocCreateClusterTrigger to check the status"""
         hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         DataprocLink.persist(
@@ -96,24 +97,30 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
                 raise
             self.log.info("Cluster already exists.")
 
-        end_time: float = time.time() + self.timeout
-
-        self.defer(
-            trigger=DataprocCreateClusterTrigger(
-                project_id=self.project_id,
-                region=self.region,
-                cluster_name=self.cluster_name,
-                end_time=end_time,
-                metadata=self.metadata,
-                delete_on_error=self.delete_on_error,
-                cluster_config=self.cluster_config,
-                labels=self.labels,
-                gcp_conn_id=self.gcp_conn_id,
-                impersonation_chain=self.impersonation_chain,
-                polling_interval=self.polling_interval,
-            ),
-            method_name="execute_complete",
+        cluster = hook.get_cluster(
+            project_id=self.project_id, region=self.region, cluster_name=self.cluster_name
         )
+        if cluster.status.state == cluster.status.State.RUNNING:
+            self.log.info("Cluster created.")
+            return Cluster.to_dict(cluster)
+        else:
+            end_time: float = time.time() + self.timeout
+            self.defer(
+                trigger=DataprocCreateClusterTrigger(
+                    project_id=self.project_id,
+                    region=self.region,
+                    cluster_name=self.cluster_name,
+                    end_time=end_time,
+                    metadata=self.metadata,
+                    delete_on_error=self.delete_on_error,
+                    cluster_config=self.cluster_config,
+                    labels=self.labels,
+                    gcp_conn_id=self.gcp_conn_id,
+                    impersonation_chain=self.impersonation_chain,
+                    polling_interval=self.polling_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Optional[Dict[str, Any]] = None) -> Any:
         """
