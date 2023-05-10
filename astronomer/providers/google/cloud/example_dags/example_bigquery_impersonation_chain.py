@@ -1,14 +1,17 @@
 """Example Airflow DAG which uses impersonation parameters for authenticating with Google BigQuery service."""
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
     BigQueryDeleteDatasetOperator,
 )
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
@@ -44,6 +47,17 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raise an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
 
 with DAG(
     dag_id="example_bigquery_impersonation",
@@ -123,6 +137,20 @@ with DAG(
     )
     # [END howto_operator_bigquery_check_async]
 
-    end = EmptyOperator(task_id="end")
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        dag=dag,
+        retries=0,
+    )
 
-    create_table_1 >> insert_query_job >> select_query_job >> check_count >> delete_dataset >> end
+    (
+        create_table_1
+        >> insert_query_job
+        >> select_query_job
+        >> check_count
+        >> delete_dataset
+        >> dag_final_status
+    )
