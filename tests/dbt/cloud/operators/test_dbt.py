@@ -135,6 +135,26 @@ class TestDbtCloudRunJobOperatorAsync:
                 context=None, event={"status": "error", "message": "test failure message"}
             )
 
+    def test_dbt_run_job_cancelled_exception(self):
+        """Test DbtCloudRunJobOperatorAsync to raise exception when job is cancelled"""
+        dbt_op = DbtCloudRunJobOperatorAsync(
+            dbt_cloud_conn_id=self.CONN_ID,
+            task_id=self.TASK_ID,
+            job_id=self.DBT_RUN_ID,
+            check_interval=self.CHECK_INTERVAL,
+            timeout=self.TIMEOUT,
+        )
+        with pytest.raises(AirflowException):
+            dbt_op.execute_complete(
+                context={"task": dbt_op},
+                event={
+                    "status": "cancelled",
+                    "message": f"Job run {self.DBT_RUN_ID} has been cancelled.",
+                    "run_id": self.DBT_RUN_ID,
+                },
+            )
+        assert dbt_op.retries == 0
+
     @pytest.mark.parametrize(
         "mock_event",
         [
