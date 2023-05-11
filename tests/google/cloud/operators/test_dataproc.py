@@ -34,18 +34,43 @@ SPARK_JOB = {
     },
 }
 
+MODULE = "airflow.providers.google.cloud.operators.dataproc.DataprocHook"
+
 
 class TestDataprocCreateClusterOperatorAsync:
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
-    def test_dataproc_operator_create_cluster_execute_async(self, mock_create_cluster):
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.dataproc.DataprocCreateClusterOperatorAsync.defer"
+    )
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.create_cluster")
+    def test_dataproc_operator_create_cluster_execute_async_finish_before_defer(
+        self, mock_create_cluster, mock_get_cluster, mock_defer
+    ):
+        cluster = Cluster(
+            cluster_name="test_cluster",
+            status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.RUNNING),
+        )
+        mock_create_cluster.return_value = cluster
+        mock_get_cluster.return_value = cluster
+        task = DataprocCreateClusterOperatorAsync(
+            task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+        )
+        task.execute(create_context(task))
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.create_cluster")
+    def test_dataproc_operator_create_cluster_execute_async(self, mock_create_cluster, mock_get_cluster):
         """
         Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
         when the DataprocCreateClusterOperatorAsync is executed.
         """
-        mock_create_cluster.return_value = Cluster(
+        cluster = Cluster(
             cluster_name="test_cluster",
             status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
         )
+        mock_create_cluster.return_value = cluster
+        mock_get_cluster.return_value = cluster
 
         task = DataprocCreateClusterOperatorAsync(
             task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
@@ -56,15 +81,20 @@ class TestDataprocCreateClusterOperatorAsync:
             exc.value.trigger, DataprocCreateClusterTrigger
         ), "Trigger is not a DataprocCreateClusterTrigger"
 
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.create_cluster")
     def test_dataproc_operator_create_cluster_execute_async_cluster_exist_exception(
-        self, mock_create_cluster
+        self, mock_create_cluster, mock_get_cluster
     ):
         """
         Asserts that a task will raise exception when dataproc cluster already exist
         and use_if_exists param is False
         """
         mock_create_cluster.side_effect = AlreadyExists("Cluster already exist")
+        mock_get_cluster.return_value = Cluster(
+            cluster_name="test_cluster",
+            status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
+        )
 
         task = DataprocCreateClusterOperatorAsync(
             task_id="task-id",
@@ -76,13 +106,20 @@ class TestDataprocCreateClusterOperatorAsync:
         with pytest.raises(AlreadyExists):
             task.execute(create_context(task))
 
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.create_cluster")
-    def test_dataproc_operator_create_cluster_execute_async_cluster_exist(self, mock_create_cluster):
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.create_cluster")
+    def test_dataproc_operator_create_cluster_execute_async_cluster_exist(
+        self, mock_create_cluster, mock_get_cluster
+    ):
         """
         Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
         when the DataprocCreateClusterOperatorAsync is executed when dataproc cluster already exist.
         """
-        mock_create_cluster.return_value = AlreadyExists("Cluster already exist")
+        mock_create_cluster.side_effect = AlreadyExists("Cluster already exist")
+        mock_get_cluster.return_value = Cluster(
+            cluster_name="test_cluster",
+            status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
+        )
 
         task = DataprocCreateClusterOperatorAsync(
             task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
@@ -130,7 +167,7 @@ class TestDataprocDeleteClusterOperatorAsync:
         task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
     )
 
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.delete_cluster")
+    @mock.patch(f"{MODULE}.delete_cluster")
     def test_dataproc_delete_operator_execute_async(self, mock_delete_cluster, context):
         """
         Asserts that a task is deferred and a DataprocDeleteClusterTrigger will be fired
@@ -165,7 +202,7 @@ class TestDataprocSubmitJobOperatorAsync:
         task_id="task-id", job=SPARK_JOB, region=TEST_REGION, project_id=TEST_PROJECT_ID
     )
 
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
+    @mock.patch(f"{MODULE}.submit_job")
     def test_dataproc_operator_execute_async(self, mock_submit_job):
         """
         Asserts that a task is deferred and a DataProcSubmitTrigger will be fired
@@ -183,14 +220,14 @@ class TestDataprocSubmitJobOperatorAsync:
             None,
         ],
     )
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
+    @mock.patch(f"{MODULE}.submit_job")
     def test_dataproc_operator_execute_failure_async(self, mock_submit_job, event):
         """Tests that an AirflowException is raised in case of error event"""
         mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
         with pytest.raises(AirflowException):
             self.OPERATOR.execute_complete(context=None, event=event)
 
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.submit_job")
+    @mock.patch(f"{MODULE}.submit_job")
     def test_dataproc_operator_execute_success_async(self, mock_submit_job):
         """Tests response message in case of success event"""
         mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
@@ -211,7 +248,7 @@ class TestDataprocUpdateClusterOperatorAsync:
     )
 
     @mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
-    @mock.patch("airflow.providers.google.cloud.operators.dataproc.DataprocHook.update_cluster")
+    @mock.patch(f"{MODULE}.update_cluster")
     def test_dataproc_operator_update_cluster_execute_async(self, mock_update_cluster, mock_persist, context):
         """
         Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
