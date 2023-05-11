@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.exceptions import AirflowException, AirflowFailException, TaskDeferred
 from airflow.models import DAG, DagRun, TaskInstance
 from airflow.providers.dbt.cloud.hooks.dbt import (
     DbtCloudJobRunException,
@@ -135,7 +135,7 @@ class TestDbtCloudRunJobOperatorAsync:
                 context=None, event={"status": "error", "message": "test failure message"}
             )
 
-    def test_dbt_run_job_cancelled_exception(self):
+    def test_dbt_run_job_cancelled_exception(self, caplog):
         """Test DbtCloudRunJobOperatorAsync to raise exception when job is cancelled"""
         dbt_op = DbtCloudRunJobOperatorAsync(
             dbt_cloud_conn_id=self.CONN_ID,
@@ -144,17 +144,17 @@ class TestDbtCloudRunJobOperatorAsync:
             check_interval=self.CHECK_INTERVAL,
             timeout=self.TIMEOUT,
         )
-        with pytest.raises(AirflowException) as exc:
+        with pytest.raises(AirflowFailException) as exc:
             dbt_op.execute_complete(
-                context={"task": dbt_op},
+                context=None,
                 event={
                     "status": "cancelled",
                     "message": f"Job run {self.DBT_RUN_ID} has been cancelled.",
                     "run_id": self.DBT_RUN_ID,
                 },
             )
-        assert dbt_op.retries == 0
         assert f"Job run {self.DBT_RUN_ID} has been cancelled." in str(exc.value)
+        assert "Task will not be retried." in caplog.text
 
     @pytest.mark.parametrize(
         "mock_event",
