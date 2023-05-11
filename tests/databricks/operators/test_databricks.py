@@ -10,6 +10,7 @@ from astronomer.providers.databricks.operators.databricks import (
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from tests.utils.airflow_util import create_context
 
+JOB_ID = "42"
 TASK_ID = "databricks_check"
 CONN_ID = "databricks_default"
 RUN_ID = "1"
@@ -21,12 +22,137 @@ XCOM_RUN_ID_KEY = "run_id"
 XCOM_RUN_PAGE_URL_KEY = "run_page_url"
 
 
+def make_run_with_state_mock(lifecycle_state: str, result_state: str, state_message: str = ""):
+    return {
+        "state": {
+            "life_cycle_state": lifecycle_state,
+            "result_state": result_state,
+            "state_message": state_message,
+        },
+    }
+
+
 class TestDatabricksSubmitRunOperatorAsync:
+    @mock.patch("astronomer.providers.databricks.operators.databricks.DatabricksSubmitRunOperatorAsync.defer")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+    def test_databricks_submit_run_operator_async_succeeded_before_defered(
+        self, submit_run_response, get_job_id, get_run_page_url_response, get_run, defer
+    ):
+        submit_run_response.return_value = {"run_id": RUN_ID}
+        get_run_page_url_response.return_value = RUN_PAGE_URL
+        get_job_id.return_value = None
+        get_run.return_value = make_run_with_state_mock("TERMINATED", "SUCCESS")
+
+        operator = DatabricksSubmitRunOperatorAsync(
+            task_id="submit_run",
+            databricks_conn_id=CONN_ID,
+            existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+            notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        )
+
+        operator.execute(context=create_context(operator))
+
+        assert not defer.called
+
+    @pytest.mark.parametrize("result_state", ("FAILED", "UNEXPECTED"))
+    @mock.patch("astronomer.providers.databricks.operators.databricks.DatabricksSubmitRunOperatorAsync.defer")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+    def test_databricks_submit_run_operator_async_failed_before_defered(
+        self, submit_run_response, get_job_id, get_run_page_url_response, get_run, defer, result_state
+    ):
+        submit_run_response.return_value = {"run_id": RUN_ID}
+        get_run_page_url_response.return_value = RUN_PAGE_URL
+        get_job_id.return_value = None
+        get_run.return_value = make_run_with_state_mock("TERMINATED", result_state)
+
+        operator = DatabricksSubmitRunOperatorAsync(
+            task_id="submit_run",
+            databricks_conn_id=CONN_ID,
+            existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+            notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        )
+        with pytest.raises(AirflowException):
+            operator.execute(context=create_context(operator))
+
+        assert not defer.called
+
+    @mock.patch("astronomer.providers.databricks.operators.databricks.DatabricksSubmitRunOperatorAsync.defer")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_output")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+    def test_databricks_submit_run_operator_async_failed_with_error_in_run_output_before_defered(
+        self,
+        submit_run_response,
+        get_job_id,
+        get_run_page_url_response,
+        get_run,
+        get_run_output,
+        defer,
+    ):
+        submit_run_response.return_value = {"run_id": RUN_ID}
+        get_run_page_url_response.return_value = RUN_PAGE_URL
+        get_job_id.return_value = None
+        get_run.return_value = make_run_with_state_mock("TERMINATED", "FAILED")
+        get_run.return_value["tasks"] = [{"state": {"result_state": "FAILED"}, "run_id": RUN_ID}]
+        get_run_output.return_value = {"error": "notebook error"}
+
+        operator = DatabricksSubmitRunOperatorAsync(
+            task_id="submit_run",
+            databricks_conn_id=CONN_ID,
+            existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+            notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        )
+        with pytest.raises(AirflowException):
+            operator.execute(context=create_context(operator))
+
+        assert not defer.called
+
+    @mock.patch("astronomer.providers.databricks.operators.databricks.DatabricksSubmitRunOperatorAsync.defer")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_output")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+    def test_databricks_submit_run_operator_async_failed_without_error_in_run_output_before_defered(
+        self,
+        submit_run_response,
+        get_job_id,
+        get_run_page_url_response,
+        get_run,
+        get_run_output,
+        defer,
+    ):
+        submit_run_response.return_value = {"run_id": RUN_ID}
+        get_run_page_url_response.return_value = RUN_PAGE_URL
+        get_job_id.return_value = None
+        get_run.return_value = make_run_with_state_mock("TERMINATED", "FAILED")
+        get_run.return_value["tasks"] = [{"state": {"result_state": "FAILED"}, "run_id": RUN_ID}]
+
+        operator = DatabricksSubmitRunOperatorAsync(
+            task_id="submit_run",
+            databricks_conn_id=CONN_ID,
+            existing_cluster_id="xxxx-xxxxxx-xxxxxx",
+            notebook_task={"notebook_path": "/Users/test@astronomer.io/Quickstart Notebook"},
+        )
+        with pytest.raises(AirflowException):
+            operator.execute(context=create_context(operator))
+
+        assert not defer.called
+
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
     @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.submit_run")
     @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_job_id")
     @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
     def test_databricks_submit_run_operator_async(
-        self, submit_run_response, get_job_id, get_run_page_url_response
+        self, submit_run_response, get_job_id, get_run_page_url_response, get_run
     ):
         """
         Asserts that a task is deferred and an DatabricksTrigger will be fired
@@ -35,6 +161,7 @@ class TestDatabricksSubmitRunOperatorAsync:
         submit_run_response.return_value = {"run_id": RUN_ID}
         get_run_page_url_response.return_value = RUN_PAGE_URL
         get_job_id.return_value = None
+        get_run.return_value = make_run_with_state_mock("RUNNING", "SUCCESS")
 
         operator = DatabricksSubmitRunOperatorAsync(
             task_id="submit_run",
