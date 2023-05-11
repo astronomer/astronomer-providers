@@ -87,7 +87,12 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
+        if event["status"] == "cancelled":
+            self.log.info("Job run %s has been cancelled.", str(event["run_id"]))
+            self.log.info("Setting task retries to 0")
+            context["task"].retries = 0
+            raise AirflowException(event["message"])
+        elif event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
         return int(event["run_id"])
