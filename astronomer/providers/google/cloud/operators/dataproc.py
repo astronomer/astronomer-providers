@@ -369,22 +369,27 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
             retry=self.retry,
             metadata=self.metadata,
         )
-
-        end_time: float = time.time() + self.timeout
-
-        self.defer(
-            trigger=DataprocCreateClusterTrigger(
-                project_id=self.project_id,
-                region=self.region,
-                cluster_name=self.cluster_name,
-                end_time=end_time,
-                metadata=self.metadata,
-                gcp_conn_id=self.gcp_conn_id,
-                impersonation_chain=self.impersonation_chain,
-                polling_interval=self.polling_interval,
-            ),
-            method_name="execute_complete",
+        cluster = hook.get_cluster(
+            project_id=self.project_id, region=self.region, cluster_name=self.cluster_name
         )
+        if cluster.status.state == cluster.status.State.RUNNING:
+            self.log.info("Updated %s cluster.", self.cluster_name)
+        else:
+            end_time: float = time.time() + self.timeout
+
+            self.defer(
+                trigger=DataprocCreateClusterTrigger(
+                    project_id=self.project_id,
+                    region=self.region,
+                    cluster_name=self.cluster_name,
+                    end_time=end_time,
+                    metadata=self.metadata,
+                    gcp_conn_id=self.gcp_conn_id,
+                    impersonation_chain=self.impersonation_chain,
+                    polling_interval=self.polling_interval,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:
         """
