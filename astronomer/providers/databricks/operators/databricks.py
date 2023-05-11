@@ -1,15 +1,47 @@
+from __future__ import annotations
+
 from typing import Any
 
 from airflow.exceptions import AirflowException
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
     DatabricksRunNowOperator,
     DatabricksSubmitRunOperator,
+    RunState,
 )
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
+
+
+def _handle_not_successful_teminated_state(
+    run_state: RunState, run_info: dict[str, Any], hook: DatabricksHook, task_id: str
+) -> None:
+    if run_state.result_state == "FAILED":
+        task_run_id = None
+        if "tasks" in run_info:
+            for task in run_info["tasks"]:
+                if task.get("state", {}).get("result_state", "") == "FAILED":
+                    task_run_id = task["run_id"]
+        if task_run_id is not None:
+            run_output = hook.get_run_output(task_run_id)
+            if "error" in run_output:
+                notebook_error = run_output["error"]
+            else:
+                notebook_error = run_state.state_message
+        else:
+            notebook_error = run_state.state_message
+        error_message = (
+            f"{task_id} failed with terminal state: {run_state} " f"and with the error {notebook_error}"
+        )
+    else:
+        error_message = (
+            f"{task_id} failed with terminal state: {run_state} "
+            f"and with the error {run_state.state_message}"
+        )
+    raise AirflowException(error_message)
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
@@ -360,19 +392,28 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
 
         self.log.info("View run status, Spark UI, and logs at %s", self.run_page_url)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DatabricksTrigger(
-                task_id=self.task_id,
-                conn_id=self.databricks_conn_id,
-                run_id=str(self.run_id),
-                run_page_url=self.run_page_url,
-                retry_limit=self.databricks_retry_limit,
-                retry_delay=self.databricks_retry_delay,
-                polling_period_seconds=self.polling_period_seconds,
-            ),
-            method_name="execute_complete",
-        )
+        run_info = hook.get_run(self.run_id)
+        run_state = RunState(**run_info["state"])
+        if not run_state.is_terminal:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DatabricksTrigger(
+                    task_id=self.task_id,
+                    conn_id=self.databricks_conn_id,
+                    run_id=str(self.run_id),
+                    run_page_url=self.run_page_url,
+                    retry_limit=self.databricks_retry_limit,
+                    retry_delay=self.databricks_retry_delay,
+                    polling_period_seconds=self.polling_period_seconds,
+                ),
+                method_name="execute_complete",
+            )
+        elif run_state.is_terminal:
+            if run_state.is_successful:
+                self.log.info("%s completed successfully.", self.task_id)
+                return
+            else:
+                _handle_not_successful_teminated_state(run_state, run_info, hook, self.task_id)
 
     def execute_complete(
         self, context: Context, event: Any = None
