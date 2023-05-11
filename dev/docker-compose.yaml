@@ -20,11 +20,11 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "5"
     ASTRONOMER_ENVIRONMENT: local
-    AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
-    OPENLINEAGE_URL: http://host.docker.internal:5050/
-    OPENLINEAGE_EXTRACTORS: "astronomer.providers.google.cloud.extractors.bigquery.BigQueryAsyncExtractor;\
-                            astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor;\
-                            astronomer.providers.amazon.aws.extractors.redshift.RedshiftAsyncExtractor"
+    # AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
+    # OPENLINEAGE_URL: http://host.docker.internal:5050/
+    # OPENLINEAGE_EXTRACTORS: "astronomer.providers.google.cloud.extractors.bigquery.BigQueryAsyncExtractor;\
+    #                         astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor;\
+    #                         astronomer.providers.amazon.aws.extractors.redshift.RedshiftAsyncExtractor"
 
     # For enabling custom XCOM backend, uncomment the below variables and ensure that the given bucket exists.
     # AIRFLOW__CORE__XCOM_BACKEND: astronomer.providers.amazon.aws.xcom_backends.s3.S3XComBackend
