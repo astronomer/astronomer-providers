@@ -144,7 +144,7 @@ class TestDbtCloudRunJobOperatorAsync:
             check_interval=self.CHECK_INTERVAL,
             timeout=self.TIMEOUT,
         )
-        with pytest.raises(AirflowException):
+        with pytest.raises(AirflowException) as exc:
             dbt_op.execute_complete(
                 context={"task": dbt_op},
                 event={
@@ -154,6 +154,7 @@ class TestDbtCloudRunJobOperatorAsync:
                 },
             )
         assert dbt_op.retries == 0
+        assert f"Job run {self.DBT_RUN_ID} has been cancelled." in str(exc.value)
 
     @pytest.mark.parametrize(
         "mock_event",
