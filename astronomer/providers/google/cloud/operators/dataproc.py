@@ -16,7 +16,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocUpdateClusterOperator,
 )
 from google.api_core.exceptions import AlreadyExists, NotFound
-from google.cloud.dataproc_v1 import Cluster
+from google.cloud.dataproc_v1 import Cluster, JobStatus
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -258,7 +258,7 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
     :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
     """
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> Any:
         """
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
@@ -279,17 +279,26 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         self.job_id = job_id
         # Save data required for extra links no matter what the job status will be
         DataprocLink.persist(context=context, task_instance=self, url=DATAPROC_JOB_LOG_LINK, resource=job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DataProcSubmitTrigger(
-                gcp_conn_id=self.gcp_conn_id,
-                dataproc_job_id=job_id,
-                project_id=self.project_id,
-                region=self.region,
-                impersonation_chain=self.impersonation_chain,
-            ),
-            method_name="execute_complete",
-        )
+
+        job = self.hook.get_job(project_id=self.project_id, region=self.region, job_id=job_id)
+        state = job.status.state
+        if state not in (JobStatus.State.ERROR, JobStatus.State.DONE, JobStatus.State.CANCELLED):
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DataProcSubmitTrigger(
+                    gcp_conn_id=self.gcp_conn_id,
+                    dataproc_job_id=job_id,
+                    project_id=self.project_id,
+                    region=self.region,
+                    impersonation_chain=self.impersonation_chain,
+                ),
+                method_name="execute_complete",
+            )
+        elif state == JobStatus.State.ERROR:
+            raise AirflowException(f"Job failed:\n{job}")
+        elif state == JobStatus.State.CANCELLED:
+            raise AirflowException(f"Job was cancelled:\n{job}")
+        return job_id
 
     def execute_complete(  # type: ignore[override]
         self, context: Context, event: Optional[Dict[str, str]] = None
