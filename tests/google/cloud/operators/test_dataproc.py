@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.providers.google.cloud.hooks.bigquery import NotFound
 from google.api_core.exceptions import AlreadyExists
 from google.cloud import dataproc
 from google.cloud.dataproc_v1 import Cluster
@@ -167,8 +168,36 @@ class TestDataprocDeleteClusterOperatorAsync:
         task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
     )
 
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperatorAsync.defer"
+    )
+    @mock.patch(f"{MODULE}.get_cluster")
     @mock.patch(f"{MODULE}.delete_cluster")
-    def test_dataproc_delete_operator_execute_async(self, mock_delete_cluster, context):
+    def test_dataproc_operator_create_cluster_execute_async_finish_before_defer(
+        self, mock_delete_cluster, mock_get_cluster, mock_defer, context
+    ):
+        mock_delete_cluster.return_value = {}
+        mock_get_cluster.side_effect = NotFound("test")
+        self.OPERATOR.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperatorAsync.defer"
+    )
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.delete_cluster")
+    def test_dataproc_operator_create_cluster_execute_async_unexpected_error_before_defer(
+        self, mock_delete_cluster, mock_get_cluster, mock_defer, context
+    ):
+        mock_delete_cluster.return_value = {}
+        mock_get_cluster.side_effect = Exception("Unexpected")
+        with pytest.raises(AirflowException):
+            self.OPERATOR.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.delete_cluster")
+    def test_dataproc_delete_operator_execute_async(self, mock_delete_cluster, get_cluster, context):
         """
         Asserts that a task is deferred and a DataprocDeleteClusterTrigger will be fired
         when the DataprocDeleteClusterOperatorAsync is executed.

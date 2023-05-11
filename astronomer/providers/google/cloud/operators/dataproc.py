@@ -15,7 +15,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
-from google.api_core.exceptions import AlreadyExists
+from google.api_core.exceptions import AlreadyExists, NotFound
 from google.cloud.dataproc_v1 import Cluster
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
@@ -190,22 +190,29 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             metadata=self.metadata,
         )
 
-        end_time: float = time.time() + self.timeout
+        try:
+            hook.get_cluster(project_id=self.project_id, region=self.region, cluster_name=self.cluster_name)
+        except NotFound:
+            return
+        except Exception as e:
+            raise AirflowException(str(e))
+        else:
+            end_time: float = time.time() + self.timeout
 
-        self.defer(
-            trigger=DataprocDeleteClusterTrigger(
-                gcp_conn_id=self.gcp_conn_id,
-                project_id=self.project_id,
-                region=self.region,
-                cluster_name=self.cluster_name,
-                request_id=self.request_id,
-                retry=self.retry,
-                end_time=end_time,
-                metadata=self.metadata,
-                impersonation_chain=self.impersonation_chain,
-            ),
-            method_name="execute_complete",
-        )
+            self.defer(
+                trigger=DataprocDeleteClusterTrigger(
+                    gcp_conn_id=self.gcp_conn_id,
+                    project_id=self.project_id,
+                    region=self.region,
+                    cluster_name=self.cluster_name,
+                    request_id=self.request_id,
+                    retry=self.retry,
+                    end_time=end_time,
+                    metadata=self.metadata,
+                    impersonation_chain=self.impersonation_chain,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Optional[Dict[str, Any]] = None) -> Any:
         """
