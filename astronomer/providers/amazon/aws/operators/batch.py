@@ -60,18 +60,29 @@ class BatchOperatorAsync(BatchOperator):
         Airflow runs this method on the worker and defers using the trigger.
         Submit the job and get the job_id using which we defer and poll in trigger
         """
-        self.submit_job(context)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BatchOperatorTrigger(
-                job_id=self.job_id,
-                waiters=self.waiters,
-                max_retries=self.hook.max_retries,
-                aws_conn_id=self.hook.aws_conn_id,
-                region_name=self.hook.region_name,
-            ),
-            method_name="execute_complete",
-        )
+        job_id = self.submit_job(context)
+        job = self.hook.get_job_description(job_id)
+        job_status = job.get("status")
+
+        if job_status == self.hook.SUCCESS_STATE:
+            self.log.info(f"{job_id} was completed successfully")
+            return
+
+        if job_status == self.hook.FAILURE_STATE:
+            raise AirflowException(f"{job_id} failed")
+
+        if job_status in self.hook.INTERMEDIATE_STATES:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=BatchOperatorTrigger(
+                    job_id=self.job_id,
+                    waiters=self.waiters,
+                    max_retries=self.hook.max_retries,
+                    aws_conn_id=self.hook.aws_conn_id,
+                    region_name=self.hook.region_name,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
