@@ -1,4 +1,6 @@
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.emr import EmrContainerHook
@@ -30,7 +32,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
     :param tags: The tags assigned to job runs. Defaults to None
     """
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> str | None:
         """Deferred and give control to trigger"""
         hook = EmrContainerHook(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
         job_id = hook.submit_job(
@@ -50,6 +52,21 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             # max_tries is deprecated so instead of max_tries using self.max_polling_attempts
             polling_attempts = self.max_polling_attempts
 
+        query_state = hook.check_query_status(job_id)
+        if query_state in hook.SUCCESS_STATES:
+            self.log.info(
+                f"Try : Query execution completed. Final state is {query_state}"
+                f"EMR Containers Operator success {query_state}"
+            )
+            return job_id
+
+        if query_state in hook.FAILURE_STATES:
+            error_message = self.hook.get_job_failure_reason(job_id)
+            raise AirflowException(
+                f"EMR Containers job failed. Final state is {query_state}. "
+                f"query_execution_id is {job_id}. Error: {error_message}"
+            )
+
         self.defer(
             timeout=self.execution_timeout,
             trigger=EmrContainerOperatorTrigger(
@@ -62,7 +79,10 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> str:
+        # for bypassing mypy missing return error
+        return None  # pragma: no cover
+
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
