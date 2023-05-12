@@ -462,6 +462,31 @@ class TestBigQueryIntervalCheckOperatorAsync:
 
 
 class TestBigQueryGetDataOperatorAsync:
+    @mock.patch("airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator.execute")
+    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryGetDataOperatorAsync.defer")
+    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
+    def test_bigquery_get_data_operator_async_finish_before_deferred(
+        self, mock_hook, mock_defer, mock_execute
+    ):
+        job_id = "123456"
+        hash_ = "hash"
+        real_job_id = f"{job_id}_{hash_}"
+
+        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
+        mock_hook.return_value.insert_job.return_value.running.return_value = False
+
+        op = BigQueryGetDataOperatorAsync(
+            task_id="get_data_from_bq",
+            dataset_id=TEST_DATASET,
+            table_id=TEST_TABLE,
+            max_results=100,
+            selected_fields="value,name",
+        )
+
+        op.execute(create_context(op))
+        assert not mock_defer.called
+        assert mock_execute.called
+
     @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
     def test_bigquery_get_data_operator_async_with_selected_fields(self, mock_hook):
         """

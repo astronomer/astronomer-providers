@@ -325,20 +325,24 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         job = self._submit_job(hook, job_id="", configuration=configuration)
         self.job_id = job.job_id
         context["ti"].xcom_push(key="job_id", value=self.job_id)
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=BigQueryGetDataTrigger(
-                conn_id=self.gcp_conn_id,
-                job_id=self.job_id,
-                dataset_id=self.dataset_id,
-                table_id=self.table_id,
-                project_id=hook.project_id,
-                impersonation_chain=self.impersonation_chain,
-                poll_interval=self.poll_interval,
-                **kwargs,
-            ),
-            method_name="execute_complete",
-        )
+
+        if job.running():
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=BigQueryGetDataTrigger(
+                    conn_id=self.gcp_conn_id,
+                    job_id=self.job_id,
+                    dataset_id=self.dataset_id,
+                    table_id=self.table_id,
+                    project_id=hook.project_id,
+                    impersonation_chain=self.impersonation_chain,
+                    poll_interval=self.poll_interval,
+                    **kwargs,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            super().execute(context=context)
 
     def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
         """
