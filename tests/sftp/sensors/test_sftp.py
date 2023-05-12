@@ -1,4 +1,3 @@
-from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -19,14 +18,14 @@ class TestSFTPSensorAsync:
         """
 
         task = SFTPSensorAsync(
-            task_id="run_now", path="/test/path/", file_pattern="test_file", newer_than="2020-01-01"
+            task_id="run_now",
+            path="/test/path/",
+            file_pattern="test_file",
         )
 
         with pytest.raises(TaskDeferred) as exc:
             task.execute(context)
             assert isinstance(exc.value.trigger, SFTPTrigger), "Trigger is not an SFTPTrigger"
-        assert isinstance(task.newer_than, datetime)
-        assert task.newer_than == datetime(2020, 1, 1)
 
     def test_sftp_execute_complete_success(self, context):
         """

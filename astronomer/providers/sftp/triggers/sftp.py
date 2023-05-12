@@ -6,6 +6,7 @@ from typing import Any, AsyncIterator, Dict, Optional, Tuple
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.timezone import convert_to_utc
+from dateutil.parser import parse as parse_date
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
@@ -63,6 +64,8 @@ class SFTPTrigger(BaseTrigger):
         """
         hook = self._get_async_hook()
         exc = None
+        if isinstance(self.newer_than, str):
+            self.newer_than = parse_date(self.newer_than)
         _newer_than = convert_to_utc(self.newer_than) if self.newer_than else None
         while True:
             try:
