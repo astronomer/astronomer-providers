@@ -247,18 +247,45 @@ class TestDataprocUpdateClusterOperatorAsync:
         update_mask={},
     )
 
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.dataproc.DataprocUpdateClusterOperatorAsync.defer"
+    )
     @mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
+    @mock.patch(f"{MODULE}.get_cluster")
     @mock.patch(f"{MODULE}.update_cluster")
-    def test_dataproc_operator_update_cluster_execute_async(self, mock_update_cluster, mock_persist, context):
+    def test_dataproc_operator_update_cluster_execute_async_finish_before_defer(
+        self, mock_update_cluster, mock_get_cluster, mock_persist, mock_defer, context
+    ):
+        mock_persist.return_value = {}
+        cluster = Cluster(
+            cluster_name="test_cluster",
+            status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.RUNNING),
+        )
+        mock_update_cluster.return_value = cluster
+        mock_get_cluster.return_value = cluster
+        DataprocCreateClusterOperatorAsync(
+            task_id="task-id", cluster_name="test_cluster", region=TEST_REGION, project_id=TEST_PROJECT_ID
+        )
+        self.OPERATOR.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch("airflow.providers.google.cloud.links.dataproc.DataprocLink.persist")
+    @mock.patch(f"{MODULE}.get_cluster")
+    @mock.patch(f"{MODULE}.update_cluster")
+    def test_dataproc_operator_update_cluster_execute_async(
+        self, mock_update_cluster, mock_get_cluster, mock_persist, context
+    ):
         """
         Asserts that a task is deferred and a DataprocCreateClusterTrigger will be fired
         when the DataprocCreateClusterOperatorAsync is executed.
         """
         mock_persist.return_value = {}
-        mock_update_cluster.return_value = Cluster(
+        cluster = Cluster(
             cluster_name="test_cluster",
             status=dataproc.ClusterStatus(state=dataproc.ClusterStatus.State.CREATING),
         )
+        mock_update_cluster.return_value = cluster
+        mock_get_cluster.return_value = cluster
 
         with pytest.raises(TaskDeferred) as exc:
             self.OPERATOR.execute(context)
