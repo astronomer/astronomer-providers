@@ -57,6 +57,27 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
             self.execute_complete(cast(Context, {}), response)
             return
         context["ti"].xcom_push(key="return_value", value=query_ids)
+
+        still_running = False
+        for qid in query_ids:
+            resp = redshift_data_hook.conn.describe_statement(Id=qid)
+            status = resp["Status"]
+            if status == "FAILED":
+                err_msg = f"Error: {resp['QueryString']} query Failed due to {resp['Error']}"
+                msg = f"context: {context}, error message: {err_msg}"
+                raise AirflowException(msg)
+            elif status == "ABORTED":
+                err_msg = "The query run was stopped by the user."
+                msg = f"context: {context}, error message: {err_msg}"
+                raise AirflowException(msg)
+            elif status in ("SUBMITTED", "PICKED", "STARTED"):
+                still_running = True
+                break
+
+        if not still_running:
+            self.log.info("%s completed successfully.", self.task_id)
+            return
+
         self.defer(
             timeout=self.execution_timeout,
             trigger=RedshiftSQLTrigger(
@@ -76,11 +97,10 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{}".format(event["message"])
-                raise AirflowException(msg)
+                raise AirflowException(event["message"])
             elif "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
-                return None
+                return
         else:
             self.log.info("%s completed successfully.", self.task_id)
-            return None
+            return
