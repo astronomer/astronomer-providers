@@ -276,7 +276,6 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
         )
         job_id = job_object.reference.job_id
         self.log.info("Job %s submitted successfully.", job_id)
-        self.job_id = job_id
         # Save data required for extra links no matter what the job status will be
         DataprocLink.persist(context=context, task_instance=self, url=DATAPROC_JOB_LOG_LINK, resource=job_id)
 
