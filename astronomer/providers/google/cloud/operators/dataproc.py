@@ -197,23 +197,23 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             return
         except Exception as e:
             raise AirflowException(str(e))
-        else:
-            end_time: float = time.time() + self.timeout
 
-            self.defer(
-                trigger=DataprocDeleteClusterTrigger(
-                    gcp_conn_id=self.gcp_conn_id,
-                    project_id=self.project_id,
-                    region=self.region,
-                    cluster_name=self.cluster_name,
-                    request_id=self.request_id,
-                    retry=self.retry,
-                    end_time=end_time,
-                    metadata=self.metadata,
-                    impersonation_chain=self.impersonation_chain,
-                ),
-                method_name="execute_complete",
-            )
+        end_time: float = time.time() + self.timeout
+
+        self.defer(
+            trigger=DataprocDeleteClusterTrigger(
+                gcp_conn_id=self.gcp_conn_id,
+                project_id=self.project_id,
+                region=self.region,
+                cluster_name=self.cluster_name,
+                request_id=self.request_id,
+                retry=self.retry,
+                end_time=end_time,
+                metadata=self.metadata,
+                impersonation_chain=self.impersonation_chain,
+            ),
+            method_name="execute_complete",
+        )
 
     def execute_complete(self, context: Context, event: Optional[Dict[str, Any]] = None) -> Any:
         """
