@@ -61,6 +61,8 @@ class BatchOperatorAsync(BatchOperator):
         Submit the job and get the job_id using which we defer and poll in trigger
         """
         self.submit_job(context)
+        if not self.job_id:
+            raise AirflowException("AWS Batch job - job_id was not found")
         job = self.hook.get_job_description(self.job_id)
         job_status = job.get("status")
 
