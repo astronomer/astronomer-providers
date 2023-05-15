@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.providers.amazon.aws.hooks.batch_client import BatchClientHook
 
 from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
 from astronomer.providers.amazon.aws.triggers.batch import BatchOperatorTrigger
@@ -18,9 +19,64 @@ class TestBatchOperatorAsync:
         "jobId": JOB_ID,
     }
 
+    @mock.patch("astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync.defer")
+    @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook.get_job_description")
     @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
-    def test_batch_op_async(self, get_client_type_mock):
+    def test_batch_op_async_succeeded_before_defer(self, get_client_type_mock, get_job_description, defer):
         get_client_type_mock.return_value.submit_job.return_value = self.RESPONSE_WITHOUT_FAILURES
+        get_job_description.return_value = {"status": BatchClientHook.SUCCESS_STATE}
+        task = BatchOperatorAsync(
+            task_id="task",
+            job_name=self.JOB_NAME,
+            job_queue="queue",
+            job_definition="hello-world",
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
+            parameters=None,
+            overrides={},
+            array_properties=None,
+            aws_conn_id="aws_default",
+            region_name="eu-west-1",
+            tags={},
+        )
+        context = create_context(task)
+        task.execute(context)
+        assert not defer.called
+
+    @pytest.mark.parametrize("status", (BatchClientHook.FAILURE_STATE, "Unexpected status"))
+    @mock.patch("astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync.defer")
+    @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook.get_job_description")
+    @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
+    def test_batch_op_async_failed_before_defer(
+        self, get_client_type_mock, get_job_description, defer, status
+    ):
+        get_client_type_mock.return_value.submit_job.return_value = self.RESPONSE_WITHOUT_FAILURES
+        get_job_description.return_value = {"status": status}
+        task = BatchOperatorAsync(
+            task_id="task",
+            job_name=self.JOB_NAME,
+            job_queue="queue",
+            job_definition="hello-world",
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
+            parameters=None,
+            overrides={},
+            array_properties=None,
+            aws_conn_id="aws_default",
+            region_name="eu-west-1",
+            tags={},
+        )
+        context = create_context(task)
+        with pytest.raises(AirflowException):
+            task.execute(context)
+        assert not defer.called
+
+    @pytest.mark.parametrize("status", BatchClientHook.INTERMEDIATE_STATES)
+    @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook.get_job_description")
+    @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
+    def test_batch_op_async(self, get_client_type_mock, get_job_description, status):
+        get_client_type_mock.return_value.submit_job.return_value = self.RESPONSE_WITHOUT_FAILURES
+        get_job_description.return_value = {"status": status}
         task = BatchOperatorAsync(
             task_id="task",
             job_name=self.JOB_NAME,
