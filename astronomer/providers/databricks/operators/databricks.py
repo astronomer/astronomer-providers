@@ -19,6 +19,7 @@ from astronomer.providers.utils.typing_compat import Context
 def _handle_non_successful_teminal_states(
     run_state: RunState, run_info: dict[str, Any], hook: DatabricksHook, task_id: str
 ) -> None:
+    """Raise AirflowException with detailed error message from run_info"""
     if run_state.result_state == "FAILED":
         task_run_id = None
         if "tasks" in run_info:
