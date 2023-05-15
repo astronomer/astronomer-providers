@@ -193,6 +193,7 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
         try:
             hook.get_cluster(project_id=self.project_id, region=self.region, cluster_name=self.cluster_name)
         except NotFound:
+            self.log.info("Cluster deleted.")
             return
         except Exception as e:
             raise AirflowException(str(e))
