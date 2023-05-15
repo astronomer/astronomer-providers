@@ -282,23 +282,24 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
 
         job = self.hook.get_job(project_id=self.project_id, region=self.region, job_id=job_id)
         state = job.status.state
-        if state not in (JobStatus.State.ERROR, JobStatus.State.DONE, JobStatus.State.CANCELLED):
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=DataProcSubmitTrigger(
-                    gcp_conn_id=self.gcp_conn_id,
-                    dataproc_job_id=job_id,
-                    project_id=self.project_id,
-                    region=self.region,
-                    impersonation_chain=self.impersonation_chain,
-                ),
-                method_name="execute_complete",
-            )
+        if state == JobStatus.State.DONE:
+            return job_id
         elif state == JobStatus.State.ERROR:
             raise AirflowException(f"Job failed:\n{job}")
         elif state == JobStatus.State.CANCELLED:
             raise AirflowException(f"Job was cancelled:\n{job}")
-        return job_id
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=DataProcSubmitTrigger(
+                gcp_conn_id=self.gcp_conn_id,
+                dataproc_job_id=job_id,
+                project_id=self.project_id,
+                region=self.region,
+                impersonation_chain=self.impersonation_chain,
+            ),
+            method_name="execute_complete",
+        )
 
     def execute_complete(  # type: ignore[override]
         self, context: Context, event: Optional[Dict[str, str]] = None
