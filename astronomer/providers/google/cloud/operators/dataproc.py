@@ -15,7 +15,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
-from google.api_core.exceptions import AlreadyExists
+from google.api_core.exceptions import AlreadyExists, NotFound
 from google.cloud.dataproc_v1 import Cluster
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
@@ -189,6 +189,14 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             retry=self.retry,
             metadata=self.metadata,
         )
+
+        try:
+            hook.get_cluster(project_id=self.project_id, region=self.region, cluster_name=self.cluster_name)
+        except NotFound:
+            self.log.info("Cluster deleted.")
+            return
+        except Exception as e:
+            raise AirflowException(str(e))
 
         end_time: float = time.time() + self.timeout
 
