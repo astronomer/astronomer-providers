@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.google.cloud.hooks.bigquery import NotFound
 from google.api_core.exceptions import AlreadyExists
 from google.cloud import dataproc
-from google.cloud.dataproc_v1 import Cluster
+from google.cloud.dataproc_v1 import Cluster, JobStatus
 
 from astronomer.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperatorAsync,
@@ -231,13 +231,52 @@ class TestDataprocSubmitJobOperatorAsync:
         task_id="task-id", job=SPARK_JOB, region=TEST_REGION, project_id=TEST_PROJECT_ID
     )
 
+    @mock.patch("astronomer.providers.google.cloud.operators.dataproc.DataprocSubmitJobOperatorAsync.defer")
+    @mock.patch(f"{MODULE}.get_job")
     @mock.patch(f"{MODULE}.submit_job")
-    def test_dataproc_operator_execute_async(self, mock_submit_job):
+    def test_dataproc_operator_execute_async_done_before_defer(
+        self, mock_submit_job, mock_get_job, mock_defer
+    ):
+        mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
+        mock_get_job.return_value.status.state = JobStatus.State.DONE
+
+        assert self.OPERATOR.execute(create_context(self.OPERATOR)) == TEST_JOB_ID
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize("state", (JobStatus.State.CANCELLED, JobStatus.State.ERROR))
+    @mock.patch("astronomer.providers.google.cloud.operators.dataproc.DataprocSubmitJobOperatorAsync.defer")
+    @mock.patch(f"{MODULE}.get_job")
+    @mock.patch(f"{MODULE}.submit_job")
+    def test_dataproc_operator_execute_async_failed_before_defer(
+        self, mock_submit_job, mock_get_job, mock_defer, state
+    ):
+        mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
+        mock_get_job.return_value.status.state = state
+        with pytest.raises(AirflowException):
+            self.OPERATOR.execute(create_context(self.OPERATOR))
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize(
+        "state",
+        (
+            JobStatus.State.STATE_UNSPECIFIED,
+            JobStatus.State.PENDING,
+            JobStatus.State.SETUP_DONE,
+            JobStatus.State.RUNNING,
+            JobStatus.State.CANCEL_PENDING,
+            JobStatus.State.CANCEL_STARTED,
+            JobStatus.State.ATTEMPT_FAILURE,
+        ),
+    )
+    @mock.patch(f"{MODULE}.get_job")
+    @mock.patch(f"{MODULE}.submit_job")
+    def test_dataproc_operator_execute_async(self, mock_submit_job, mock_get_job, state):
         """
         Asserts that a task is deferred and a DataProcSubmitTrigger will be fired
         when the DataprocSubmitJobOperatorAsync is executed.
         """
         mock_submit_job.return_value.reference.job_id = TEST_JOB_ID
+        mock_get_job.return_value.status.state = state
         with pytest.raises(TaskDeferred) as exc:
             self.OPERATOR.execute(create_context(self.OPERATOR))
         assert isinstance(exc.value.trigger, DataProcSubmitTrigger), "Trigger is not a DataProcSubmitTrigger"
