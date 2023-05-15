@@ -5,11 +5,13 @@ import time
 from datetime import datetime
 from json import loads
 from os import environ
+from typing import Any
 
 from airflow import DAG, AirflowException
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.operators.batch import BatchOperatorAsync
 from astronomer.providers.amazon.aws.sensors.batch import BatchSensorAsync
@@ -236,6 +238,16 @@ def delete_job_queue_func() -> None:
         raise error
 
 
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 with DAG(
     dag_id="example_async_batch",
     schedule=None,
@@ -309,7 +321,13 @@ with DAG(
         trigger_rule="all_done",
     )
 
-    end = DummyOperator(task_id="end")
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        retries=0,
+    )
 
     (
         setup_aws_config
@@ -322,6 +340,5 @@ with DAG(
         >> disable_job_queue
         >> delete_job_queue
         >> delete_compute_environment
+        >> dag_final_status
     )
-
-    [disable_compute_environment, disable_job_queue, delete_job_queue, delete_compute_environment] >> end
