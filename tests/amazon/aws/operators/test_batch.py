@@ -43,12 +43,15 @@ class TestBatchOperatorAsync:
         task.execute(context)
         assert not defer.called
 
+    @pytest.mark.parametrize("status", (BatchClientHook.FAILURE_STATE, "Unexpected status"))
     @mock.patch("astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync.defer")
     @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook.get_job_description")
     @mock.patch("airflow.providers.amazon.aws.hooks.batch_client.AwsBaseHook.get_client_type")
-    def test_batch_op_async_failed_before_defer(self, get_client_type_mock, get_job_description, defer):
+    def test_batch_op_async_failed_before_defer(
+        self, get_client_type_mock, get_job_description, defer, status
+    ):
         get_client_type_mock.return_value.submit_job.return_value = self.RESPONSE_WITHOUT_FAILURES
-        get_job_description.return_value = {"status": BatchClientHook.FAILURE_STATE}
+        get_job_description.return_value = {"status": status}
         task = BatchOperatorAsync(
             task_id="task",
             job_name=self.JOB_NAME,

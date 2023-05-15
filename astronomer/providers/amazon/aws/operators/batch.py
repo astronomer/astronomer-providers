@@ -84,6 +84,8 @@ class BatchOperatorAsync(BatchOperator):
                 method_name="execute_complete",
             )
 
+        raise AirflowException(f"Unexpected status: {job_status}")
+
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> None:
         """
         Callback for when the trigger fires - returns immediately.
