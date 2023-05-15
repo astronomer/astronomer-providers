@@ -16,7 +16,7 @@ from astronomer.providers.databricks.triggers.databricks import DatabricksTrigge
 from astronomer.providers.utils.typing_compat import Context
 
 
-def _handle_not_successful_teminated_state(
+def _handle_non_successful_teminal_states(
     run_state: RunState, run_info: dict[str, Any], hook: DatabricksHook, task_id: str
 ) -> None:
     if run_state.result_state == "FAILED":
@@ -207,7 +207,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
                 self.log.info("%s completed successfully.", self.task_id)
                 return
             else:
-                _handle_not_successful_teminated_state(run_state, run_info, hook, self.task_id)
+                _handle_non_successful_teminal_states(run_state, run_info, hook, self.task_id)
 
     def execute_complete(self, context: Context, event: Any = None) -> None:
         """
