@@ -142,3 +142,28 @@ class TestBatchOperatorAsync:
             assert task.execute_complete(context=None, event=event) is None
 
         mock_log_info.assert_called_with(f"AWS Batch job ({self.JOB_ID}) succeeded")
+
+    @mock.patch("astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync.submit_job")
+    def test_batch_op_raises_exception_before_deferral_if_job_id_unset(self, mock_submit_job):
+        """
+        Test that an AirflowException is raised if job_id is not set before deferral by mocking the submit_job
+        method which sets the job_id attribute of the instance.
+        """
+        task = BatchOperatorAsync(
+            task_id="task",
+            job_name=self.JOB_NAME,
+            job_queue="queue",
+            job_definition="hello-world",
+            max_retries=self.MAX_RETRIES,
+            status_retries=self.STATUS_RETRIES,
+            parameters=None,
+            overrides={},
+            array_properties=None,
+            aws_conn_id="aws_default",
+            region_name="eu-west-1",
+            tags={},
+        )
+        context = create_context(task)
+        with pytest.raises(AirflowException) as exc:
+            task.execute(context)
+        assert "AWS Batch job - job_id was not found" in str(exc.value)
