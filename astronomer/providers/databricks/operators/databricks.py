@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from airflow.exceptions import AirflowException
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
+from airflow.providers.databricks.hooks.databricks import DatabricksHook, RunState
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
     DatabricksRunNowOperator,
     DatabricksSubmitRunOperator,
-    RunState,
 )
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
@@ -19,7 +18,20 @@ from astronomer.providers.utils.typing_compat import Context
 def _handle_non_successful_teminal_states(
     run_state: RunState, run_info: dict[str, Any], hook: DatabricksHook, task_id: str
 ) -> None:
-    """Raise AirflowException with detailed error message from run_info"""
+    """Raise AirflowException with detailed error message from run_info
+
+    Check if the "result_state" is "FAILED".
+    If not, raise an AirflowException with the "result_state" and "state_message" from getrun endpoint [1]
+    If so, it further digs into the result_state of each task to get error output from "error" in
+    getrunoutput endpoint [2] or "state_message" from getrun endpoint[1]
+
+    [1] https://docs.databricks.com/api-explorer/workspace/jobs/getrun
+    [2] https://docs.databricks.com/api-explorer/workspace/jobs/getrunoutput
+
+    :param run_state: the state information extract from run_info["state"]
+    :param run_info: response from https://docs.databricks.com/api-explorer/workspace/jobs/getrun
+    :param hook: hook to connect to Databricks
+    """
     if run_state.result_state == "FAILED":
         task_run_id = None
         if "tasks" in run_info:
