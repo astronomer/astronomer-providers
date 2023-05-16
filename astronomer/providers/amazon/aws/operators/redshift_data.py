@@ -45,6 +45,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         context["ti"].xcom_push(key="return_value", value=query_ids)
 
         still_running = False
+        completed_query_ids = []
         for qid in query_ids:
             resp = redshift_data_hook.conn.describe_statement(Id=qid)
             status = resp["Status"]
@@ -59,8 +60,10 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             elif status in ("SUBMITTED", "PICKED", "STARTED"):
                 still_running = True
                 break
+            elif status == "FINISHED":
+                completed_query_ids.append(qid)
 
-        if not still_running:
+        if not still_running and len(completed_query_ids) == len(query_ids):
             self.log.info("%s completed successfully.", self.task_id)
             return
 
