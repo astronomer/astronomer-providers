@@ -3,7 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import TaskDeferred
+from airflow.providers.cncf.kubernetes.triggers.kubernetes_pod import ContainerState
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodLoggingStatus
+from kubernetes.client import models as k8s
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperatorAsync,
@@ -15,6 +17,24 @@ from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
 from tests.utils.airflow_util import create_context
 
 KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
+
+
+def _build_mock_pod(state: k8s.V1ContainerState) -> k8s.V1Pod:
+    return k8s.V1Pod(
+        metadata=k8s.V1ObjectMeta(name="base", namespace="default"),
+        status=k8s.V1PodStatus(
+            container_statuses=[
+                k8s.V1ContainerStatus(
+                    name="base",
+                    image="alpine",
+                    image_id="1",
+                    ready=True,
+                    restart_count=1,
+                    state=state,
+                )
+            ]
+        ),
+    )
 
 
 class TestKubernetesPodOperatorAsync:
@@ -152,12 +172,79 @@ class TestKubernetesPodOperatorAsync:
         with pytest.raises(ValueError):
             op.defer(kwargs={"timeout": 10})
 
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.trigger_reentry")
+    @mock.patch(
+        f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.define_container_state",
+        return_value=ContainerState.FAILED,
+    )
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.build_pod_request_obj")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
-    def test_execute(self, mock_defer, mock_get_or_create_pod, mock_build_pod_request_obj):
+    def test_execute_failed_before_defer(
+        self,
+        mock_defer,
+        mock_get_or_create_pod,
+        mock_build_pod_request_obj,
+        mock_define_container_state,
+        mock_trigger_reentry,
+    ):
+        mock_get_or_create_pod.return_value = _build_mock_pod(
+            k8s.V1ContainerState({"running": k8s.V1ContainerStateTerminated(exit_code=1), "waiting": None})
+        )
+        mock_build_pod_request_obj.return_value = {}
+        mock_defer.return_value = {}
+        op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+
+        op.execute(context=create_context(op))
+        assert mock_trigger_reentry.called
+        assert not mock_defer.called
+
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.trigger_reentry")
+    @mock.patch(
+        f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.define_container_state",
+        return_value=ContainerState.TERMINATED,
+    )
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.build_pod_request_obj")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
+    def test_execute_succeeded_before_defer(
+        self,
+        mock_defer,
+        mock_get_or_create_pod,
+        mock_build_pod_request_obj,
+        mock_define_container_state,
+        mock_trigger_reentry,
+    ):
+        mock_get_or_create_pod.return_value = _build_mock_pod(
+            k8s.V1ContainerState({"running": k8s.V1ContainerStateTerminated(exit_code=0), "waiting": None})
+        )
+        mock_build_pod_request_obj.return_value = {}
+        mock_defer.return_value = {}
+        op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+        assert op.execute(context=create_context(op))
+        assert mock_trigger_reentry.called
+        assert not mock_defer.called
+
+    @mock.patch(
+        "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync.define_container_state",
+        return_value=ContainerState.RUNNING,
+    )
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.build_pod_request_obj")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
+    def test_execute(
+        self,
+        mock_defer,
+        mock_get_or_create_pod,
+        mock_build_pod_request_obj,
+        mock_define_container_state,
+    ):
         """Assert that execute succeeded"""
-        mock_get_or_create_pod.return_value = {}
+        mock_get_or_create_pod.return_value = _build_mock_pod(
+            k8s.V1ContainerState(
+                {"running": k8s.V1ContainerStateRunning(), "terminated": None, "waiting": None}
+            )
+        )
         mock_build_pod_request_obj.return_value = {}
         mock_defer.return_value = {}
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
@@ -169,3 +256,40 @@ class TestKubernetesPodOperatorAsync:
         mock_trigger_reentry.return_value = {}
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
         assert op.execute_complete(context=create_context(op), event={}) is None
+
+    @pytest.mark.parametrize(
+        "container_state, expected_state",
+        [
+            (
+                {"running": k8s.V1ContainerStateRunning(), "terminated": None, "waiting": None},
+                ContainerState.RUNNING,
+            ),
+            (
+                {"running": None, "terminated": k8s.V1ContainerStateTerminated(exit_code=0), "waiting": None},
+                ContainerState.TERMINATED,
+            ),
+            (
+                {"running": None, "terminated": None, "waiting": k8s.V1ContainerStateWaiting()},
+                ContainerState.WAITING,
+            ),
+        ],
+    )
+    def test_define_container_state_should_execute_successfully(self, container_state, expected_state):
+        op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+        op.pod = _build_mock_pod(k8s.V1ContainerState(**container_state))
+        assert expected_state == op.define_container_state()
+
+    @pytest.mark.parametrize(
+        "pod",
+        (
+            _build_mock_pod(k8s.V1ContainerState(running=None, terminated=None, waiting=None)),
+            k8s.V1Pod(
+                metadata=k8s.V1ObjectMeta(name="base", namespace="default"),
+                status=k8s.V1PodStatus(container_statuses=[]),
+            ),
+        ),
+    )
+    def test_define_container_state_with_undefined_state(self, pod):
+        op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+        op.pod = pod
+        assert op.define_container_state() == ContainerState.UNDEFINED
