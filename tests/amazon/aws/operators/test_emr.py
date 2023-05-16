@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.providers.amazon.aws.hooks.emr import EmrContainerHook
 
 from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.triggers.emr import EmrContainerOperatorTrigger
@@ -47,10 +48,41 @@ EMR_OPERATOR = EmrContainerOperatorAsync(
 
 
 class TestEmrContainerOperatorAsync:
+    @pytest.mark.parametrize("status", EmrContainerHook.SUCCESS_STATES)
+    @mock.patch("astronomer.providers.amazon.aws.operators.emr.EmrContainerOperatorAsync.defer")
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.check_query_status")
     @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
-    def test_emr_container_operator_async(self, check_job_status, context):
-        """Assert EmrContainerOperatorAsync defer"""
+    def test_emr_container_operator_async_succeeded_before_defer(
+        self, check_job_status, check_query_status, defer, status, context
+    ):
         check_job_status.return_value = JOB_ID
+        check_query_status.return_value = status
+        assert EMR_OPERATOR.execute(context) == JOB_ID
+
+        assert not defer.called
+
+    @pytest.mark.parametrize("status", EmrContainerHook.FAILURE_STATES)
+    @mock.patch("astronomer.providers.amazon.aws.operators.emr.EmrContainerOperatorAsync.defer")
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.get_job_failure_reason")
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.check_query_status")
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
+    def test_emr_container_operator_async_terminal_before_defer(
+        self, check_job_status, check_query_status, get_job_failure_reason, defer, status, context
+    ):
+        check_job_status.return_value = JOB_ID
+        check_query_status.return_value = status
+
+        with pytest.raises(AirflowException):
+            EMR_OPERATOR.execute(context)
+
+        assert not defer.called
+
+    @pytest.mark.parametrize("status", EmrContainerHook.INTERMEDIATE_STATES)
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.check_query_status")
+    @mock.patch("airflow.providers.amazon.aws.hooks.emr.EmrContainerHook.submit_job")
+    def test_emr_container_operator_async(self, check_job_status, check_query_status, status, context):
+        check_job_status.return_value = JOB_ID
+        check_query_status.return_value = status
         with pytest.raises(TaskDeferred) as exc:
             EMR_OPERATOR.execute(context)
 
