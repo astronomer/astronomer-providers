@@ -4,7 +4,7 @@ import os.path
 from base64 import decodebytes
 from datetime import datetime
 from fnmatch import fnmatch
-from typing import Any
+from typing import Any, Sequence
 
 import asyncssh
 import paramiko
@@ -26,7 +26,7 @@ class SFTPHookAsync(BaseHook):
     :param port: port of the SFTP server
     :param username: username used when authenticating to the SFTP server
     :param password: password used when authenticating to the SFTP server
-                     Can be left blank if using a key file
+        Can be left blank if using a key file
     :param known_hosts: path to the known_hosts file on the local file system. Defaults to ~/.ssh/known_hosts.
     :param key_file: path to the client key file used for authentication to SFTP server
     :param passphrase: passphrase used with the key_file for authentication to SFTP server
@@ -211,15 +211,25 @@ class SFTPHookAsync(BaseHook):
         except asyncssh.SFTPNoSuchFile:
             return None
 
+    async def read_directory(self, path: str = "") -> Sequence[asyncssh.sftp.SFTPName] | None:
+        """Returns a list of files along with their attributes on the SFTP server at the provided path"""
+        ssh_conn = await self._get_conn()
+        sftp_client = await ssh_conn.start_sftp_client()
+        try:
+            files = await sftp_client.readdir(path)
+            return files
+        except asyncssh.SFTPNoSuchFile:
+            return None
+
     async def get_files_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> list[str]:
         """
-        Returns the name of a file matching the file pattern at the provided path, if one exists
+        Returns the files along with their attributes matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
         """
-        files_list = await self.list_directory(path)
+        files_list = await self.read_directory(path)
         if files_list is None:
             raise AirflowException(f"No files at path {path} found...")
-        matched_files = [file for file in files_list if fnmatch(file, fnmatch_pattern)]
+        matched_files = [file for file in files_list if fnmatch(file.filename, fnmatch_pattern)]
         return matched_files
 
     async def get_mod_time(self, path: str) -> str:
