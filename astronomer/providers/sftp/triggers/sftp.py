@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator
 
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -29,7 +31,7 @@ class SFTPTrigger(BaseTrigger):
         path: str,
         file_pattern: str = "",
         sftp_conn_id: str = "sftp_default",
-        newer_than: Optional[datetime] = None,
+        newer_than: datetime | str | None = None,
         poke_interval: float = 5,
     ) -> None:
         super().__init__()
@@ -39,7 +41,7 @@ class SFTPTrigger(BaseTrigger):
         self.newer_than = newer_than
         self.poke_interval = poke_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SFTPTrigger arguments and classpath"""
         return (
             "astronomer.providers.sftp.triggers.sftp.SFTPTrigger",
@@ -52,7 +54,7 @@ class SFTPTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes a series of asynchronous calls to sftp servers via async sftp hook. It yields a Trigger
 

@@ -350,6 +350,19 @@ class TestSFTPHookAsync:
 
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
+    async def test_read_directory_path_does_not_exist(self, mock_hook_get_conn):
+        """
+        Assert that AirflowException is raised when path does not exist on SFTP server
+        """
+        mock_hook_get_conn.return_value = MockSSHClient()
+        hook = SFTPHookAsync()
+
+        expected_files = None
+        files = await hook.read_directory(path="/path/does_not/exist/")
+        assert files == expected_files
+
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    @pytest.mark.asyncio
     async def test_list_directory_path_has_files(self, mock_hook_get_conn):
         """
         Assert that file list is returned when path exists on SFTP server
@@ -378,6 +391,18 @@ class TestSFTPHookAsync:
     @pytest.mark.asyncio
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     async def test_get_file_by_pattern_with_no_match(self, mock_hook_get_conn):
+        """
+        Assert that AirflowException is raised when no files match file pattern on SFTP server
+        """
+        mock_hook_get_conn.return_value = MockSSHClient()
+        hook = SFTPHookAsync()
+        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file_does_not_exist")
+
+        assert file == []
+
+    @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    async def test_get_file_by_pattern_path_not_exists(self, mock_hook_get_conn):
         """
         Assert that AirflowException is raised when no files match file pattern on SFTP server
         """

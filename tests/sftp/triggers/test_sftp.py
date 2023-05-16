@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import TriggerEvent
-from asyncssh.sftp import SFTPName
+from asyncssh.sftp import SFTPAttrs, SFTPName
 
 from astronomer.providers.sftp.triggers.sftp import SFTPTrigger
 
@@ -28,19 +28,32 @@ class TestSFTPTrigger:
         }
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "newer_than",
+        ["19700101053001", None],
+    )
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_mod_time")
-    async def test_sftp_trigger_run_trigger_success_state(self, mock_mod_time, mock_get_files_by_pattern):
+    async def test_sftp_trigger_run_trigger_success_state(self, mock_get_files_by_pattern, newer_than):
         """
         Assert that a TriggerEvent with a success status is yielded if a file
         matching the pattern is returned by the hook
         """
-        mock_get_files_by_pattern.return_value = [SFTPName("some_file")]
-        mock_mod_time.return_value = "19700101053001"
+        mock_get_files_by_pattern.return_value = [
+            SFTPName("some_file", attrs=SFTPAttrs(mtime=1684244898)),
+            SFTPName("some_other_file"),
+        ]
 
-        trigger = SFTPTrigger(path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file")
+        trigger = SFTPTrigger(
+            path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file", newer_than=newer_than
+        )
 
-        expected_event = {"status": "success", "message": "Sensed 1 files: ['some_file']"}
+        if newer_than:
+            expected_event = {"status": "success", "message": "Sensed 1 files: ['some_file']"}
+        else:
+            expected_event = {
+                "status": "success",
+                "message": "Sensed 2 files: ['some_file', 'some_other_file']",
+            }
 
         generator = trigger.run()
         actual_event = await generator.asend(None)
@@ -88,18 +101,15 @@ class TestSFTPTrigger:
 
     @pytest.mark.asyncio
     @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_mod_time")
     async def test_sftp_trigger_run_trigger_defer_state(
         self,
-        mock_mod_time,
         mock_get_files_by_pattern,
     ):
         """
         Assert that a the task does not complete,
         indicating that the task needs to be deferred
         """
-        mock_get_files_by_pattern.return_value = [SFTPName("my_test_file.txt")]
-        mock_mod_time.return_value = "19700101053001"
+        mock_get_files_by_pattern.return_value = [SFTPName("my_test_file.txt", attrs=SFTPAttrs(mtime=49129))]
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         trigger = SFTPTrigger(
             path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file", newer_than=yesterday
