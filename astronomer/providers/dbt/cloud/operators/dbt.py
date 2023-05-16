@@ -4,6 +4,7 @@ import time
 from typing import Any
 
 from airflow import AirflowException
+from airflow.exceptions import AirflowFailException
 from airflow.providers.dbt.cloud.hooks.dbt import (
     DbtCloudHook,
     DbtCloudJobRunException,
@@ -87,7 +88,11 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
-        if event["status"] == "error":
+        if event["status"] == "cancelled":
+            self.log.info("Job run %s has been cancelled.", str(event["run_id"]))
+            self.log.info("Task will not be retried.")
+            raise AirflowFailException(event["message"])
+        elif event["status"] == "error":
             raise AirflowException(event["message"])
         self.log.info(event["message"])
         return int(event["run_id"])
