@@ -75,7 +75,11 @@ class SFTPTrigger(BaseTrigger):
                     files_sensed = []
                     for file in files_returned_by_hook:
                         if _newer_than:
-                            mod_time = datetime.fromtimestamp(file.attrs.mtime).strftime("%Y%m%d%H%M%S")
+                            if file.attrs.mtime is None:
+                                continue
+                            mod_time = datetime.fromtimestamp(float(file.attrs.mtime)).strftime(
+                                "%Y%m%d%H%M%S"
+                            )
                             mod_time_utc = convert_to_utc(datetime.strptime(mod_time, "%Y%m%d%H%M%S"))
                             if _newer_than <= mod_time_utc:
                                 files_sensed.append(file.filename)

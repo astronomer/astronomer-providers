@@ -8,6 +8,7 @@ import paramiko.ssh_exception
 import pytest
 from airflow.exceptions import AirflowException
 from asyncssh import SFTPAttrs, SFTPNoSuchFile
+from asyncssh.sftp import SFTPName
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
@@ -21,6 +22,12 @@ class MockSFTPClient:
             raise SFTPNoSuchFile("File does not exist")
         else:
             return ["..", ".", "file"]
+
+    async def readdir(self, path: str):
+        if path == "/path/does_not/exist/":
+            raise SFTPNoSuchFile("File does not exist")
+        else:
+            return [SFTPName(".."), SFTPName("."), SFTPName("file")]
 
     async def stat(self, path: str):
         if path == "/path/does_not/exist/":
@@ -363,9 +370,10 @@ class TestSFTPHookAsync:
         mock_hook_get_conn.return_value = MockSSHClient()
         hook = SFTPHookAsync()
 
-        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file")
+        files = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file")
 
-        assert file == ["file"]
+        assert len(files) == 1
+        assert files[0].filename == "file"
 
     @pytest.mark.asyncio
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
