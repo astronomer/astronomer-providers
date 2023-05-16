@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.triggers.base import TriggerEvent
+from asyncssh.sftp import SFTPName
 
 from astronomer.providers.sftp.triggers.sftp import SFTPTrigger
 
@@ -34,12 +35,12 @@ class TestSFTPTrigger:
         Assert that a TriggerEvent with a success status is yielded if a file
         matching the pattern is returned by the hook
         """
-        mock_get_files_by_pattern.return_value = ["some_file"]
+        mock_get_files_by_pattern.return_value = [SFTPName("some_file")]
         mock_mod_time.return_value = "19700101053001"
 
         trigger = SFTPTrigger(path="test/path/", sftp_conn_id="sftp_default", file_pattern="my_test_file")
 
-        expected_event = {"status": "success", "message": "Sensed file: test/path/some_file"}
+        expected_event = {"status": "success", "message": "Sensed 1 files: ['some_file']"}
 
         generator = trigger.run()
         actual_event = await generator.asend(None)
@@ -97,7 +98,7 @@ class TestSFTPTrigger:
         Assert that a the task does not complete,
         indicating that the task needs to be deferred
         """
-        mock_get_files_by_pattern.return_value = ["my_test_file.txt"]
+        mock_get_files_by_pattern.return_value = [SFTPName("my_test_file.txt")]
         mock_mod_time.return_value = "19700101053001"
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         trigger = SFTPTrigger(
