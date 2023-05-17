@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import Any
 
 from airflow.exceptions import AirflowException
+from airflow.providers.databricks.hooks.databricks import DatabricksHook, RunState
 from airflow.providers.databricks.operators.databricks import (
     XCOM_RUN_ID_KEY,
     XCOM_RUN_PAGE_URL_KEY,
@@ -10,6 +13,48 @@ from airflow.providers.databricks.operators.databricks import (
 
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
+
+
+def _handle_non_successful_terminal_states(
+    run_state: RunState, run_info: dict[str, Any], hook: DatabricksHook, task_id: str
+) -> None:
+    """Raise AirflowException with detailed error message from run_info
+
+    Check if the "result_state" is "FAILED".
+    If not, raise an AirflowException with the "result_state" and "state_message" from getrun endpoint [1]
+    If so, it further digs into the result_state of each task to get error output from "error" in
+    getrunoutput endpoint [2] or "state_message" from getrun endpoint[1]
+
+    [1] https://docs.databricks.com/api-explorer/workspace/jobs/getrun
+    [2] https://docs.databricks.com/api-explorer/workspace/jobs/getrunoutput
+
+    :param run_state: the state information extract from run_info["state"]
+    :param run_info: response from https://docs.databricks.com/api-explorer/workspace/jobs/getrun
+    :param hook: hook to connect to Databricks
+    """
+    if run_state.result_state == "FAILED":
+        task_run_id = None
+        if "tasks" in run_info:
+            for task in run_info["tasks"]:
+                if task.get("state", {}).get("result_state", "") == "FAILED":
+                    task_run_id = task["run_id"]
+        if task_run_id is not None:
+            run_output = hook.get_run_output(task_run_id)
+            if "error" in run_output:
+                notebook_error = run_output["error"]
+            else:
+                notebook_error = run_state.state_message
+        else:
+            notebook_error = run_state.state_message
+        error_message = (
+            f"{task_id} failed with terminal state: {run_state} " f"and with the error {notebook_error}"
+        )
+    else:
+        error_message = (
+            f"{task_id} failed with terminal state: {run_state} "
+            f"and with the error {run_state.state_message}"
+        )
+    raise AirflowException(error_message)
 
 
 class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
@@ -153,20 +198,29 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
 
         self.log.info("View run status, Spark UI, and logs at %s", self.run_page_url)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DatabricksTrigger(
-                conn_id=self.databricks_conn_id,
-                task_id=self.task_id,
-                run_id=str(self.run_id),
-                job_id=job_id,
-                run_page_url=self.run_page_url,
-                retry_limit=self.databricks_retry_limit,
-                retry_delay=self.databricks_retry_delay,
-                polling_period_seconds=self.polling_period_seconds,
-            ),
-            method_name="execute_complete",
-        )
+        run_info = hook.get_run(self.run_id)
+        run_state = RunState(**run_info["state"])
+        if not run_state.is_terminal:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DatabricksTrigger(
+                    conn_id=self.databricks_conn_id,
+                    task_id=self.task_id,
+                    run_id=str(self.run_id),
+                    job_id=job_id,
+                    run_page_url=self.run_page_url,
+                    retry_limit=self.databricks_retry_limit,
+                    retry_delay=self.databricks_retry_delay,
+                    polling_period_seconds=self.polling_period_seconds,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            if run_state.is_successful:
+                self.log.info("%s completed successfully.", self.task_id)
+                return
+            else:
+                _handle_non_successful_terminal_states(run_state, run_info, hook, self.task_id)
 
     def execute_complete(self, context: Context, event: Any = None) -> None:
         """
