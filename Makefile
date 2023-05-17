@@ -77,6 +77,7 @@ run-local-lineage-server: ## Run flask based local Lineage server
 
 test-rc-deps: ## Test providers RC by building an image with given dependencies and running the master DAG
 	@which gh > /dev/null || (echo "ERROR: Github CLI is required. Refer https://github.com/cli/cli for installation."; exit 1)
+	python3 -m pip install -U pip
 	git checkout main && git pull origin main
 	$(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
 	echo "Current timestamp is" $(current_timestamp)
