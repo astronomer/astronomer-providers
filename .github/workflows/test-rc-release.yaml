@@ -1,0 +1,36 @@
+---
+name: test-rc-release
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+    inputs:
+      rc_provider_packages:
+        description: 'The rc provider packages (separate by ,) (e.g., apache-airflow-providers-amazon==8.0.0rc1,apache-airflow-providers-databricks==4.1.0rc1)'
+        required: true
+        default: ''
+
+jobs:
+  test-rc-release:
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.git_rev }}
+
+      - name: Setup Github Actions git user
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Test RC providers
+        run: |
+          python3 -m pip install pip==23.1.2
+          make test-rc-deps \
+            RC_PROVIDER_PACKAGES="${{ inputs.rc_provider_packages }}" \
+            DOCKER_REGISTRY="${{ secrets.DOCKER_REGISTRY }}" \
+            ORGANIZATION_ID="${{ secrets.ORGANIZATION_ID }}" \
+            DEPLOYMENT_ID="${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}" \
+            ASTRONOMER_KEY_ID="${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}" \
+            ASTRONOMER_KEY_SECRET="${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}"
