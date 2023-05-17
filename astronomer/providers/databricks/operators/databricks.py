@@ -414,19 +414,28 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
 
         self.log.info("View run status, Spark UI, and logs at %s", self.run_page_url)
 
-        self.defer(
-            timeout=self.execution_timeout,
-            trigger=DatabricksTrigger(
-                task_id=self.task_id,
-                conn_id=self.databricks_conn_id,
-                run_id=str(self.run_id),
-                run_page_url=self.run_page_url,
-                retry_limit=self.databricks_retry_limit,
-                retry_delay=self.databricks_retry_delay,
-                polling_period_seconds=self.polling_period_seconds,
-            ),
-            method_name="execute_complete",
-        )
+        run_info = hook.get_run(self.run_id)
+        run_state = RunState(**run_info["state"])
+        if not run_state.is_terminal:
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=DatabricksTrigger(
+                    task_id=self.task_id,
+                    conn_id=self.databricks_conn_id,
+                    run_id=str(self.run_id),
+                    run_page_url=self.run_page_url,
+                    retry_limit=self.databricks_retry_limit,
+                    retry_delay=self.databricks_retry_delay,
+                    polling_period_seconds=self.polling_period_seconds,
+                ),
+                method_name="execute_complete",
+            )
+        elif run_state.is_terminal:
+            if run_state.is_successful:
+                self.log.info("%s completed successfully.", self.task_id)
+                return
+            else:
+                _handle_non_successful_terminal_states(run_state, run_info, hook, self.task_id)
 
     def execute_complete(
         self, context: Context, event: Any = None
