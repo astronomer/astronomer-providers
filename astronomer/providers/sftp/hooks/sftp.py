@@ -73,13 +73,13 @@ class SFTPHookAsync(BaseHook):
         """Parse extra fields from the connection into instance fields"""
         extra_options = conn.extra_dejson
         if "key_file" in extra_options and self.key_file == "":
-            self.key_file = extra_options.get("key_file")
+            self.key_file = extra_options["key_file"]
         if "known_hosts" in extra_options:
-            self.known_hosts = extra_options.get("known_hosts")
+            self.known_hosts = extra_options["known_hosts"]
         if ("passphrase" or "private_key_passphrase") in extra_options:
-            self.passphrase = extra_options.get("passphrase")
+            self.passphrase = extra_options["passphrase"]
         if "private_key" in extra_options:
-            self.private_key = extra_options.get("private_key")
+            self.private_key = extra_options["private_key"]
 
         host_key = extra_options.get("host_key")
         no_host_key_check = extra_options.get("no_host_key_check")
@@ -234,7 +234,7 @@ class SFTPHookAsync(BaseHook):
         self, path: str = "", fnmatch_pattern: str = ""
     ) -> Sequence[asyncssh.sftp.SFTPName]:
         """
-        Returns the files along with their attributes matching the file pattern (e.g. *.pdf) at the provided path,
+        Returns the files along with their attributes matching the file pattern (e.g. ``*.pdf``) at the provided path,
         if one exists. Otherwise, raises an AirflowException to be handled upstream for deferring
         """
         files_list = await self.read_directory(path)
