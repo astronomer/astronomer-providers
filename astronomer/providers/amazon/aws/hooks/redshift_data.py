@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 from io import StringIO
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Iterable
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
@@ -8,6 +10,8 @@ from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from asgiref.sync import sync_to_async
 from snowflake.connector.util_text import split_statements
+
+from astronomer.providers.utils.typing_compat import Context
 
 
 class RedshiftDataHook(AwsBaseHook):
@@ -44,7 +48,7 @@ class RedshiftDataHook(AwsBaseHook):
         self.client_type = aws_connection_type
         self.poll_interval = poll_interval
 
-    def get_conn_params(self) -> Dict[str, Union[str, int]]:
+    def get_conn_params(self) -> dict[str, str | int]:
         """Helper method to retrieve connection args"""
         if not self.aws_conn_id:
             raise AirflowException("Required connection details is missing !")
@@ -52,7 +56,7 @@ class RedshiftDataHook(AwsBaseHook):
         connection_object = self.get_connection(self.aws_conn_id)
         extra_config = connection_object.extra_dejson
 
-        conn_params: Dict[str, Union[str, int]] = {}
+        conn_params: dict[str, str | int] = {}
 
         if "db_user" in extra_config:
             conn_params["db_user"] = extra_config.get("db_user", None)
@@ -106,8 +110,8 @@ class RedshiftDataHook(AwsBaseHook):
         return conn_params
 
     def execute_query(
-        self, sql: Union[Dict[Any, Any], Iterable[Any]], params: Union[ParamsDict, Dict[Any, Any]]
-    ) -> Tuple[List[str], Dict[str, str]]:
+        self, sql: dict[Any, Any] | Iterable[Any], params: ParamsDict | dict[Any, Any]
+    ) -> tuple[list[str], dict[str, str]]:
         """
         Runs an SQL statement, which can be data manipulation language (DML)
         or data definition language (DDL)
@@ -129,7 +133,7 @@ class RedshiftDataHook(AwsBaseHook):
                 self.resource_type = None
                 client = self.get_conn()
             conn_params = self.get_conn_params()
-            query_ids: List[str] = []
+            query_ids: list[str] = []
             for sql_statement in sql:
                 self.log.info("Executing statement: %s", sql_statement)
                 response = client.execute_statement(
@@ -144,7 +148,7 @@ class RedshiftDataHook(AwsBaseHook):
         except botocore.exceptions.ClientError as error:
             return [], {"status": "error", "message": str(error)}
 
-    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
+    async def get_query_status(self, query_ids: list[str]) -> dict[str, str | list[str]]:
         """
         Async function to get the Query status by query Ids.
         The function takes list of query_ids, makes async connection to redshift data to get the query status
@@ -162,7 +166,7 @@ class RedshiftDataHook(AwsBaseHook):
                 # for apache-airflow-providers-amazon>=4.1.0
                 self.resource_type = None
                 client = await sync_to_async(self.get_conn)()
-            completed_ids: List[str] = []
+            completed_ids: list[str] = []
             for query_id in query_ids:
                 while await self.is_still_running(query_id):
                     await asyncio.sleep(self.poll_interval)
@@ -183,7 +187,7 @@ class RedshiftDataHook(AwsBaseHook):
         except botocore.exceptions.ClientError as error:
             return {"status": "error", "message": str(error), "type": "ERROR"}
 
-    async def is_still_running(self, qid: str) -> Union[bool, Dict[str, str]]:
+    async def is_still_running(self, qid: str) -> bool | dict[str, str]:
         """
         Async function to check whether the query is still running to return True or in
         "PICKED", "STARTED" or "SUBMITTED" state to return False.
@@ -202,3 +206,24 @@ class RedshiftDataHook(AwsBaseHook):
             return False
         except botocore.exceptions.ClientError as error:
             return {"status": "error", "message": str(error), "type": "ERROR"}
+
+    def queries_are_completed(self, query_ids: list[str], context: Context | None) -> bool:
+        """Check whether all queries complete"""
+        completed_query_ids = []
+        for qid in query_ids:
+            resp = self.conn.describe_statement(Id=qid)
+            status = resp["Status"]
+            if status == "FAILED":
+                err_msg = f"Error: {resp['QueryString']} query Failed due to {resp['Error']}"
+                msg = f"context: {context}, error message: {err_msg}"
+                raise AirflowException(msg)
+            elif status == "ABORTED":
+                err_msg = "The query run was stopped by the user."
+                msg = f"context: {context}, error message: {err_msg}"
+                raise AirflowException(msg)
+            elif status in ("SUBMITTED", "PICKED", "STARTED"):
+                return False
+            elif status == "FINISHED":
+                completed_query_ids.append(qid)
+
+        return len(completed_query_ids) == len(query_ids)

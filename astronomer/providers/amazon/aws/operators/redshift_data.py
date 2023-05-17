@@ -44,26 +44,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             self.execute_complete(context, event=response)
         context["ti"].xcom_push(key="return_value", value=query_ids)
 
-        still_running = False
-        completed_query_ids = []
-        for qid in query_ids:
-            resp = redshift_data_hook.conn.describe_statement(Id=qid)
-            status = resp["Status"]
-            if status == "FAILED":
-                err_msg = f"Error: {resp['QueryString']} query Failed due to {resp['Error']}"
-                msg = f"context: {context}, error message: {err_msg}"
-                raise AirflowException(msg)
-            elif status == "ABORTED":
-                err_msg = "The query run was stopped by the user."
-                msg = f"context: {context}, error message: {err_msg}"
-                raise AirflowException(msg)
-            elif status in ("SUBMITTED", "PICKED", "STARTED"):
-                still_running = True
-                break
-            elif status == "FINISHED":
-                completed_query_ids.append(qid)
-
-        if not still_running and len(completed_query_ids) == len(query_ids):
+        if redshift_data_hook.queries_are_completed(query_ids, context):
             self.log.info("%s completed successfully.", self.task_id)
             return
 
