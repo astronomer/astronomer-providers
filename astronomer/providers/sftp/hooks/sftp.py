@@ -69,56 +69,41 @@ class SFTPHookAsync(BaseHook):
         self.no_host_key_check = False
         self.host_key = None
 
-    async def _get_conn(self) -> asyncssh.SSHClientConnection:
-        """
-        Asynchronously connect to the SFTP server as an SSH client
+    def _parse_extras(self, conn: Connection) -> None:
+        """Parse extra fields from the connection into instance fields"""
+        extra_options = conn.extra_dejson
+        if "key_file" in extra_options and self.key_file == "":
+            self.key_file = extra_options.get("key_file")
+        if "known_hosts" in extra_options:
+            self.known_hosts = extra_options.get("known_hosts")
+        if ("passphrase" or "private_key_passphrase") in extra_options:
+            self.passphrase = extra_options.get("passphrase")
+        if "private_key" in extra_options:
+            self.private_key = extra_options.get("private_key")
 
-        The following parameters are provided either in the extra json object in
-        the SFTP connection definition
+        host_key = extra_options.get("host_key")
+        no_host_key_check = extra_options.get("no_host_key_check")
 
-        - key_file
-        - known_hosts
-        - passphrase
-        """
-        conn = await sync_to_async(self.get_connection)(self.sftp_conn_id)
-        if conn.extra is not None:
-            extra_options = conn.extra_dejson
-            if "key_file" in extra_options and self.key_file == "":
-                self.key_file = extra_options.get("key_file")
-            if "known_hosts" in extra_options:
-                self.known_hosts = extra_options.get("known_hosts")
-            if ("passphrase" or "private_key_passphrase") in extra_options:
-                self.passphrase = extra_options.get("passphrase")
-            if "private_key" in extra_options:
-                self.private_key = extra_options.get("private_key")
+        if no_host_key_check is not None:
+            no_host_key_check = str(no_host_key_check).lower() == "true"
+            if host_key is not None and no_host_key_check:
+                raise ValueError("Must check host key when provided.")
+            self.no_host_key_check = no_host_key_check
 
-            host_key = extra_options.get("host_key")
-            no_host_key_check = extra_options.get("no_host_key_check")
+        if host_key is not None:
+            if host_key.startswith("ssh-"):
+                key_type, host_key = host_key.split(None)[:2]
+                key_constructor = self._host_key_mappings[key_type[4:]]
+            elif host_key.startswith("ecdsa-"):
+                _, host_key = host_key.split(None)[:2]
+                key_constructor = paramiko.ECDSAKey
+            else:
+                key_constructor = paramiko.RSAKey
+            decoded_host_key = decodebytes(host_key.encode("utf-8"))
+            self.host_key = key_constructor(data=decoded_host_key)
 
-            if no_host_key_check is not None:
-                no_host_key_check = str(no_host_key_check).lower() == "true"
-                if host_key is not None and no_host_key_check:
-                    raise ValueError("Must check host key when provided.")
-                self.no_host_key_check = no_host_key_check
-
-            if host_key is not None:
-                if host_key.startswith("ssh-"):
-                    key_type, host_key = host_key.split(None)[:2]
-                    key_constructor = self._host_key_mappings[key_type[4:]]
-                elif host_key.startswith("ecdsa-"):
-                    _, host_key = host_key.split(None)[:2]
-                    key_constructor = paramiko.ECDSAKey
-                else:
-                    key_constructor = paramiko.RSAKey
-                decoded_host_key = decodebytes(host_key.encode("utf-8"))
-                self.host_key = key_constructor(data=decoded_host_key)
-
-        if self.no_host_key_check:
-            self.log.warning("No Host Key Verification. This won't protect against Man-In-The-Middle attacks")
-            self.known_hosts = "none"
-        else:
-            self._validate_host_key_using_paramiko(conn)
-
+    async def _get_asyncssh_client_connection(self, conn: Connection) -> asyncssh.SSHClientConnection:
+        """Return an asyncssh client connection object for the given connection"""
         conn_config = {
             "host": conn.host,
             "port": conn.port,
@@ -137,8 +122,32 @@ class SFTPHookAsync(BaseHook):
             conn_config.update(client_keys=[_private_key])
         if self.passphrase:
             conn_config.update(passphrase=self.passphrase)
-        ssh_client = await asyncssh.connect(**conn_config)
-        return ssh_client
+        ssh_client_conn = await asyncssh.connect(**conn_config)
+        return ssh_client_conn
+
+    async def _get_conn(self) -> asyncssh.SSHClientConnection:
+        """
+        Asynchronously connect to the SFTP server as an SSH client
+
+        The following parameters are provided either in the extra json object in
+        the SFTP connection definition
+
+        - key_file
+        - known_hosts
+        - passphrase
+        """
+        conn = await sync_to_async(self.get_connection)(self.sftp_conn_id)
+        if conn.extra is not None:
+            self._parse_extras(conn)
+
+        if self.no_host_key_check:
+            self.log.warning("No Host Key Verification. This won't protect against Man-In-The-Middle attacks")
+            self.known_hosts = "none"
+        else:
+            self._validate_host_key_using_paramiko(conn)
+
+        ssh_client_conn = await self._get_asyncssh_client_connection(conn)
+        return ssh_client_conn
 
     def _validate_host_key_using_paramiko(self, conn: Connection) -> None:
         """
@@ -225,8 +234,8 @@ class SFTPHookAsync(BaseHook):
         self, path: str = "", fnmatch_pattern: str = ""
     ) -> Sequence[asyncssh.sftp.SFTPName]:
         """
-        Returns the files along with their attributes matching the file pattern at the provided path, if one exists
-        Otherwise, raises an AirflowException to be handled upstream for deferring
+        Returns the files along with their attributes matching the file pattern (e.g. *.pdf) at the provided path,
+        if one exists. Otherwise, raises an AirflowException to be handled upstream for deferring
         """
         files_list = await self.read_directory(path)
         if files_list is None:
