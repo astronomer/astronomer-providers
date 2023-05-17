@@ -79,6 +79,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	@which gh > /dev/null || (echo "ERROR: Github CLI is required. Refer https://github.com/cli/cli for installation."; exit 1)
 	python3 -m pip install -U pip
 	git checkout main && git pull origin main
+	git checkout add-test-rc-github-workflow && git pull origin add-test-rc-github-workflow
 	$(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
 	echo "Current timestamp is" $(current_timestamp)
 	$(eval branch_name := "rc-test-$(current_timestamp)")
