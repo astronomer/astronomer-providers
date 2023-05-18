@@ -4,6 +4,7 @@ import os.path
 from base64 import decodebytes
 from datetime import datetime
 from fnmatch import fnmatch
+from pathlib import Path
 from typing import Any, Sequence
 
 import asyncssh
@@ -125,6 +126,16 @@ class SFTPHookAsync(BaseHook):
         ssh_client_conn = await asyncssh.connect(**conn_config)
         return ssh_client_conn
 
+    def _ensure_known_hosts_file_exists(self):
+        """
+        Ensure that the known_hosts file exists and create it if it doesn't exist along with creating its parent
+        directories.
+        """
+        known_hosts_file_path = Path(self.known_hosts)
+        if not known_hosts_file_path.exists():
+            known_hosts_file_path.parent.mkdir(parents=True, exist_ok=True)
+            known_hosts_file_path.touch()
+
     async def _get_conn(self) -> asyncssh.SSHClientConnection:
         """
         Asynchronously connect to the SFTP server as an SSH client
@@ -144,6 +155,7 @@ class SFTPHookAsync(BaseHook):
             self.log.warning("No Host Key Verification. This won't protect against Man-In-The-Middle attacks")
             self.known_hosts = "none"
         else:
+            self._ensure_known_hosts_file_exists()
             self._validate_host_key_using_paramiko(conn)
 
         ssh_client_conn = await self._get_asyncssh_client_connection(conn)
