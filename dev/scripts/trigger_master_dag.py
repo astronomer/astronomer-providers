@@ -37,7 +37,7 @@ def trigger_master_dag_run(deployment_id: str, bearer_token: str):
     :param bearer_token: bearer token to be used for authentication with the Airflow REST API
     """
     short_deployment_id = f"d{deployment_id[-7:]}"
-    integration_tests_deployment_url = f"https://astronomer.astronomer.run/{short_deployment_id}"
+    integration_tests_deployment_url = f"https://e2etesting.astronomer.run/{short_deployment_id}"
     master_dag_trigger_url = f"{integration_tests_deployment_url}/api/v1/dags/{MASTER_DAG_ID}/dagRuns"
     headers = {
         "Content-Type": "application/json",
