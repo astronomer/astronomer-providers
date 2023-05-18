@@ -50,7 +50,7 @@ class SFTPHookAsync(BaseHook):
         self.port = port
         self.username = username
         self.password = password
-        self.known_hosts = os.path.expanduser(known_hosts)
+        self.known_hosts: bytes | str = os.path.expanduser(known_hosts)
         self.key_file = key_file
         self.passphrase = passphrase
         self.private_key = private_key
