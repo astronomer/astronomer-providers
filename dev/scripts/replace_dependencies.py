@@ -1,21 +1,30 @@
+from __future__ import annotations
+
 import argparse
 import fileinput
-from re import search, sub
-from typing import List
+from re import sub
+
+from pip._internal.utils.packaging import get_requirement
 
 
-def update_setup_cfg(rc_provider_packages: List[str]):
+def update_setup_cfg(rc_provider_packages: list[str]):
     """
     Replaces the given provider packages in the setup.cfg with the given pinned RC versions.
     :param rc_provider_packages: list of RC provider packages to be replaced
     """
     for package in rc_provider_packages:
-        pinned_package = package.strip()
-        if not search("==", pinned_package):
+        requirement = get_requirement(package)
+        package_name_to_search = requirement.name
+
+        if requirement.specifier:
+            pinned_package = f"{package_name_to_search}{requirement.specifier}"
+        elif requirement.url:
+            pinned_package = f"{package_name_to_search} @{requirement.url}"
+        else:
             raise Exception(
                 f"Invalid package {package} provided. It needs to be pinned to a specific version."
             )
-        package_name_to_search = pinned_package.split("==")[0]
+
         with fileinput.FileInput("setup.cfg", inplace=True) as setup_file:
             for line in setup_file:
                 print(sub(f"{package_name_to_search}.*", pinned_package, line), end="")
