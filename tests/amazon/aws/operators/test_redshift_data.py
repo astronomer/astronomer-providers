@@ -20,9 +20,51 @@ class TestRedshiftDataOperatorAsync:
         database=DATABASE_NAME,
     )
 
+    @mock.patch("astronomer.providers.amazon.aws.operators.redshift_data.RedshiftDataOperatorAsync.defer")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.conn")
     @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
-    def test_redshift_data_op_async(self, mock_execute):
-        mock_execute.return_value = [], {}
+    def test_redshift_data_op_async_finished_before_deferred(self, mock_execute, mock_conn, mock_defer):
+        mock_execute.return_value = ["test_query_id"], {}
+        mock_conn.describe_statement.return_value = {
+            "Status": "FINISHED",
+        }
+        self.TASK.execute(create_context(self.TASK))
+        assert not mock_defer.called
+
+    @mock.patch("astronomer.providers.amazon.aws.operators.redshift_data.RedshiftDataOperatorAsync.defer")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.conn")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
+    def test_redshift_data_op_async_aborted_before_deferred(self, mock_execute, mock_conn, mock_defer):
+        mock_execute.return_value = ["test_query_id"], {}
+        mock_conn.describe_statement.return_value = {"Status": "ABORTED"}
+
+        with pytest.raises(AirflowException):
+            self.TASK.execute(create_context(self.TASK))
+
+        assert not mock_defer.called
+
+    @mock.patch("astronomer.providers.amazon.aws.operators.redshift_data.RedshiftDataOperatorAsync.defer")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.conn")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
+    def test_redshift_data_op_async_failed_before_deferred(self, mock_execute, mock_conn, mock_defer):
+        mock_execute.return_value = ["test_query_id"], {}
+        mock_conn.describe_statement.return_value = {
+            "Status": "FAILED",
+            "QueryString": "test query",
+            "Error": "test error",
+        }
+
+        with pytest.raises(AirflowException):
+            self.TASK.execute(create_context(self.TASK))
+
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize("status", ("SUBMITTED", "PICKED", "STARTED"))
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.conn")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook.execute_query")
+    def test_redshift_data_op_async(self, mock_execute, mock_conn, status):
+        mock_execute.return_value = ["test_query_id"], {}
+        mock_conn.describe_statement.return_value = {"Status": status}
 
         with pytest.raises(TaskDeferred) as exc:
             self.TASK.execute(create_context(self.TASK))
