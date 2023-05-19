@@ -22,7 +22,7 @@ class SFTPHookAsync(BaseHook):
     :param username: username used when authenticating to the SFTP server
     :param password: password used when authenticating to the SFTP server
         Can be left blank if using a key file
-    :param known_hosts: path to the known_hosts file on the local file system. Defaults to ~/.ssh/known_hosts.
+    :param known_hosts: path to the known_hosts file on the local file system. Defaults to ``~/.ssh/known_hosts``.
     :param key_file: path to the client key file used for authentication to SFTP server
     :param passphrase: passphrase used with the key_file for authentication to SFTP server
     """
@@ -60,7 +60,7 @@ class SFTPHookAsync(BaseHook):
         extra_options = conn.extra_dejson
         if "key_file" in extra_options and self.key_file == "":
             self.key_file = extra_options["key_file"]
-        if "known_hosts" in extra_options:
+        if "known_hosts" in extra_options and self.known_hosts != self.default_known_hosts:
             self.known_hosts = extra_options["known_hosts"]
         if ("passphrase" or "private_key_passphrase") in extra_options:
             self.passphrase = extra_options["passphrase"]
@@ -73,7 +73,7 @@ class SFTPHookAsync(BaseHook):
         if no_host_key_check is not None:
             no_host_key_check = str(no_host_key_check).lower() == "true"
             if host_key is not None and no_host_key_check:
-                raise ValueError("Must check host key when provided.")
+                raise ValueError("Host key check was skipped, but `host_key` value was given")
             if no_host_key_check:
                 self.log.warning(
                     "No Host Key Verification. This won't protect against Man-In-The-Middle attacks"
@@ -148,7 +148,7 @@ class SFTPHookAsync(BaseHook):
         """
         files_list = await self.read_directory(path)
         if files_list is None:
-            raise AirflowException(f"No files at path {path} found...")
+            raise FileNotFoundError(f"No files at path {path!r} found...")
         matched_files = [file for file in files_list if fnmatch(str(file.filename), fnmatch_pattern)]
         return matched_files
 
