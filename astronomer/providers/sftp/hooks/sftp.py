@@ -152,9 +152,7 @@ class SFTPHookAsync(BaseHook):
         matched_files = [file for file in files_list if fnmatch(str(file.filename), fnmatch_pattern)]
         return matched_files
 
-    async def get_files_by_pattern(
-        self, path: str = "", fnmatch_pattern: str = ""
-    ) -> Sequence[asyncssh.sftp.SFTPName]:
+    async def get_files_by_pattern(self, path: str = "", fnmatch_pattern: str = "") -> list[str]:
         """
         Returns the name of a file matching the file pattern at the provided path, if one exists
         Otherwise, raises an AirflowException to be handled upstream for deferring
