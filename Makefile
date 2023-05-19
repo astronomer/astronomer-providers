@@ -57,7 +57,7 @@ run-tests: ## Run CI tests
 	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev
 	docker run -v `pwd`:/usr/local/airflow/astronomer_providers -v `pwd`/dev/.cache:/home/astro/.cache \
 	 	-w /usr/local/airflow/astronomer_providers \
-		--rm -it astronomer-providers-dev -- pytest tests
+		--rm -it astronomer-providers-dev -- pytest --cov astronomer --cov-report=term-missing tests
 
 run-static-checks: ## Run CI static code checks
 	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev
