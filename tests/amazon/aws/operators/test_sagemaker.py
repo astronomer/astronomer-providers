@@ -136,14 +136,89 @@ class TestSagemakerProcessingOperatorAsync:
     CHECK_INTERVAL = 5
     MAX_INGESTION_TIME = 60 * 60 * 24 * 7
 
+    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
+    @mock.patch.object(
+        SageMakerHook, "describe_processing_job", return_value={"ProcessingJobStatus": "Completed"}
+    )
     @mock.patch.object(
         SageMakerHook,
         "create_processing_job",
         return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
     )
     @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async(self, mock_hook, mock_processing, context):
-        """Assert SageMakerProcessingOperatorAsync deferred properlu"""
+    def test_sagemakerprocessing_op_async_complete_before_defer(
+        self, mock_hook, mock_processing, mock_describe, mock_defer, context
+    ):
+        task = SageMakerProcessingOperatorAsync(
+            config=CREATE_PROCESSING_PARAMS,
+            task_id=self.TASK_ID,
+            check_interval=self.CHECK_INTERVAL,
+            max_ingestion_time=self.MAX_INGESTION_TIME,
+        )
+        task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
+    @mock.patch.object(SageMakerHook, "describe_processing_job", return_value=Exception)
+    @mock.patch.object(
+        SageMakerHook,
+        "create_processing_job",
+        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
+    )
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
+    def test_sagemakerprocessing_op_async_encounter_exception_before_defer(
+        self, mock_hook, mock_processing, mock_describe, mock_defer, context
+    ):
+        task = SageMakerProcessingOperatorAsync(
+            config=CREATE_PROCESSING_PARAMS,
+            task_id=self.TASK_ID,
+            check_interval=self.CHECK_INTERVAL,
+            max_ingestion_time=self.MAX_INGESTION_TIME,
+        )
+
+        with pytest.raises(Exception):
+            task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
+    @mock.patch.object(
+        SageMakerHook,
+        "describe_processing_job",
+        return_value={"ProcessingJobStatus": "Failed", "FailureReason": "it just failed"},
+    )
+    @mock.patch.object(
+        SageMakerHook,
+        "create_processing_job",
+        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
+    )
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
+    def test_sagemakerprocessing_op_async_failed_before_defer(
+        self, mock_hook, mock_processing, mock_describe, mock_defer, context
+    ):
+        task = SageMakerProcessingOperatorAsync(
+            config=CREATE_PROCESSING_PARAMS,
+            task_id=self.TASK_ID,
+            check_interval=self.CHECK_INTERVAL,
+            max_ingestion_time=self.MAX_INGESTION_TIME,
+        )
+        with pytest.raises(AirflowException):
+            task.execute(context)
+
+        assert not mock_defer.called
+
+    @mock.patch.object(
+        SageMakerHook, "describe_processing_job", return_value={"ProcessingJobStatus": "InProgress"}
+    )
+    @mock.patch.object(
+        SageMakerHook,
+        "create_processing_job",
+        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
+    )
+    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
+    def test_sagemakerprocessing_op_async(self, mock_hook, mock_processing, mock_describe, context):
+        """Assert SageMakerProcessingOperatorAsync deferred properly"""
         task = SageMakerProcessingOperatorAsync(
             config=CREATE_PROCESSING_PARAMS,
             task_id=self.TASK_ID,

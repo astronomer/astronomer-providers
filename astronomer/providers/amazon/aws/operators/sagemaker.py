@@ -56,7 +56,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         (default) and "fail".
     """
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> dict[str, str] | None:  # type: ignore[override]
         """
         Creates processing job via sync hook `create_processing_job` and pass the
         control to trigger and polls for the status of the processing job in async
@@ -83,20 +83,31 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker Processing Job creation failed: {response}")
-        else:
-            end_time: float | None = None
-            if self.max_ingestion_time is not None:
-                end_time = time.time() + self.max_ingestion_time
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=SagemakerProcessingTrigger(
-                    poll_interval=self.check_interval,
-                    aws_conn_id=self.aws_conn_id,
-                    job_name=self.config["ProcessingJobName"],
-                    end_time=end_time,
-                ),
-                method_name="execute_complete",
-            )
+
+        response = self.hook.describe_processing_job(processing_job_name)
+        status = response["ProcessingJobStatus"]
+        if status in self.hook.failed_states:
+            raise AirflowException(f"SageMaker job failed because {response['FailureReason']}")
+        elif status == "Completed":
+            self.log.info(f"{self.task_id} completed successfully.")
+            return {"Processing": serialize(response)}
+
+        end_time: float | None = None
+        if self.max_ingestion_time is not None:
+            end_time = time.time() + self.max_ingestion_time
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=SagemakerProcessingTrigger(
+                poll_interval=self.check_interval,
+                aws_conn_id=self.aws_conn_id,
+                job_name=self.config["ProcessingJobName"],
+                end_time=end_time,
+            ),
+            method_name="execute_complete",
+        )
+
+        # for bypassing mypy missing return error
+        return None  # pragma: no cover
 
     def execute_complete(self, context: Context, event: Any = None) -> dict[str, Any]:
         """
