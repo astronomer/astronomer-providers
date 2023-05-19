@@ -32,7 +32,7 @@ class TestSFTPTrigger:
         "newer_than",
         ["19700101053001", None],
     )
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
+    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_and_attrs_by_pattern")
     async def test_sftp_trigger_run_trigger_success_state(self, mock_get_files_by_pattern, newer_than):
         """
         Assert that a TriggerEvent with a success status is yielded if a file
@@ -100,7 +100,7 @@ class TestSFTPTrigger:
         assert TriggerEvent(expected_event) == actual_event
 
     @pytest.mark.asyncio
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
+    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_and_attrs_by_pattern")
     async def test_sftp_trigger_run_trigger_defer_state(
         self,
         mock_get_files_by_pattern,
@@ -148,7 +148,7 @@ class TestSFTPTrigger:
         asyncio.get_event_loop().stop()
 
     @pytest.mark.asyncio
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
+    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_and_attrs_by_pattern")
     async def test_sftp_trigger_run_trigger_failure_state(self, mock_get_files_by_pattern):
         """
         Mock the hook to raise other than an AirflowException and assert that a TriggerEvent with a failure status
@@ -166,7 +166,7 @@ class TestSFTPTrigger:
             assert TriggerEvent(expected_event) == actual_event
 
     @pytest.mark.asyncio
-    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_by_pattern")
+    @mock.patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_files_and_attrs_by_pattern")
     async def test_sftp_trigger_run_airflow_exception(self, mock_get_files_by_pattern):
         """
         Assert that a the task does not complete if the hook raises an AirflowException,

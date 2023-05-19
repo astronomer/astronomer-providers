@@ -71,7 +71,7 @@ class SFTPTrigger(BaseTrigger):
         while True:
             try:
                 if self.file_pattern:
-                    files_returned_by_hook = await hook.get_files_by_pattern(
+                    files_returned_by_hook = await hook.get_files_and_attrs_by_pattern(
                         path=self.path, fnmatch_pattern=self.file_pattern
                     )
                     files_sensed = []

@@ -311,7 +311,7 @@ class TestSFTPHookAsync:
         mock_hook_get_conn.return_value = MockSSHClient()
         hook = SFTPHookAsync()
 
-        files = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file")
+        files = await hook.get_files_and_attrs_by_pattern(path="/path/exists/", fnmatch_pattern="file")
 
         assert len(files) == 1
         assert files[0].filename == "file"
