@@ -196,7 +196,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -302,7 +302,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
                     method_name="execute_complete",
                 )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

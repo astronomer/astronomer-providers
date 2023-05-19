@@ -222,7 +222,7 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
             else:
                 _handle_non_successful_terminal_states(run_state, run_info, hook, self.task_id)
 
-    def execute_complete(self, context: Context, event: Any = None) -> None:
+    def execute_complete(self, context: Context, event: Any = None) -> None:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
