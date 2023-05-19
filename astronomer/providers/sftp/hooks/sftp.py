@@ -20,7 +20,7 @@ class SFTPHookAsync(BaseHook):
     :param host: hostname of the SFTP server
     :param port: port of the SFTP server
     :param username: username used when authenticating to the SFTP server
-    :param password: password used when authenticating to the SFTP server
+    :param password: password used when authenticating to the SFTP server.
         Can be left blank if using a key file
     :param known_hosts: path to the known_hosts file on the local file system. Defaults to ``~/.ssh/known_hosts``.
     :param key_file: path to the client key file used for authentication to SFTP server
