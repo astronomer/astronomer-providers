@@ -13,6 +13,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.models import Variable
 from airflow.utils.session import create_session
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
@@ -20,6 +21,7 @@ SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", "0 0 * * *")
 
+is_runtime_release = Variable.get("IS_RUNTIME_RELEASE", default_var="False")
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
     """Fetch dags run details and generate report."""
@@ -87,13 +89,16 @@ def prepare_dag_dependency(task_info, execution_time):
         )
     return _task_list, _dag_run_ids
 
+if is_runtime_release == "TRUE":
+    MASTER_DAG_SCHEDULE = None
+
 
 with DAG(
     dag_id="example_master_dag",
     schedule=MASTER_DAG_SCHEDULE,
     start_date=datetime(2022, 1, 1),
     catchup=False,
-    tags=["master_dag"],
+    tags=["provider_master_dag"],
 ) as dag:
     # Sleep for 30 seconds so that all the example dag will be available before master dag trigger them
     start = PythonOperator(

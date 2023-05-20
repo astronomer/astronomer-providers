@@ -27,7 +27,7 @@ AWS_S3_CREDS = {
 }
 AMI_ID = os.getenv("AMI_ID", "test")
 PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
-PRIVATE_KEY = Variable.get("providers_team_keypair")
+PRIVATE_KEY = os.getenv("PROVIDER_TEAM_KEYPAIR", "providers_team_keypair")
 INBOUND_SECURITY_GROUP = os.getenv("INBOUND_SECURITY_GROUP", "security-group")
 SFTP_SSH_PORT = int(os.getenv("SFTP_SSH_PORT", 22))
 SFTP_INSTANCE_TYPE = os.getenv("SFTP_INSTANCE_TYPE", "t2.micro")
