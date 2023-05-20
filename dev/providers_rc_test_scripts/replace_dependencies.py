@@ -26,7 +26,7 @@ def _parse_pinned_pacakge_from_cncf(cncf_url: str) -> str:
     """
     download_package_url = f"{cncf_url}#files"
     req = requests.get(download_package_url)
-    soup = BeautifulSoup(req.text, features="html5lib")
+    soup = BeautifulSoup(req.text, "html.parser")
     first_file_card_comment = soup.find("div", {"class": "file__card"})
     url = first_file_card_comment.a.get("href")
     return f"apache-airflow-providers-cncf-kubernetes @{url}"
@@ -60,7 +60,7 @@ def parse_providers_release_testing_gh_issue(issue_url: str) -> list[str]:
     :param issue_url: The URL of the github issue that announce provider testing
     """
     req = requests.get(issue_url)
-    soup = BeautifulSoup(req.text, features="html5lib")
+    soup = BeautifulSoup(req.text, "html.parser")
     first_comment = soup.find("div", {"class": "comment"})
     h2_titles = first_comment.find_all("h2")
     package_urls = [_parse_pypi_url_from_h2_title(h2_title) for h2_title in h2_titles]
