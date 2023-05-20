@@ -8,31 +8,91 @@ on:  # yamllint disable-line rule:truthy
         description: 'The rc provider packages (separate by ,) (e.g., apache-airflow-providers-amazon==8.0.0rc1,apache-airflow-providers-databricks==4.1.0rc1)'
         required: true
         default: ''
+      git_rev:
+        description: 'The base git revision to test rc release'
+        required: false
+        type: string
+        default: 'main'
 
 jobs:
-  test-rc-release:
+  create-branch-for-testing-rc-release:
     runs-on: 'ubuntu-20.04'
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
           ref: ${{ inputs.git_rev }}
+
+      - name: Install dev dependency
+        run: |
+          python3 -m pip install -U pip
+
+      - name: Create RC branch
+        id: create_rc_branch
+        run: |
+          $(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
+          echo "Current timestamp is" $(current_timestamp)
+          $(eval branch_name := "rc-test-$(current_timestamp)")
+          git checkout -b $(branch_name)
+          echo "rc_testing_branch_name=$(branch_name)" >> $GITHUB_OUTPUT
+
+      - name: Update project dependencies to use RC providers
+        run: |
+          echo "Updating setup.cfg with RC provider packages"
+          python3 dev/scripts/replace_dependencies.py ${{ input.rc_provider_packages }}
 
       - name: Setup Github Actions git user
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Actions"
 
-      - name: Test RC providers
+      - name: Commit changes and create a pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 -m pip install pip==23.1.2
-          make test-rc-deps \
-            RC_PROVIDER_PACKAGES="${{ inputs.rc_provider_packages }}" \
-            DOCKER_REGISTRY="${{ secrets.DOCKER_REGISTRY }}" \
-            ORGANIZATION_ID="${{ secrets.ORGANIZATION_ID }}" \
-            DEPLOYMENT_ID="${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}" \
-            ASTRONOMER_KEY_ID="${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}" \
-            ASTRONOMER_KEY_SECRET="${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}"
+          git add setup.cfg
+          git commit -m "Update setup.cfg to use RC provider packages"
+          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
+          gh pr create --base "main" --title "[DO NOT MERGE] Test RC provider packages" --fill
+          echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    outputs:
+      rc_testing_branch_name: ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
+
+
+  deploy-rc-testing-branch-to-astro-cloud:
+    needs: create-branch-for-testing-rc-release
+    uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
+    with:
+      git_rev: ${{ needs.create-branch-for-testing-rc-release.outpus.rc_testing_branch_name }}
+      environment_to_deploy: 'providers-integration-tests'
+    secrets:
+      docker_registry: ${{ secrets.DOCKER_REGISTRY }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-deployment-to-be-ready:
+    needs: deploy-rc-testing-branch-to-astro-cloud
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep for 30 minutes
+        run: |
+          $(eval current_timestamp := $(shell date))
+          echo "Current timestamp is" $(current_timestamp)
+          echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."
+          sleep 1800
+
+  trigger-master-dag:
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.create-branch-for-testing-rc-release.outpus.rc_testing_branch_name }}
+
+      - name: Sleep for 30 minutes
+        run: |
+          python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
