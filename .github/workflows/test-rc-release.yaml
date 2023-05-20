@@ -4,10 +4,9 @@ name: test-rc-release
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
-      rc_provider_packages:
-        description: 'The rc provider packages (separate by ,) (e.g., apache-airflow-providers-amazon==8.0.0rc1,apache-airflow-providers-databricks==4.1.0rc1)'
+      issue_url:
+        description: 'The URL of the github issue that announce provider testing (e.g., https://github.com/apache/airflow/issues/31322)'
         required: true
-        default: ''
       git_rev:
         description: 'The base git revision to test rc release'
         required: false
@@ -25,21 +24,21 @@ jobs:
 
       - name: Install dev dependency
         run: |
-          python3 -m pip install -U pip
+          python3 -m pip install -r dev/providers_rc_test_scripts/requirements.txt
 
       - name: Create RC branch
         id: create_rc_branch
         run: |
-          $(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
-          echo "Current timestamp is" $(current_timestamp)
-          $(eval branch_name := "rc-test-$(current_timestamp)")
-          git checkout -b $(branch_name)
-          echo "rc_testing_branch_name=$(branch_name)" >> $GITHUB_OUTPUT
+          current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
+          echo "Current timestamp is" $current_timestamp
+          branch_name="rc-test-$current_timestamp"
+          git checkout -b $branch_name
+          echo "rc_testing_branch_name=$branch_name" >> $GITHUB_OUTPUT
 
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating setup.cfg with RC provider packages"
-          python3 dev/scripts/replace_dependencies.py ${{ input.rc_provider_packages }}
+          python3 dev/providers_rc_test_scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
@@ -53,12 +52,11 @@ jobs:
           git add setup.cfg
           git commit -m "Update setup.cfg to use RC provider packages"
           git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
-          gh pr create --base "main" --title "[DO NOT MERGE] Test RC provider packages" --fill
+          gh pr create --base ${{ inputs.git_rev }} --title "[DO NOT MERGE] Test RC provider packages" --fill
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
     outputs:
       rc_testing_branch_name: ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
-
 
   deploy-rc-testing-branch-to-astro-cloud:
     needs: create-branch-for-testing-rc-release
@@ -80,12 +78,12 @@ jobs:
     steps:
       - name: Sleep for 30 minutes
         run: |
-          $(eval current_timestamp := $(shell date))
-          echo "Current timestamp is" $(current_timestamp)
+          echo "Current timestamp is" `date`
           echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."
           sleep 1800
 
   trigger-master-dag:
+    needs: wait-for-deployment-to-be-ready
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
@@ -93,6 +91,10 @@ jobs:
         with:
           ref: ${{ needs.create-branch-for-testing-rc-release.outpus.rc_testing_branch_name }}
 
-      - name: Sleep for 30 minutes
+      - name: Trigger master dag
+        env:
+          deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
+          astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
+          astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
         run: |
-          python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
+          python3 dev/providers_rc_test_scripts/trigger_master_dag.py '$(deployment_id)' '$(astronomer_key_id)' ' $(astronomer_key_secret)'
