@@ -5,20 +5,18 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
       rc_testing_branch_name:
+        # If a branch is given, the workflow will use it for deployment and testing.
+        # If no branch is provided, the workflow will create a new rc testing branch
+        # for deployment and testing.
         description: |
-          If a branch is given, the workflow will use it for deployment and testing.
-          If no branch is provided, the workflow will create a new rc testing branch
-          for deployment and testing.
-
-          * One and only one of rc_testing_branch_name and issue_url is required.
+          rc_testing_branch_name: existing testing branch
+          (One and only one of rc_testing_branch_name and issue_url is required.)
         required: false
         default: ''
       issue_url:
         description: |
-          The URL of the github issue that announce provider testing
-          (e.g., https://github.com/apache/airflow/issues/31322)
-
-          * One and only one of rc_testing_branch_name and issue_url is required.
+          issue_url: the URL of the github issue that announce provider testing
+          (One and only one of rc_testing_branch_name and issue_url is required.)
         required: false
       base_git_rev:
         description: 'The base git revision to test rc release'
