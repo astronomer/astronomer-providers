@@ -4,25 +4,47 @@ name: test-rc-release
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
+      rc_testing_branch_name:
+        description: |
+          If a branch is given, the workflow will use it for deployment and testing.
+          If no branch is provided, the workflow will create a new rc testing branch
+          for deployment and testing.
+
+          * One and only one of rc_testing_branch_name and issue_url is required.
+        required: false
+        default: ''
       issue_url:
         description: |
           The URL of the github issue that announce provider testing
           (e.g., https://github.com/apache/airflow/issues/31322)
-        required: true
-      git_rev:
+
+          * One and only one of rc_testing_branch_name and issue_url is required.
+        required: false
+      base_git_rev:
         description: 'The base git revision to test rc release'
         required: false
         type: string
         default: 'main'
 
 jobs:
-  create-branch-for-testing-rc-release:
+  validate-manual-input:
     runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Validate user input
+        if: ${{ (inputs.rc_testing_branch_name != '') == (inputs.issue_url != '') }}
+        run: |
+          echo "One and only one of rc_testing_branch_name and issue_url is required."
+          exit 1
+
+  create-branch-for-testing-rc-release:
+    needs: validate-manual-input
+    runs-on: 'ubuntu-20.04'
+    if: ${{ inputs.issue_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.git_rev }}
+          ref: ${{ inputs.base_git_rev }}
 
       - name: Install dev dependency
         run: |
@@ -54,17 +76,41 @@ jobs:
           git add setup.cfg
           git commit -m "Update setup.cfg to use RC provider packages"
           git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
-          gh pr create --base ${{ inputs.git_rev }} --title "[DO NOT MERGE] Test RC provider packages" --fill
+          gh pr create --base ${{ inputs.base_git_rev }} \
+                       --title "[DO NOT MERGE] Test RC provider packages" \
+                       --body "${{ inputs.issue_url }}" --fill
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
     outputs:
       rc_testing_branch_name: ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
 
+  export-rc-testing-branch-name:
+    needs: [validate-manual-input, create-branch-for-testing-rc-release]
+    if: |
+      always() &&
+      needs.create-branch-for-testing-rc-release.result == 'success' ||
+      (needs.validate-manual-input.result == 'success' && inputs.rc_testing_branch_name )
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: export rc_testing_branch_name
+        id: export-rc-testing-branch-name-step
+        run: |
+          if [ "${{ inputs.rc_testing_branch_name }}" == "" ]; then
+            rc_testing_branch_name=${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch_name }}
+          else
+            rc_testing_branch_name=${{ inputs.rc_testing_branch_name }}
+          fi
+          echo "rc_testing_branch_name=$rc_testing_branch_name" >> $GITHUB_OUTPUT
+    outputs:
+      rc_testing_branch_name: ${{ steps.export-rc-testing-branch-name-step.outputs.rc_testing_branch_name }}
+
   deploy-rc-testing-branch-to-astro-cloud:
-    needs: create-branch-for-testing-rc-release
+    needs: export-rc-testing-branch-name
+    if: |
+      always() &&
+      needs.export-rc-testing-branch-name.result == 'success'
     uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
     with:
-      git_rev: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch_name }}
+      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch_name }}
       environment_to_deploy: 'providers-integration-tests'
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
@@ -76,17 +122,23 @@ jobs:
 
   wait-for-deployment-to-be-ready:
     needs: deploy-rc-testing-branch-to-astro-cloud
+    if: |
+      always() &&
+      needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Sleep for 30 minutes
         run: |
           echo "Current timestamp is" `date`
-          echo "Sleeping for 1800 seconds (30 minutes)
+          echo "Sleeping for 1800 seconds (30 minutes)"
           echo "allowing the deployed image to be updated across all Airflow components.."
           sleep 1800
 
   trigger-master-dag:
     needs: wait-for-deployment-to-be-ready
+    if: |
+      always() &&
+      needs.wait-for-deployment-to-be-ready.result == 'success'
     runs-on: 'ubuntu-20.04'
     steps:
       - name: checkout
@@ -95,12 +147,8 @@ jobs:
           ref: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch_name }}
 
       - name: Trigger master dag
-        env:
-          deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
-          astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
-          astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
         run: |
           python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
-            '$deployment_id' \
-            '$astronomer_key_id' \
-            '$astronomer_key_secret'
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
