@@ -32,7 +32,7 @@ AWS_S3_CREDS = {
 }
 BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
 PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
-PRIVATE_KEY = Variable.get("providers_team_keypair",default_var=os.environ['PROVIDER_TEAM_KEYPAIR'])
+PRIVATE_KEY = Variable.get("providers_team_keypair")
 HIVE_OPERATOR_INGRESS_PORT = int(os.getenv("HIVE_OPERATOR_INGRESS_PORT", 10000))
 HIVE_SCHEMA = os.getenv("HIVE_SCHEMA", "default")
 HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")

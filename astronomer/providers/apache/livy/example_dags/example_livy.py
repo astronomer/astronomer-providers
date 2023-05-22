@@ -31,7 +31,7 @@ LIVY_PYTHON_FILE = os.getenv("LIVY_PYTHON_FILE", "/user/hadoop/pi.py")
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 PEM_FILENAME = os.getenv("PEM_FILENAME", "providers_team_keypair")
-PRIVATE_KEY = Variable.get("providers_team_keypair",default_var=os.environ['PROVIDER_TEAM_KEYPAIR'])
+PRIVATE_KEY = Variable.get("providers_team_keypair")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 AWS_S3_CREDS = {
