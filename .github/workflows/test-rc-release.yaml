@@ -4,19 +4,19 @@ name: test-rc-release
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
-      rc_testing_branch_name:
+      rc_testing_branch:
         # If a branch is given, the workflow will use it for deployment and testing.
         # If no branch is provided, the workflow will create a new rc testing branch
         # for deployment and testing.
         description: |
-          rc_testing_branch_name: existing testing branch
-          (One and only one of rc_testing_branch_name and issue_url is required.)
+          rc_testing_branch: existing testing branch
+          (One and only one of rc_testing_branch and issue_url is required.)
         required: false
         default: ''
       issue_url:
         description: |
           issue_url: the URL of the github issue that announce provider testing
-          (One and only one of rc_testing_branch_name and issue_url is required.)
+          (One and only one of rc_testing_branch and issue_url is required.)
         required: false
       base_git_rev:
         description: 'The base git revision to test rc release'
@@ -29,9 +29,9 @@ jobs:
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Validate user input
-        if: ${{ (inputs.rc_testing_branch_name != '') == (inputs.issue_url != '') }}
+        if: ${{ (inputs.rc_testing_branch != '') == (inputs.issue_url != '') }}
         run: |
-          echo "One and only one of rc_testing_branch_name and issue_url is required."
+          echo "One and only one of rc_testing_branch and issue_url is required."
           exit 1
 
   create-branch-for-testing-rc-release:
@@ -55,7 +55,7 @@ jobs:
           echo "Current timestamp is" $current_timestamp
           branch_name="rc-test-$current_timestamp"
           git checkout -b $branch_name
-          echo "rc_testing_branch_name=$branch_name" >> $GITHUB_OUTPUT
+          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
 
       - name: Update project dependencies to use RC providers
         run: |
@@ -73,33 +73,33 @@ jobs:
         run: |
           git add setup.cfg
           git commit -m "Update setup.cfg to use RC provider packages"
-          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
+          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
           gh pr create --base ${{ inputs.base_git_rev }} \
                        --title "[DO NOT MERGE] Test RC provider packages" \
                        --body "${{ inputs.issue_url }}" --fill
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
-      rc_testing_branch_name: ${{ steps.create_rc_branch.outputs.rc_testing_branch_name }}
+      rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
 
   export-rc-testing-branch-name:
     needs: [validate-manual-input, create-branch-for-testing-rc-release]
     if: |
       always() &&
       needs.create-branch-for-testing-rc-release.result == 'success' ||
-      (needs.validate-manual-input.result == 'success' && inputs.rc_testing_branch_name )
+      (needs.validate-manual-input.result == 'success' && inputs.rc_testing_branch )
     runs-on: 'ubuntu-20.04'
     steps:
-      - name: export rc_testing_branch_name
+      - name: export rc_testing_branch
         id: export-rc-testing-branch-name-step
         run: |
-          if [ "${{ inputs.rc_testing_branch_name }}" == "" ]; then
-            rc_testing_branch_name=${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch_name }}
+          if [ "${{ inputs.rc_testing_branch }}" == "" ]; then
+            rc_testing_branch=${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch }}
           else
-            rc_testing_branch_name=${{ inputs.rc_testing_branch_name }}
+            rc_testing_branch=${{ inputs.rc_testing_branch }}
           fi
-          echo "rc_testing_branch_name=$rc_testing_branch_name" >> $GITHUB_OUTPUT
+          echo "rc_testing_branch=$rc_testing_branch" >> $GITHUB_OUTPUT
     outputs:
-      rc_testing_branch_name: ${{ steps.export-rc-testing-branch-name-step.outputs.rc_testing_branch_name }}
+      rc_testing_branch: ${{ steps.export-rc-testing-branch-name-step.outputs.rc_testing_branch }}
 
   deploy-rc-testing-branch-to-astro-cloud:
     needs: export-rc-testing-branch-name
@@ -108,7 +108,7 @@ jobs:
       needs.export-rc-testing-branch-name.result == 'success'
     uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
     with:
-      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch_name }}
+      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
       environment_to_deploy: 'providers-integration-tests'
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
@@ -142,7 +142,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch_name }}
+          ref: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch }}
 
       - name: Trigger master dag
         run: |
