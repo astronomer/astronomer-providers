@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import typing
 import warnings
 from datetime import timedelta
-from typing import Any, Callable, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, List, Sequence, cast
 
 from airflow.exceptions import AirflowException
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensor
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 from airflow.sensors.base import BaseSensorOperator
 
 from astronomer.providers.amazon.aws.triggers.s3 import (
@@ -15,7 +16,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-class S3KeySensorAsync(BaseSensorOperator):
+class S3KeySensorAsync(S3KeySensor):
     """
     Waits for one or multiple keys (a file-like instance on S3) to be present in a S3 bucket.
     S3 being a key/value it does not support folders. The path is just a key
@@ -59,40 +60,43 @@ class S3KeySensorAsync(BaseSensorOperator):
     def __init__(
         self,
         *,
-        bucket_key: Union[str, List[str]],
-        bucket_name: Optional[str] = None,
+        bucket_key: str | list[str],
+        bucket_name: str | None = None,
         wildcard_match: bool = False,
-        check_fn: Optional[Callable[..., bool]] = None,
+        check_fn: Callable[..., bool] | None = None,
         aws_conn_id: str = "aws_default",
-        verify: Optional[Union[str, bool]] = None,
+        verify: str | bool | None = None,
         **kwargs: Any,
     ):
-        super().__init__(**kwargs)
-        self.bucket_name = bucket_name
-        self.bucket_key = [bucket_key] if isinstance(bucket_key, str) else bucket_key
-        self.wildcard_match = wildcard_match
-        self.check_fn = check_fn
-        self.aws_conn_id = aws_conn_id
-        self.verify = verify
-        self.hook: Optional[S3Hook] = None
+        self.bucket_key: list[str] = [bucket_key] if isinstance(bucket_key, str) else bucket_key
+        super().__init__(
+            bucket_name=bucket_name,
+            bucket_key=self.bucket_key,
+            wildcard_match=wildcard_match,
+            check_fn=check_fn,
+            aws_conn_id=aws_conn_id,
+            verify=verify,
+            **kwargs,
+        )
 
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=S3KeyTrigger(
-                bucket_name=cast(str, self.bucket_name),
-                bucket_key=self.bucket_key,
-                wildcard_match=self.wildcard_match,
-                check_fn=self.check_fn,
-                aws_conn_id=self.aws_conn_id,
-                verify=self.verify,
-                poke_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+        if not self.poke(context):
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=S3KeyTrigger(
+                    bucket_name=cast(str, self.bucket_name),
+                    bucket_key=self.bucket_key,
+                    wildcard_match=self.wildcard_match,
+                    check_fn=self.check_fn,
+                    aws_conn_id=self.aws_conn_id,
+                    verify=self.verify,
+                    poke_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
 
-    def execute_complete(self, context: Context, event: Any = None) -> Optional[bool]:
+    def execute_complete(self, context: Context, event: Any = None) -> bool | None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -116,7 +120,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
     def __init__(
         self,
         *,
-        check_fn: Optional[Callable[..., bool]] = None,
+        check_fn: Callable[..., bool] | None = None,
         **kwargs: Any,
     ):
         warnings.warn(
@@ -211,10 +215,10 @@ class S3PrefixSensorAsync(BaseSensorOperator):
         self,
         *,
         bucket_name: str,
-        prefix: Union[str, List[str]],
+        prefix: str | list[str],
         delimiter: str = "/",
         aws_conn_id: str = "aws_default",
-        verify: Optional[Union[str, bool]] = None,
+        verify: str | bool | None = None,
         **kwargs: Any,
     ):
         warnings.warn(

@@ -25,7 +25,16 @@ MODULE = "astronomer.providers.amazon.aws.sensors.s3"
 
 
 class TestS3KeySensorAsync:
-    def test_bucket_name_none_and_bucket_key_as_relative_path(self, context):
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.defer")
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=True)
+    def test_finish_before_deferred(self, mock_poke, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        sensor = S3KeySensorAsync(task_id="s3_key_sensor", bucket_key="file_in_bucket")
+        sensor.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
+    def test_bucket_name_none_and_bucket_key_as_relative_path(self, mock_poke, context):
         """
         Test if exception is raised when bucket_name is None
         and bucket_key is provided with one of the two keys as relative path rather than s3:// url.
@@ -34,9 +43,10 @@ class TestS3KeySensorAsync:
         with pytest.raises(TaskDeferred):
             sensor.execute(context)
 
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_head_object")
     def test_bucket_name_none_and_bucket_key_is_list_and_contain_relative_path(
-        self, mock_head_object, context
+        self, mock_head_object, mock_poke, context
     ):
         """
         Test if exception is raised when bucket_name is None
@@ -50,7 +60,8 @@ class TestS3KeySensorAsync:
         with pytest.raises(TaskDeferred):
             sensor.execute(context)
 
-    def test_bucket_name_provided_and_bucket_key_is_s3_url(self, context):
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
+    def test_bucket_name_provided_and_bucket_key_is_s3_url(self, mock_poke, context):
         """
         Test if exception is raised when bucket_name is provided
         while bucket_key is provided as a full s3:// url.
@@ -68,8 +79,9 @@ class TestS3KeySensorAsync:
             ["key", "bucket"],
         ]
     )
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_async(self, key, bucket, mock_hook):
+    def test_s3_key_sensor_async(self, key, bucket, mock_hook, mock_poke):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
@@ -93,8 +105,9 @@ class TestS3KeySensorAsync:
             ["key", "bucket"],
         ]
     )
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_execute_complete_success(self, key, bucket, mock_hook):
+    def test_s3_key_sensor_execute_complete_success(self, key, bucket, mock_poke, mock_hook):
         """
         Asserts that a task is completed with success status.
         """
@@ -112,7 +125,8 @@ class TestS3KeySensorAsync:
             ["key", "bucket"],
         ]
     )
-    def test_s3_key_sensor_execute_complete_success_with_keys(self, key, bucket):
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
+    def test_s3_key_sensor_execute_complete_success_with_keys(self, key, bucket, mock_poke):
         """
         Asserts that a task is completed with success status and check function
         """
@@ -137,8 +151,9 @@ class TestS3KeySensorAsync:
             ["key", "bucket"],
         ]
     )
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_execute_complete_error(self, key, bucket, mock_hook):
+    def test_s3_key_sensor_execute_complete_error(self, key, bucket, mock_hook, mock_poke):
         """
         Asserts that a task is completed with error status.
         """
@@ -158,10 +173,13 @@ class TestS3KeySensorAsync:
             ["key", "bucket"],
         ]
     )
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
     @mock.patch.object(S3KeySensorAsync, "defer")
     @mock.patch("astronomer.providers.amazon.aws.sensors.s3.S3KeyTrigger")
-    def test_s3_key_sensor_async_with_mock_defer(self, key, bucket, mock_trigger, mock_defer, mock_hook):
+    def test_s3_key_sensor_async_with_mock_defer(
+        self, key, bucket, mock_trigger, mock_defer, mock_hook, mock_poke
+    ):
         """
         Asserts that a task is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
@@ -181,8 +199,9 @@ class TestS3KeySensorAsync:
             timeout=timedelta(days=7), trigger=mock_trigger.return_value, method_name="execute_complete"
         )
 
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook.check_for_key")
-    def test_parse_bucket_key_from_jinja(self, mock_check):
+    def test_parse_bucket_key_from_jinja(self, mock_check, mock_poke):
         mock_check.return_value = False
 
         Variable.set("test_bucket_key", "s3://bucket/key")
@@ -206,8 +225,9 @@ class TestS3KeySensorAsync:
         assert op.bucket_key == ["s3://bucket/key"]
         assert op.bucket_name is None
 
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke", return_value=False)
     @mock.patch("airflow.providers.amazon.aws.sensors.s3.S3Hook")
-    def test_s3_key_sensor_with_wildcard_async(self, mock_hook, context):
+    def test_s3_key_sensor_with_wildcard_async(self, mock_hook, mock_poke, context):
         """
         Asserts that a task with wildcard=True is deferred and an S3KeyTrigger will be fired
         when the S3KeySensorAsync is executed.
