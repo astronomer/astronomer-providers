@@ -69,9 +69,10 @@ class S3KeySensorAsync(S3KeySensor):
         verify: str | bool | None = None,
         **kwargs: Any,
     ):
+        self.bucket_key: list[str] = [bucket_key] if isinstance(bucket_key, str) else bucket_key
         super().__init__(
             bucket_name=bucket_name,
-            bucket_key=[bucket_key] if isinstance(bucket_key, str) else bucket_key,
+            bucket_key=self.bucket_key,
             wildcard_match=wildcard_match,
             check_fn=check_fn,
             aws_conn_id=aws_conn_id,
@@ -82,12 +83,11 @@ class S3KeySensorAsync(S3KeySensor):
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
         if not self.poke(context):
-            self.hook: S3Hook | None = None  # type: ignore[assignment]
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=S3KeyTrigger(
                     bucket_name=cast(str, self.bucket_name),
-                    bucket_key=self.bucket_key,  # type: ignore[arg-type]
+                    bucket_key=self.bucket_key,
                     wildcard_match=self.wildcard_match,
                     check_fn=self.check_fn,
                     aws_conn_id=self.aws_conn_id,
