@@ -6,7 +6,6 @@ from datetime import timedelta
 from typing import Any, Callable, List, Sequence, cast
 
 from airflow.exceptions import AirflowException
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 from airflow.sensors.base import BaseSensorOperator
 
