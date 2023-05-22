@@ -77,14 +77,14 @@ run-local-lineage-server: ## Run flask based local Lineage server
 
 test-rc-deps: ## Test providers RC by building an image with given dependencies and running the master DAG
 	@which gh > /dev/null || (echo "ERROR: Github CLI is required. Refer https://github.com/cli/cli for installation."; exit 1)
-	python3 -m pip install -U pip
+	python3 -m pip install -r dev/providers_rc_test_scripts/requirements.txt
 	git checkout main && git pull origin main
 	$(eval current_timestamp := $(shell date +%Y-%m-%dT%H-%M-%S%Z))
 	echo "Current timestamp is" $(current_timestamp)
 	$(eval branch_name := "rc-test-$(current_timestamp)")
 	git checkout -b $(branch_name)
 	echo "Updating setup.cfg with RC provider packages"
-	python3 dev/scripts/replace_dependencies.py '$(RC_PROVIDER_PACKAGES)'
+	python3 dev/providers_rc_test_scripts/replace_dependencies.py --issue-url '$(ISSUE_URL)'
 	echo "Building and deploying image to Astro Cloud"
 	cd ".circleci/integration-tests/" && \
 	 bash script.sh 'astro-cloud' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
@@ -92,7 +92,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	echo "Current timestamp is" $(current_timestamp)
 	echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."
 	sleep 1800
-	python3 dev/scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
+	python3 dev/providers_rc_test_scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
 	git add setup.cfg
 	git commit -m "Update setup.cfg to use RC provider packages"
 	git push origin $(branch_name)
