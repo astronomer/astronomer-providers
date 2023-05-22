@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, AsyncIterator, Callable
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -27,9 +29,9 @@ class S3KeyTrigger(BaseTrigger):
     def __init__(
         self,
         bucket_name: str,
-        bucket_key: List[str],
+        bucket_key: list[str],
         wildcard_match: bool = False,
-        check_fn: Optional[Callable[..., bool]] = None,
+        check_fn: Callable[..., bool] | None = None,
         aws_conn_id: str = "aws_default",
         poke_interval: float = 5.0,
         **hook_params: Any,
@@ -43,7 +45,7 @@ class S3KeyTrigger(BaseTrigger):
         self.hook_params = hook_params
         self.poke_interval = poke_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize S3KeyTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3KeyTrigger",
@@ -58,7 +60,7 @@ class S3KeyTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
@@ -110,11 +112,11 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
         inactivity_seconds: int = 0,
-        previous_objects: Optional[Set[str]] = None,
+        previous_objects: set[str] | None = None,
         allow_delete: bool = True,
         aws_conn_id: str = "aws_default",
-        last_activity_time: Optional[datetime] = None,
-        verify: Optional[Union[bool, str]] = None,
+        last_activity_time: datetime | None = None,
+        verify: bool | str | None = None,
     ):
         super().__init__()
         self.bucket_name = bucket_name
@@ -129,11 +131,11 @@ class S3KeysUnchangedTrigger(BaseTrigger):
         self.inactivity_seconds = inactivity_seconds
         self.allow_delete = allow_delete
         self.aws_conn_id = aws_conn_id
-        self.last_activity_time: Optional[datetime] = last_activity_time
+        self.last_activity_time: datetime | None = last_activity_time
         self.verify = verify
         self.polling_period_seconds = 0
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize S3KeysUnchangedTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.s3.S3KeysUnchangedTrigger",
@@ -150,7 +152,7 @@ class S3KeysUnchangedTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Make an asynchronous connection using S3HookAsync."""
         try:
             hook = self._get_async_hook()
