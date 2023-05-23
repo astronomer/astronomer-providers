@@ -7,8 +7,8 @@ Create a new release branch from main
 Create a new release branch from ``main`` branch with the name ``release-<version>``.
 e.g. If you want to release version ``1.17.6``, you can create a new branch called ``release-1-17-6`` cut from ``main`` branch.
 
-Note: It is important to prefix your release branch name with ``release-``. This is because we run a CircleCI job to
-generate the constraints files only on such branches and the ``main`` branch.
+Note: It is important to prefix your release branch name with ``release-``. This is because we run a CircleCI job to generate 
+the constraints files only on such branches and the ``main`` branch.
 
 Decide on the new version number
 --------------------------------
