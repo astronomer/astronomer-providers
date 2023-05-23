@@ -36,6 +36,35 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  wait-for-providers-integration-tests-to-be-ready:
+    if: github.event_name == 'schedule'
+    needs: deploy-to-providers-integration-tests
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep for 30 minutes
+        run: |
+          echo "Current timestamp is" `date`
+          echo "Sleeping for 1800 seconds (30 minutes)"
+          echo "allowing the deployed image to be updated across all Airflow components.."
+          sleep 1800
+
+  trigger-providers-integration-tests-master-dag:
+    if: github.event_name == 'schedule'
+    needs: wait-for-providers-integration-tests-to-be-ready
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          git_rev: ${{ inputs.git_rev }}
+
+      - name: Trigger master dag
+        run: |
+          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+
   deploy-to-providers-integration-tests-on-KE:
     if: |
       contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy) ||
@@ -51,3 +80,32 @@ jobs:
       astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }}
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-providers-integration-tests-on-KE-to-be-ready:
+    if: github.event_name == 'schedule'
+    needs: deploy-to-providers-integration-tests-on-KE
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep for 2 hours 30 minutes
+        run: |
+          echo "Current timestamp is" `date`
+          echo "Sleeping for 9000 seconds (2 hours 30 minutes)"
+          echo "allowing the deployed image to be updated across all Airflow components.."
+          sleep 9000
+
+  trigger-providers-integration-tests-on-KE-master-dag:
+    if: github.event_name == 'schedule'
+    needs: wait-for-providers-integration-tests-on-KE-to-be-ready
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          git_rev: ${{ inputs.git_rev }}
+
+      - name: Trigger master dag
+        run: |
+          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
