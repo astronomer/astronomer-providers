@@ -225,7 +225,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         # for bypassing mypy missing return error
         return None  # pragma: no cover
 
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -367,7 +367,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         # for bypassing mypy missing return error
         return None  # pragma: no cover
 
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

@@ -14,6 +14,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperator,
 )
 from google.api_core.exceptions import Conflict
+from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
@@ -105,7 +106,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
             self._handle_job_error(job)
         except Conflict:
             # If the job already exists retrieve it
-            job = hook.get_job(
+            job: CopyJob | QueryJob | LoadJob | ExtractJob = hook.get_job(  # type: ignore[no-redef]
                 project_id=self.project_id,
                 location=self.location,
                 job_id=job_id,
