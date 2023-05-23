@@ -1,6 +1,15 @@
 How to release?
 ===============
 
+Create a new release branch from main
+-------------------------------------
+
+Create a new release branch from ``main`` branch with the name ``release-<version>``.
+e.g. If you want to release version ``1.17.6``, you can create a new branch called ``release-1-17-6`` cut from ``main`` branch.
+
+Note: It is important to prefix your release branch name with ``release-``. This is because we run a CircleCI job to
+generate the constraints files only on such branches and the ``main`` branch.
+
 Decide on the new version number
 --------------------------------
 
@@ -38,6 +47,15 @@ make ASTRO_PROVIDER_VERSION=<RELEASE_VERSION> bump-version
 ```
 
 Note: ```RELEASE_VERSION``` is the software version you want to release.
+
+Compare the commits introduced since the last release to aid building the CHANGELOG
+-----------------------------------------------------------------------------------
+
+You can use the following link to compare the commits introduced since the last release (e.g. 1.15.4)
+
+```https://github.com/astronomer/astronomer-providers/compare/1.15.4...main```
+
+Note: Make sure to replace the last release version in the above URL
 
 Write the changelog
 -------------------
