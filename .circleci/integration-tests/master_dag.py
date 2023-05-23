@@ -31,9 +31,14 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
-        airflow_version_message = (
+
+        if is_runtime_release == "TRUE":
+            airflow_version_message = f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {airflow_executor}  \n\n"
+        else:
+            airflow_version_message = (
             f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
         )
+
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
