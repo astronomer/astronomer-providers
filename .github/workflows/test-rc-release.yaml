@@ -29,7 +29,9 @@ jobs:
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Validate user input
-        if: ${{ (inputs.rc_testing_branch != '') == (inputs.issue_url != '') }}
+        if: |
+           (inputs.rc_testing_branch == '' && inputs.issue_url == '') ||
+           (inputs.rc_testing_branch != '' && inputs.issue_url != '')
         run: |
           echo "Either rc_testing_branch or issue_url is required, and you cannot give both."
           exit 1
