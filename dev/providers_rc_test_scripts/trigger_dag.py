@@ -9,9 +9,6 @@ import requests
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-MASTER_DAG_ID = "example_master_dag"
-
-
 def get_access_token(api_key_id: str, api_key_secret: str) -> str:
     """
     Gets bearer access token for the Astro Cloud deployment needed for REST API authentication.
@@ -68,9 +65,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     token = get_access_token(args.astronomer_key_id.strip(), args.astronomer_key_secret.strip())
 
-    if not args.dag_ids:
+    input_dag_ids = args.dag_ids
+    if not input_dag_ids:
         dag_ids = ["example_master_dag"]
     else:
-        dag_ids = [dag_id.strip() for dag_id in args.dags_id.split(",")]
+        dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
 
     trigger_dag_runs(dag_ids, args.deployment_id, token)
