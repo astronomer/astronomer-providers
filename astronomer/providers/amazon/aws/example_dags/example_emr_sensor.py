@@ -96,6 +96,7 @@ with DAG(
         job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
         steps=SPARK_STEPS,
         aws_conn_id=AWS_CONN_ID,
+        trigger_rule="all_done",
     )
     # [END howto_operator_emr_add_steps]
 

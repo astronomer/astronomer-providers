@@ -278,7 +278,9 @@ with DAG(
 
     # [START describe_created_cluster]
     describe_created_cluster = PythonOperator(
-        task_id="describe_created_cluster", python_callable=get_cluster_details
+        task_id="describe_created_cluster",
+        python_callable=get_cluster_details,
+        trigger_rule="all_done",
     )
     # [END describe_created_cluster]
 
