@@ -120,7 +120,7 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready:
+  wait-for-deployment-to-be-ready-and-trigger-master-dag:
     needs: deploy-rc-testing-branch-to-astro-cloud
     if: |
       always() &&
@@ -134,13 +134,6 @@ jobs:
           echo "allowing the deployed image to be updated across all Airflow components.."
           sleep 1800
 
-  trigger-master-dag:
-    needs: wait-for-deployment-to-be-ready
-    if: |
-      always() &&
-      needs.wait-for-deployment-to-be-ready.result == 'success'
-    runs-on: 'ubuntu-20.04'
-    steps:
       - name: checkout
         uses: actions/checkout@v3
         with:
