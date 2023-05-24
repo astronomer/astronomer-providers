@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from __future__ import annotations
 
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
@@ -35,7 +35,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     async def get_client_async(self) -> AioBaseClient:
         """Create an Async Client object to communicate with AWS services."""
         # Fetch the Airflow connection object
-        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
+        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)  # type: ignore[arg-type]
 
         conn_config = AwsConnectionWrapper(
             conn=connection_object,
@@ -70,7 +70,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     @staticmethod
     async def get_role_credentials(
         async_session: AioSession, conn_config: AwsConnectionWrapper
-    ) -> Optional[Dict[str, str]]:
+    ) -> dict[str, str] | None:
         """Get the role_arn, method credentials from connection details and get the role credentials detail"""
         async with async_session.create_client(
             "sts",
@@ -79,7 +79,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         ) as client:
             return_response = None
             if conn_config.assume_role_method == "assume_role" or conn_config.assume_role_method is None:
-                response: Dict[str, Dict[str, str]] = await client.assume_role(
+                response: dict[str, dict[str, str]] = await client.assume_role(
                     RoleArn=conn_config.role_arn,
                     RoleSessionName="RoleSession",
                     **conn_config.assume_role_kwargs,

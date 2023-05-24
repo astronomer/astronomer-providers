@@ -62,7 +62,7 @@ class TaskStateTrigger(BaseTrigger):
         hit one of the states yet, or not.
         """
         while True:
-            num_tasks = await self.count_tasks()
+            num_tasks = await self.count_tasks()  # type: ignore[call-arg]
             if num_tasks == len(self.execution_dates):
                 yield TriggerEvent(True)
             await asyncio.sleep(self.poll_interval)
@@ -127,7 +127,7 @@ class DagStateTrigger(BaseTrigger):
         hit one of the states yet, or not.
         """
         while True:
-            num_dags = await self.count_dags()
+            num_dags = await self.count_dags()  # type: ignore[call-arg]
             if num_dags == len(self.execution_dates):
                 yield TriggerEvent(True)
             await asyncio.sleep(self.poll_interval)
