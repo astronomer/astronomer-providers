@@ -86,12 +86,21 @@ jobs:
     needs: deploy-to-providers-integration-tests-on-KE
     runs-on: 'ubuntu-20.04'
     steps:
-      - name: Sleep for 2 hours 30 minutes
+      - name: Sleep and wait for the deployment to be ready
         run: |
+          if [ "${{ inputs.environment_to_deploy }}" == "providers-integration-tests-on-KE" ]; then
+            # This means that only KE deployment was triggered
+            # and hence we do not need to wait for CE deployment's master DAG to complete.
+            # We just need to wait for 30 minutes for the deployment to be reflected.
+            sleep_time=1800
+          else
+            # 3 hours
+            sleep_time=10800
+          fi
           echo "Current timestamp is" `date`
-          echo "Sleeping for 9000 seconds (2 hours 30 minutes)"
+          echo "Sleeping for $sleep_time seconds"
           echo "allowing the deployed image to be updated across all Airflow components.."
-          sleep 9000
+          sleep $sleep_time
 
   trigger-providers-integration-tests-on-KE-master-dag:
     if: github.event_name == 'schedule'
