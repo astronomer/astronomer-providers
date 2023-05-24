@@ -77,6 +77,7 @@ JOB_FLOW_OVERRIDES = {
     "Steps": [],
     "JobFlowRole": JOB_FLOW_ROLE,
     "ServiceRole": SERVICE_ROLE,
+    "LogUri": "s3://example_emr_sensor_cluster/"
 }
 
 
