@@ -92,7 +92,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	echo "Current timestamp is" $(current_timestamp)
 	echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."
 	sleep 1800
-	python3 dev/providers_rc_test_scripts/trigger_master_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
+	python3 dev/providers_rc_test_scripts/trigger_dag.py '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' ' $(ASTRONOMER_KEY_SECRET)'
 	git add setup.cfg
 	git commit -m "Update setup.cfg to use RC provider packages"
 	git push origin $(branch_name)

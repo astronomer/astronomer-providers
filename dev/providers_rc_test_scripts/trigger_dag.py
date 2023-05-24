@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import sys
@@ -28,24 +30,26 @@ def get_access_token(api_key_id: str, api_key_secret: str) -> str:
     return response_json["access_token"]
 
 
-def trigger_master_dag_run(deployment_id: str, bearer_token: str):
+def trigger_dag_runs(dag_ids: list[str], deployment_id: str, bearer_token: str) -> None:
     """
-    Triggers the master DAG using Airflow REST API.
+    Triggers the DAG using Airflow REST API.
 
     :param deployment_id: ID of the Astro Cloud deployment. Using this, we generate the short deployment ID needed
         for the construction of Airflow endpoint to hit
     :param bearer_token: bearer token to be used for authentication with the Airflow REST API
+    :param dag_ids: list of dag_id to trigger
     """
     short_deployment_id = f"d{deployment_id[-7:]}"
     integration_tests_deployment_url = f"https://e2etesting.astronomer.run/{short_deployment_id}"
-    master_dag_trigger_url = f"{integration_tests_deployment_url}/api/v1/dags/{MASTER_DAG_ID}/dagRuns"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
         "Authorization": f"Bearer {bearer_token}",
     }
-    response = requests.post(master_dag_trigger_url, headers=headers, json={})
-    logging.info("Response for master DAG trigger is %s", response.json())
+    for dag_id in dag_ids:
+        dag_trigger_url = f"{integration_tests_deployment_url}/api/v1/dags/{dag_id}/dagRuns"
+        response = requests.post(dag_trigger_url, headers=headers, json={})
+        logging.info(f"Response for {dag_id} DAG trigger is %s", response.json())
 
 
 if __name__ == "__main__":
@@ -53,6 +57,20 @@ if __name__ == "__main__":
     parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud")
     parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment")
     parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment")
+    parser.add_argument(
+        "--dag-ids",
+        help=(
+            "Comma separated list of dag_ids to trigger"
+            " e.g. 'example_async_adf_run_pipeline, example_async_batch'"
+        ),
+    )
+
     args = parser.parse_args()
     token = get_access_token(args.astronomer_key_id.strip(), args.astronomer_key_secret.strip())
-    trigger_master_dag_run(args.deployment_id, token)
+
+    if not args.dag_ids:
+        dag_ids = ["example_master_dag"]
+    else:
+        dag_ids = [dag_id.strip() for dag_id in args.dags_id.split(",")]
+
+    trigger_dag_runs(dag_ids, args.deployment_id, token)
