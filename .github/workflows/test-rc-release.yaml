@@ -48,7 +48,7 @@ jobs:
 
       - name: Install dev dependency
         run: |
-          python3 -m pip install -r dev/providers_rc_test_scripts/requirements.txt
+          python3 -m pip install -r dev/integration_test_scripts/requirements.txt
 
       - name: Create RC branch
         id: create_rc_branch
@@ -62,7 +62,7 @@ jobs:
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating setup.cfg with RC provider packages"
-          python3 dev/providers_rc_test_scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          python3 dev/integration_test_scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
@@ -141,7 +141,7 @@ jobs:
 
       - name: Trigger master dag
         run: |
-          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+          python3 dev/integration_test_scripts/trigger_master_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}

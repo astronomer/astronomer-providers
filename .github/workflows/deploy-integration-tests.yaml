@@ -64,7 +64,7 @@ jobs:
 
       - name: Trigger master dag
         run: |
-          python3 dev/providers_rc_test_scripts/trigger_dag.py \
+          python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} \
@@ -116,7 +116,7 @@ jobs:
 
       - name: Trigger master dag
         run: |
-          python3 dev/providers_rc_test_scripts/trigger_dag.py \
+          python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }} \
