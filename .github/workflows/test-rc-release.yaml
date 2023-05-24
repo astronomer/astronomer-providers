@@ -142,7 +142,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch }}
+          ref: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
 
       - name: Trigger master dag
         run: |
