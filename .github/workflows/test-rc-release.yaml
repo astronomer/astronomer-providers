@@ -10,16 +10,16 @@ on:  # yamllint disable-line rule:truthy
         # for deployment and testing.
         description: |
           rc_testing_branch: existing testing branch
-          (One and only one of rc_testing_branch and issue_url is required.)
+          (Either rc_testing_branch or issue_url is required. You cannot give both.)
         required: false
         default: ''
       issue_url:
         description: |
-          issue_url: the URL of the github issue that announce provider testing
-          (One and only one of rc_testing_branch and issue_url is required.)
+          issue_url: the GitHub issue URL that tracks the status of Providers release
+          (Either rc_testing_branch or issue_url is required. You cannot give both.)
         required: false
       base_git_rev:
-        description: 'The base git revision to test rc release'
+        description: 'The base git revision to test Providers RCs'
         required: false
         type: string
         default: 'main'
@@ -31,7 +31,7 @@ jobs:
       - name: Validate user input
         if: ${{ (inputs.rc_testing_branch != '') == (inputs.issue_url != '') }}
         run: |
-          echo "One and only one of rc_testing_branch and issue_url is required."
+          echo "Either rc_testing_branch or issue_url is required. You cannot give both."
           exit 1
 
   create-branch-for-testing-rc-release:
