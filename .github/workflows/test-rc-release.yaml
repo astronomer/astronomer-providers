@@ -10,16 +10,16 @@ on:  # yamllint disable-line rule:truthy
         # for deployment and testing.
         description: |
           rc_testing_branch: existing testing branch
-          (One and only one of rc_testing_branch and issue_url is required.)
+          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
         default: ''
       issue_url:
         description: |
-          issue_url: the URL of the github issue that announce provider testing
-          (One and only one of rc_testing_branch and issue_url is required.)
+          issue_url: the GitHub issue URL that tracks the status of Providers release
+          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
       base_git_rev:
-        description: 'The base git revision to test rc release'
+        description: 'The base git revision to test Providers RCs'
         required: false
         type: string
         default: 'main'
@@ -29,9 +29,11 @@ jobs:
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Validate user input
-        if: ${{ (inputs.rc_testing_branch != '') == (inputs.issue_url != '') }}
+        if: |
+           (inputs.rc_testing_branch == '' && inputs.issue_url == '') ||
+           (inputs.rc_testing_branch != '' && inputs.issue_url != '')
         run: |
-          echo "One and only one of rc_testing_branch and issue_url is required."
+          echo "Either rc_testing_branch or issue_url is required, and you cannot give both."
           exit 1
 
   create-branch-for-testing-rc-release:
@@ -142,7 +144,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch }}
+          ref: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
 
       - name: Trigger master dag
         run: |
