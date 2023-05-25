@@ -13,7 +13,6 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from airflow.models import Variable
 from airflow.utils.session import create_session
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
