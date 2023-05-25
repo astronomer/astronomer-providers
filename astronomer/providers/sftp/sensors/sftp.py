@@ -34,7 +34,6 @@ class SFTPSensorAsync(SFTPSensor):
         self.file_pattern = file_pattern
         if timeout is None:
             timeout = conf.getfloat("sensors", "default_timeout")
-
         super().__init__(path=path, file_pattern=file_pattern, timeout=timeout, **kwargs)
         self.hook = SFTPHookAsync(sftp_conn_id=self.sftp_conn_id)  # type: ignore[assignment]
 
@@ -43,18 +42,34 @@ class SFTPSensorAsync(SFTPSensor):
         Logic that the sensor uses to correctly identify which trigger to
         execute, and defer execution as expected.
         """
-        if not self.poke(context=context):
-            self.defer(
-                timeout=timedelta(seconds=self.timeout),
-                trigger=SFTPTrigger(
-                    path=self.path,
-                    file_pattern=self.file_pattern,
-                    sftp_conn_id=self.sftp_conn_id,
-                    poke_interval=self.poke_interval,
-                    newer_than=self.newer_than,
-                ),
-                method_name="execute_complete",
-            )
+        # Unlike other async sensors, we do not follow the pattern of calling the synchronous self.poke() method before
+        # deferring here. This is due to the current limitations we have in the synchronous SFTPHook methods.
+        # The limitations are discovered while being worked upon the ticket
+        # https://github.com/astronomer/astronomer-providers/issues/1021. They are as follows:
+        # 1. For host key types of ecdsa, the hook expects the host key to prefixed with 'ssh-' as per the mapping of
+        #    key types defined in it to get the appropriate key constructor for the ecdsa type keys, whereas
+        #    conventionally such keys are not prefixed with 'ssh-'.
+        # 2. The sync sensor does not support the newer_than field to be passed as a Jinja template value which is of
+        #    string type.
+        # 3. For file_pattern sensing, the hook implements list_directory() method which returns a list of filenames
+        #    only without the attributes like modified time which is required for the file_pattern sensing when
+        #    newer_than is supplied. This leads to intermittent failures potentially due to throttling by the SFTP
+        #    server as the hook makes multiple calls to the server to get the attributes for each of the files in the
+        #    directory.This limitation is resolved here by instead calling the read_directory() method which returns a
+        #    list of files along with their attributes in a single call.
+        # We can add back the call to self.poke() before deferring once the above limitations are resolved in the
+        # sync sensor.
+        self.defer(
+            timeout=timedelta(seconds=self.timeout),
+            trigger=SFTPTrigger(
+                path=self.path,
+                file_pattern=self.file_pattern,
+                sftp_conn_id=self.sftp_conn_id,
+                poke_interval=self.poke_interval,
+                newer_than=self.newer_than,
+            ),
+            method_name="execute_complete",
+        )
 
     def execute_complete(self, context: Dict[str, Any], event: Any = None) -> None:
         """

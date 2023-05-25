@@ -6,6 +6,7 @@ from contextlib import closing
 from datetime import timedelta
 from typing import Any, Callable, List
 
+import requests
 from airflow.exceptions import AirflowException
 
 from snowflake.connector import SnowflakeConnection
@@ -386,6 +387,25 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         if self.do_xcom_push:
             context["ti"].xcom_push(key="query_ids", value=self.query_ids)
 
+        succeeded_query_ids = []
+        for query_id in self.query_ids:
+            self.log.info("Retrieving status for query id %s", query_id)
+            header, params, url = hook.get_request_url_header_params(query_id)
+            with requests.session() as session:
+                session.headers = header
+                with session.get(url, params=params) as resp:
+                    event = hook.process_query_status_response(resp.json(), resp.status_code)
+                    if resp.status_code == 202:
+                        break
+                    elif resp.status_code == 200:
+                        succeeded_query_ids.append(query_id)
+                    else:
+                        raise AirflowException(f"{event['status']}: {event['message']}")
+
+        if len(self.query_ids) == len(succeeded_query_ids):
+            self.log.info("%s completed successfully.", self.task_id)
+            return
+
         self.defer(
             timeout=self.execution_timeout,
             trigger=SnowflakeSqlApiTrigger(
@@ -406,8 +426,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                msg = "{}: {}".format(event["status"], event["message"])
-                raise AirflowException(msg)
+                raise AirflowException(f"{event['status']}: {event['message']}")
             elif "status" in event and event["status"] == "success":
                 hook = SnowflakeSqlApiHookAsync(snowflake_conn_id=self.snowflake_conn_id)
                 query_ids = typing.cast(List[str], event["statement_query_ids"])

@@ -18,6 +18,14 @@ version_tag_only: &version_tag_only
     branches:
       ignore: /.*/
 
+# Run jobs only for main branch and release branches
+main_and_release_branches: &main_and_release_branches
+  filters:
+    branches:
+      only:
+        - main
+        - /^release\b.*$/
+
 workflows:
   test:
     jobs:
@@ -31,7 +39,7 @@ workflows:
             parameters:
               python_version: ["3.8", "3.9", "3.10"]
               airflow_version: ["2.3.4", "2.4.2", "2.5.3"]
-          <<: *all_branches_and_version_tag
+          <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
       - test:

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from airflow.exceptions import AirflowException
 from asyncssh import SFTPAttrs, SFTPNoSuchFile
+from asyncssh.sftp import SFTPName
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
@@ -19,6 +20,12 @@ class MockSFTPClient:
             raise SFTPNoSuchFile("File does not exist")
         else:
             return ["..", ".", "file"]
+
+    async def readdir(self, path: str):
+        if path == "/path/does_not/exist/":
+            raise SFTPNoSuchFile("File does not exist")
+        else:
+            return [SFTPName(".."), SFTPName("."), SFTPName("file")]
 
     async def stat(self, path: str):
         if path == "/path/does_not/exist/":
@@ -61,7 +68,7 @@ class MockAirflowConnection:
 
 
 class MockAirflowConnectionWithHostKey:
-    def __init__(self, host_key: str | None = None, no_host_key_check: bool = True, port: int = 22):
+    def __init__(self, host_key: str | None = None, no_host_key_check: bool = False, port: int = 22):
         self.host = "localhost"
         self.port = port
         self.login = "username"
@@ -129,28 +136,28 @@ class TestSFTPHookAsync:
         }
 
         mock_connect.assert_called_with(**expected_connection_details)
-        assert "No Host Key Verification. This won't protect against Man-In-The-Middle attacks" in caplog.text
 
     @pytest.mark.parametrize(
         "mock_port, mock_host_key",
         [
             (22, "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"),
             (2222, "AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"),
+            (
+                2222,
+                "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDDsXFe87LsBA1Hfi+mtw"
+                "/EoQkv8bXVtfOwdMP1ETpHVsYpm5QG/7tsLlKdE8h6EoV/OFw7XQtoibNZp/l5ABjE=",
+            ),
         ],
     )
-    @patch("paramiko.SSHClient.connect")
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("asyncssh.import_private_key")
-    @patch("paramiko.RSAKey")
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
     @pytest.mark.asyncio
     async def test_extra_dejson_fields_for_connection_with_host_key(
         self,
         mock_get_connection,
-        mock_paramiko_constructor,
         mock_import_private_key,
         mock_connect,
-        mock_paramiko_connect,
         mock_port,
         mock_host_key,
     ):
@@ -165,57 +172,43 @@ class TestSFTPHookAsync:
         hook = SFTPHookAsync()
         await hook._get_conn()
 
-        expected_connection_details = {
-            "hostname": "localhost",
-            "port": mock_port,
-            "username": "username",
-            "password": "password",
-            "pkey": "~/keys/my_key",
-            "key_filename": "~/keys/my_key",
-        }
+        assert hook.known_hosts == f"localhost {mock_host_key}".encode()
 
-        mock_paramiko_connect.assert_called_with(**expected_connection_details)
-
-    @patch("paramiko.SSHClient.connect")
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
     @pytest.mark.asyncio
     async def test_extra_dejson_fields_for_connection_raises_valuerror(
-        self, mock_get_connection, mock_connect, mock_paramiko_connect
+        self, mock_get_connection, mock_connect
     ):
         """
         Assert that when both host_key and no_host_key_check are set, a valuerror is raised because no_host_key_check
         should be unset when host_key is given and the host_key needs to be validated.
         """
         host_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"
-        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(host_key=host_key)
+        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(
+            host_key=host_key, no_host_key_check=True
+        )
 
         hook = SFTPHookAsync()
         with pytest.raises(ValueError) as exc:
             await hook._get_conn()
 
-        assert str(exc.value) == "Must check host key when provided"
+        assert str(exc.value) == "Host key check was skipped, but `host_key` value was given"
 
-    @patch("paramiko.SSHClient.connect", side_effect=Exception("mocked error"))
+    @patch("paramiko.SSHClient.connect")
     @patch("asyncssh.import_private_key")
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
     @pytest.mark.asyncio
-    async def test_extra_dejson_fields_for_connection_retry_upon_error(
-        self, mock_get_connection, mock_connect, mock_import_pkey, mock_paramiko_connect
+    async def test_no_host_key_check_set_logs_warning(
+        self, mock_get_connection, mock_connect, mock_import_pkey, mock_ssh_connect, caplog
     ):
-        """
-        Assert than paramiko connect is retried upon failure.
-        """
-        host_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFe8P8lk5HFfL/rMlcCMHQhw1cg+uZtlK5rXQk2C4pOY"
-        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(
-            host_key=host_key, no_host_key_check=False
-        )
-        hook = SFTPHookAsync()
-        with pytest.raises(Exception):
-            await hook._get_conn()
+        """Assert that when no_host_key_check is set, a warning is logged for MITM attacks possibility."""
+        mock_get_connection.return_value = MockAirflowConnectionWithHostKey(no_host_key_check=True)
 
-        assert len(mock_paramiko_connect.mock_calls) == 3
+        hook = SFTPHookAsync()
+        await hook._get_conn()
+        assert "No Host Key Verification. This won't protect against Man-In-The-Middle attacks" in caplog.text
 
     @patch("asyncssh.connect", new_callable=AsyncMock)
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync.get_connection")
@@ -285,6 +278,19 @@ class TestSFTPHookAsync:
 
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     @pytest.mark.asyncio
+    async def test_read_directory_path_does_not_exist(self, mock_hook_get_conn):
+        """
+        Assert that AirflowException is raised when path does not exist on SFTP server
+        """
+        mock_hook_get_conn.return_value = MockSSHClient()
+        hook = SFTPHookAsync()
+
+        expected_files = None
+        files = await hook.read_directory(path="/path/does_not/exist/")
+        assert files == expected_files
+
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    @pytest.mark.asyncio
     async def test_list_directory_path_has_files(self, mock_hook_get_conn):
         """
         Assert that file list is returned when path exists on SFTP server
@@ -305,13 +311,26 @@ class TestSFTPHookAsync:
         mock_hook_get_conn.return_value = MockSSHClient()
         hook = SFTPHookAsync()
 
-        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file")
+        files = await hook.get_files_and_attrs_by_pattern(path="/path/exists/", fnmatch_pattern="file")
 
-        assert file == ["file"]
+        assert len(files) == 1
+        assert files[0].filename == "file"
 
     @pytest.mark.asyncio
     @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
     async def test_get_file_by_pattern_with_no_match(self, mock_hook_get_conn):
+        """
+        Assert that AirflowException is raised when no files match file pattern on SFTP server
+        """
+        mock_hook_get_conn.return_value = MockSSHClient()
+        hook = SFTPHookAsync()
+        file = await hook.get_files_by_pattern(path="/path/exists/", fnmatch_pattern="file_does_not_exist")
+
+        assert file == []
+
+    @pytest.mark.asyncio
+    @patch("astronomer.providers.sftp.hooks.sftp.SFTPHookAsync._get_conn")
+    async def test_get_file_by_pattern_path_not_exists(self, mock_hook_get_conn):
         """
         Assert that AirflowException is raised when no files match file pattern on SFTP server
         """

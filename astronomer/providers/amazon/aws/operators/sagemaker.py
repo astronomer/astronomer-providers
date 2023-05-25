@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.sagemaker import (
+    LogState,
     secondary_training_status_message,
 )
 from airflow.providers.amazon.aws.operators.sagemaker import (
@@ -21,7 +24,7 @@ from astronomer.providers.amazon.aws.triggers.sagemaker import (
 from astronomer.providers.utils.typing_compat import Context
 
 
-def serialize(result: Dict[str, Any]) -> str:
+def serialize(result: dict[str, Any]) -> str:
     """Serialize any objects coming from Sagemaker API response to json string"""
     return json.loads(json.dumps(result, cls=AirflowJsonEncoder))  # type: ignore[no-any-return]
 
@@ -53,7 +56,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         (default) and "fail".
     """
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> dict[str, str] | None:  # type: ignore[override]
         """
         Creates processing job via sync hook `create_processing_job` and pass the
         control to trigger and polls for the status of the processing job in async
@@ -80,22 +83,33 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker Processing Job creation failed: {response}")
-        else:
-            end_time: Optional[float] = None
-            if self.max_ingestion_time is not None:
-                end_time = time.time() + self.max_ingestion_time
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=SagemakerProcessingTrigger(
-                    poll_interval=self.check_interval,
-                    aws_conn_id=self.aws_conn_id,
-                    job_name=self.config["ProcessingJobName"],
-                    end_time=end_time,
-                ),
-                method_name="execute_complete",
-            )
 
-    def execute_complete(self, context: Context, event: Any = None) -> Dict[str, Any]:
+        response = self.hook.describe_processing_job(processing_job_name)
+        status = response["ProcessingJobStatus"]
+        if status in self.hook.failed_states:
+            raise AirflowException(f"SageMaker job failed because {response['FailureReason']}")
+        elif status == "Completed":
+            self.log.info(f"{self.task_id} completed successfully.")
+            return {"Processing": serialize(response)}
+
+        end_time: float | None = None
+        if self.max_ingestion_time is not None:
+            end_time = time.time() + self.max_ingestion_time
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=SagemakerProcessingTrigger(
+                poll_interval=self.check_interval,
+                aws_conn_id=self.aws_conn_id,
+                job_name=self.config["ProcessingJobName"],
+                end_time=end_time,
+            ),
+            method_name="execute_complete",
+        )
+
+        # for bypassing mypy missing return error
+        return None  # pragma: no cover
+
+    def execute_complete(self, context: Context, event: Any = None) -> dict[str, Any]:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -150,7 +164,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         This is only relevant if check_if_job_exists is True.
     """
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> dict[str, Any] | None:  # type: ignore[override]
         """
         Creates transform job via sync hook `create_transform_job` and pass the
         control to trigger and polls for the status of the transform job in async
@@ -179,24 +193,39 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker transform Job creation failed: {response}")
-        else:
-            end_time: Optional[float] = None
-            if self.max_ingestion_time is not None:
-                end_time = time.time() + self.max_ingestion_time
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=SagemakerTrigger(
-                    poke_interval=self.check_interval,
-                    end_time=end_time,
-                    aws_conn_id=self.aws_conn_id,
-                    job_name=transform_config["TransformJobName"],
-                    job_type="Transform",
-                    response_key="TransformJobStatus",
-                ),
-                method_name="execute_complete",
-            )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.hook.describe_transform_job(transform_config["TransformJobName"])
+        status = response["TransformJobStatus"]
+        if status in self.hook.failed_states:
+            raise AirflowException(f"SageMaker job failed because {response['FailureReason']}")
+
+        if status == "Completed":
+            self.log.info(f"{self.task_id} completed successfully.")
+            return {
+                "Model": serialize(self.hook.describe_model(transform_config["ModelName"])),
+                "Transform": serialize(response),
+            }
+
+        end_time: float | None = None
+        if self.max_ingestion_time is not None:
+            end_time = time.time() + self.max_ingestion_time
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=SagemakerTrigger(
+                poke_interval=self.check_interval,
+                end_time=end_time,
+                aws_conn_id=self.aws_conn_id,
+                job_name=transform_config["TransformJobName"],
+                job_type="Transform",
+                response_key="TransformJobStatus",
+            ),
+            method_name="execute_complete",
+        )
+
+        # for bypassing mypy missing return error
+        return None  # pragma: no cover
+
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -240,7 +269,7 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         This is only relevant if check_if_job_exists is True.
     """
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> dict[str, Any] | None:  # type: ignore[override]
         """
         Creates SageMaker training job via sync hook `create_training_job` and pass the
         control to trigger and polls for the status of the training job in async
@@ -267,42 +296,78 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
         )
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
             raise AirflowException(f"Sagemaker Training Job creation failed: {response}")
-        else:
-            end_time: Optional[float] = None
-            if self.max_ingestion_time is not None:
-                end_time = time.time() + self.max_ingestion_time
-            if self.print_log:
-                description = self.hook.describe_training_job(self.config["TrainingJobName"])
-                self.log.info(secondary_training_status_message(description, None))
-                instance_count = description["ResourceConfig"]["InstanceCount"]
-                status = description["TrainingJobStatus"]
-                self.defer(
-                    timeout=self.execution_timeout,
-                    trigger=SagemakerTrainingWithLogTrigger(
-                        poke_interval=self.check_interval,
-                        end_time=end_time,
-                        aws_conn_id=self.aws_conn_id,
-                        job_name=self.config["TrainingJobName"],
-                        instance_count=int(instance_count),
-                        status=status,
-                    ),
-                    method_name="execute_complete",
-                )
-            else:
-                self.defer(
-                    timeout=self.execution_timeout,
-                    trigger=SagemakerTrigger(
-                        poke_interval=self.check_interval,
-                        end_time=end_time,
-                        aws_conn_id=self.aws_conn_id,
-                        job_name=self.config["TrainingJobName"],
-                        job_type="Training",
-                        response_key="TrainingJobStatus",
-                    ),
-                    method_name="execute_complete",
-                )
 
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> Dict[str, Any]:
+        end_time: float | None = None
+        if self.max_ingestion_time is not None:
+            end_time = time.time() + self.max_ingestion_time
+
+        description = self.hook.describe_training_job(self.config["TrainingJobName"])
+        status = description["TrainingJobStatus"]
+        if self.print_log:
+            instance_count = description["ResourceConfig"]["InstanceCount"]
+            last_describe_job_call = time.monotonic()
+            job_already_completed = status not in self.hook.non_terminal_states
+            _, last_description, last_describe_job_call = self.hook.describe_training_job_with_log(
+                self.config["TrainingJobName"],
+                {},
+                [],
+                instance_count,
+                LogState.TAILING if job_already_completed else LogState.COMPLETE,
+                description,
+                last_describe_job_call,
+            )
+
+            self.log.info(secondary_training_status_message(description, None))
+
+            if status in self.hook.failed_states:
+                reason = last_description.get("FailureReason", "(No reason provided)")
+                raise AirflowException(f"SageMaker job failed because {reason}")
+            elif status == "Completed":
+                billable_time = (
+                    last_description["TrainingEndTime"] - last_description["TrainingStartTime"]
+                ) * instance_count
+                self.log.info(
+                    f"Billable seconds: {int(billable_time.total_seconds()) + 1}\n"
+                    f"{self.task_id} completed successfully."
+                )
+                return {"Training": serialize(description)}
+
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=SagemakerTrainingWithLogTrigger(
+                    poke_interval=self.check_interval,
+                    end_time=end_time,
+                    aws_conn_id=self.aws_conn_id,
+                    job_name=self.config["TrainingJobName"],
+                    instance_count=int(instance_count),
+                    status=status,
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            if status in self.hook.failed_states:
+                raise AirflowException(f"SageMaker job failed because {description['FailureReason']}")
+            elif status == "Completed":
+                self.log.info(f"{self.task_id} completed successfully.")
+                return {"Training": serialize(description)}
+
+            self.defer(
+                timeout=self.execution_timeout,
+                trigger=SagemakerTrigger(
+                    poke_interval=self.check_interval,
+                    end_time=end_time,
+                    aws_conn_id=self.aws_conn_id,
+                    job_name=self.config["TrainingJobName"],
+                    job_type="Training",
+                    response_key="TrainingJobStatus",
+                ),
+                method_name="execute_complete",
+            )
+
+        # for bypassing mypy missing return error
+        return None  # pragma: no cover
+
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

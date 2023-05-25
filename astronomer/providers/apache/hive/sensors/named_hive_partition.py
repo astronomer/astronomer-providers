@@ -6,6 +6,7 @@ from airflow.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensor,
 )
 
+from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.named_hive_partition import (
     NamedHivePartitionTrigger,
 )
@@ -45,15 +46,28 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
         """Submit a job to Hive and defer"""
         if not self.partition_names:
             raise ValueError("Partition array can't be empty")
-        self.defer(
-            timeout=timedelta(seconds=self.timeout),
-            trigger=NamedHivePartitionTrigger(
-                partition_names=self.partition_names,
-                metastore_conn_id=self.metastore_conn_id,
-                polling_interval=self.poke_interval,
-            ),
-            method_name="execute_complete",
-        )
+
+        hook = HiveCliHookAsync(metastore_conn_id=self.metastore_conn_id)
+        all_parition_exists = True
+        for name in self.partition_names:
+            schema, table, partition = hook.parse_partition_name(name)
+            if hook.check_partition_exists(schema=schema, table=table, partition=partition):
+                self.log.info("Found partition for %s.%s/%s", schema, table, partition)
+            else:
+                all_parition_exists = False
+                break
+
+        if not all_parition_exists:
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=NamedHivePartitionTrigger(
+                    partition_names=self.partition_names,
+                    metastore_conn_id=self.metastore_conn_id,
+                    polling_interval=self.poke_interval,
+                ),
+                method_name="execute_complete",
+            )
+        self.log.info("Named hive partition found.")
 
     def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> None:
         """

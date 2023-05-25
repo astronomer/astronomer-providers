@@ -2,6 +2,25 @@ Changelog
 =========
 
 
+1.16.0 (2023-05-19)
+-------------------
+
+Enhancements
+""""""""""""
+
+- Enhance ``SFTPSensorAsync`` by adding below features (`#1072 <https://github.com/astronomer/astronomer-providers/pull/1072>`_):
+    - Remove the need for prefixing ``ssh-`` to host keys that don't have such prefix e.g. ecdsa type keys
+    - Support validating host keys using a known_hosts file
+    - Accept string values for ``newer_than`` field. e.g. passed via Jinja template
+    - Use ``readdir`` for listing files instead of ``stat`` on each file to avoid throttling caused by multiple roundtrips to the server for each file
+
+
+Bug Fixes
+"""""""""
+
+- Mark ``DbtCloudRunJobOperatorAsync`` failed if cancelled by raising ``AirflowFailException`` (`#1082 <https://github.com/astronomer/astronomer-providers/pull/1082>`_)
+
+
 1.15.5 (2023-04-24)
 -------------------
 

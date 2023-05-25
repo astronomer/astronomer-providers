@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import uuid
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import aiohttp
 import requests
@@ -100,8 +102,8 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
             )
 
     def execute_query(
-        self, sql: str, statement_count: int, query_tag: str = "", bindings: Optional[Dict[str, Any]] = None
-    ) -> List[str]:
+        self, sql: str, statement_count: int, query_tag: str = "", bindings: dict[str, Any] | None = None
+    ) -> list[str]:
         """
         Using SnowflakeSQL API, run the query in snowflake by making API request
 
@@ -117,7 +119,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
 
         req_id = uuid.uuid4()
         url = "https://{}.snowflakecomputing.com/api/v2/statements".format(conn_config["account"])
-        params: Optional[Union[Dict[str, Any]]] = {"requestId": str(req_id), "async": True, "pageSize": 10}
+        params: dict[str, Any] | None = {"requestId": str(req_id), "async": True, "pageSize": 10}
         headers = self.get_headers()
         if bindings is None:
             bindings = {}
@@ -151,7 +153,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
             raise AirflowException("No statementHandle/statementHandles present in response")
         return self.query_ids
 
-    def get_headers(self) -> Dict[str, Any]:
+    def get_headers(self) -> dict[str, Any]:
         """Based on the private key, and with connection details JWT Token is generated and header is formed"""
         if not self.private_key:
             self.get_private_key()
@@ -175,7 +177,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         }
         return headers
 
-    def get_request_url_header_params(self, query_id: str) -> Tuple[Dict[str, Any], Dict[str, Any], str]:
+    def get_request_url_header_params(self, query_id: str) -> tuple[dict[str, Any], dict[str, Any], str]:
         """
         Build the request header Url with account name identifier and query id from the connection params
 
@@ -185,12 +187,10 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         req_id = uuid.uuid4()
         header = self.get_headers()
         params = {"requestId": str(req_id), "page": 2, "pageSize": 10}
-        url = "https://{}.snowflakecomputing.com/api/v2/statements/{}".format(
-            conn_config["account"], query_id
-        )
+        url = f"https://{conn_config['account']}.snowflakecomputing.com/api/v2/statements/{query_id}"
         return header, params, url
 
-    def check_query_output(self, query_ids: List[str]) -> None:
+    def check_query_output(self, query_ids: list[str]) -> None:
         """
         Based on the query ids passed as the parameter make HTTP request to snowflake SQL API and logs the response
 
@@ -207,7 +207,36 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                     f"Response: {e.response.content}, Status Code: {e.response.status_code}"
                 )
 
-    async def get_sql_api_query_status(self, query_id: str) -> Dict[str, Union[str, List[str]]]:
+    @staticmethod
+    def process_query_status_response(resp: dict[str, Any], status_code: int) -> dict[str, Any]:
+        """Process query_status response and generate event based on status Code
+
+        200: success
+        202: running
+        422 and else: error
+
+        :param resp: json response from snowflake statements API
+        :param status_code: status code of the response
+        """
+        if status_code == 202:
+            return {"status": "running", "message": "Query statements are still running"}
+        elif status_code == 422:
+            return {"status": "error", "message": resp["message"]}
+        elif status_code == 200:
+            statement_handles = []
+            if "statementHandles" in resp and resp["statementHandles"]:
+                statement_handles = resp["statementHandles"]
+            elif "statementHandle" in resp and resp["statementHandle"]:
+                statement_handles.append(resp["statementHandle"])
+            return {
+                "status": "success",
+                "message": resp["message"],
+                "statement_handles": statement_handles,
+            }
+        else:
+            return {"status": "error", "message": resp["message"]}
+
+    async def get_sql_api_query_status(self, query_id: str) -> dict[str, str | list[str]]:
         """
         Based on the query id async HTTP request is made to snowflake SQL API and return response.
 
@@ -220,20 +249,4 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 status_code = response.status
                 resp = await response.json()
                 self.log.info("Snowflake SQL GET statements status API response: %s", resp)
-                if status_code == 202:
-                    return {"status": "running", "message": "Query statements are still running"}
-                elif status_code == 422:
-                    return {"status": "error", "message": resp["message"]}
-                elif status_code == 200:
-                    statement_handles = []
-                    if "statementHandles" in resp and resp["statementHandles"]:
-                        statement_handles = resp["statementHandles"]
-                    elif "statementHandle" in resp and resp["statementHandle"]:
-                        statement_handles.append(resp["statementHandle"])
-                    return {
-                        "status": "success",
-                        "message": resp["message"],
-                        "statement_handles": statement_handles,
-                    }
-                else:
-                    return {"status": "error", "message": resp["message"]}
+                return self.process_query_status_response(resp, status_code)

@@ -36,6 +36,30 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  wait-for-deployment-to-be-ready-and-trigger-master-dag-for-providers-integration-tests:
+    if: github.event_name == 'schedule'
+    needs: deploy-to-providers-integration-tests
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep for 30 minutes
+        run: |
+          echo "Current timestamp is" `date`
+          echo "Sleeping for 1800 seconds (30 minutes)"
+          echo "allowing the deployed image to be updated across all Airflow components.."
+          sleep 1800
+
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: Trigger master dag
+        run: |
+          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+
   deploy-to-providers-integration-tests-on-KE:
     if: |
       contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy) ||
@@ -51,3 +75,36 @@ jobs:
       astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }}
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-deployment-to-be-ready-and-trigger-master-dag-for-providers-integration-tests-on-KE:
+    if: github.event_name == 'schedule'
+    needs: deploy-to-providers-integration-tests-on-KE
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep and wait for the deployment to be ready
+        run: |
+          if [ "${{ inputs.environment_to_deploy }}" == "providers-integration-tests-on-KE" ]; then
+            # This means that only KE deployment was triggered
+            # and hence we do not need to wait for CE deployment's master DAG to complete.
+            # We just need to wait for 30 minutes for the deployment to be reflected.
+            sleep_time=1800
+          else
+            # 3 hours
+            sleep_time=10800
+          fi
+          echo "Current timestamp is" `date`
+          echo "Sleeping for $sleep_time seconds"
+          echo "allowing the deployed image to be updated across all Airflow components.."
+          sleep $sleep_time
+
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: Trigger master dag
+        run: |
+          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
