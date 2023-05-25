@@ -100,7 +100,7 @@ with DAG(
     schedule=MASTER_DAG_SCHEDULE,
     start_date=datetime(2022, 1, 1),
     catchup=False,
-    tags=["provider_master_dag"],
+    tags=["master_dag"],
 ) as dag:
     # Sleep for 30 seconds so that all the example dag will be available before master dag trigger them
     start = PythonOperator(
