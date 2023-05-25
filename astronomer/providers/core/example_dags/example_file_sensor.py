@@ -27,7 +27,7 @@ with DAG(
     # [START howto_sensor_filesystem_async]
     file_sensor_task = FileSensorAsync(
         task_id="file_sensor_task",
-        filepath="example_file_async_sensor.txt",
+        filepath=f"{os.environ['AIRFLOW_HOME']}/dags/example_file_async_sensor.txt",
         fs_conn_id=FS_CONN_ID,
     )
     # [END howto_sensor_filesystem_async]

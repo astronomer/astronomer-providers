@@ -19,6 +19,7 @@ SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", None)
+IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
@@ -29,9 +30,12 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
-        airflow_version_message = (
-            f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
-        )
+
+        if IS_RUNTIME_RELEASE:
+            airflow_version_message = f"Results generated for Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {airflow_executor}  \n\n"
+        else:
+            airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
+
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:

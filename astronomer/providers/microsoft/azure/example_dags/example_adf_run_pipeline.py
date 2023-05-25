@@ -180,6 +180,8 @@ with DAG(
     tags=["example", "async", "Azure Pipeline"],
 ) as dag:
     # [START howto_create_resource_group]
+    # This task uses CLIENT_ID,CLIENT_SCERET and TENANT_ID as env var to create a connection
+    # using ClientSecretCredential
     create_azure_data_factory_storage_pipeline = PythonOperator(
         task_id="create_azure_data_factory_storage_pipeline",
         python_callable=create_adf_storage_pipeline,
@@ -187,6 +189,7 @@ with DAG(
     # [END howto_create_resource_group]
 
     # [START howto_operator_adf_run_pipeline_async]
+    # This task uses azure_data_factory_default connection
     run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_wait",
         pipeline_name=PIPELINE_NAME,
