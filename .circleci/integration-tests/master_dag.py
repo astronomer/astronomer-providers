@@ -92,9 +92,6 @@ def prepare_dag_dependency(task_info, execution_time):
     return _task_list, _dag_run_ids
 
 
-if IS_RUNTIME_RELEASE:
-    MASTER_DAG_SCHEDULE = None
-
 with DAG(
     dag_id="example_master_dag",
     schedule=MASTER_DAG_SCHEDULE,
