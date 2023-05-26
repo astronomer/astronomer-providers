@@ -35,7 +35,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     async def get_client_async(self) -> AioBaseClient:
         """Create an Async Client object to communicate with AWS services."""
         # Fetch the Airflow connection object
-        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
+        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)  # type: ignore[arg-type]
 
         conn_config = AwsConnectionWrapper(
             conn=connection_object,

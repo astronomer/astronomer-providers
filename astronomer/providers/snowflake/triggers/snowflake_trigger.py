@@ -245,7 +245,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
         try:
             hook = get_db_hook(self._conn_id)
             while True:
-                query_ids = await sync_to_async(hook.run)(self._sql, parameters=self._parameters)
+                query_ids = await sync_to_async(hook.run)(self._sql, parameters=self._parameters)  # type: ignore[arg-type]
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:
                     result = await sync_to_async(hook.check_query_output)(
@@ -261,7 +261,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                         self._run_id,
                     )
 
-                    if await sync_to_async(self.validate_result)(result):
+                    if await sync_to_async(self.validate_result)(result):  # type: ignore[arg-type]
                         yield TriggerEvent(
                             {
                                 "status": "success",
