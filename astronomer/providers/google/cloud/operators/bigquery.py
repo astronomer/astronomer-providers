@@ -296,7 +296,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             nowait=True,
         )
 
-    def generate_query(self) -> str:
+    def generate_query(self) -> str:  # type: ignore[override]
         """
         Generate a select query if selected fields are given or with *
         for the given dataset and table id
