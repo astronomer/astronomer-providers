@@ -18,6 +18,13 @@ on:  # yamllint disable-line rule:truthy
           - both
           - providers-integration-tests
           - providers-integration-tests-on-KE
+      dags_to_trigger_after_deployment:
+        description: |
+          Comma separated list of dag_ids to trigger after deployment
+          (e.g. "example_async_adf_run_pipeline, example_async_batch")
+        required: false
+        type: string
+        default: ''
 
 jobs:
   deploy-to-providers-integration-tests:
@@ -36,8 +43,10 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-master-dag-for-providers-integration-tests:
-    if: github.event_name == 'schedule'
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests
     runs-on: 'ubuntu-20.04'
     steps:
@@ -53,12 +62,13 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: Trigger master dag
+      - name: Trigger DAG(s)
         run: |
-          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+          python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} \
+            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
 
   deploy-to-providers-integration-tests-on-KE:
     if: |
@@ -76,8 +86,10 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-master-dag-for-providers-integration-tests-on-KE:
-    if: github.event_name == 'schedule'
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests-on-KE:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests-on-KE
     runs-on: 'ubuntu-20.04'
     steps:
@@ -102,9 +114,10 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: Trigger master dag
+      - name: Trigger DAG(s)
         run: |
-          python3 dev/providers_rc_test_scripts/trigger_master_dag.py \
+          python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
+            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }} \
+            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
