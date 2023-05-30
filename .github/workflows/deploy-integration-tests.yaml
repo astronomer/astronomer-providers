@@ -114,7 +114,7 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: Trigger master dag
+      - name: Trigger dag(s)
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
