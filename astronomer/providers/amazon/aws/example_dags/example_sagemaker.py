@@ -250,6 +250,13 @@ def delete_logs(task_instance: TaskInstance) -> None:
                 client.delete_log_group(logGroupName=group)
         except ClientError as e:
             raise e
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                # Handle the resource group not found exception
+                print("logs group doesn't exits")
+            else:
+                # Handle other types of exceptions or errors
+                raise e
 
 
 def get_aws_sagemaker_session(task_instance: TaskInstance) -> None:
