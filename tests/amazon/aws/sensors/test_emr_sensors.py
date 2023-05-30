@@ -1,4 +1,5 @@
 from unittest import mock
+from unittest.mock import PropertyMock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
@@ -19,6 +20,9 @@ VIRTUAL_CLUSTER_ID = "test_cluster_1"
 JOB_ID = "j-T0CT8Z0C20NT"
 AWS_CONN_ID = "aws_default"
 STEP_ID = "s-34RJO0CKERRPL"
+
+MODULE = "astronomer.providers.amazon.aws.sensors.emr"
+
 
 MODULE = "astronomer.providers.amazon.aws.sensors.emr"
 
@@ -81,12 +85,35 @@ class TestEmrJobFlowSensorAsync:
         job_flow_id=JOB_ID,
     )
 
-    def test_emr_job_flow_sensor_async(self, context):
+    @mock.patch(f"{MODULE}.EmrJobFlowSensorAsync.defer")
+    @mock.patch(f"{MODULE}.EmrJobFlowSensorAsync.hook", new_callable=PropertyMock)
+    def test_emr_job_flow_sensor_async_finish_before_deferred(self, mock_hook, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        mock_hook.return_value.conn.describe_cluster.return_value = {
+            "Cluster": {"Status": {"State": "TERMINATED"}}
+        }
+        self.TASK.execute(context)
+        assert not mock_defer.called
+
+    @mock.patch(f"{MODULE}.EmrJobFlowSensorAsync.defer")
+    @mock.patch(f"{MODULE}.EmrJobFlowSensorAsync.hook", new_callable=PropertyMock)
+    def test_emr_job_flow_sensor_async_failed_before_deferred(self, mock_hook, mock_defer, context):
+        """Assert task is not deferred when it receives a finish status before deferring"""
+        mock_hook.return_value.conn.describe_cluster.return_value = {
+            "Cluster": {"Status": {"State": "TERMINATED_WITH_ERRORS"}}
+        }
+        with pytest.raises(AirflowException):
+            self.TASK.execute(context)
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize("status", ("STARTING", "BOOTSTRAPPING", "RUNNING", "WAITING"))
+    @mock.patch(f"{MODULE}.EmrJobFlowSensorAsync.hook", new_callable=PropertyMock)
+    def test_emr_job_flow_sensor_async(self, mock_hook, status, context):
         """
         Asserts that a task is deferred and a EmrJobFlowSensorTrigger will be fired
         when the EmrJobFlowSensorAsync is executed.
         """
-
+        mock_hook.return_value.conn.describe_cluster.return_value = {"Cluster": {"Status": {"State": status}}}
         with pytest.raises(TaskDeferred) as exc:
             self.TASK.execute(context)
         assert isinstance(
