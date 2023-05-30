@@ -2,6 +2,8 @@
 name: test-rc-release
 
 on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       rc_testing_branch:
@@ -25,8 +27,73 @@ on:  # yamllint disable-line rule:truthy
         default: 'main'
 
 jobs:
+  check-rc-testing-annocement:
+    runs-on: 'ubuntu-20.04'
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Checkout apache-airflow
+        uses: actions/checkout@v3
+        with:
+          repository: 'apache/airflow'
+
+      - name: Parse the latest 100 GitHub issues from apache-airflow to check providers testing annocement
+        id: parse-airflow-gh-issues
+        run: |
+          # The default limit is 30. Set it to 100 for retrieving more issues
+          rc_issue_url=`gh issue list \
+            --json createdAt,title,url \
+            --limit 100 \
+            --jq 'map(
+                    select(
+                      .title |
+                      contains ("Status of testing Providers that were prepared on ")
+                    )
+                  ) | .[0].url'`
+
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+
+      - name: Checkout current repo
+        uses: actions/checkout@v3
+        if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
+
+      - name: Parse the latest GitHub issues for checking existing RC provider testing issue
+        id: parse-current-repo
+        if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
+        run: |
+          # The default limit is 30. Set it to 100 for retrieving more issues
+          rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
+          testing_issue_url=`gh issue list \
+            --json createdAt,title,url \
+            --limit 100 \
+            --jq 'map(
+                    select(
+                      .title |
+                      contains (
+                        "[DO NOT MERGE] Test RC provider packages for $rc_issue_url"
+                      )
+                    )
+                  ) | .[0].url'`
+
+          echo "testing_issue_url=$testing_issue_url" >> $GITHUB_OUTPUT
+
+      - name: Export rc_issue_url
+        id: export-rc-issue-url
+        run: |
+          rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
+          testing_issue_url="${{ steps.parse-current-repo.outputs.testing_issue_url }}"
+          if [ "$rc_issue_url" == "" ] ; then
+            echo "No RC providers testing annocement found on apache-airflow"
+          elif [ "$testing_issue_url" != "" ] ; then
+            echo "Branch for testing RC providers has been created"
+            rc_issue_url=""
+          fi
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+    outputs:
+      rc_issue_url: ${{ steps.export-rc-issue-url.outputs.rc_issue_url }}
+
   validate-manual-input:
     runs-on: 'ubuntu-20.04'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Validate user input
         if: |
@@ -37,9 +104,14 @@ jobs:
           exit 1
 
   create-branch-for-testing-rc-release:
-    needs: validate-manual-input
+    needs: [validate-manual-input, check-rc-testing-annocement]
     runs-on: 'ubuntu-20.04'
-    if: ${{ inputs.issue_url }}
+    if: |
+      always() &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.issue_url != '') ||
+        (github.event_name == 'schedule' && needs.check-rc-testing-annocement.outputs.rc_issue_url != '')
+      )
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -50,6 +122,22 @@ jobs:
         run: |
           python3 -m pip install -r dev/integration_test_scripts/requirements.txt
 
+      - name: Setup Github Actions git user
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Export GitHub RC provider testing url
+        id: export-rc-issue-url
+        run: |
+          if [ "${{ inputs.issue_url }}" != "" ] ; then
+            rc_issue_url="${{ inputs.issue_url }}"
+          else
+            rc_issue_url="${{ needs.check-rc-testing-annocement.outputs.rc_issue_url }}"
+          fi
+
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+
       - name: Create RC branch
         id: create_rc_branch
         run: |
@@ -57,28 +145,28 @@ jobs:
           echo "Current timestamp is" $current_timestamp
           branch_name="rc-test-$current_timestamp"
           git checkout -b $branch_name
+
           echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
 
       - name: Update project dependencies to use RC providers
         run: |
-          echo "Updating setup.cfg with RC provider packages"
-          python3 dev/integration_test_scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          rc_issue_url="${{ steps.export-rc-issue-url.rc_issue_url }}"
 
-      - name: Setup Github Actions git user
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Actions"
+          echo "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          python3 dev/integration_test_scripts/replace_dependencies.py --issue-url $rc_issue_url
 
       - name: Commit changes and create a pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          rc_issue_url="${{ steps.export-rc-issue-url.rc_issue_url }}"
+
           git add setup.cfg
-          git commit -m "Update setup.cfg to use RC provider packages"
-          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
+          git commit -m "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          git push origin ${{ steps.create_rc_branch.rc_testing_branch }}
           gh pr create --base ${{ inputs.base_git_rev }} \
-                       --title "[DO NOT MERGE] Test RC provider packages" \
-                       --body "${{ inputs.issue_url }}" --fill
+                       --title "[DO NOT MERGE] Test RC provider packages for $rc_issue_url"
+
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
       rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
@@ -131,7 +219,7 @@ jobs:
         run: |
           echo "Current timestamp is" `date`
           echo "Sleeping for 1800 seconds (30 minutes)"
-          echo "allowing the deployed image to be updated across all Airflow components.."
+          echo "allowing the deployed image to be updated across all Airflow components."
           sleep 1800
 
       - name: checkout
