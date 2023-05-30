@@ -37,6 +37,7 @@ HIVE_OPERATOR_INGRESS_PORT = int(os.getenv("HIVE_OPERATOR_INGRESS_PORT", 10000))
 HIVE_SCHEMA = os.getenv("HIVE_SCHEMA", "default")
 HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")
 HIVE_PARTITION = os.getenv("HIVE_PARTITION", "state='FL'")
+HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
@@ -52,7 +53,7 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
 # If you would like to use a different version of the EMR cluster, then we need to
 # match the hive and hadoop versions same as specified in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
-    "Name": "example_hive_sensor_cluster",
+    "Name": HIVE_CLUSTER,
     "ReleaseLabel": "emr-5.34.0",
     "Applications": [
         {"Name": "Spark"},
