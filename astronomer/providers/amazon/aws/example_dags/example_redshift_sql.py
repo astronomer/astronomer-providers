@@ -13,7 +13,6 @@ from astronomer.providers.amazon.aws.operators.redshift_sql import (
 )
 
 REDSHIFT_CONN_ID = os.getenv("ASTRO_REDSHIFT_CONN_ID", "redshift_default")
-AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
 REDSHIFT_CLUSTER_IDENTIFIER = os.getenv("REDSHIFT_CLUSTER_IDENTIFIER", "astro-providers-cluster")
 REDSHIFT_CLUSTER_MASTER_USER = os.getenv("REDSHIFT_CLUSTER_MASTER_USER", "awsuser")
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.getenv("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
@@ -136,11 +135,7 @@ with DAG(
             end;
             $$ language plpgsql;
             """,
-            cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-            db_user=REDSHIFT_CLUSTER_MASTER_USER,
-            aws_conn_id=AWS_CONN_ID,
-            database=REDSHIFT_CLUSTER_DB_NAME,
-            region=AWS_DEFAULT_REGION,
+        redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     task_long_running_query = RedshiftSQLOperatorAsync(
@@ -158,11 +153,7 @@ with DAG(
             color VARCHAR NOT NULL
             );
         """,
-        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-        db_user=REDSHIFT_CLUSTER_MASTER_USER,
-        aws_conn_id=AWS_CONN_ID,
-        database=REDSHIFT_CLUSTER_DB_NAME,
-        region=AWS_DEFAULT_REGION,
+        redshift_conn_id=REDSHIFT_CONN_ID,
     )
     # [END howto_operator_redshift_sql_async]
 
@@ -176,11 +167,7 @@ with DAG(
             "INSERT INTO fruit VALUES ( 5, 'Pear', 'Green');",
             "INSERT INTO fruit VALUES ( 6, 'Strawberry', 'Red');",
         ],
-        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-        db_user=REDSHIFT_CLUSTER_MASTER_USER,
-        aws_conn_id=AWS_CONN_ID,
-        database=REDSHIFT_CLUSTER_DB_NAME,
-        region=AWS_DEFAULT_REGION,
+        redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     task_get_all_data = RedshiftSQLOperatorAsync(
@@ -192,21 +179,13 @@ with DAG(
         task_id="task_get_data_with_filter",
         sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
         params={"color": "Red"},
-        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-        db_user=REDSHIFT_CLUSTER_MASTER_USER,
-        aws_conn_id=AWS_CONN_ID,
-        database=REDSHIFT_CLUSTER_DB_NAME,
-        region=AWS_DEFAULT_REGION,
+        redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     task_delete_table = RedshiftSQLOperatorAsync(
         task_id="task_delete_table",
         sql="drop table fruit;",
-        cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
-        db_user=REDSHIFT_CLUSTER_MASTER_USER,
-        aws_conn_id=AWS_CONN_ID,
-        database=REDSHIFT_CLUSTER_DB_NAME,
-        region=AWS_DEFAULT_REGION,
+        redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     delete_redshift_cluster = PythonOperator(
