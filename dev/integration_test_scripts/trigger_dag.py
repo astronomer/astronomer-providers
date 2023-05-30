@@ -60,6 +60,7 @@ if __name__ == "__main__":
             "Comma separated list of dag_ids to trigger"
             " e.g. 'example_async_adf_run_pipeline, example_async_batch'"
         ),
+        default="example_master_dag",
     )
 
     args = parser.parse_args()
