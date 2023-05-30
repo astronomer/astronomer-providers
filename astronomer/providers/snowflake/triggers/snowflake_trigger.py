@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+from typing import Any, AsyncIterator
 
 from airflow import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -39,7 +41,7 @@ class SnowflakeTrigger(BaseTrigger):
         self,
         task_id: str,
         poll_interval: float,
-        query_ids: List[str],
+        query_ids: list[str],
         snowflake_conn_id: str,
     ):
         super().__init__()
@@ -48,7 +50,7 @@ class SnowflakeTrigger(BaseTrigger):
         self.query_ids = query_ids
         self.snowflake_conn_id = snowflake_conn_id
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SnowflakeTrigger arguments and classpath."""
         return (
             "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeTrigger",
@@ -60,7 +62,7 @@ class SnowflakeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes a series of connections to snowflake to get the status of the query
         by async get_query_status function
@@ -92,7 +94,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
     def __init__(
         self,
         poll_interval: float,
-        query_ids: List[str],
+        query_ids: list[str],
         snowflake_conn_id: str,
         token_life_time: timedelta,
         token_renewal_delta: timedelta,
@@ -104,7 +106,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
         self.token_life_time = token_life_time
         self.token_renewal_delta = token_renewal_delta
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SnowflakeSqlApiTrigger arguments and classpath."""
         return (
             "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger",
@@ -117,7 +119,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes a GET API request to snowflake with query_id to get the status of the query
         by get_sql_api_query_status async function
@@ -128,7 +130,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
             self.token_renewal_delta,
         )
         try:
-            statement_query_ids: List[str] = []
+            statement_query_ids: list[str] = []
             for query_id in self.query_ids:
                 while await self.is_still_running(query_id):
                     await asyncio.sleep(self.poll_interval)
@@ -179,9 +181,9 @@ class SnowflakeSensorTrigger(BaseTrigger):
         task_id: str,
         run_id: str,
         snowflake_conn_id: str,
-        parameters: Optional[str] = None,
-        success: Optional[str] = None,
-        failure: Optional[str] = None,
+        parameters: str | None = None,
+        success: str | None = None,
+        failure: str | None = None,
         fail_on_empty: bool = False,
         poke_interval: float = 60,
     ):
@@ -197,7 +199,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
         self._conn_id = snowflake_conn_id
         self._poke_interval = poke_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SqlTrigger arguments and classpath.."""
         return (
             "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeSensorTrigger",
@@ -215,7 +217,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
             },
         )
 
-    def validate_result(self, result: List[Tuple[Any]]) -> Any:
+    def validate_result(self, result: list[tuple[Any]]) -> Any:
         """Validates query result and verifies if it returns a row"""
         if not result:
             if self._fail_on_empty:
@@ -237,7 +239,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 raise AirflowException(f"self.success is present, but not callable -> {self._success}")
         return bool(first_cell)
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Make an asynchronous connection to Snowflake and defer until query
         returns a result
