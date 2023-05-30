@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from airflow.models import TaskInstance
 
 ROLE_ARN_KEY = os.getenv("SAGEMAKER_ROLE_ARN_KEY", "")
+MODEL_NAME = os.getenv("MODEL_NAME", "provider-KNN-model")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 ACCOUNT_ID = os.getenv("AWS_ACCOUNT_ID", "")
 KNN_IMAGE_URI_KEY = os.getenv("KNN_IMAGE_URI_KEY", "")
@@ -88,7 +89,7 @@ def set_up(role_arn: str) -> None:
     train_data_csv = "train-processed-input-data/train.csv"
     training_output_s3_key = "train-processed-output"
 
-    model_name = "provider-KNN-model"
+    model_name = MODEL_NAME
 
     # Transform configs
     transform_job_name = "provider-transform"
