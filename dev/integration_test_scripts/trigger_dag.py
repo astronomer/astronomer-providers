@@ -67,9 +67,6 @@ if __name__ == "__main__":
     token = get_access_token(args.astronomer_key_id.strip(), args.astronomer_key_secret.strip())
 
     input_dag_ids = args.dag_ids
-    if not input_dag_ids:
-        dag_ids = ["example_master_dag"]
-    else:
-        dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
+    dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
 
     trigger_dag_runs(dag_ids, args.deployment_id, token)
