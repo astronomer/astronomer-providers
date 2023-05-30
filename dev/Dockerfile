@@ -14,4 +14,5 @@ COPY pyproject.toml ${AIRFLOW_HOME}/astronomer_providers/pyproject.toml
 
 
 RUN pip install -e "${AIRFLOW_HOME}/astronomer_providers[all,tests,mypy]"
+RUN pip install apache-airflow-providers-slack
 USER astro
