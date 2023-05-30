@@ -43,7 +43,7 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-master-dag-for-providers-integration-tests:
+  wait-for-deployment-to-be-ready-and-trigger-dag(s)-for-providers-integration-tests:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
