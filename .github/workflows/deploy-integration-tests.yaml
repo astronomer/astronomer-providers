@@ -43,7 +43,7 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-dag(s)-for-providers-integration-tests:
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
@@ -86,7 +86,7 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-dag(s)-for-providers-integration-tests-on-KE:
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests-on-KE:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
@@ -114,10 +114,10 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: Trigger dag(s)
+      - name: Trigger DAG(s)
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }} \
-            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}""
+            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
