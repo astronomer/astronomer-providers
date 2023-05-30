@@ -62,7 +62,7 @@ jobs:
         with:
           ref: ${{ inputs.git_rev }}
 
-      - name: Trigger master dag
+      - name: Trigger DAG(s)
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
