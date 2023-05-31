@@ -238,14 +238,6 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*dbt_trigger_tasks)
 
-    report = PythonOperator(
-        task_id="get_report",
-        python_callable=get_report,
-        op_kwargs={"dag_run_ids": dag_run_ids},
-        trigger_rule="all_done",
-        provide_context=True,
-    )
-
     end_test = DummyOperator(
         task_id="end_test",
         trigger_rule="all_success",
@@ -257,6 +249,14 @@ with DAG(
     aws_nuke_trigger_tasks, ids = prepare_dag_dependency(aws_nuke_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*aws_nuke_trigger_tasks)
+
+    report = PythonOperator(
+        task_id="get_report",
+        python_callable=get_report,
+        op_kwargs={"dag_run_ids": dag_run_ids},
+        trigger_rule="all_done",
+        provide_context=True,
+    )
 
     end = DummyOperator(
         task_id="end",
@@ -303,6 +303,4 @@ with DAG(
         dbt_trigger_tasks[-1],
     ]
 
-    last_task >> end_test >> end
-    last_task >> report >> end
-    [end_test, report] >> aws_nuke_trigger_tasks[0] >> end
+    last_task >> end_test >> aws_nuke_trigger_tasks[0] >> report >> end
