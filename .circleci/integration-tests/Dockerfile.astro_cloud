@@ -30,7 +30,8 @@ RUN apt-get update -y \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && \
     apt-get update -y && \
     apt-get install google-cloud-sdk -y && \
-    apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
+    apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y \
+    apt-get install jq -y \
 
 # Set Hive and Hadoop versions.
 ENV HIVE_LIBRARY_VERSION=hive-2.3.9
