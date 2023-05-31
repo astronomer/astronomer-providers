@@ -29,6 +29,15 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start")
 
+    terminate_running_emr_virtual_clusters = BashOperator(
+        task_id="terminate_running_emr_virtual_clusters",
+        bash_command=f"set -e; "
+        f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
+        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
+        f"aws configure set default.region {AWS_DEFAULT_REGION}; "
+        f"aws emr-containers list-virtual-clusters --state RUNNING --region {AWS_DEFAULT_REGION} | jq -r '.virtualClusters[].id' | xargs -I % aws emr-containers delete-virtual-cluster --id % --region {AWS_DEFAULT_REGION}; ",
+    )
+
     execute_aws_nuke = BashOperator(
         task_id="execute_aws_nuke",
         bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
@@ -39,4 +48,4 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    start >> execute_aws_nuke >> end
+    start >> terminate_running_emr_virtual_clusters >> execute_aws_nuke >> end

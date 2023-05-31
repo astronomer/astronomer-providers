@@ -7,7 +7,8 @@ RUN apt-get install -y --no-install-recommends \
         build-essential \
         libsasl2-2 \
         libsasl2-dev \
-        libsasl2-modules
+        libsasl2-modules \
+        jq
 
 COPY setup.cfg ${AIRFLOW_HOME}/astronomer_providers/setup.cfg
 COPY pyproject.toml ${AIRFLOW_HOME}/astronomer_providers/pyproject.toml
