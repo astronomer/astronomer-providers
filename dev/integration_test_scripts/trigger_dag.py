@@ -51,9 +51,9 @@ def trigger_dag_runs(dag_ids: list[str], deployment_id: str, bearer_token: str) 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud")
-    parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment")
-    parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment")
+    parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud", type=str)
+    parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment", type=str)
+    parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment", type=str)
     parser.add_argument(
         "--dag-ids",
         help=(
@@ -61,6 +61,8 @@ if __name__ == "__main__":
             " e.g. 'example_async_adf_run_pipeline, example_async_batch'"
         ),
         default="example_master_dag",
+        # fallback to "example_master_dag" if empty string "" is provided
+        type=lambda dag_ids: dag_ids if dag_ids else "example_master_dag",
     )
 
     args = parser.parse_args()
