@@ -18,6 +18,7 @@ REDSHIFT_CLUSTER_MASTER_USER = os.getenv("REDSHIFT_CLUSTER_MASTER_USER", "awsuse
 REDSHIFT_CLUSTER_MASTER_PASSWORD = os.getenv("REDSHIFT_CLUSTER_MASTER_PASSWORD", "********")
 REDSHIFT_CLUSTER_TYPE = os.getenv("REDSHIFT_CLUSTER_TYPE", "single-node")
 REDSHIFT_CLUSTER_NODE_TYPE = os.getenv("REDSHIFT_CLUSTER_NODE_TYPE", "dc2.large")
+REDSHIFT_TABLE_NAME = os.getenv("REDSHIFT_TABLE_NAME", "fruit")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "**********")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "***********")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
@@ -146,8 +147,8 @@ with DAG(
     # [START howto_operator_redshift_sql_async]
     task_create_table = RedshiftSQLOperatorAsync(
         task_id="task_create_table",
-        sql="""
-            CREATE TABLE IF NOT EXISTS fruit (
+        sql=f"""
+            CREATE TABLE IF NOT EXISTS {REDSHIFT_TABLE_NAME} (
             fruit_id INTEGER,
             name VARCHAR NOT NULL,
             color VARCHAR NOT NULL
@@ -160,31 +161,31 @@ with DAG(
     task_insert_data = RedshiftSQLOperatorAsync(
         task_id="task_insert_data",
         sql=[
-            "INSERT INTO fruit VALUES ( 1, 'Banana', 'Yellow');",
-            "INSERT INTO fruit VALUES ( 2, 'Apple', 'Red');",
-            "INSERT INTO fruit VALUES ( 3, 'Lemon', 'Yellow');",
-            "INSERT INTO fruit VALUES ( 4, 'Grape', 'Purple');",
-            "INSERT INTO fruit VALUES ( 5, 'Pear', 'Green');",
-            "INSERT INTO fruit VALUES ( 6, 'Strawberry', 'Red');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 1, 'Banana', 'Yellow');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 2, 'Apple', 'Red');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 3, 'Lemon', 'Yellow');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 4, 'Grape', 'Purple');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 5, 'Pear', 'Green');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 6, 'Strawberry', 'Red');",
         ],
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     task_get_all_data = RedshiftSQLOperatorAsync(
         task_id="task_get_all_data",
-        sql="SELECT * FROM fruit;",
+        sql=f"SELECT * FROM {REDSHIFT_TABLE_NAME};",
     )
 
     task_get_data_with_filter = RedshiftSQLOperatorAsync(
         task_id="task_get_data_with_filter",
-        sql="SELECT * FROM fruit WHERE color = '{{ params.color }}';",
+        sql=f"SELECT * FROM {REDSHIFT_TABLE_NAME} WHERE color = '{{ params.color }}';",
         params={"color": "Red"},
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
     task_delete_table = RedshiftSQLOperatorAsync(
         task_id="task_delete_table",
-        sql="drop table fruit;",
+        sql=f"drop table {REDSHIFT_TABLE_NAME};",
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
 
