@@ -18,6 +18,7 @@ GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
 LOCATION = os.getenv("GCP_GKE_LOCATION", "us-central1")
 GKE_CLUSTER_NAME = os.getenv("GKE_CLUSTER_NAME", "provider-team-gke-cluster")
 GKE_NAMESPACE = os.getenv("GKE_NAMESPACE", "default")
+GKE_POD_NAME = os.getenv("GKE_POD_NAME", "astro_k8s_gke_test_pod")
 
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
@@ -46,7 +47,7 @@ with DAG(
         project_id=PROJECT_ID,
         location=LOCATION,
         cluster_name=GKE_CLUSTER_NAME,
-        name="astro_k8s_gke_test_pod",
+        name=GKE_POD_NAME,
         namespace=GKE_NAMESPACE,
         image="ubuntu",
         in_cluster=False,
