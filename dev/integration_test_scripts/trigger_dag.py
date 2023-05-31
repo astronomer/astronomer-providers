@@ -43,17 +43,27 @@ def trigger_dag_runs(dag_ids: list[str], deployment_id: str, bearer_token: str) 
         "Cache-Control": "no-cache",
         "Authorization": f"Bearer {bearer_token}",
     }
+    failed_dag_ids: list[str] = []
     for dag_id in dag_ids:
         dag_trigger_url = f"{integration_tests_deployment_url}/api/v1/dags/{dag_id}/dagRuns"
         response = requests.post(dag_trigger_url, headers=headers, json={})
+
+        if response.status_code != 200:
+            failed_dag_ids.append(dag_id)
+
         logging.info(f"Response for {dag_id} DAG trigger is %s", response.json())
+
+    if failed_dag_ids:
+        for dag_id in failed_dag_ids:
+            logging.error(f"Failed to run DAG {dag_id}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud")
-    parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment")
-    parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment")
+    parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud", type=str)
+    parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment", type=str)
+    parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment", type=str)
     parser.add_argument(
         "--dag-ids",
         help=(
@@ -61,6 +71,8 @@ if __name__ == "__main__":
             " e.g. 'example_async_adf_run_pipeline, example_async_batch'"
         ),
         default="example_master_dag",
+        # fallback to "example_master_dag" if empty string "" is provided
+        type=lambda dag_ids: dag_ids if dag_ids else "example_master_dag",
     )
 
     args = parser.parse_args()
