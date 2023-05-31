@@ -162,11 +162,11 @@ with DAG(
         task_id="task_insert_data",
         sql=[
             f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 1, 'Banana', 'Yellow');",
-            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 2, 'Apple', 'Red');",
-            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 3, 'Lemon', 'Yellow');",
-            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 4, 'Grape', 'Purple');",
-            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 5, 'Pear', 'Green');",
-            f"INSERT INTO {REDSHIFT_TABLE_NAME} ( 6, 'Strawberry', 'Red');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 2, 'Apple', 'Red');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 3, 'Lemon', 'Yellow');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 4, 'Grape', 'Purple');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 5, 'Pear', 'Green');",
+            f"INSERT INTO {REDSHIFT_TABLE_NAME} VALUES ( 6, 'Strawberry', 'Red');",
         ],
         redshift_conn_id=REDSHIFT_CONN_ID,
     )
