@@ -249,7 +249,7 @@ def delete_logs(task_instance: TaskInstance) -> None:
             if client.describe_log_streams(logGroupName=group)["logStreams"]:
                 client.delete_log_group(logGroupName=group)
         except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 # Handle the resource group not found exception
                 print("logs group doesn't exits")
             else:
