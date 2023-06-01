@@ -96,7 +96,7 @@ with DAG(
     create_eks_cluster_kube_namespace_with_role = BashOperator(
         task_id="create_eks_cluster_kube_namespace_with_role",
         bash_command=f"{create_cluster_environment_variables} "
-        f"sh $AIRFLOW_HOME/dags/example_create_eks_kube_namespace_with_role.sh ",
+        f"bash $AIRFLOW_HOME/dags/example_create_eks_kube_namespace_with_role.sh ",
     )
 
     create_emr_virtual_cluster = EmrEksCreateClusterOperator(
@@ -144,7 +144,7 @@ with DAG(
     remove_cluster_container_role_policy = BashOperator(
         task_id="remove_cluster_container_role_policy",
         bash_command=f"{removal_environment_variables} "
-        f"sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
+        f"bash $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_role_policies.sh ",
         trigger_rule="all_done",
     )
 
