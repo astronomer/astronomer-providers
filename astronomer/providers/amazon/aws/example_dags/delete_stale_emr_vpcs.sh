@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# What does the script do?
+# This script automates the deletion of resources associated with VPCs (Virtual Private Clouds) in AWS .
+# It takes a prefix as input and retrieves a list of VPC IDs with the specified prefix. Then, it iterates through each
+# VPC ID and performs the following actions in the same order listed below to delete the VPC successfully.
+#     1. Deletes associated subnets
+#     2. First detach and then delete associated internet gateways
+#     3. Disassociates subnet associations and the main route table if applicable for the route tables and then delete
+#        the associated route tables
+#     4. Deletes associated security groups
+#     5. Deletes associated network interfaces
+#     6. Finally, deletes the VPC itself
+#
+# Why do we need this script?
+# When we create an EKS cluster using eksctl in the "emr_eks_pi_job" DAG , it creates a VPC with the specified prefix.
+# When we delete the cluster as part of its cleanup script task, ideally the delete cluster command should delete the
+# VPC as well. However, there were observed occurrences where the VPCs were not deleted. This script automates the
+# deletion of such stale VPCs and associated resources. We call this script as a task from the AWS nuke DAG at the end
+# of the master DAG run.
+
 prefix="eksctl-providers-team-eks"
 
 # Get the list of VPC IDs with the specified name prefix
