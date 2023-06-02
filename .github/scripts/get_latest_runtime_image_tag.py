@@ -31,7 +31,7 @@ def get_latest_tag(repository: str) -> str:
 
 
 if __name__ == "__main__":
-    repository = "astronomer/astro-runtime-dev"
+    repository = "astronomer/astro-runtime"
     if len(sys.argv) == 2 and sys.argv[1]:
         repository = sys.argv[1]
     latest_tag = get_latest_tag(repository=repository)
