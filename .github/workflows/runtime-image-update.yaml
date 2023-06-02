@@ -4,6 +4,10 @@ name: Update runtime image tag
 on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: '0 0 * * *'  # Run every day at midnight UTC
+  pull_request:
+    types:
+      - opened
+      - synchronize
   workflow_dispatch:
     inputs:
       quay_repo:
