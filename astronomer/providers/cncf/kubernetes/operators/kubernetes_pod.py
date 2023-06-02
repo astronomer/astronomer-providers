@@ -5,9 +5,9 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
-from airflow.providers.cncf.kubernetes.triggers.kubernetes_pod import (
-    ContainerState,
-    KubernetesPodTrigger,
+from airflow.providers.cncf.kubernetes.utils.pod_manager import (
+    PodPhase,
+    container_is_running,
 )
 from kubernetes.client import models as k8s
 from pendulum import DateTime
@@ -54,21 +54,6 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def define_container_state(self) -> ContainerState:
-        """Define the state of container"""
-        pod_containers = self.pod.status.container_statuses
-        if not pod_containers:
-            return ContainerState.UNDEFINED
-        container = [c for c in pod_containers if c.name == self.BASE_CONTAINER_NAME][0]
-        for state in (ContainerState.RUNNING, ContainerState.WAITING, ContainerState.TERMINATED):
-            state_obj = getattr(container.state, state)
-            if state_obj:
-                if state != ContainerState.TERMINATED:
-                    return state
-                else:
-                    return ContainerState.TERMINATED if state_obj.exit_code == 0 else ContainerState.FAILED
-        return ContainerState.UNDEFINED
-
     def defer(self, last_log_time: Optional[DateTime] = None, **kwargs: Any) -> None:
         """Defers to ``WaitContainerTrigger`` optionally with last log time."""
         if kwargs:
@@ -98,27 +83,18 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     def execute(self, context: Context) -> Any:  # noqa: D102
         self.pod_request_obj = self.build_pod_request_obj(context)
         self.pod: k8s.V1Pod = self.get_or_create_pod(self.pod_request_obj, context)
-        container_state = self.define_container_state()
         pod_status = self.pod.status.phase
-        if KubernetesPodTrigger.should_wait(pod_status, container_state):
-            self.defer()
-            return
+        if pod_status in PodPhase.terminal_states or not container_is_running(
+            pod=self.pod, container_name=self.BASE_CONTAINER_NAME
+        ):
+            event = {
+                "status": "done",
+                "namespace": self.pod.metadata.namespace,
+                "pod_name": self.pod.metadata.name,
+            }
+            return self.trigger_reentry(context=context, event=event)
 
-        if container_state == ContainerState.TERMINATED:
-            event = {
-                "name": self.pod.metadata.name,
-                "namespace": self.pod.metadata.namespace,
-                "status": "success",
-                "message": "All containers inside pod have started successfully.",
-            }
-        else:
-            event = {
-                "name": self.pod.metadata.name,
-                "namespace": self.pod.metadata.namespace,
-                "status": "failed",
-                "message": self.pod.status.message,
-            }
-        return self.trigger_reentry(context=context, event=event)
+        self.defer()
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:  # type: ignore[override]
         """Deprecated; replaced by trigger_reentry."""
