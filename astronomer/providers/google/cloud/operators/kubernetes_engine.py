@@ -2,9 +2,11 @@
 from typing import Any, Dict, Optional, Sequence, Union
 
 from airflow.exceptions import AirflowException
+from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
+from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
 from kubernetes.client import models as k8s
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -105,10 +107,47 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             self.pod_name = self.pod.metadata.name
             self.pod_namespace = self.pod.metadata.namespace
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> Any:
         """Look for a pod, if not found then create one and defer"""
         self._get_or_create_pod(context)
         self.log.info("Created pod=%s in namespace=%s", self.pod_name, self.pod_namespace)
+
+        event = None
+        try:
+            with _get_gke_config_file(
+                gcp_conn_id=self.gcp_conn_id,
+                project_id=self.project_id,
+                cluster_name=self.cluster_name,
+                impersonation_chain=self.impersonation_chain,
+                regional=self.regional,
+                location=self.location,
+                use_internal_ip=self.use_internal_ip,
+            ) as config_file:
+                hook_params: Dict[str, Any] = {
+                    "cluster_context": self.cluster_context,
+                    "config_file": config_file,
+                    "in_cluster": self.in_cluster,
+                }
+                hook = KubernetesHook(conn_id=None, **hook_params)
+                client = hook.core_v1_client
+                pod = client.read_namespaced_pod(self.pod_name, self.pod_namespace)
+                phase = pod.status.phase
+                if phase == PodPhase.SUCCEEDED:
+                    event = {"status": "done", "namespace": self.namespace, "pod_name": self.name}
+
+                elif phase == PodPhase.FAILED:
+                    event = {
+                        "status": "failed",
+                        "namespace": self.namespace,
+                        "pod_name": self.name,
+                        "description": "Failed to start pod operator",
+                    }
+        except Exception as e:
+            event = {"status": "error", "message": str(e)}
+
+        if event:
+            return self.trigger_reentry(context, event)
+
         self.defer(
             trigger=GKEStartPodTrigger(
                 namespace=self.pod_namespace,

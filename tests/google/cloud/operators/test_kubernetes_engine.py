@@ -1,9 +1,12 @@
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.providers.cncf.kubernetes.utils.pod_manager import PodLoggingStatus
+from airflow.providers.cncf.kubernetes.utils.pod_manager import (
+    PodLoggingStatus,
+    PodPhase,
+)
 from kubernetes.client import models as k8s
 from kubernetes.client.models.v1_object_meta import V1ObjectMeta
 
@@ -71,18 +74,98 @@ class TestGKEStartPodOperatorAsync:
 
         assert self.OPERATOR._get_or_create_pod(context=context) is None
 
+    @pytest.mark.parametrize("phase", PodPhase.terminal_states)
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.trigger_reentry"
+    )
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.defer"
+    )
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.KubernetesHook.core_v1_client",
+        new_callable=PropertyMock,
+    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync._get_or_create_pod"
     )
-    def test_execute(self, mock__get_or_create_pod, context):
+    def test_execute_terminated_before_deferred(
+        self,
+        mock__get_or_create_pod,
+        mock__get_gke_config_file,
+        mock_client,
+        mock_defer,
+        mock_trigger_reentry,
+        phase,
+        context,
+    ):
         """
         asserts that a task is deferred and a GKEStartPodTrigger will be fired
         when the GKEStartPodOperatorAsync is executed.
         """
         mock__get_or_create_pod.return_value = None
+        mock_client.return_value.read_namespaced_pod.return_value.status.phase = phase
+
+        self.OPERATOR.execute(context)
+
+        assert mock_trigger_reentry.called
+        assert not mock_defer.called
+
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.trigger_reentry"
+    )
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.defer"
+    )
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.KubernetesHook.core_v1_client",
+        new_callable=PropertyMock,
+    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync._get_or_create_pod"
+    )
+    def test_execute_encounter_exception_before_deferred(
+        self,
+        mock__get_or_create_pod,
+        mock__get_gke_config_file,
+        mock_client,
+        mock_defer,
+        mock_trigger_reentry,
+        context,
+    ):
+        """
+        asserts that a task is deferred and a GKEStartPodTrigger will be fired
+        when the GKEStartPodOperatorAsync is executed.
+        """
+        mock__get_or_create_pod.return_value = None
+        mock_client.side_effect = Exception
+
+        self.OPERATOR.execute(context)
+
+        assert mock_trigger_reentry.called
+        assert not mock_defer.called
+
+    @pytest.mark.parametrize("phase", (PodPhase.RUNNING, PodPhase.PENDING))
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.KubernetesHook.core_v1_client",
+        new_callable=PropertyMock,
+    )
+    @mock.patch("astronomer.providers.google.cloud.operators.kubernetes_engine._get_gke_config_file")
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync._get_or_create_pod"
+    )
+    def test_execute(self, mock__get_or_create_pod, mock__get_gke_config_file, mock_client, phase, context):
+        """
+        asserts that a task is deferred and a GKEStartPodTrigger will be fired
+        when the GKEStartPodOperatorAsync is executed.
+        """
+        mock__get_or_create_pod.return_value = None
+        mock_client.return_value.read_namespaced_pod.return_value.status.phase = phase
 
         with pytest.raises(TaskDeferred) as exc:
             self.OPERATOR.execute(context)
+
         assert isinstance(exc.value.trigger, GKEStartPodTrigger), "Trigger is not a GKEStartPodTrigger"
 
     @mock.patch(
