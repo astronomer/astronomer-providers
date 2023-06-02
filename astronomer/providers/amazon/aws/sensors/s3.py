@@ -5,7 +5,7 @@ import warnings
 from datetime import timedelta
 from typing import Any, Callable, List, Sequence, cast
 
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 from airflow.sensors.base import BaseSensorOperator
 
@@ -81,20 +81,27 @@ class S3KeySensorAsync(S3KeySensor):
 
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
-        if not self.poke(context):
-            self.defer(
-                timeout=timedelta(seconds=self.timeout),
-                trigger=S3KeyTrigger(
-                    bucket_name=cast(str, self.bucket_name),
-                    bucket_key=self.bucket_key,
-                    wildcard_match=self.wildcard_match,
-                    check_fn=self.check_fn,
-                    aws_conn_id=self.aws_conn_id,
-                    verify=self.verify,
-                    poke_interval=self.poke_interval,
-                ),
-                method_name="execute_complete",
-            )
+        try:
+            if not self.poke(context):
+                self.defer(
+                    timeout=timedelta(seconds=self.timeout),
+                    trigger=S3KeyTrigger(
+                        bucket_name=cast(str, self.bucket_name),
+                        bucket_key=self.bucket_key,
+                        wildcard_match=self.wildcard_match,
+                        check_fn=self.check_fn,
+                        aws_conn_id=self.aws_conn_id,
+                        verify=self.verify,
+                        poke_interval=self.poke_interval,
+                        soft_fail=self.soft_fail,
+                    ),
+                    method_name="execute_complete",
+                )
+        except Exception as e:
+            if self.soft_fail:
+                raise AirflowSkipException(f"{self.task_id} failed")
+            else:
+                raise e
 
     def execute_complete(self, context: Context, event: Any = None) -> bool | None:
         """
@@ -103,6 +110,8 @@ class S3KeySensorAsync(S3KeySensor):
         successful.
         """
         if event["status"] == "error":
+            if event["soft_fail"]:
+                raise AirflowSkipException(event["message"])
             raise AirflowException(event["message"])
         elif event["status"] == "success" and "s3_objects" in event:
             files = typing.cast(List[str], event["s3_objects"])
