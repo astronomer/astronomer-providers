@@ -46,6 +46,13 @@ with DAG(
         f"aws-nuke -c /usr/local/airflow/dags/nuke-config.yml --profile default --force --no-dry-run; ",
     )
 
+    delete_stale_emr_vpcs = BashOperator(
+        task_id="delete_stale_emr_vpcs",
+        bash_command="sh $AIRFLOW_HOME/dags/delete_stale_emr_vpcs.sh ",
+        trigger_rule="all_done",
+    )
+
     end = DummyOperator(task_id="end")
 
-    start >> terminate_running_emr_virtual_clusters >> execute_aws_nuke >> end
+    start >> terminate_running_emr_virtual_clusters >> execute_aws_nuke >> delete_stale_emr_vpcs
+    [terminate_running_emr_virtual_clusters, execute_aws_nuke, delete_stale_emr_vpcs] >> end
