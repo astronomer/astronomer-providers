@@ -23,7 +23,8 @@ SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 
 
-def generate_task_report(**context):
+def generate_task_report(**context: Any):
+    """Generate a report of the task statuses for the DAG run and send it to configured Slack channel for alerts."""
     dag_run = context["dag_run"]
     run_id = dag_run.run_id
 
@@ -79,7 +80,7 @@ def generate_task_report(**context):
 
 
 def check_dag_status(**kwargs: Any) -> None:
-    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    """Raise an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
     for task_instance in kwargs["dag_run"].get_task_instances():
         if (
             task_instance.current_state() != State.SUCCESS
