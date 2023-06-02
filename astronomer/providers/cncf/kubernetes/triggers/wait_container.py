@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import traceback
 from datetime import timedelta
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator
 
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.utils.pod_manager import (
@@ -43,12 +45,12 @@ class WaitContainerTrigger(BaseTrigger):
         container_name: str,
         pod_name: str,
         pod_namespace: str,
-        kubernetes_conn_id: Optional[str] = None,
-        hook_params: Optional[Dict[str, Any]] = None,
+        kubernetes_conn_id: str | None = None,
+        hook_params: dict[str, Any] | None = None,
         pending_phase_timeout: float = 120,
         poll_interval: float = 5,
-        logging_interval: Optional[int] = None,
-        last_log_time: Optional[DateTime] = None,
+        logging_interval: int | None = None,
+        last_log_time: DateTime | None = None,
     ):
         super().__init__()
         self.kubernetes_conn_id = kubernetes_conn_id
@@ -61,7 +63,7 @@ class WaitContainerTrigger(BaseTrigger):
         self.logging_interval = logging_interval
         self.last_log_time = last_log_time
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:  # noqa: D102
+    def serialize(self) -> tuple[str, dict[str, Any]]:  # noqa: D102
         return (
             "astronomer.providers.cncf.kubernetes.triggers.wait_container.WaitContainerTrigger",
             {
@@ -94,7 +96,7 @@ class WaitContainerTrigger(BaseTrigger):
             await asyncio.sleep(self.poll_interval)
         raise PodLaunchTimeoutException("Pod did not leave 'Pending' phase within specified timeout")
 
-    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> "TriggerEvent":
+    async def wait_for_container_completion(self, v1_api: CoreV1Api) -> TriggerEvent:
         """
         Waits until container ``self.container_name`` is no longer in running state.
         If trigger is configured with a logging period, then will emit an event to
@@ -114,7 +116,7 @@ class WaitContainerTrigger(BaseTrigger):
                 return TriggerEvent({"status": "running", "last_log_time": self.last_log_time})
             await asyncio.sleep(self.poll_interval)
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:  # noqa: D102
+    async def run(self) -> AsyncIterator[TriggerEvent]:  # noqa: D102
         self.log.debug("Checking pod %r in namespace %r.", self.pod_name, self.pod_namespace)
         try:
             hook = await self.get_hook()
