@@ -48,7 +48,7 @@ with DAG(
 
     delete_stale_emr_vpcs = BashOperator(
         task_id="delete_stale_emr_vpcs",
-        bash_command="sh $AIRFLOW_HOME/dags/delete_stale_emr_vpcs.sh ",
+        bash_command="sh $AIRFLOW_HOME/dags/example_delete_stale_emr_vpcs.sh ",
         trigger_rule="all_done",
     )
 
