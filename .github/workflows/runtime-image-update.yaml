@@ -32,7 +32,7 @@ jobs:
         run: |
           CURRENT_TAG=$(awk -F: '/quay.io\/astronomer\/astro-runtime/ {print $NF}' ./.circleci/integration-tests/Dockerfile.astro_cloud)
           echo "CURRENT_TAG=$CURRENT_TAG"
-          echo "::set-output name=tag::$CURRENT_TAG"
+          echo "tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
         # yamllint enable rule:line-length
 
       - name: Get latest tag from Quay.io
@@ -41,7 +41,7 @@ jobs:
         run: |
           LATEST_TAG=$(python ./.github/scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
           echo "LATEST_TAG=$LATEST_TAG"
-          echo "::set-output name=tag::$LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
         # yamllint enable rule:line-length
 
       - name: Check if tag was updated
@@ -49,10 +49,10 @@ jobs:
         run: |
           if [ "${{ steps.get_current_tag.outputs.tag }}" != "${{ steps.get_latest_tag.outputs.tag }}" ]; then
             echo "Tag was updated"
-            echo "::set-output name=tag_updated::true"
+            echo "tag_updated=true" >> $GITHUB_OUTPUT
           else
             echo "Tag was not updated"
-            echo "::set-output name=tag_updated::false"
+            echo "tag_updated=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create runtime image tag update branch
@@ -86,11 +86,13 @@ jobs:
         # yamllint enable rule:line-length
 
       - name: Setup Github Actions git user
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Actions"
 
       - name: Commit changes and create a pull request
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         # yamllint disable rule:line-length
