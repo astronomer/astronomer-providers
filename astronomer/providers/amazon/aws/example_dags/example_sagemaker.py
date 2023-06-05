@@ -251,7 +251,7 @@ def delete_logs(task_instance: TaskInstance) -> None:
         except ClientError as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 # Handle the resource group not found exception
-                print("logs group doesn't exits")
+                print("logs group doesn't exist")
             else:
                 # Handle other types of exceptions or errors
                 raise e
