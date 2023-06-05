@@ -4,7 +4,7 @@ from typing import Any, List
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.exceptions import AirflowException, AirflowSkipException, TaskDeferred
 from airflow.models import DAG, DagRun, TaskInstance
 from airflow.models.variable import Variable
 from airflow.utils import timezone
@@ -165,7 +165,9 @@ class TestS3KeySensorAsync:
             bucket_name=bucket,
         )
         with pytest.raises(AirflowException):
-            sensor.execute_complete(context={}, event={"status": "error", "message": "mocked error"})
+            sensor.execute_complete(
+                context={}, event={"status": "error", "message": "mocked error", "soft_fail": False}
+            )
 
     @parameterized.expand(
         [
@@ -242,6 +244,32 @@ class TestS3KeySensorAsync:
             sensor.execute(context)
 
         assert isinstance(exc.value.trigger, S3KeyTrigger), "Trigger is not a S3KeyTrigger"
+
+    def test_soft_fail(self):
+        """Raise AirflowSkipException in case soft_fail is true"""
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async", bucket_key="key", bucket_name="bucket", soft_fail=True
+        )
+        with pytest.raises(AirflowSkipException):
+            sensor.execute_complete(
+                context={}, event={"status": "error", "message": "mocked error", "soft_fail": True}
+            )
+
+    @pytest.mark.parametrize(
+        "soft_fail,exception",
+        [
+            (True, AirflowSkipException),
+            (False, Exception),
+        ],
+    )
+    @mock.patch(f"{MODULE}.S3KeySensorAsync.poke")
+    def test_execute_handle_exception(self, mock_poke, soft_fail, exception):
+        mock_poke.side_effect = Exception()
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async", bucket_key="key", bucket_name="bucket", soft_fail=soft_fail
+        )
+        with pytest.raises(exception):
+            sensor.execute(context={})
 
 
 class TestS3KeysUnchangedSensorAsync:

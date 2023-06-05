@@ -29,6 +29,7 @@ class TestS3KeyTrigger:
             "aws_conn_id": "aws_default",
             "hook_params": {},
             "check_fn": None,
+            "soft_fail": False,
             "poke_interval": 5.0,
         }
 
@@ -76,6 +77,7 @@ class TestS3KeyTrigger:
                 {
                     "message": "Unable to locate credentials",
                     "status": "error",
+                    "soft_fail": False,
                 }
             )
             == actual

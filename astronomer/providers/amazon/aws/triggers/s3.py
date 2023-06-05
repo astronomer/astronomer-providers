@@ -22,6 +22,7 @@ class S3KeyTrigger(BaseTrigger):
         Unix wildcard pattern
     :param aws_conn_id: reference to the s3 connection
     :param hook_params: params for hook its optional
+    :param soft_fail: Set to true to mark the task as SKIPPED on failure
     :param check_fn: Function that receives the list of the S3 objects,
         and returns a boolean
     """
@@ -34,6 +35,7 @@ class S3KeyTrigger(BaseTrigger):
         check_fn: Callable[..., bool] | None = None,
         aws_conn_id: str = "aws_default",
         poke_interval: float = 5.0,
+        soft_fail: bool = False,
         **hook_params: Any,
     ):
         super().__init__()
@@ -44,6 +46,7 @@ class S3KeyTrigger(BaseTrigger):
         self.aws_conn_id = aws_conn_id
         self.hook_params = hook_params
         self.poke_interval = poke_interval
+        self.soft_fail = soft_fail
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize S3KeyTrigger arguments and classpath."""
@@ -57,6 +60,7 @@ class S3KeyTrigger(BaseTrigger):
                 "aws_conn_id": self.aws_conn_id,
                 "hook_params": self.hook_params,
                 "poke_interval": self.poke_interval,
+                "soft_fail": self.soft_fail,
             },
         )
 
@@ -77,7 +81,7 @@ class S3KeyTrigger(BaseTrigger):
                     await asyncio.sleep(self.poke_interval)
 
         except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
+            yield TriggerEvent({"status": "error", "message": str(e), "soft_fail": self.soft_fail})
 
     def _get_async_hook(self) -> S3HookAsync:
         return S3HookAsync(aws_conn_id=self.aws_conn_id, verify=self.hook_params.get("verify"))
