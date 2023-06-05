@@ -52,8 +52,9 @@ jobs:
     steps:
       - name: Sleep for 30 minutes
         run: |
+          sleep_time=1800
           echo "Current timestamp is" `date`
-          echo "Sleeping for 1800 seconds (30 minutes)"
+          echo "Sleeping for $sleep_time seconds"
           echo "allowing the deployed image to be updated across all Airflow components.."
           sleep 1800
 
@@ -95,15 +96,7 @@ jobs:
     steps:
       - name: Sleep and wait for the deployment to be ready
         run: |
-          if [ "${{ inputs.environment_to_deploy }}" == "providers-integration-tests-on-KE" ]; then
-            # This means that only KE deployment was triggered
-            # and hence we do not need to wait for CE deployment's master DAG to complete.
-            # We just need to wait for 30 minutes for the deployment to be reflected.
-            sleep_time=1800
-          else
-            # 3 hours
-            sleep_time=10800
-          fi
+          sleep_time=1800
           echo "Current timestamp is" `date`
           echo "Sleeping for $sleep_time seconds"
           echo "allowing the deployed image to be updated across all Airflow components.."
