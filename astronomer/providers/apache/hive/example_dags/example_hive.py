@@ -25,6 +25,7 @@ from astronomer.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensorAsync,
 )
 
+HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 AWS_S3_CREDS = {
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "aws_access_key"),
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "aws_secret_key"),
@@ -52,7 +53,7 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
 # If you would like to use a different version of the EMR cluster, then we need to
 # match the hive and hadoop versions same as specified in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
-    "Name": "example_hive_sensor_cluster",
+    "Name": HIVE_CLUSTER,
     "ReleaseLabel": "emr-5.34.0",
     "Applications": [
         {"Name": "Spark"},
