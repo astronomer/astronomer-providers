@@ -17,20 +17,13 @@ from astronomer.providers.microsoft.azure.sensors.data_factory import (
 
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
-default_args = {
-    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
-    "azure_data_factory_conn_id": "azure_data_factory_default",
-    "factory_name": "ADFProvidersTeamDataFactoryTest",  # This can also be specified in the ADF connection.
-    "resource_group_name": "team_provider_resource_group_test_1",  # This can also be specified in the ADF connection.
-    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
-    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
-}
+
 
 CLIENT_ID = os.getenv("CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
 TENANT_ID = os.getenv("TENANT_ID", "")
 SUBSCRIPTION_ID = os.getenv("SUBSCRIPTION_ID", "")
-RESOURCE_GROUP_NAME = os.getenv("RESOURCE_GROUP_NAME", "")
+RESOURCE_GROUP_NAME = os.getenv("RESOURCE_GROUP_NAME", "team_provider_resource_group_test_1")
 DATAFACTORY_NAME = os.getenv("DATAFACTORY_NAME", "")
 LOCATION = os.getenv("LOCATION", "eastus")
 CONNECTION_STRING = os.getenv("CONNECTION_STRING", "")
@@ -45,6 +38,14 @@ STORAGE_LINKED_SERVICE_NAME = os.getenv("STORAGE_LINKED_SERVICE_NAME", "storageL
 rg_params = {"location": LOCATION}
 df_params = {"location": LOCATION}
 
+default_args = {
+    "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    "azure_data_factory_conn_id": "azure_data_factory_default",
+    "factory_name": "ADFProvidersTeamDataFactoryTest",  # This can also be specified in the ADF connection.
+    "resource_group_name": RESOURCE_GROUP_NAME,  # This can also be specified in the ADF connection.
+    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
+    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
+}
 
 def create_adf_storage_pipeline() -> None:
     """
