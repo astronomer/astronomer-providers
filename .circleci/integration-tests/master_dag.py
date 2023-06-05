@@ -22,12 +22,12 @@ MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", None)
 IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 
 """
-To run this master dag across multiple deployments simultaneously, set unique values for the below environment 
+To run this master dag across multiple deployments simultaneously, set unique values for the below environment
 variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
 
 AZURE_DATA_STORAGE_BLOB_NAME
 AZURE_DATA_STORAGE_CONTAINER_NAME
-BATCH_JOB_COMPUTE_ENV 
+BATCH_JOB_COMPUTE_ENV
 BATCH_JOB_NAME
 BATCH_JOB_QUEUE
 EKS_CLUSTER_NAME
@@ -48,6 +48,7 @@ Additionally, ensure to have unique "cluster_identifier" values for each deploym
 aws_default
 redshift_default
 """
+
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
     """Fetch dags run details and generate report."""
