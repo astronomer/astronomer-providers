@@ -18,7 +18,6 @@ from astronomer.providers.microsoft.azure.sensors.data_factory import (
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
 
-
 CLIENT_ID = os.getenv("CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
 TENANT_ID = os.getenv("TENANT_ID", "")
@@ -46,6 +45,7 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+
 
 def create_adf_storage_pipeline() -> None:
     """
