@@ -25,6 +25,7 @@ from astronomer.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensorAsync,
 )
 
+HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 AWS_S3_CREDS = {
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "aws_access_key"),
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "aws_secret_key"),
@@ -37,7 +38,6 @@ HIVE_OPERATOR_INGRESS_PORT = int(os.getenv("HIVE_OPERATOR_INGRESS_PORT", 10000))
 HIVE_SCHEMA = os.getenv("HIVE_SCHEMA", "default")
 HIVE_TABLE = os.getenv("HIVE_TABLE", "zipcode")
 HIVE_PARTITION = os.getenv("HIVE_PARTITION", "state='FL'")
-HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))

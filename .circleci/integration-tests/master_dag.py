@@ -22,16 +22,32 @@ MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", None)
 IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 
 """
-To run this master dag across multiple deployment parallelly, please set these env var unique per deployment
+To run this master dag across multiple deployments simultaneously, set unique values for the below environment 
+variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
 
-GCP_BIGQUERY_DATASET_NAME,BATCH_JOB_COMPUTE_ENV, MODEL_NAME,AZURE_DATA_STORAGE_BLOB_NAME,AZURE_DATA_STORAGE_CONTAINER_NAME,
-GCP_TEST_BUCKET,GCP_DATAPROC_CLUSTER_NAME,GKE_CLUSTER_NAME,BATCH_JOB_NAME,BATCH_JOB_QUEUE,REDSHIFT_TABLE_NAME,GKE_POD_NAME,
-EMR_VIRTUAL_CLUSTER_NAME,REDSHIFT_CLUSTER_IDENTIFIER,EKS_CLUSTER_NAME,EKS_NAMESPACE,JOB_EXECUTION_ROLE
+AZURE_DATA_STORAGE_BLOB_NAME
+AZURE_DATA_STORAGE_CONTAINER_NAME
+BATCH_JOB_COMPUTE_ENV 
+BATCH_JOB_NAME
+BATCH_JOB_QUEUE
+EKS_CLUSTER_NAME
+EKS_NAMESPACE
+EMR_VIRTUAL_CLUSTER_NAME
+GCP_BIGQUERY_DATASET_NAME
+GCP_DATAPROC_CLUSTER_NAME
+GCP_TEST_BUCKET
+GKE_CLUSTER_NAME
+GKE_POD_NAME
+JOB_EXECUTION_ROLE
+LIVY_CLUSTER
+MODEL_NAME
+REDSHIFT_CLUSTER_IDENTIFIER
+REDSHIFT_TABLE_NAME
 
-Also we have two connections with name aws_default,redshift_default ensure to use cluster_identifier value as unique per deployment
-
+Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
+aws_default
+redshift_default
 """
-
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:
     """Fetch dags run details and generate report."""

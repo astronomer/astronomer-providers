@@ -24,6 +24,7 @@ from requests import get
 
 from astronomer.providers.apache.livy.operators.livy import LivyOperatorAsync
 
+LIVY_CLUSTER = os.getenv("LIVY_CLUSTER", "example_livy_operator_cluster")
 BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
 LIVY_JAVA_FILE = os.getenv("LIVY_JAVA_FILE", "/spark-examples.jar")
 LIVY_OPERATOR_INGRESS_PORT = int(os.getenv("LIVY_OPERATOR_INGRESS_PORT", 8998))
@@ -46,7 +47,7 @@ COMMAND_TO_CREATE_PI_FILE: List[str] = [
 ]
 
 JOB_FLOW_OVERRIDES = {
-    "Name": "example_livy_operator_cluster",
+    "Name": LIVY_CLUSTER,
     "ReleaseLabel": "emr-5.35.0",
     "Applications": [
         {"Name": "Spark"},
