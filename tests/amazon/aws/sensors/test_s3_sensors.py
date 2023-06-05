@@ -141,8 +141,7 @@ class TestS3KeySensorAsync:
             check_fn=check_fn,
         )
         assert (
-            sensor.execute_complete(context={}, event={"status": "success", "s3_objects": [{"Size": 10}]})
-            is True
+            sensor.execute_complete(context={}, event={"status": "running", "files": [{"Size": 10}]}) is None
         )
 
     @parameterized.expand(

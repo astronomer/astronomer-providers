@@ -28,9 +28,9 @@ class TestS3KeyTrigger:
             "wildcard_match": True,
             "aws_conn_id": "aws_default",
             "hook_params": {},
-            "check_fn": None,
             "soft_fail": False,
             "poke_interval": 5.0,
+            "should_check": False,
         }
 
     @pytest.mark.asyncio
@@ -89,17 +89,14 @@ class TestS3KeyTrigger:
     async def test_run_check_fn_success(self, mock_get_files, mock_client):
         """Test if the task is run is in trigger with check_fn."""
 
-        def dummy_check_fn(list_obj):
-            return True
-
         mock_get_files.return_value = ["test"]
         mock_client.return_value.check_key.return_value = True
         trigger = S3KeyTrigger(
-            bucket_key="s3://test_bucket/file", bucket_name="test_bucket", check_fn=dummy_check_fn
+            bucket_key="s3://test_bucket/file", bucket_name="test_bucket", poke_interval=1, should_check=True
         )
         generator = trigger.run()
         actual = await generator.asend(None)
-        assert TriggerEvent({"status": "success", "s3_objects": ["test"]}) == actual
+        assert TriggerEvent({"status": "running", "files": ["test"]}) == actual
 
 
 class TestS3KeysUnchangedTrigger:
