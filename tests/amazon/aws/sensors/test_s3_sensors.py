@@ -256,19 +256,19 @@ class TestS3KeySensorAsync:
             )
 
     @pytest.mark.parametrize(
-        "soft_fail,exec",
+        "soft_fail,exception",
         [
             (True, AirflowSkipException),
             (False, Exception),
         ],
     )
     @mock.patch(f"{MODULE}.S3KeySensorAsync.poke")
-    def test_execute_handle_exception(self, mock_poke, soft_fail, exec):
+    def test_execute_handle_exception(self, mock_poke, soft_fail, exception):
         mock_poke.side_effect = Exception()
         sensor = S3KeySensorAsync(
             task_id="s3_key_sensor_async", bucket_key="key", bucket_name="bucket", soft_fail=soft_fail
         )
-        with pytest.raises(exec):
+        with pytest.raises(exception):
             sensor.execute(context={})
 
 

@@ -85,7 +85,7 @@ class S3KeySensorAsync(S3KeySensor):
             poke = self.poke(context)
         except Exception as e:
             if self.soft_fail:
-                raise AirflowSkipException(f"{self.task_id} failed")
+                raise AirflowSkipException(str(e))
             else:
                 raise e
         if not poke:
