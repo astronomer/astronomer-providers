@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
         type: choice
         options:
           - both
-          - providers-integration-tests
+          - providers-integration-tests-on-CE
           - providers-integration-tests-on-KE
       dags_to_trigger_after_deployment:
         description: |
@@ -27,14 +27,14 @@ on:  # yamllint disable-line rule:truthy
         default: ''
 
 jobs:
-  deploy-to-providers-integration-tests:
+  deploy-to-providers-integration-tests-on-CE:
     if: |
-      contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy) ||
+      contains(fromJSON('["both", "providers-integration-tests-on-CE"]'), inputs.environment_to_deploy) ||
       github.event_name == 'schedule'
     uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
-      environment_to_deploy: 'providers-integration-tests'
+      environment_to_deploy: 'providers-integration-tests-on-CE'
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
@@ -43,17 +43,18 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests:
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests-on-CE:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
-    needs: deploy-to-providers-integration-tests
+    needs: deploy-to-providers-integration-tests-on-CE
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Sleep for 30 minutes
         run: |
+          sleep_time=1800
           echo "Current timestamp is" `date`
-          echo "Sleeping for 1800 seconds (30 minutes)"
+          echo "Sleeping for $sleep_time seconds"
           echo "allowing the deployed image to be updated across all Airflow components.."
           sleep 1800
 
@@ -95,15 +96,7 @@ jobs:
     steps:
       - name: Sleep and wait for the deployment to be ready
         run: |
-          if [ "${{ inputs.environment_to_deploy }}" == "providers-integration-tests-on-KE" ]; then
-            # This means that only KE deployment was triggered
-            # and hence we do not need to wait for CE deployment's master DAG to complete.
-            # We just need to wait for 30 minutes for the deployment to be reflected.
-            sleep_time=1800
-          else
-            # 3 hours
-            sleep_time=10800
-          fi
+          sleep_time=1800
           echo "Current timestamp is" `date`
           echo "Sleeping for $sleep_time seconds"
           echo "allowing the deployed image to be updated across all Airflow components.."
