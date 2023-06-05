@@ -111,7 +111,7 @@ jobs:
     uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
     with:
       git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
-      environment_to_deploy: 'providers-integration-tests-on-CE'
+      environment_to_deploy: 'providers-integration-tests'
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}

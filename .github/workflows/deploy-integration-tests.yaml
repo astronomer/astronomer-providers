@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
         type: choice
         options:
           - both
-          - providers-integration-tests-on-CE
+          - providers-integration-tests
           - providers-integration-tests-on-KE
       dags_to_trigger_after_deployment:
         description: |
@@ -27,14 +27,14 @@ on:  # yamllint disable-line rule:truthy
         default: ''
 
 jobs:
-  deploy-to-providers-integration-tests-on-CE:
+  deploy-to-providers-integration-tests:
     if: |
-      contains(fromJSON('["both", "providers-integration-tests-on-CE"]'), inputs.environment_to_deploy) ||
+      contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy) ||
       github.event_name == 'schedule'
     uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
-      environment_to_deploy: 'providers-integration-tests-on-CE'
+      environment_to_deploy: 'providers-integration-tests'
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
@@ -43,11 +43,11 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests-on-CE:
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-providers-integration-tests:
     if: |
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
-    needs: deploy-to-providers-integration-tests-on-CE
+    needs: deploy-to-providers-integration-tests
     runs-on: 'ubuntu-20.04'
     steps:
       - name: Sleep for 30 minutes
