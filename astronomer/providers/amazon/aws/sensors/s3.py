@@ -82,26 +82,27 @@ class S3KeySensorAsync(S3KeySensor):
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
         try:
-            if not self.poke(context):
-                self.defer(
-                    timeout=timedelta(seconds=self.timeout),
-                    trigger=S3KeyTrigger(
-                        bucket_name=cast(str, self.bucket_name),
-                        bucket_key=self.bucket_key,
-                        wildcard_match=self.wildcard_match,
-                        check_fn=self.check_fn,
-                        aws_conn_id=self.aws_conn_id,
-                        verify=self.verify,
-                        poke_interval=self.poke_interval,
-                        soft_fail=self.soft_fail,
-                    ),
-                    method_name="execute_complete",
-                )
+            poke = self.poke(context)
         except Exception as e:
             if self.soft_fail:
                 raise AirflowSkipException(f"{self.task_id} failed")
             else:
                 raise e
+        if not poke:
+            self.defer(
+                timeout=timedelta(seconds=self.timeout),
+                trigger=S3KeyTrigger(
+                    bucket_name=cast(str, self.bucket_name),
+                    bucket_key=self.bucket_key,
+                    wildcard_match=self.wildcard_match,
+                    check_fn=self.check_fn,
+                    aws_conn_id=self.aws_conn_id,
+                    verify=self.verify,
+                    poke_interval=self.poke_interval,
+                    soft_fail=self.soft_fail,
+                ),
+                method_name="execute_complete",
+            )
 
     def execute_complete(self, context: Context, event: Any = None) -> bool | None:
         """
