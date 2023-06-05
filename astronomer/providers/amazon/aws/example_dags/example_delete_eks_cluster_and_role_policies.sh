@@ -77,5 +77,5 @@ fi
 
 # Command to delete the EKS cluster and node group attached with it. Make sure to wait for the cluster to be deleted so
 # that the task reports for any potential failures.
-eksctl delete cluster $EKS_CLUSTER_NAME --wait
+eksctl delete cluster $EKS_CLUSTER_NAME --wait --force --timeout 60m0s
 echo "EKS cluster '$EKS_CLUSTER_NAME' deleted."
