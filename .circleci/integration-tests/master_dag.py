@@ -38,11 +38,13 @@ GCP_DATAPROC_CLUSTER_NAME
 GCP_TEST_BUCKET
 GKE_CLUSTER_NAME
 GKE_POD_NAME
+HIVE_CLUSTER
 JOB_EXECUTION_ROLE
 LIVY_CLUSTER
 MODEL_NAME
 REDSHIFT_CLUSTER_IDENTIFIER
 REDSHIFT_TABLE_NAME
+RESOURCE_GROUP_NAME
 
 Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
 aws_default
