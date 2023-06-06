@@ -65,6 +65,8 @@ jobs:
           testing_pr_url=`gh pr list \
             --json createdAt,title,url \
             --limit 100 \
+            --state open \
+            --state merged \
             --jq 'map(
                     select(
                       .title |
