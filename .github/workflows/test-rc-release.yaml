@@ -62,7 +62,7 @@ jobs:
         run: |
           # The default limit is 30. Set it to 100 for retrieving more issues
           rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
-          testing_issue_url=`gh issue list \
+          testing_issue_url=`gh pr list \
             --json createdAt,title,url \
             --limit 100 \
             --jq 'map(
