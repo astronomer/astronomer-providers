@@ -26,6 +26,7 @@ class TestS3KeyTrigger:
             "bucket_name": "test_bucket",
             "bucket_key": "s3://test_bucket/file",
             "wildcard_match": True,
+            "use_regex": False,
             "aws_conn_id": "aws_default",
             "hook_params": {},
             "soft_fail": False,

@@ -29,6 +29,7 @@ class S3KeySensorAsync(S3KeySensor):
         refers to this bucket
     :param wildcard_match: whether the bucket_key should be interpreted as a
         Unix wildcard pattern
+    :param use_regex: whether to use regex to check bucket
     :param check_fn: Function that receives the list of the S3 objects,
         and returns a boolean:
         - ``True``: the criteria is met
@@ -57,17 +58,19 @@ class S3KeySensorAsync(S3KeySensor):
     template_fields: Sequence[str] = ("bucket_key", "bucket_name")
 
     def __init__(
-        self,
-        *,
-        bucket_key: str | list[str],
-        bucket_name: str | None = None,
-        wildcard_match: bool = False,
-        check_fn: Callable[..., bool] | None = None,
-        aws_conn_id: str = "aws_default",
-        verify: str | bool | None = None,
-        **kwargs: Any,
+            self,
+            *,
+            bucket_key: str | list[str],
+            bucket_name: str | None = None,
+            wildcard_match: bool = False,
+            use_regex: bool = False,
+            check_fn: Callable[..., bool] | None = None,
+            aws_conn_id: str = "aws_default",
+            verify: str | bool | None = None,
+            **kwargs: Any,
     ):
         self.bucket_key: list[str] = [bucket_key] if isinstance(bucket_key, str) else bucket_key
+        self.use_regex = use_regex
         super().__init__(
             bucket_name=bucket_name,
             bucket_key=self.bucket_key,
@@ -99,11 +102,12 @@ class S3KeySensorAsync(S3KeySensor):
                 bucket_name=cast(str, self.bucket_name),
                 bucket_key=self.bucket_key,
                 wildcard_match=self.wildcard_match,
+                use_regex=self.use_regex,
                 aws_conn_id=self.aws_conn_id,
                 verify=self.verify,
                 poke_interval=self.poke_interval,
                 soft_fail=self.soft_fail,
-                should_check_fn=self.should_check_fn,
+                should_check_fn=self.should_check_fn
             ),
             method_name="execute_complete",
         )
@@ -184,8 +188,8 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
     """
 
     def __init__(
-        self,
-        **kwargs: Any,
+            self,
+            **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
 

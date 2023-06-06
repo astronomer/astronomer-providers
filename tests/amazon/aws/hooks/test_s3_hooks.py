@@ -494,3 +494,30 @@ class TestS3HookAsync:
             mock_client.return_value, "test_bucket", True, "test/example_s3_test_file.txt"
         )
         assert response is False
+
+    @pytest.mark.parametrize(
+        "key, pattern, expected",
+        [
+            ("test.csv", r"[a-z]+\.csv", True),
+            ("test.txt", r"test/[a-z]+\.csv", False),
+            ("test/test.csv", r"test/[a-z]+\.csv", True),
+        ],
+    )
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.amazon.aws.triggers.s3.S3HookAsync.get_file_metadata")
+    @mock.patch("astronomer.providers.amazon.aws.hooks.s3.S3HookAsync.get_client_async")
+    async def test_s3_check_key_with_regex(self, mock_client, mock_get_file_metadata, key, pattern, expected):
+        """Match AWS S3 key with regex expression"""
+        mock_get_file_metadata.return_value = [
+            {
+                "Key": key,
+                "ETag": "etag1",
+                "LastModified": datetime(2020, 8, 14, 17, 19, 34),
+                "Size": 0,
+            },
+        ]
+        s3_hook_async = S3HookAsync(client_type="S3", resource_type="S3")
+        response = await s3_hook_async._check_key(
+            mock_client.return_value, "test_bucket", False, pattern, True
+        )
+        assert response is expected
