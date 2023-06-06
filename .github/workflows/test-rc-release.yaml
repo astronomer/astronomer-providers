@@ -27,7 +27,7 @@ on:  # yamllint disable-line rule:truthy
         default: 'main'
 
 jobs:
-  check-rc-testing-annocement:
+  check-rc-testing-announcement:
     runs-on: 'ubuntu-20.04'
     if: github.event_name == 'schedule'
     steps:
@@ -36,7 +36,7 @@ jobs:
         with:
           repository: 'apache/airflow'
 
-      - name: Parse the latest 100 GitHub issues from apache-airflow to check providers testing annocement
+      - name: Parse the latest 100 GitHub issues from apache-airflow to check providers testing announcement
         id: parse-airflow-gh-issues
         run: |
           # The default limit is 30. Set it to 100 for retrieving more issues
@@ -56,13 +56,13 @@ jobs:
         uses: actions/checkout@v3
         if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
 
-      - name: Parse the latest GitHub issues for checking existing RC provider testing issue
+      - name: Parse the latest GitHub pull requests for checking existing RC provider testing pull request
         id: parse-current-repo
         if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
         run: |
-          # The default limit is 30. Set it to 100 for retrieving more issues
+          # The default limit is 30. Set it to 100 for retrieving more pull requests
           rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
-          testing_issue_url=`gh pr list \
+          testing_pr_url=`gh pr list \
             --json createdAt,title,url \
             --limit 100 \
             --jq 'map(
@@ -74,16 +74,16 @@ jobs:
                     )
                   ) | .[0].url'`
 
-          echo "testing_issue_url=$testing_issue_url" >> $GITHUB_OUTPUT
+          echo "testing_pr_url=$testing_pr_url" >> $GITHUB_OUTPUT
 
       - name: Export rc_issue_url
         id: export-rc-issue-url
         run: |
           rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
-          testing_issue_url="${{ steps.parse-current-repo.outputs.testing_issue_url }}"
+          testing_pr_url="${{ steps.parse-current-repo.outputs.testing_pr_url }}"
           if [ "$rc_issue_url" == "" ] ; then
-            echo "No RC providers testing annocement found on apache-airflow"
-          elif [ "$testing_issue_url" != "" ] ; then
+            echo "No RC providers testing announcement found on apache-airflow"
+          elif [ "$testing_pr_url" != "" ] ; then
             echo "Branch for testing RC providers has been created"
             rc_issue_url=""
           fi
@@ -104,13 +104,13 @@ jobs:
           exit 1
 
   create-branch-for-testing-rc-release:
-    needs: [validate-manual-input, check-rc-testing-annocement]
+    needs: [validate-manual-input, check-rc-testing-announcement]
     runs-on: 'ubuntu-20.04'
     if: |
       always() &&
       (
         (github.event_name == 'workflow_dispatch' && inputs.issue_url != '') ||
-        (github.event_name == 'schedule' && needs.check-rc-testing-annocement.outputs.rc_issue_url != '')
+        (github.event_name == 'schedule' && needs.check-rc-testing-announcement.outputs.rc_issue_url != '')
       )
     steps:
       - name: Checkout
@@ -133,7 +133,7 @@ jobs:
           if [ "${{ inputs.issue_url }}" != "" ] ; then
             rc_issue_url="${{ inputs.issue_url }}"
           else
-            rc_issue_url="${{ needs.check-rc-testing-annocement.outputs.rc_issue_url }}"
+            rc_issue_url="${{ needs.check-rc-testing-announcement.outputs.rc_issue_url }}"
           fi
 
           echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
