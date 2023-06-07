@@ -5,6 +5,10 @@ from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
+from airflow.providers.cncf.kubernetes.utils.pod_manager import (
+    PodPhase,
+    container_is_running,
+)
 from kubernetes.client import models as k8s
 from pendulum import DateTime
 
@@ -76,9 +80,20 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             method_name=self.trigger_reentry.__name__,
         )
 
-    def execute(self, context: Context) -> None:  # noqa: D102
+    def execute(self, context: Context) -> Any:  # noqa: D102
         self.pod_request_obj = self.build_pod_request_obj(context)
         self.pod: k8s.V1Pod = self.get_or_create_pod(self.pod_request_obj, context)
+        pod_status = self.pod.status.phase
+        if pod_status in PodPhase.terminal_states or not container_is_running(
+            pod=self.pod, container_name=self.BASE_CONTAINER_NAME
+        ):
+            event = {
+                "status": "done",
+                "namespace": self.pod.metadata.namespace,
+                "pod_name": self.pod.metadata.name,
+            }
+            return self.trigger_reentry(context=context, event=event)
+
         self.defer()
 
     def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:  # type: ignore[override]

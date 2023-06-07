@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import TaskDeferred
-from airflow.providers.cncf.kubernetes.utils.pod_manager import PodLoggingStatus
+from airflow.providers.cncf.kubernetes.utils.pod_manager import (
+    PodLoggingStatus,
+    PodPhase,
+)
+from kubernetes.client import models as k8s
 
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperatorAsync,
@@ -15,6 +19,24 @@ from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
 from tests.utils.airflow_util import create_context
 
 KUBE_POD_MOD = "astronomer.providers.cncf.kubernetes.operators.kubernetes_pod"
+
+
+def _build_mock_pod(state: k8s.V1ContainerState) -> k8s.V1Pod:
+    return k8s.V1Pod(
+        metadata=k8s.V1ObjectMeta(name="base", namespace="default"),
+        status=k8s.V1PodStatus(
+            container_statuses=[
+                k8s.V1ContainerStatus(
+                    name="base",
+                    image="alpine",
+                    image_id="1",
+                    ready=True,
+                    restart_count=1,
+                    state=state,
+                )
+            ]
+        ),
+    )
 
 
 class TestKubernetesPodOperatorAsync:
@@ -152,12 +174,37 @@ class TestKubernetesPodOperatorAsync:
         with pytest.raises(ValueError):
             op.defer(kwargs={"timeout": 10})
 
+    @pytest.mark.parametrize("pod_phase", PodPhase.terminal_states)
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.trigger_reentry")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.build_pod_request_obj")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
-    def test_execute(self, mock_defer, mock_get_or_create_pod, mock_build_pod_request_obj):
+    def test_execute_done_before_defer(
+        self, mock_defer, mock_get_or_create_pod, mock_build_pod_request_obj, mock_trigger_reentry, pod_phase
+    ):
+        mock_get_or_create_pod.return_value.status.phase = pod_phase
+        mock_build_pod_request_obj.return_value = {}
+        mock_defer.return_value = {}
+        op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
+        assert op.execute(context=create_context(op))
+        assert mock_trigger_reentry.called
+        assert not mock_defer.called
+
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.build_pod_request_obj")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.get_or_create_pod")
+    @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.defer")
+    def test_execute(
+        self,
+        mock_defer,
+        mock_get_or_create_pod,
+        mock_build_pod_request_obj,
+    ):
         """Assert that execute succeeded"""
-        mock_get_or_create_pod.return_value = {}
+        mock_get_or_create_pod.return_value = _build_mock_pod(
+            k8s.V1ContainerState(
+                {"running": k8s.V1ContainerStateRunning(), "terminated": None, "waiting": None}
+            )
+        )
         mock_build_pod_request_obj.return_value = {}
         mock_defer.return_value = {}
         op = KubernetesPodOperatorAsync(task_id="test_task", name="test-pod", get_logs=True)
