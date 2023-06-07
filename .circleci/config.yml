@@ -39,7 +39,7 @@ workflows:
             parameters:
               python_version: ["3.8", "3.9", "3.10"]
               airflow_version: ["2.4.2", "2.5.3", "2.6.1"]
-          <<: *main_and_release_branches
+          <<: *all_branches_and_version_tag  # TODO: Set this back to *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
       - test:
