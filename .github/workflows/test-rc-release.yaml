@@ -140,6 +140,7 @@ jobs:
             rc_issue_url="${{ needs.check-rc-testing-announcement.outputs.rc_issue_url }}"
           fi
 
+          echo "rc_issue_url=$rc_issue_url"
           echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
 
       - name: Create RC branch
@@ -150,11 +151,12 @@ jobs:
           branch_name="rc-test-$current_timestamp"
           git checkout -b $branch_name
 
+          echo "rc_testing_branch=$branch_name"
           echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
 
       - name: Update project dependencies to use RC providers
         run: |
-          rc_issue_url="${{ steps.export-rc-issue-url.rc_issue_url }}"
+          rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
 
           echo "Updating setup.cfg with RC provider packages on $rc_issue_url"
           python3 dev/integration_test_scripts/replace_dependencies.py --issue-url $rc_issue_url
@@ -163,13 +165,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          rc_issue_url="${{ steps.export-rc-issue-url.rc_issue_url }}"
+          rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
 
           git add setup.cfg
           git commit -m "Updating setup.cfg with RC provider packages on $rc_issue_url"
-          git push origin ${{ steps.create_rc_branch.rc_testing_branch }}
+          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
           gh pr create --base ${{ inputs.base_git_rev }} \
-                       --title "[DO NOT MERGE] Test RC provider packages for $rc_issue_url"
+                       --title "[DO NOT MERGE] Test RC provider packages for $rc_issue_url" \
+                       --fill
 
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
