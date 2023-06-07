@@ -30,6 +30,8 @@ jobs:
   check-rc-testing-announcement:
     runs-on: 'ubuntu-20.04'
     if: github.event_name == 'schedule'
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout apache-airflow
         uses: actions/checkout@v3
