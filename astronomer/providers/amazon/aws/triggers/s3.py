@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any, AsyncIterator, Callable
+from typing import Any, AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -23,8 +23,6 @@ class S3KeyTrigger(BaseTrigger):
     :param aws_conn_id: reference to the s3 connection
     :param hook_params: params for hook its optional
     :param soft_fail: Set to true to mark the task as SKIPPED on failure
-    :param check_fn: Function that receives the list of the S3 objects,
-        and returns a boolean
     """
 
     def __init__(
@@ -32,21 +30,21 @@ class S3KeyTrigger(BaseTrigger):
         bucket_name: str,
         bucket_key: list[str],
         wildcard_match: bool = False,
-        check_fn: Callable[..., bool] | None = None,
         aws_conn_id: str = "aws_default",
         poke_interval: float = 5.0,
         soft_fail: bool = False,
+        should_check_fn: bool = False,
         **hook_params: Any,
     ):
         super().__init__()
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key
         self.wildcard_match = wildcard_match
-        self.check_fn = check_fn
         self.aws_conn_id = aws_conn_id
         self.hook_params = hook_params
         self.poke_interval = poke_interval
         self.soft_fail = soft_fail
+        self.should_check_fn = should_check_fn
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize S3KeyTrigger arguments and classpath."""
@@ -56,11 +54,11 @@ class S3KeyTrigger(BaseTrigger):
                 "bucket_name": self.bucket_name,
                 "bucket_key": self.bucket_key,
                 "wildcard_match": self.wildcard_match,
-                "check_fn": self.check_fn,
                 "aws_conn_id": self.aws_conn_id,
                 "hook_params": self.hook_params,
                 "poke_interval": self.poke_interval,
                 "soft_fail": self.soft_fail,
+                "should_check_fn": self.should_check_fn,
             },
         )
 
@@ -71,15 +69,15 @@ class S3KeyTrigger(BaseTrigger):
             async with await hook.get_client_async() as client:
                 while True:
                     if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
-                        if self.check_fn is None:
-                            yield TriggerEvent({"status": "success"})
-                        else:
+                        if self.should_check_fn:
                             s3_objects = await hook.get_files(
                                 client, self.bucket_name, self.bucket_key, self.wildcard_match
                             )
-                            yield TriggerEvent({"status": "success", "s3_objects": s3_objects})
+                            await asyncio.sleep(self.poke_interval)
+                            yield TriggerEvent({"status": "running", "files": s3_objects})
+                        else:
+                            yield TriggerEvent({"status": "success"})
                     await asyncio.sleep(self.poke_interval)
-
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e), "soft_fail": self.soft_fail})
 

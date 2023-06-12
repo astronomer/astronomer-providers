@@ -141,9 +141,23 @@ class TestS3KeySensorAsync:
             check_fn=check_fn,
         )
         assert (
-            sensor.execute_complete(context={}, event={"status": "success", "s3_objects": [{"Size": 10}]})
-            is True
+            sensor.execute_complete(context={}, event={"status": "running", "files": [{"Size": 10}]}) is None
         )
+
+    @mock.patch(f"{MODULE}.S3KeySensorAsync._defer")
+    def test_s3_key_sensor_re_defer(self, mock_defer):
+        def check_fn(files: List[Any]) -> bool:
+            return False
+
+        sensor = S3KeySensorAsync(
+            task_id="s3_key_sensor_async",
+            bucket_key="key",
+            bucket_name="bucket",
+            check_fn=check_fn,
+        )
+        sensor.execute_complete(context={}, event={"status": "running", "files": [{"Size": 10}]})
+
+        mock_defer.assert_called_once()
 
     @parameterized.expand(
         [
