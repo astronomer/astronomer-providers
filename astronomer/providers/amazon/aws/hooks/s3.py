@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import fnmatch
 import os
@@ -5,7 +7,7 @@ import re
 from datetime import datetime
 from functools import wraps
 from inspect import signature
-from typing import Any, Dict, List, Optional, Set, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from aiobotocore.client import AioBaseClient
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook, unify_bucket_name_and_key
@@ -54,8 +56,8 @@ class S3HookAsync(AwsBaseHookAsync):
     @provide_bucket_name_async
     @unify_bucket_name_and_key
     async def get_head_object(
-        self, client: AioBaseClient, key: str, bucket_name: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, client: AioBaseClient, key: str, bucket_name: str | None = None
+    ) -> dict[str, Any] | None:
         """
         Retrieves metadata of an object
 
@@ -63,7 +65,7 @@ class S3HookAsync(AwsBaseHookAsync):
         :param bucket_name: Name of the bucket in which the file is stored
         :param key: S3 key that will point to the file
         """
-        head_object_val: Optional[Dict[str, Any]] = None
+        head_object_val: dict[str, Any] | None = None
         try:
             head_object_val = await client.head_object(Bucket=bucket_name, Key=key)
             return head_object_val
@@ -76,12 +78,12 @@ class S3HookAsync(AwsBaseHookAsync):
     async def list_prefixes(
         self,
         client: AioBaseClient,
-        bucket_name: Optional[str] = None,
-        prefix: Optional[str] = None,
-        delimiter: Optional[str] = None,
-        page_size: Optional[int] = None,
-        max_items: Optional[int] = None,
-    ) -> List[Any]:
+        bucket_name: str | None = None,
+        prefix: str | None = None,
+        delimiter: str | None = None,
+        page_size: int | None = None,
+        max_items: int | None = None,
+    ) -> list[Any]:
         """
         Lists prefixes in a bucket under prefix
 
@@ -114,7 +116,9 @@ class S3HookAsync(AwsBaseHookAsync):
         return prefixes
 
     @provide_bucket_name_async
-    async def get_file_metadata(self, client: AioBaseClient, bucket_name: str, key: str) -> List[Any]:
+    async def get_file_metadata(
+        self, client: AioBaseClient, bucket_name: str, key: str | None = None
+    ) -> list[Any]:
         """
         Gets a list of files that a key matching a wildcard expression exists in a bucket asynchronously
 
@@ -122,7 +126,7 @@ class S3HookAsync(AwsBaseHookAsync):
         :param bucket_name: the name of the bucket
         :param key: the path to the key
         """
-        prefix = re.split(r"[\[\*\?]", key, 1)[0]
+        prefix = re.split(r"[\[\*\?]", key, 1)[0] if key else ""
         delimiter = ""
         paginator = client.get_paginator("list_objects_v2")
         response = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)
@@ -138,6 +142,7 @@ class S3HookAsync(AwsBaseHookAsync):
         bucket_val: str,
         wildcard_match: bool,
         key: str,
+        use_regex: bool = False,
     ) -> bool:
         """
         Function to check if wildcard_match is True get list of files that a key matching a wildcard expression exists
@@ -148,12 +153,18 @@ class S3HookAsync(AwsBaseHookAsync):
         :param bucket_val: the name of the bucket
         :param key: S3 keys that will point to the file
         :param wildcard_match: the path to the key
+        :param use_regex: whether to use regex to check bucket
         """
         bucket_name, key = S3Hook.get_s3_bucket_key(bucket_val, key, "bucket_name", "bucket_key")
         if wildcard_match:
             keys = await self.get_file_metadata(client, bucket_name, key)
             key_matches = [k for k in keys if fnmatch.fnmatch(k["Key"], key)]
             if len(key_matches) == 0:
+                return False
+        elif use_regex:
+            keys = await self.get_file_metadata(client, bucket_name)
+            key_matches = [k for k in keys if re.match(pattern=key, string=k["Key"])]
+            if not key_matches:
                 return False
         else:
             obj = await self.get_head_object(client, key, bucket_name)
@@ -166,8 +177,9 @@ class S3HookAsync(AwsBaseHookAsync):
         self,
         client: AioBaseClient,
         bucket: str,
-        bucket_keys: List[str],
+        bucket_keys: list[str],
         wildcard_match: bool,
+        use_regex: bool = False,
     ) -> bool:
         """
         Checks for all keys in bucket and returns boolean value
@@ -176,22 +188,23 @@ class S3HookAsync(AwsBaseHookAsync):
         :param bucket: the name of the bucket
         :param bucket_keys: S3 keys that will point to the file
         :param wildcard_match: the path to the key
+        :param use_regex: whether to use regex to check bucket
         """
         return all(
             await asyncio.gather(
-                *(self._check_key(client, bucket, wildcard_match, key) for key in bucket_keys)
+                *(self._check_key(client, bucket, wildcard_match, key, use_regex) for key in bucket_keys)
             )
         )
 
     async def _check_for_prefix(
-        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: Optional[str] = None
+        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: str | None = None
     ) -> bool:
         return await self.check_for_prefix(
             client, prefix=prefix, delimiter=delimiter, bucket_name=bucket_name
         )
 
     async def check_for_prefix(
-        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: Optional[str] = None
+        self, client: AioBaseClient, prefix: str, delimiter: str, bucket_name: str | None = None
     ) -> bool:
         """
         Checks that a prefix exists in a bucket
@@ -211,12 +224,12 @@ class S3HookAsync(AwsBaseHookAsync):
         self,
         client: AioBaseClient,
         bucket: str,
-        bucket_keys: List[str],
+        bucket_keys: list[str],
         wildcard_match: bool,
-        delimiter: Optional[str] = "/",
-    ) -> List[Any]:
+        delimiter: str | None = "/",
+    ) -> list[Any]:
         """Gets a list of files in the bucket"""
-        keys: List[Any] = []
+        keys: list[Any] = []
         for key in bucket_keys:
             prefix = key
             if wildcard_match:
@@ -233,12 +246,12 @@ class S3HookAsync(AwsBaseHookAsync):
     @staticmethod
     async def _list_keys(
         client: AioBaseClient,
-        bucket_name: Optional[str] = None,
-        prefix: Optional[str] = None,
-        delimiter: Optional[str] = None,
-        page_size: Optional[int] = None,
-        max_items: Optional[int] = None,
-    ) -> List[str]:
+        bucket_name: str | None = None,
+        prefix: str | None = None,
+        delimiter: str | None = None,
+        page_size: int | None = None,
+        max_items: int | None = None,
+    ) -> list[str]:
         """
         Lists keys in a bucket under prefix and not containing delimiter
 
@@ -276,11 +289,11 @@ class S3HookAsync(AwsBaseHookAsync):
         prefix: str,
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
-        previous_objects: Optional[Set[str]] = None,
+        previous_objects: set[str] | None = None,
         inactivity_seconds: int = 0,
         allow_delete: bool = True,
-        last_activity_time: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+        last_activity_time: datetime | None = None,
+    ) -> dict[str, Any]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
