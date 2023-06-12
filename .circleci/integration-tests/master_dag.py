@@ -67,22 +67,25 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
 
         message_list.append(airflow_version_message)
-
+        dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
             dr_status = f" *{dr.dag_id} : {dr.get_state()}* \n"
-            message_list.append(dr_status)
-            for ti in dr.get_task_instances():
-                task_code = ":black_circle: "
-                if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
-                    if ti.state == "success":
-                        task_code = ":large_green_circle: "
-                    elif ti.state == "failed":
-                        task_code = ":red_circle: "
-                    elif ti.state == "upstream_failed":
-                        task_code = ":large_orange_circle: "
-                    task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
-                    message_list.append(task_message_str)
-
+            dag_count += 1
+            if dr.get_state() == "failed":
+                failed_dag_count += 1
+                message_list.append(dr_status)
+                for ti in dr.get_task_instances():
+                    task_code = ":black_circle: "
+                    if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
+                        if ti.state == "success":
+                            task_code = ":large_green_circle: "
+                        elif ti.state == "failed":
+                            task_code = ":red_circle: "
+                        elif ti.state == "upstream_failed":
+                            task_code = ":large_orange_circle: "
+                        task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
+                        message_list.append(task_message_str)
+        message_list.append(f":large_green_circle:  {str(dag_count-failed_dag_count)}/{str(dag_count)}")
         logging.info("%s", "".join(message_list))
         # Send dag run report on Slack
         try:
