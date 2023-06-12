@@ -33,7 +33,7 @@ class S3KeyTrigger(BaseTrigger):
         aws_conn_id: str = "aws_default",
         poke_interval: float = 5.0,
         soft_fail: bool = False,
-        should_check: bool = False,
+        should_check_fn: bool = False,
         **hook_params: Any,
     ):
         super().__init__()
@@ -44,7 +44,7 @@ class S3KeyTrigger(BaseTrigger):
         self.hook_params = hook_params
         self.poke_interval = poke_interval
         self.soft_fail = soft_fail
-        self.should_check = should_check
+        self.should_check_fn = should_check_fn
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize S3KeyTrigger arguments and classpath."""
@@ -58,7 +58,7 @@ class S3KeyTrigger(BaseTrigger):
                 "hook_params": self.hook_params,
                 "poke_interval": self.poke_interval,
                 "soft_fail": self.soft_fail,
-                "should_check": self.should_check,
+                "should_check_fn": self.should_check_fn,
             },
         )
 
@@ -69,7 +69,7 @@ class S3KeyTrigger(BaseTrigger):
             async with await hook.get_client_async() as client:
                 while True:
                     if await hook.check_key(client, self.bucket_name, self.bucket_key, self.wildcard_match):
-                        if self.should_check:
+                        if self.should_check_fn:
                             s3_objects = await hook.get_files(
                                 client, self.bucket_name, self.bucket_key, self.wildcard_match
                             )

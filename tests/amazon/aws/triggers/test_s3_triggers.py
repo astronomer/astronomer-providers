@@ -30,7 +30,7 @@ class TestS3KeyTrigger:
             "hook_params": {},
             "soft_fail": False,
             "poke_interval": 5.0,
-            "should_check": False,
+            "should_check_fn": False,
         }
 
     @pytest.mark.asyncio
@@ -92,7 +92,10 @@ class TestS3KeyTrigger:
         mock_get_files.return_value = ["test"]
         mock_client.return_value.check_key.return_value = True
         trigger = S3KeyTrigger(
-            bucket_key="s3://test_bucket/file", bucket_name="test_bucket", poke_interval=1, should_check=True
+            bucket_key="s3://test_bucket/file",
+            bucket_name="test_bucket",
+            poke_interval=1,
+            should_check_fn=True,
         )
         generator = trigger.run()
         actual = await generator.asend(None)

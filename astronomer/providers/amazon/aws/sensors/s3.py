@@ -78,7 +78,7 @@ class S3KeySensorAsync(S3KeySensor):
             **kwargs,
         )
         self.check_fn = check_fn
-        self.should_check = True if check_fn else False
+        self.should_check_fn = True if check_fn else False
 
     def execute(self, context: Context) -> None:
         """Check for a keys in s3 and defers using the trigger"""
@@ -103,7 +103,7 @@ class S3KeySensorAsync(S3KeySensor):
                 verify=self.verify,
                 poke_interval=self.poke_interval,
                 soft_fail=self.soft_fail,
-                should_check=self.should_check,
+                should_check_fn=self.should_check_fn,
             ),
             method_name="execute_complete",
         )
