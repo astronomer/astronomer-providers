@@ -1,3 +1,4 @@
+"""DAG to delete stale GCP resources."""
 import os
 from datetime import timedelta
 
@@ -7,6 +8,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.timezone import datetime
 
 REGION = os.getenv("GCP_LOCATION", "us-central1")
+GCP_NUKE_DAG_SCHEDULE = os.getenv("GCP_NUKE_DAG_SCHEDULE", None)
 GCP_PROJECT_NAME = os.getenv("GCP_PROJECT_NAME", "astronomer-airflow-providers")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
@@ -18,7 +20,7 @@ default_args = {
 
 
 def gcloud_nuke_callable() -> None:
-    """Deletes stale GCP resources."""
+    """Delete stale GCP resources."""
     import json
     import logging
     import subprocess
@@ -71,7 +73,7 @@ def gcloud_nuke_callable() -> None:
 with DAG(
     dag_id="example_gcp_nuke",
     start_date=datetime(2022, 1, 1),
-    schedule="30 20 * * *",
+    schedule=GCP_NUKE_DAG_SCHEDULE,
     catchup=False,
     default_args=default_args,
     tags=["example", "gcp", "nuke"],
