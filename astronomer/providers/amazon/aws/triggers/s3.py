@@ -73,7 +73,7 @@ class S3KeyTrigger(BaseTrigger):
             async with await hook.get_client_async() as client:
                 while True:
                     if await hook.check_key(
-                            client, self.bucket_name, self.bucket_key, self.wildcard_match, self.use_regex
+                        client, self.bucket_name, self.bucket_key, self.wildcard_match, self.use_regex
                     ):
                         if self.should_check_fn:
                             s3_objects = await hook.get_files(

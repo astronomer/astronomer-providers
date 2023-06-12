@@ -58,16 +58,16 @@ class S3KeySensorAsync(S3KeySensor):
     template_fields: Sequence[str] = ("bucket_key", "bucket_name")
 
     def __init__(
-            self,
-            *,
-            bucket_key: str | list[str],
-            bucket_name: str | None = None,
-            wildcard_match: bool = False,
-            use_regex: bool = False,
-            check_fn: Callable[..., bool] | None = None,
-            aws_conn_id: str = "aws_default",
-            verify: str | bool | None = None,
-            **kwargs: Any,
+        self,
+        *,
+        bucket_key: str | list[str],
+        bucket_name: str | None = None,
+        wildcard_match: bool = False,
+        use_regex: bool = False,
+        check_fn: Callable[..., bool] | None = None,
+        aws_conn_id: str = "aws_default",
+        verify: str | bool | None = None,
+        **kwargs: Any,
     ):
         self.bucket_key: list[str] = [bucket_key] if isinstance(bucket_key, str) else bucket_key
         self.use_regex = use_regex
@@ -107,7 +107,7 @@ class S3KeySensorAsync(S3KeySensor):
                 verify=self.verify,
                 poke_interval=self.poke_interval,
                 soft_fail=self.soft_fail,
-                should_check_fn=self.should_check_fn
+                should_check_fn=self.should_check_fn,
             ),
             method_name="execute_complete",
         )
@@ -188,8 +188,8 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
     """
 
     def __init__(
-            self,
-            **kwargs: Any,
+        self,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
 
