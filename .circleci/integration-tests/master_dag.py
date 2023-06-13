@@ -45,6 +45,7 @@ MODEL_NAME
 REDSHIFT_CLUSTER_IDENTIFIER
 REDSHIFT_TABLE_NAME
 RESOURCE_GROUP_NAME
+ADF_FACTORY_NAME
 
 Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
 aws_default
