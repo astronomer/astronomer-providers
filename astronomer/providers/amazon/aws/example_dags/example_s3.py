@@ -70,7 +70,7 @@ with DAG(
         :return: true if the criteria is met
         :rtype: bool
         """
-        return all(f.get("Size", 0) > 1024 for f in files)
+        return all(f.get("Size", 0) > 20 for f in files)
 
     # [END howto_sensor_s3_key_function_definition]
     create_bucket = S3CreateBucketOperator(
