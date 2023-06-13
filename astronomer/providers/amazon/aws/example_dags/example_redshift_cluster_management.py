@@ -146,6 +146,7 @@ with DAG(
         >> [resume_redshift_cluster, redshift_sensor]
         >> delete_redshift_cluster_snapshot
         >> delete_redshift_cluster
+        >> dag_final_status
     )
 
     [resume_redshift_cluster, redshift_sensor] >> dag_final_status
