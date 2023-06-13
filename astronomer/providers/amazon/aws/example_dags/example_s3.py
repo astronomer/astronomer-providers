@@ -64,7 +64,7 @@ with DAG(
     # [START howto_sensor_s3_key_function_definition]
     def check_fn(files: List[Any]) -> bool:
         """
-        check if all files are bigger than 0 bytes
+        Check if all files are bigger than 0 bytes
 
         :param files: List of S3 object attributes.
         :return: true if the criteria is met
