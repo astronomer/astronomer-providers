@@ -148,4 +148,3 @@ with DAG(
         >> delete_redshift_cluster
         >> dag_final_status
     )
-
