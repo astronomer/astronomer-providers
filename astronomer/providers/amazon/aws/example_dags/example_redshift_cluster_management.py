@@ -1,14 +1,18 @@
 """Airflow operators example to manage AWS Redshift cluster."""
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftCreateClusterOperator,
     RedshiftCreateClusterSnapshotOperator,
     RedshiftDeleteClusterSnapshotOperator,
 )
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.amazon.aws.operators.redshift_cluster import (
     RedshiftDeleteClusterOperatorAsync,
@@ -34,6 +38,16 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
 
 
 with DAG(
@@ -116,7 +130,13 @@ with DAG(
     )
     # [END howto_operator_redshift_delete_cluster_async]
 
-    end = EmptyOperator(task_id="end")
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        retries=0,
+    )
 
     (
         start
@@ -126,7 +146,5 @@ with DAG(
         >> [resume_redshift_cluster, redshift_sensor]
         >> delete_redshift_cluster_snapshot
         >> delete_redshift_cluster
+        >> dag_final_status
     )
-
-    [resume_redshift_cluster, redshift_sensor] >> end
-    [delete_redshift_cluster_snapshot, delete_redshift_cluster] >> end
