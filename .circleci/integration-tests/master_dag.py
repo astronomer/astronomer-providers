@@ -25,6 +25,7 @@ IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 To run this master dag across multiple deployments simultaneously, set unique values for the below environment
 variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
 
+ADF_FACTORY_NAME
 AZURE_DATA_STORAGE_BLOB_NAME
 AZURE_DATA_STORAGE_CONTAINER_NAME
 BATCH_JOB_COMPUTE_ENV
@@ -45,7 +46,7 @@ MODEL_NAME
 REDSHIFT_CLUSTER_IDENTIFIER
 REDSHIFT_TABLE_NAME
 RESOURCE_GROUP_NAME
-ADF_FACTORY_NAME
+
 
 Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
 aws_default
