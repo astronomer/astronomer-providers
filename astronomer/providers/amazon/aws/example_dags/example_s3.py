@@ -64,13 +64,12 @@ with DAG(
     # [START howto_sensor_s3_key_function_definition]
     def check_fn(files: List[Any]) -> bool:
         """
-        Example of custom check: check if all files are bigger than ``1kB``
+        Check if all files are bigger than 0 bytes
 
         :param files: List of S3 object attributes.
         :return: true if the criteria is met
-        :rtype: bool
         """
-        return all(f.get("Size", 0) > 1024 for f in files)
+        return all(f.get("Size", 0) > 0 for f in files)
 
     # [END howto_sensor_s3_key_function_definition]
     create_bucket = S3CreateBucketOperator(
