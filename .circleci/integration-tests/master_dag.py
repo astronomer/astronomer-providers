@@ -96,7 +96,6 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         output_list = [
             airflow_version_message,
             f"*Total DAGS*: {dag_count} \n",
-            f"*Total DAGS*: {dag_count} \n",
             f"*Success DAGS*: {dag_count-failed_dag_count} :green_apple: \n",
             f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
             "*Failure Details:*: \n",
