@@ -1,12 +1,17 @@
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.amazon.aws.operators.emr import EmrEksCreateClusterOperator
 
 from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
+
 
 # [START howto_operator_emr_eks_env_variables]
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
@@ -63,6 +68,17 @@ CONFIGURATION_OVERRIDES_ARG = {
     },
 }
 # [END howto_operator_emr_eks_config]
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 
 with DAG(
     dag_id="example_emr_eks_pi_job",
@@ -148,6 +164,14 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        retries=0,
+    )
+
     (
         setup_aws_config
         >> create_eks_cluster_kube_namespace_with_role
@@ -155,4 +179,5 @@ with DAG(
         >> run_emr_container_job
         >> emr_job_container_sensor
         >> remove_cluster_container_role_policy
+        >> dag_final_status
     )
