@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
 from airflow.utils.state import State
@@ -48,7 +48,7 @@ with DAG(
     tags=["example", "async", "dbt-cloud"],
     catchup=False,
 ) as dag:
-    start = EmptyOperator(task_id="start")
+    start = DummyOperator(task_id="start")
 
     # [START howto_operator_dbt_cloud_run_job_async]
     trigger_dbt_job_run_async = DbtCloudRunJobOperatorAsync(
