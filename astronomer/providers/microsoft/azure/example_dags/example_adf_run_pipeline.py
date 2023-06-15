@@ -23,7 +23,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
 TENANT_ID = os.getenv("TENANT_ID", "")
 SUBSCRIPTION_ID = os.getenv("SUBSCRIPTION_ID", "")
 RESOURCE_GROUP_NAME = os.getenv("RESOURCE_GROUP_NAME", "team_provider_resource_group_test_1")
-DATAFACTORY_NAME = os.getenv("DATAFACTORY_NAME", "")
+DATAFACTORY_NAME = os.getenv("DATAFACTORY_NAME", "ADFProvidersTeamDataFactoryTest")
 LOCATION = os.getenv("LOCATION", "eastus")
 CONNECTION_STRING = os.getenv("CONNECTION_STRING", "")
 PIPELINE_NAME = os.getenv("PIPELINE_NAME", "pipeline1")
@@ -40,7 +40,7 @@ df_params = {"location": LOCATION}
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "azure_data_factory_conn_id": "azure_data_factory_default",
-    "factory_name": "ADFProvidersTeamDataFactoryTest",  # This can also be specified in the ADF connection.
+    "factory_name": DATAFACTORY_NAME,  # This can also be specified in the ADF connection.
     "resource_group_name": RESOURCE_GROUP_NAME,  # This can also be specified in the ADF connection.
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
