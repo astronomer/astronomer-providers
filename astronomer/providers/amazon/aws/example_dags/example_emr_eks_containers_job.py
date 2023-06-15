@@ -5,13 +5,12 @@ from typing import Any
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.operators.emr import EmrEksCreateClusterOperator
 from airflow.utils.state import State
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.providers.amazon.aws.operators.emr import EmrEksCreateClusterOperator
 
 from astronomer.providers.amazon.aws.operators.emr import EmrContainerOperatorAsync
 from astronomer.providers.amazon.aws.sensors.emr import EmrContainerSensorAsync
-
 
 # [START howto_operator_emr_eks_env_variables]
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
@@ -69,6 +68,7 @@ CONFIGURATION_OVERRIDES_ARG = {
 }
 # [END howto_operator_emr_eks_config]
 
+
 def check_dag_status(**kwargs: Any) -> None:
     """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
     for task_instance in kwargs["dag_run"].get_task_instances():
@@ -77,7 +77,6 @@ def check_dag_status(**kwargs: Any) -> None:
             and task_instance.task_id != kwargs["task_instance"].task_id
         ):
             raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
-
 
 
 with DAG(
