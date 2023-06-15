@@ -98,9 +98,10 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             f"*Total DAGS*: {dag_count} \n",
             f"*Success DAGS*: {dag_count-failed_dag_count} :green_apple: \n",
             f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
-            "*Failure Details:*: \n",
         ]
-        output_list.extend(message_list)
+        if failed_dag_count > 0:
+            output_list.append("*Failure Details:* \n")
+            output_list.extend(message_list)
         output_list.append(deployment_message)
         logging.info("%s", "".join(output_list))
         # Send dag run report on Slack
