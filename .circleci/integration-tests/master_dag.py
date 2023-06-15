@@ -69,6 +69,11 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
 
         message_list.append(airflow_version_message)
+        master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
+        deployment_message = (
+            f"<{master_dag_deployment_link}|Airflow Deployment> with master dag execution details \n"
+        )
+        message_list.append(deployment_message)
         dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
             dr_status = f" *{dr.dag_id} : {dr.get_state()}* \n"
@@ -87,6 +92,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
                             task_code = ":large_orange_circle: "
                         task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
                         message_list.append(task_message_str)
+        message_list.append("*Total Success DAGS* \n")
         message_list.append(f":large_green_circle:  {str(dag_count-failed_dag_count)}/{str(dag_count)}")
         logging.info("%s", "".join(message_list))
         # Send dag run report on Slack
