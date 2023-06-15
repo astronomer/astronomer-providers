@@ -69,7 +69,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
-        deployment_message = f"\n \n \n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment: Master DAG \n"
+        deployment_message = f"\n \n \n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
 
         dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
