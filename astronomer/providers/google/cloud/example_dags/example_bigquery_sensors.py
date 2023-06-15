@@ -1,8 +1,10 @@
 """Example Airflow DAG for Google BigQuery Sensors."""
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from airflow import DAG
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryCreateEmptyTableOperator,
@@ -12,6 +14,8 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.sensors.bigquery import (
     BigQueryTablePartitionExistenceSensor,
 )
+from airflow.utils.state import State
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.google.cloud.sensors.bigquery import (
     BigQueryTableExistenceSensorAsync,
@@ -41,6 +45,17 @@ default_args = {
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
+
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
 
 with DAG(
     dag_id="example_bigquery_sensors",
@@ -94,9 +109,17 @@ with DAG(
         task_id="delete_dataset", dataset_id=DATASET_NAME, delete_contents=True
     )
 
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        retries=0,
+    )
+
     create_dataset >> create_table
     create_table >> check_table_exists
     create_table >> execute_insert_query
     execute_insert_query >> check_table_partition_exists
     check_table_exists >> delete_dataset
-    check_table_partition_exists >> delete_dataset
+    check_table_partition_exists >> delete_dataset >> dag_final_status
