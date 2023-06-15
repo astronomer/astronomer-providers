@@ -2,11 +2,15 @@
 
 import os
 from datetime import timedelta
+from typing import Any
 
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
+from airflow.utils.state import State
 from airflow.utils.timezone import datetime
+from airflow.utils.trigger_rule import TriggerRule
 
 from astronomer.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperatorAsync
 from astronomer.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensorAsync
@@ -25,6 +29,17 @@ default_args = {
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
 
+
+def check_dag_status(**kwargs: Any) -> None:
+    """Raises an exception if any of the DAG's tasks failed and as a result marking the DAG failed."""
+    for task_instance in kwargs["dag_run"].get_task_instances():
+        if (
+            task_instance.current_state() != State.SUCCESS
+            and task_instance.task_id != kwargs["task_instance"].task_id
+        ):
+            raise Exception(f"Task {task_instance.task_id} failed. Failing this DAG run")
+
+
 with DAG(
     dag_id="example_dbt_cloud",
     start_date=datetime(2022, 1, 1),
@@ -33,8 +48,8 @@ with DAG(
     tags=["example", "async", "dbt-cloud"],
     catchup=False,
 ) as dag:
-    start = EmptyOperator(task_id="start")
-    end = EmptyOperator(task_id="end")
+    start = DummyOperator(task_id="start")
+
     # [START howto_operator_dbt_cloud_run_job_async]
     trigger_dbt_job_run_async = DbtCloudRunJobOperatorAsync(
         task_id="trigger_dbt_job_run_async",
@@ -57,5 +72,13 @@ with DAG(
     )
     # [END howto_operator_dbt_cloud_run_job_sensor_async]
 
-    start >> trigger_dbt_job_run_async >> end
-    start >> trigger_job_run2 >> job_run_sensor_async >> end
+    dag_final_status = PythonOperator(
+        task_id="dag_final_status",
+        provide_context=True,
+        python_callable=check_dag_status,
+        trigger_rule=TriggerRule.ALL_DONE,  # Ensures this task runs even if upstream fails
+        retries=0,
+    )
+
+    start >> trigger_dbt_job_run_async >> dag_final_status
+    start >> trigger_job_run2 >> job_run_sensor_async >> dag_final_status
