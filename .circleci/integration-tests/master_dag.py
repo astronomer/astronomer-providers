@@ -69,7 +69,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
-        deployment_message = f"\n \n \n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
+        deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
 
         dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
@@ -191,14 +191,21 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*amazon_trigger_tasks)
 
-    # AWS EMR DAG
-    emr_task_info = [
+    # AWS EMR EKS PI DAG
+    emr_eks_task_info = [
         {"emr_eks_pi_job_dag": "example_emr_eks_pi_job"},
+    ]
+    emr_eks_trigger_tasks, ids = prepare_dag_dependency(emr_eks_task_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*emr_eks_trigger_tasks)
+
+    # AWS EMR Sensor DAG
+    emr_sensor_task_info = [
         {"emr_sensor_dag": "example_emr_sensor"},
     ]
-    emr_trigger_tasks, ids = prepare_dag_dependency(emr_task_info, "{{ ds }}")
+    emr_sensor_trigger_tasks, ids = prepare_dag_dependency(emr_sensor_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
-    chain(*emr_trigger_tasks)
+    chain(*emr_sensor_trigger_tasks)
 
     # Google DAG
     google_task_info = [
@@ -305,7 +312,8 @@ with DAG(
         list_installed_pip_packages,
         get_airflow_version,
         get_airflow_executor,
-        emr_trigger_tasks[0],
+        emr_eks_trigger_tasks[0],
+        emr_sensor_trigger_tasks[0],
         aws_misc_dags_tasks[0],
         amazon_trigger_tasks[0],
         google_trigger_tasks[0],
@@ -326,7 +334,8 @@ with DAG(
         get_airflow_version,
         get_airflow_executor,
         amazon_trigger_tasks[-1],
-        emr_trigger_tasks[-1],
+        emr_eks_trigger_tasks[-1],
+        emr_sensor_trigger_tasks[-1],
         aws_misc_dags_tasks[-1],
         google_trigger_tasks[-1],
         core_trigger_tasks[-1],
