@@ -139,6 +139,11 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    delete_stale_emr_iam_roles = BashOperator(
+        task_id="delete_stale_emr_iam_roles",
+        bash_command="sh $AIRFLOW_HOME/dags/example_delete_stale_emr_iam_roles.sh ",
+    )
+
     generate_report = PythonOperator(
         task_id="generate_report",
         python_callable=generate_task_report,
@@ -160,6 +165,7 @@ with DAG(
         >> terminate_running_emr_virtual_clusters
         >> execute_aws_nuke
         >> delete_stale_emr_vpcs
+        >> delete_stale_emr_iam_roles
         >> generate_report
         >> dag_final_status
     )
