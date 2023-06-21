@@ -2,14 +2,16 @@ Changelog
 =========
 
 1.17.0 (2023-06-21)
+-------------------
 
 Enhancements
 """"""""""""
 
-- Enhance ``S3KeySizeSensorAsync``
-  - Add ``use_regex`` param  (`#1172 <https://github.com/astronomer/astronomer-providers/pull/1172>`_)
-  - Handle soft fail (`#1161 <https://github.com/astronomer/astronomer-providers/pull/1161>`_)
+* Enhance ``S3KeySizeSensorAsync``
 
+  * Add ``use_regex`` param  (`#1172 <https://github.com/astronomer/astronomer-providers/pull/1172>`_)
+
+  * Handle soft fail (`#1161 <https://github.com/astronomer/astronomer-providers/pull/1161>`_)
 
 Bug Fixes
 """""""""
@@ -22,12 +24,15 @@ Bug Fixes
 Enhancements
 """"""""""""
 
-- Enhance ``SFTPSensorAsync`` by adding below features (`#1072 <https://github.com/astronomer/astronomer-providers/pull/1072>`_):
-    - Remove the need for prefixing ``ssh-`` to host keys that don't have such prefix e.g. ecdsa type keys
-    - Support validating host keys using a known_hosts file
-    - Accept string values for ``newer_than`` field. e.g. passed via Jinja template
-    - Use ``readdir`` for listing files instead of ``stat`` on each file to avoid throttling caused by multiple roundtrips to the server for each file
+* Enhance ``SFTPSensorAsync`` by adding below features (`#1072 <https://github.com/astronomer/astronomer-providers/pull/1072>`_):
 
+  * Remove the need for prefixing ``ssh-`` to host keys that don't have such prefix e.g. ecdsa type keys
+
+  * Support validating host keys using a known_hosts file
+
+  * Accept string values for ``newer_than`` field. e.g. passed via Jinja template
+
+  * Use ``readdir`` for listing files instead of ``stat`` on each file to avoid throttling caused by multiple roundtrips to the server for each file
 
 Bug Fixes
 """""""""
