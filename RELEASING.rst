@@ -32,7 +32,7 @@ You will need to update it in:
 * ``docs/conf.py`` - ``release`` variable
 * ``astronomer/providers/package.py`` - ``get_provider_info`` method return value ``versions``
 
-You can also use `commitizen <https://github.com/commitizen-tools/commitizen>`_ to update the version in these files
+You can also use `commitizen <https://github.com/commitizen-tools/commitizen>`_ (version >= 3.4.0 is required) to update the version in these files
 
 Install commitizen on mac
 

@@ -95,3 +95,4 @@ version_files = [
     "astronomer/providers/package.py",
     "setup.cfg",
 ]
+version_scheme = "semver"
