@@ -172,7 +172,7 @@ with DAG(
 
     get_astronomer_providers_version = BashOperator(
         task_id="get_astronomer_providers_version",
-        bash_command="airflow providers list -o json |  jq '.[] | select(.package_name == 'astronomer-providers') | .version'",
+        bash_command="airflow providers list -o json |  jq '.[] | select(.package_name == \"astronomer-providers\") | .version'",
         do_xcom_push=True,
     )
 
