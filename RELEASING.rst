@@ -36,24 +36,24 @@ You can also use `commitizen <https://github.com/commitizen-tools/commitizen>`_ 
 
 Install commitizen on mac
 
-```
-brew install commitizen
-```
+.. code-block:: shell
+
+  brew install commitizen
 
 Bump versions locally
 
-```
-make ASTRO_PROVIDER_VERSION=<RELEASE_VERSION> bump-version
-```
+.. code-block:: shell
 
-Note: ```RELEASE_VERSION``` is the software version you want to release.
+  make ASTRO_PROVIDER_VERSION=<RELEASE_VERSION> bump-version
+
+Note: ``<RELEASE_VERSION>`` is the software version you want to release.
 
 Compare the commits introduced since the last release to aid building the CHANGELOG
 -----------------------------------------------------------------------------------
 
 You can use the following link to compare the commits introduced since the last release (e.g. 1.15.4)
 
-```https://github.com/astronomer/astronomer-providers/compare/1.15.4...main```
+``https://github.com/astronomer/astronomer-providers/compare/1.15.4...main``
 
 Note: Make sure to replace the last release version in the above URL
 
