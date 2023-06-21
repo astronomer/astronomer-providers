@@ -1,0 +1,27 @@
+---
+name: Delete RC testing branch upon PR closure
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  delete-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Verify and Delete RC testing branch
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "action@github.com"
+          git fetch --prune --all
+
+          if [[ "${{ github.event.pull_request.head.ref }}" == rc-test-* ]]; then
+            git push origin --delete ${{ github.event.pull_request.head.ref }}
+          else
+            echo "Branch does not have the required RC testing prefix. Skipping branch deletion."
+          fi
