@@ -48,6 +48,8 @@ class EmrContainerSensorAsync(EmrContainerSensor):
                 method_name="execute_complete",
             )
 
+    # Ignoring the override type check because the parent class specifies "context: Any" but specifying it as
+    # "context: Context" is accurate as it's more specific.
     def execute_complete(self, context: Context, event: dict[str, str]) -> None:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
