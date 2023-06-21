@@ -1,6 +1,20 @@
 Changelog
 =========
 
+1.17.0 (2023-06-21)
+
+Enhancements
+""""""""""""
+
+- Enhance ``S3KeySizeSensorAsync``
+  - Add ``use_regex`` param  (`#1172 <https://github.com/astronomer/astronomer-providers/pull/1172>`_)
+  - Handle soft fail (`#1161 <https://github.com/astronomer/astronomer-providers/pull/1161>`_)
+
+
+Bug Fixes
+"""""""""
+- Fixing the issue that ``check_fn`` was ignored in ``S3KeySensorAsync`` (`#1171 <https://github.com/astronomer/astronomer-providers/pull/1171>`_)
+
 
 1.16.0 (2023-05-19)
 -------------------
