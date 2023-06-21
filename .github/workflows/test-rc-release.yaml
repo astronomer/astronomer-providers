@@ -170,7 +170,7 @@ jobs:
           git add setup.cfg
           git commit -m "Updating setup.cfg with RC provider packages on $rc_issue_url"
           git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
-          gh pr create --base ${{ inputs.base_git_rev }} \
+          gh pr create --base ${{ steps.create_rc_branch.outputs.rc_testing_branch }} \
                        --title "[DO NOT MERGE] Test RC provider packages for $rc_issue_url" \
                        --fill
 
