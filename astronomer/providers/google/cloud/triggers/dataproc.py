@@ -350,9 +350,7 @@ class DataProcSubmitTrigger(BaseTrigger):
             JobStatus.State.CANCEL_STARTED,
         }:
             return {
-                "status": "error",
-                "message": f"Job got cancelled. \n {job}",
-                "job_id": self.dataproc_job_id,
+                "status": "error", "message": f"Job got cancelled.\n {job}", "job_id": self.dataproc_job_id,
             }
         elif JobStatus.State.DONE == state:
             return {
