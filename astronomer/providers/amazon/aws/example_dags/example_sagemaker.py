@@ -166,7 +166,7 @@ def set_up(role_arn: str) -> None:
         "InputDataConfig": [
             {
                 "ChannelName": "train",
-                **training_data_source,  # type: ignore[arg-type]
+                **training_data_source,
             }
         ],
         "OutputDataConfig": {"S3OutputPath": f"s3://{bucket_name}/{training_output_s3_key}/"},
