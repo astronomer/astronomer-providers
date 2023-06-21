@@ -453,7 +453,9 @@ class TestDataProcSubmitTrigger:
         hook = mock.AsyncMock(DataprocHookAsync)
         get_job_instance = mock.AsyncMock(Job)
         hook.get_job = get_job_instance
-        hook.get_job.return_value.status.state = state
+        job = hook.get_job.return_value
+        response["message"] = f"{response['message']}.\n {job}"
+        job.status.state = state
         trigger = DataProcSubmitTrigger(
             dataproc_job_id=TEST_JOB_ID,
             project_id=TEST_PROJECT_ID,

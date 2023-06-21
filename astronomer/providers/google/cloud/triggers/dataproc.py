@@ -350,14 +350,24 @@ class DataProcSubmitTrigger(BaseTrigger):
             JobStatus.State.CANCEL_STARTED,
         }:
             return {
-                "status": "error", "message": f"Job got cancelled.\n {job}", "job_id": self.dataproc_job_id,
+                "status": "error",
+                "message": f"Job got cancelled.\n {job}",
+                "job_id": self.dataproc_job_id,
             }
         elif JobStatus.State.DONE == state:
             return {
                 "status": "success",
-                "message": "Job completed successfully",
+                "message": f"Job completed successfully.\n {job}",
                 "job_id": self.dataproc_job_id,
             }
         elif JobStatus.State.ATTEMPT_FAILURE == state:
-            return {"status": "pending", "message": "Job is in pending state", "job_id": self.dataproc_job_id}
-        return {"status": "pending", "message": "Job is in pending state", "job_id": self.dataproc_job_id}
+            return {
+                "status": "pending",
+                "message": f"Job is in pending state.\n {job}",
+                "job_id": self.dataproc_job_id,
+            }
+        return {
+            "status": "pending",
+            "message": f"Job is in pending state.\n {job}",
+            "job_id": self.dataproc_job_id,
+        }
