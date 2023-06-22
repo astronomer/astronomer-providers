@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.17.1 (2023-06-22)
+-------------------
+
+Bug Fixes
+"""""""""
+* Revert "feat(kubernetes): check state before deferring KubernetesPodOperatorAsync (#1104)" (`#1209 <https://github.com/astronomer/astronomer-providers/pull/1209>`_)
+
 1.17.0 (2023-06-21)
 -------------------
 
