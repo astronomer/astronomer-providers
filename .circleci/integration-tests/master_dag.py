@@ -62,11 +62,12 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
+        astronomer_providers_version = context["ti"].xcom_pull(task_ids="get_astronomer_providers_version")
 
         if IS_RUNTIME_RELEASE:
-            airflow_version_message = f"Results generated for Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {airflow_executor}  \n\n"
+            airflow_version_message = f"Results generated for Runtime version `{os.environ['ASTRONOMER_RUNTIME_VERSION']}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` \n\n"
         else:
-            airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} executor`\n\n"
+            airflow_version_message = f"The below run is on Airflow version `{airflow_version}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}`\n\n"
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
         deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
@@ -166,6 +167,12 @@ with DAG(
     get_airflow_executor = BashOperator(
         task_id="get_airflow_executor",
         bash_command="airflow config get-value core executor",
+        do_xcom_push=True,
+    )
+
+    get_astronomer_providers_version = BashOperator(
+        task_id="get_astronomer_providers_version",
+        bash_command="airflow providers get astronomer-providers -o json | jq '.[0].Version'",
         do_xcom_push=True,
     )
 
@@ -312,6 +319,7 @@ with DAG(
         list_installed_pip_packages,
         get_airflow_version,
         get_airflow_executor,
+        get_astronomer_providers_version,
         emr_eks_trigger_tasks[0],
         emr_sensor_trigger_tasks[0],
         aws_misc_dags_tasks[0],
@@ -333,6 +341,7 @@ with DAG(
         list_installed_pip_packages,
         get_airflow_version,
         get_airflow_executor,
+        get_astronomer_providers_version,
         amazon_trigger_tasks[-1],
         emr_eks_trigger_tasks[-1],
         emr_sensor_trigger_tasks[-1],
