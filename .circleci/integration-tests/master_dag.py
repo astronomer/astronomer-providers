@@ -67,7 +67,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         if IS_RUNTIME_RELEASE:
             airflow_version_message = f"Results generated for Runtime version `{os.environ['ASTRONOMER_RUNTIME_VERSION']}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` \n\n"
         else:
-            airflow_version_message = f"The below run is on Airflow version `{airflow_version} with {airflow_executor} and astronomer-provider version {astronomer_providers_version}`\n\n"
+            airflow_version_message = f"The below run is on Airflow version `{airflow_version}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}`\n\n"
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
         deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
