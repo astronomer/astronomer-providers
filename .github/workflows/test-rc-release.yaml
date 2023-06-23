@@ -68,7 +68,7 @@ jobs:
             --json createdAt,title,url \
             --limit 100 \
             --state open \
-            --state merged \
+            --state closed \
             --jq 'map(
                     select(
                       .title |
