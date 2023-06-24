@@ -32,7 +32,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
         final_cluster_snapshot_identifier: Optional[str] = None,
         cluster_status_fetch_interval_seconds: int = 10,
         aws_conn_id: str = "aws_default",
-        poll_interval: float = 5.0,
+        poll_interval: int = 5,
         **kwargs: Any,
     ):
         self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
