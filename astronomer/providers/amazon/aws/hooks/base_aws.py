@@ -12,7 +12,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     Interacts with AWS using aiobotocore asynchronously.
 
     .. note::
-        AwsBaseHookAsync uses aiobotocore to create asynchronous S3 hooks. Hence, AwsBaseHookAsync
+        AwsBaseHookAsync uses aiobotocore to create asynchronous hooks. Hence, AwsBaseHookAsync
         only supports the authentication mechanism that aiobotocore supports. Currently, AwsBaseHookAsync supports
         only AWS STS client method ``assume_role`` provided in the Airflow connection extra args via aiobotocore.
 
