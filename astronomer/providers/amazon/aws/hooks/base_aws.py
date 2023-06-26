@@ -41,8 +41,8 @@ class AwsBaseHookAsync(AwsBaseHook):
         # Try to use airflow provider client implementation
         try:
             return self.get_aioclient()
-        except Exception:
-            pass
+        except Exception as e:
+            self.log.info(f"An error occur while using upstream provider implementation \n {e}")
 
         # Fetch the Airflow connection object
         connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)  # type: ignore[arg-type]
