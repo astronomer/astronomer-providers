@@ -40,7 +40,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         """Create an Async Client object to communicate with AWS services."""
         # Try to use airflow provider client implementation
         try:
-            return self.get_aioclient()
+            return self._get_aioclient()
         except Exception as e:
             self.log.info(f"An error occur while using upstream provider implementation \n {e}")
 
@@ -159,7 +159,7 @@ class AwsBaseHookAsync(AwsBaseHook):
                 return_response = response["Credentials"]
             return return_response
 
-    def get_aioclient(self):
+    def _get_aioclient(self):
         session = self.get_session(region_name=self.region_name, deferrable=True)
         return session.client(
             self.client_type,
