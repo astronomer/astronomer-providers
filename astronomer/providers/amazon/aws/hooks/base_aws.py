@@ -159,7 +159,7 @@ class AwsBaseHookAsync(AwsBaseHook):
                 return_response = response["Credentials"]
             return return_response
 
-    def _get_aioclient(self):
+    def _get_aioclient(self) -> AioBaseClient:
         session = self.get_session(region_name=self.region_name, deferrable=True)
         return session.client(
             self.client_type,
