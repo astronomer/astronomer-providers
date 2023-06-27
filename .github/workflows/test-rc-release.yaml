@@ -1,5 +1,5 @@
 ---
-name: test-rc-release
+name: Test providers RC releases
 
 on:  # yamllint disable-line rule:truthy
   schedule:
@@ -215,7 +215,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-master-dag:
-    needs: deploy-rc-testing-branch-to-astro-cloud
+    needs: [deploy-rc-testing-branch-to-astro-cloud, export-rc-testing-branch-name]
     if: |
       always() &&
       needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
