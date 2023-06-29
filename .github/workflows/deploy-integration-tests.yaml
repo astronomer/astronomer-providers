@@ -66,6 +66,7 @@ jobs:
       - name: Trigger DAG(s)
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
+            ${{ secrets.ASTRO_SUBDOMAIN }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} \
@@ -110,6 +111,7 @@ jobs:
       - name: Trigger DAG(s)
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
+            ${{ secrets.ASTRO_SUBDOMAIN }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }} \

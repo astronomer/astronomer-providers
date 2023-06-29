@@ -236,6 +236,7 @@ jobs:
       - name: Trigger master dag
         run: |
           python3 dev/integration_test_scripts/trigger_dag.py \
+            ${{ secrets.ASTRO_SUBDOMAIN }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
             ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
