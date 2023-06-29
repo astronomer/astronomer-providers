@@ -48,29 +48,15 @@ jobs:
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests
-    runs-on: 'ubuntu-20.04'
-    steps:
-      - name: Sleep for 30 minutes
-        run: |
-          sleep_time=1800
-          echo "Current timestamp is" `date`
-          echo "Sleeping for $sleep_time seconds"
-          echo "allowing the deployed image to be updated across all Airflow components.."
-          sleep 1800
-
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.git_rev }}
-
-      - name: Trigger DAG(s)
-        run: |
-          python3 dev/integration_test_scripts/trigger_dag.py \
-            ${{ secrets.ASTRO_SUBDOMAIN }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} \
-            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
+    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} 
 
   deploy-to-providers-integration-tests-on-KE:
     if: |
@@ -93,26 +79,12 @@ jobs:
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests-on-KE
-    runs-on: 'ubuntu-20.04'
-    steps:
-      - name: Sleep and wait for the deployment to be ready
-        run: |
-          sleep_time=1800
-          echo "Current timestamp is" `date`
-          echo "Sleeping for $sleep_time seconds"
-          echo "allowing the deployed image to be updated across all Airflow components.."
-          sleep $sleep_time
-
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.git_rev }}
-
-      - name: Trigger DAG(s)
-        run: |
-          python3 dev/integration_test_scripts/trigger_dag.py \
-            ${{ secrets.ASTRO_SUBDOMAIN }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }} \
-            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
+    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }} 
