@@ -87,7 +87,7 @@ test-rc-deps: ## Test providers RC by building an image with given dependencies 
 	python3 dev/integration_test_scripts/replace_dependencies.py --issue-url '$(ISSUE_URL)'
 	echo "Building and deploying image to Astro Cloud"
 	cd ".circleci/integration-tests/" && \
-	 bash script.sh 'astro-cloud' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
+	 bash script.sh 'astro-cloud' '$(ASTRO_SUBDOMAIN)' '$(DOCKER_REGISTRY)' '$(ORGANIZATION_ID)' '$(DEPLOYMENT_ID)' '$(ASTRONOMER_KEY_ID)' '$(ASTRONOMER_KEY_SECRET)'
 	$(eval current_timestamp := $(shell date))
 	echo "Current timestamp is" $(current_timestamp)
 	echo "Sleeping for 1800 seconds (30 minutes) allowing the deployed image to be updated across all Airflow components.."

@@ -27,17 +27,20 @@ def get_access_token(api_key_id: str, api_key_secret: str) -> str:
     return response_json["access_token"]
 
 
-def trigger_dag_runs(dag_ids: list[str], deployment_id: str, bearer_token: str) -> None:
+def trigger_dag_runs(
+    *, dag_ids: list[str], astro_subdomain: str, deployment_id: str, bearer_token: str
+) -> None:
     """
     Triggers the DAG using Airflow REST API.
 
+    :param dag_ids: list of dag_id to trigger
+    :param astro_subdomain: subdomain of the Astro Cloud  (e.g., https://<subdomain>.astronomer.run/)
     :param deployment_id: ID of the Astro Cloud deployment. Using this, we generate the short deployment ID needed
         for the construction of Airflow endpoint to hit
     :param bearer_token: bearer token to be used for authentication with the Airflow REST API
-    :param dag_ids: list of dag_id to trigger
     """
     short_deployment_id = f"d{deployment_id[-7:]}"
-    integration_tests_deployment_url = f"https://e2etesting.astronomer.run/{short_deployment_id}"
+    integration_tests_deployment_url = f"https://{astro_subdomain}.astronomer.run/{short_deployment_id}"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
@@ -61,6 +64,7 @@ def trigger_dag_runs(dag_ids: list[str], deployment_id: str, bearer_token: str) 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("astro_subdomain", help="subdomain of the Astro Cloud", type=str)
     parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud", type=str)
     parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment", type=str)
     parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment", type=str)
@@ -81,4 +85,9 @@ if __name__ == "__main__":
     input_dag_ids = args.dag_ids
     dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
 
-    trigger_dag_runs(dag_ids, args.deployment_id, token)
+    trigger_dag_runs(
+        dag_ids=dag_ids,
+        astro_subdomain=args.astro_subdomain,
+        deployment_id=args.deployment_id,
+        bearer_token=token,
+    )

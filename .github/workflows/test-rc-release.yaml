@@ -219,23 +219,12 @@ jobs:
     if: |
       always() &&
       needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
-    runs-on: 'ubuntu-20.04'
-    steps:
-      - name: Sleep for 30 minutes
-        run: |
-          echo "Current timestamp is" `date`
-          echo "Sleeping for 1800 seconds (30 minutes)"
-          echo "allowing the deployed image to be updated across all Airflow components."
-          sleep 1800
-
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
-
-      - name: Trigger master dag
-        run: |
-          python3 dev/integration_test_scripts/trigger_dag.py \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }} \
-            ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    with:
+      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
+      dags_to_trigger_after_deployment: "example_master_dag"
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}

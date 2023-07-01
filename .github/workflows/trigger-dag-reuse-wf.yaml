@@ -1,0 +1,61 @@
+---
+name: Wait for deployment and trigger dags
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        required: false
+        type: string
+        default: ''
+      wait_time:
+        description: 'seconds to wait (default 1800 seconds = 30 minutes)'
+        required: false
+        type: number
+        default: 1800
+      dags_to_trigger_after_deployment:
+        description: |
+          Comma separated list of dag_ids to trigger after deployment
+          (e.g. "example_async_adf_run_pipeline, example_async_batch")
+        required: false
+        type: string
+        default: ''
+    secrets:
+      astro_subdomain:
+        description: 'astro cloud subdomain'
+        required: true
+      deployment_id:
+        description: 'astro cloud deployment_id'
+        required: true
+      astronomer_key_id:
+        description: 'astro cloud astronomer_key_id'
+        required: true
+      astronomer_key_secret:
+        description: 'astro cloud astronomer_key_secret'
+        required: true
+
+jobs:
+  wait-for-deployment-to-be-ready-and-trigger-dag:
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: Sleep and wait for astro cloud deployment
+        run: |
+          echo "Current timestamp is" `date`
+          echo "Sleeping for ${{ inputs.wait_time }}"
+          echo "allowing the deployed image to be updated across all Airflow components."
+          sleep ${{ inputs.wait_time }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: Trigger DAG(s)
+        run: |
+          python3 dev/integration_test_scripts/trigger_dag.py \
+            ${{ secrets.astro_subdomain }} \
+            ${{ secrets.deployment_id }} \
+            ${{ secrets.astronomer_key_id }} \
+            ${{ secrets.astronomer_key_secret }} \
+            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
