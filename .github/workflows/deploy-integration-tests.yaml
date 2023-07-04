@@ -85,6 +85,6 @@ jobs:
       dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
-      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets. PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
