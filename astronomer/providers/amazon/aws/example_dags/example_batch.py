@@ -288,8 +288,8 @@ with DAG(
     )
     # [END howto_operator_batch_async]
 
-    submit_batch_job_assume_cred = BatchOperatorAsync(
-        task_id="assume_role_cred",
+    submit_job_with_assume_role = BatchOperatorAsync(
+        task_id="submit_job_with_assume_role",
         job_name=JOB_NAME,
         job_queue=JOB_QUEUE,
         job_definition=JOB_DEFINITION,
@@ -347,7 +347,7 @@ with DAG(
         >> submit_batch_job
         >> list_jobs
         >> batch_job_sensor
-        >> submit_batch_job_assume_cred
+        >> submit_job_with_assume_role
         >> disable_compute_environment
         >> disable_job_queue
         >> delete_job_queue
