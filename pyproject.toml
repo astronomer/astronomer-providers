@@ -60,6 +60,7 @@ extend-select = [
     "T10",  # flake8-debugger
     "A",    # flake8-builtins
     "UP",   # pyupgrade
+    "ASYNC",  # flake8-async
 ]
 
 # Remove this in future
