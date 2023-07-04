@@ -18,6 +18,7 @@ from astronomer.providers.amazon.aws.sensors.batch import BatchSensorAsync
 
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 AWS_CONN_ID = os.getenv("ASTRO_AWS_CONN_ID", "aws_default")
+AWS_CONN_ID_ASSUME_ROLE = os.getenv("ASTRO_AWS_ASSUME_ROLE_CONN_ID", "aws_assume_role_conn")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "xxxxxxx")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "xxxxxxxx")
 
@@ -287,6 +288,16 @@ with DAG(
     )
     # [END howto_operator_batch_async]
 
+    submit_batch_job_assume_cred = BatchOperatorAsync(
+        task_id="assume_role_cred",
+        job_name=JOB_NAME,
+        job_queue=JOB_QUEUE,
+        job_definition=JOB_DEFINITION,
+        overrides=JOB_OVERRIDES,
+        aws_conn_id=AWS_CONN_ID_ASSUME_ROLE,
+        region_name=AWS_DEFAULT_REGION,
+    )
+
     # Task to List jobs in AWS batch
     list_jobs = PythonOperator(
         task_id="list_jobs",
@@ -336,6 +347,7 @@ with DAG(
         >> submit_batch_job
         >> list_jobs
         >> batch_job_sensor
+        >> submit_batch_job_assume_cred
         >> disable_compute_environment
         >> disable_job_queue
         >> delete_job_queue
