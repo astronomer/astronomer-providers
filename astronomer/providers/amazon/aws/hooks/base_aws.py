@@ -161,7 +161,7 @@ class AwsBaseHookAsync(AwsBaseHook):
 
     def _get_aioclient(self) -> AioBaseClient:
         session = self.get_session(region_name=self.region_name, deferrable=True)
-        return session.client(
+        return session.create_client(
             self.client_type,
             endpoint_url=self.conn_config.endpoint_url,
             config=self._get_config(),
