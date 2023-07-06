@@ -64,19 +64,14 @@ jobs:
         run: |
           # The default limit is 30. Set it to 100 for retrieving more pull requests
           rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
+          jq_query="map(
+            select(.title == \"[DO NOT MERGE] Test RC provider packages for $rc_issue_url\")
+          ) | .[0].url"
           testing_pr_url=`gh pr list \
             --json createdAt,title,url \
             --limit 100 \
-            --state open \
-            --state closed \
-            --jq 'map(
-                    select(
-                      .title |
-                      contains (
-                        "[DO NOT MERGE] Test RC provider packages for $rc_issue_url"
-                      )
-                    )
-                  ) | .[0].url'`
+            --state all \
+            --jq "$jq_query"`
 
           echo "testing_pr_url=$testing_pr_url" >> $GITHUB_OUTPUT
 
