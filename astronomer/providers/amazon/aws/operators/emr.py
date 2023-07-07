@@ -5,7 +5,6 @@ from typing import Any
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.emr import EmrContainerHook
 from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
-
 from astronomer.providers.amazon.aws.triggers.emr import EmrContainerOperatorTrigger
 from astronomer.providers.utils.typing_compat import Context
 
@@ -82,7 +81,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
         # for bypassing mypy missing return error
         return None  # pragma: no cover
 
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> str:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> str:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
