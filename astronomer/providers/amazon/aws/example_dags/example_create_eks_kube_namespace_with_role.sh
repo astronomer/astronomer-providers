@@ -20,11 +20,13 @@ kubectl create namespace $EKS_NAMESPACE
 eksctl create iamidentitymapping \
     --cluster $EKS_CLUSTER_NAME \
     --namespace $EKS_NAMESPACE \
-    --service-name "emr-containers"
+    --service-name "emr-containers" \
+    --region $AWS_DEFAULT_REGION
+
 
 aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer"
 
-eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve
+eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve --region $AWS_DEFAULT_REGION
 
 aws iam create-role --role-name $JOB_EXECUTION_ROLE --assume-role-policy-document '{"Version": "2012-10-17","Statement":
 [{"Effect": "Allow","Principal": {"AWS": "arn:aws:iam::'$AWS_ACCOUNT_ID':root"},"Action":
