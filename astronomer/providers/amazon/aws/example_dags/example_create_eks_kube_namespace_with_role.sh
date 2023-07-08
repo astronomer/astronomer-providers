@@ -24,7 +24,7 @@ eksctl create iamidentitymapping \
     --region $AWS_DEFAULT_REGION
 
 
-aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer" --region $AWS_DEFAULT_REGION
+aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer"
 
 eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve --region $AWS_DEFAULT_REGION
 
