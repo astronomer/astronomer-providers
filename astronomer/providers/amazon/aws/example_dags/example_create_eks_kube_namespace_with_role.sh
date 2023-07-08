@@ -22,7 +22,7 @@ eksctl create iamidentitymapping \
     --namespace $EKS_NAMESPACE \
     --service-name "emr-containers"
 
-aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer"
+aws eks describe-cluster --name $EKS_CLUSTER_NAME --query "cluster.identity.oidc.issuer" --region $AWS_DEFAULT_REGION
 
 eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve
 
