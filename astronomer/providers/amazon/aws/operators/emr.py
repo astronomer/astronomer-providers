@@ -5,6 +5,7 @@ from typing import Any
 from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.hooks.emr import EmrContainerHook
 from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator
+
 from astronomer.providers.amazon.aws.triggers.emr import EmrContainerOperatorTrigger
 from astronomer.providers.utils.typing_compat import Context
 

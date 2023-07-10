@@ -9,6 +9,7 @@ from airflow.providers.amazon.aws.sensors.emr import (
     EmrJobFlowSensor,
     EmrStepSensor,
 )
+
 from astronomer.providers.amazon.aws.triggers.emr import (
     EmrContainerSensorTrigger,
     EmrJobFlowSensorTrigger,
