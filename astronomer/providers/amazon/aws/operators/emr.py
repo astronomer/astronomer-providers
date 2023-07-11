@@ -82,7 +82,7 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
         # for bypassing mypy missing return error
         return None  # pragma: no cover
 
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> str:
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> str:  # type: ignore[override]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
