@@ -9,11 +9,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: ''
-      wait_time:
-        description: 'seconds to wait (default 1800 seconds = 30 minutes)'
-        required: false
-        type: number
-        default: 1800
       dags_to_trigger_after_deployment:
         description: |
           Comma separated list of dag_ids to trigger after deployment
@@ -34,17 +29,45 @@ on:  # yamllint disable-line rule:truthy
       astronomer_key_secret:
         description: 'astro cloud astronomer_key_secret'
         required: true
+      organization_id:
+        description: 'astro cloud organization_id'
+        required: true
+      bearer_token:
+        description: 'workspace bearer token'
+        required: true
 
 jobs:
   wait-for-deployment-to-be-ready-and-trigger-dag:
     runs-on: 'ubuntu-20.04'
     steps:
-      - name: Sleep and wait for astro cloud deployment
+
+      - name: Wait for deployment to be healthy
         run: |
-          echo "Current timestamp is" `date`
-          echo "Sleeping for ${{ inputs.wait_time }}"
-          echo "allowing the deployed image to be updated across all Airflow components."
-          sleep ${{ inputs.wait_time }}
+          astro_core_api_status_endpoint="https://api.astronomer.io/v1alpha1/organizations/${{ secrets.organization_id }}/deployments"  # Replace with the actual API endpoint URL
+          tries=60
+          health_flag=false
+
+          while [[ $tries -gt 0 && $health_flag == false ]]; do
+              response=$(curl -s -H "Authorization: Bearer ${{ secrets.bearer_token }}" -X GET "$astro_core_api_status_endpoint?deploymentIds=${{ secrets.deployment_id }}&offset=0&limit=20")
+              deployment_status=$(echo "$response" | jq -r '.deployments[0].status')
+
+              echo "Deployment status is: $deployment_status"
+              echo "Waiting for deployment to be in ready state!!!"
+              sleep 60
+
+              if [[ $deployment_status == "HEALTHY" ]]; then
+                  health_flag=true
+              fi
+
+              tries=$((tries - 1))
+          done
+
+          if [[ $health_flag == false ]]; then
+              echo "Timed out waiting for deployment ${{ secrets.deployment_id }} to be HEALTHY"
+              exit 1
+          fi
+
+          echo "${{ secrets.deployment_id }} is in HEALTHY state now"
 
       - name: Checkout
         uses: actions/checkout@v3
