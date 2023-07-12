@@ -57,6 +57,8 @@ jobs:
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
       astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
 
   deploy-to-providers-integration-tests-on-KE:
     if: |
@@ -88,3 +90,5 @@ jobs:
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }}
       astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_ID }}
       astronomer_key_secret: ${{ secrets. PROVIDER_INTEGRATION_TESTS_ON_KE_ASTRONOMER_KEY_SECRET }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
