@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import json
 import logging
 from datetime import datetime
@@ -52,37 +51,37 @@ class ExternalDeploymentTriggerDagRunLink(BaseOperatorLink):
 
 class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
     """
-        External Deployment Trigger Dag Run Operator makes an HTTP call to trigger a run of an externally deployed Dag and poll for its status asynchronously.
-        The host should be the external deployment URL and the header must contain a valid access token
+    External Deployment Trigger Dag Run Operator makes an HTTP call to trigger a run of an externally deployed Dag and poll for its status asynchronously.
+    The host should be the external deployment URL and the header must contain a valid access token
 
-        .. seealso::
-            - `Retrieve an access token and Deployment URL <https://docs.astronomer.io/astro/airflow-api#step-1-retrieve-an-access-token-and-deployment-url.>`_
+    .. seealso::
+        - `Retrieve an access token and Deployment URL <https://docs.astronomer.io/astro/airflow-api#step-1-retrieve-an-access-token-and-deployment-url.>`_
 
-        :param http_conn_id: The HTTP Connection ID to run the operator against
-        :param headers: The HTTP headers to be added to the GET request
-        :param extra_options: Extra options for the 'requests' library, see the
-            'requests' documentation (options to modify timeout, ssl, etc.)
-        :param tcp_keep_alive: Enable TCP Keep Alive for the connection.
-        :param tcp_keep_alive_idle: The TCP Keep Alive Idle parameter (corresponds to ``socket.TCP_KEEPIDLE``).
-        :param tcp_keep_alive_count: The TCP Keep Alive count parameter (corresponds to ``socket.TCP_KEEPCNT``)
-        :param tcp_keep_alive_interval: The TCP Keep Alive interval parameter (corresponds to
-            ``socket.TCP_KEEPINTVL``)
-        :param trigger_dag_id: The dag_id to trigger (templated).
-        :param trigger_run_id: The run ID to use for the triggered DAG run (templated).
-            If not provided, a run ID will be automatically generated.
-        :param conf: Configuration for the DAG run (templated).
-        :param execution_date: Execution date for the dag (templated).
-        :param reset_dag_run: Whether clear existing dag run if already exists.
-            This is useful when backfill or rerun an existing dag run.
-            This only resets (not recreates) the dag run.
-            Dag run conf is immutable and will not be reset on rerun of an existing dag run.
-            When reset_dag_run=False and dag run exists, DagRunAlreadyExists will be raised.
-            When reset_dag_run=True and dag run exists, existing dag run will be cleared to rerun.
-        :param wait_for_completion: Whether wait for dag run completion. (default: False)
-        :param poke_interval: Poke interval to check dag run status when wait_for_completion=True.
-            (default: 60)
-        :param allowed_states: List of allowed states, default is ``['success']``.
-        :param failed_states: List of failed or dis-allowed states, default is ``None``.
+    :param http_conn_id: The HTTP Connection ID to run the operator against
+    :param headers: The HTTP headers to be added to the GET request
+    :param extra_options: Extra options for the 'requests' library, see the
+        'requests' documentation (options to modify timeout, ssl, etc.)
+    :param tcp_keep_alive: Enable TCP Keep Alive for the connection.
+    :param tcp_keep_alive_idle: The TCP Keep Alive Idle parameter (corresponds to ``socket.TCP_KEEPIDLE``).
+    :param tcp_keep_alive_count: The TCP Keep Alive count parameter (corresponds to ``socket.TCP_KEEPCNT``)
+    :param tcp_keep_alive_interval: The TCP Keep Alive interval parameter (corresponds to
+        ``socket.TCP_KEEPINTVL``)
+    :param trigger_dag_id: The dag_id to trigger (templated).
+    :param trigger_run_id: The run ID to use for the triggered DAG run (templated).
+        If not provided, a run ID will be automatically generated.
+    :param conf: Configuration for the DAG run (templated).
+    :param execution_date: Execution date for the dag (templated).
+    :param reset_dag_run: Whether clear existing dag run if already exists.
+        This is useful when backfill or rerun an existing dag run.
+        This only resets (not recreates) the dag run.
+        Dag run conf is immutable and will not be reset on rerun of an existing dag run.
+        When reset_dag_run=False and dag run exists, DagRunAlreadyExists will be raised.
+        When reset_dag_run=True and dag run exists, existing dag run will be cleared to rerun.
+    :param wait_for_completion: Whether wait for dag run completion. (default: False)
+    :param poke_interval: Poke interval to check dag run status when wait_for_completion=True.
+        (default: 60)
+    :param allowed_states: List of allowed states, default is ``['success']``.
+    :param failed_states: List of failed or dis-allowed states, default is ``None``.
     """
 
     template_fields: Sequence[str] = (
@@ -187,7 +186,6 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
 
         if dag_run is None:
             raise RuntimeError("The dag_run should be set here!")
-
 
         self.defer(
             timeout=self.execution_timeout,
