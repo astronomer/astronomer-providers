@@ -136,7 +136,7 @@ def prepare_dag_dependency(task_info, execution_time):
                 wait_for_completion=True,
                 reset_dag_run=True,
                 execution_date=execution_time,
-                allowed_states=["success", "failed", "queued", "running"],
+                allowed_states=["success", "failed"],
                 trigger_rule="all_done",
             )
         )

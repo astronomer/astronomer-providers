@@ -71,7 +71,7 @@ with DAG(
         trigger_dag_id="example_external_task_async_waits_for_me",
         wait_for_completion=True,
         reset_dag_run=True,
-        allowed_states=["success", "failed", "queued", "running"],
+        allowed_states=["success", "failed"],
         execution_date="{{execution_date}}",
         poke_interval=1,
     )
