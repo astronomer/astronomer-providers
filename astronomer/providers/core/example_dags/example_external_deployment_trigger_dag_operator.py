@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import requests
 from airflow import DAG
@@ -74,7 +74,7 @@ with DAG(
         execution_date="{{ ds }}",
         reset_dag_run=True,
         wait_for_completion=True,
-        headers=generate_header_access_token.output,
+        headers=cast(Dict[str, Any], generate_header_access_token.output),
         poke_interval=5,
     )
     # [END howto_external_deployment_trigger_dag_run]
