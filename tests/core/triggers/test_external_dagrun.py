@@ -7,7 +7,7 @@ import pytest
 from airflow import AirflowException
 from airflow.triggers.base import TriggerEvent
 
-from astronomer.providers.core.triggers.external_dagrun import ExternalDeploymentDagRunTrigger
+from astronomer.providers.core.triggers.external_trigger_dagrun import ExternalDeploymentDagRunTrigger
 from astronomer.providers.http.hooks.http import HttpHookAsync
 
 DAGRUN_ENDPOINT = "/api/v1/dags/{dag_id}/dagRuns/{run_id}"

@@ -16,7 +16,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from requests.auth import AuthBase, HTTPBasicAuth
 
-from astronomer.providers.core.triggers.external_dagrun import ExternalDeploymentDagRunTrigger
+from astronomer.providers.core.triggers.external_trigger_dagrun import ExternalDeploymentDagRunTrigger
 from astronomer.providers.utils.typing_compat import Context
 
 XCOM_EXECUTION_DATE_ISO = "trigger_execution_date_iso"
@@ -52,8 +52,8 @@ class ExternalDeploymentTriggerDagRunLink(BaseOperatorLink):
 
 class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
     """
-        External Deployment Trigger Dag Run Operator Make HTTP call to trigger a Dag Run and poll for the response state of externally
-        deployed DAG run to complete. The host should be external deployment url, header must contain access token
+        External Deployment Trigger Dag Run Operator makes an HTTP call to trigger a run of an externally deployed Dag and poll for its status asynchronously.
+        The host should be the external deployment URL and the header must contain a valid access token
 
         .. seealso::
             - `Retrieve an access token and Deployment URL <https://docs.astronomer.io/astro/airflow-api#step-1-retrieve-an-access-token-and-deployment-url.>`_
@@ -83,8 +83,6 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
             (default: 60)
         :param allowed_states: List of allowed states, default is ``['success']``.
         :param failed_states: List of failed or dis-allowed states, default is ``None``.
-
-    Changed in version 2.1.3: 'queued' is added as a possible value.
     """
 
     template_fields: Sequence[str] = (
@@ -95,7 +93,6 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         "conf",
     )
     template_fields_renderers = {"headers": "json", "data": "py", "conf": "py"}
-    ui_color = "#7352ba"
     operator_extra_links = [ExternalDeploymentTriggerDagRunLink()]
 
     def __init__(
@@ -154,7 +151,7 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
         """
         execution_date = parse_execution_date(self.execution_date)
 
-        api = AirflowApiClient(
+        api_client = AirflowApiClient(
             http_conn_id=self.http_conn_id,
             auth_type=self.auth_type,
             headers=self.headers,
@@ -167,9 +164,9 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
 
         try:
             if self.unpause_dag:
-                api.unpause_dag(dag_id=self.trigger_dag_id)
+                api_client.unpause_dag(dag_id=self.trigger_dag_id)
 
-            dag_run = api.trigger_dag_run(
+            dag_run = api_client.trigger_dag_run(
                 dag_id=self.trigger_dag_id,
                 run_id=self.trigger_run_id,
                 conf=self.conf,
@@ -181,17 +178,16 @@ class ExternalDeploymentTriggerDagRunOperator(BaseOperator):
                 raise e
 
             if not self.trigger_run_id:
-                self.trigger_run_id = api.get_dag_run_by_date(
+                self.trigger_run_id = api_client.get_dag_run_by_date(
                     dag_id=self.trigger_dag_id, execution_date=execution_date
                 ).run_id
 
-            api.clear_dag_run(dag_id=self.trigger_dag_id, run_id=self.trigger_run_id)
-            dag_run = api.get_dag_run(dag_id=self.trigger_dag_id, run_id=self.trigger_run_id)
+            api_client.clear_dag_run(dag_id=self.trigger_dag_id, run_id=self.trigger_run_id)
+            dag_run = api_client.get_dag_run(dag_id=self.trigger_dag_id, run_id=self.trigger_run_id)
 
         if dag_run is None:
             raise RuntimeError("The dag_run should be set here!")
-        logging.warning(type(dag_run))
-        logging.warning(inspect.getmembers(dag_run))
+
 
         self.defer(
             timeout=self.execution_timeout,
@@ -259,9 +255,10 @@ def parse_dag_run(json_dict: dict[str, Any]) -> DagRun:
 
     :param json_dict: Dictionary containing DagRun properties to parse
     """
-    if (data_interval_start := json_dict.get("data_interval_start")) and (
-        data_interval_end := json_dict.get("data_interval_end")
-    ):
+    data_interval_start = json_dict.get("data_interval_start")
+    data_interval_end = json_dict.get("data_interval_end")
+
+    if data_interval_start and data_interval_end:
         data_interval = (
             timezone.parse(data_interval_start),
             timezone.parse(data_interval_end),
@@ -303,7 +300,7 @@ class AirflowApiClient:
         headers: dict[str, Any],
         http_conn_id: str = "http_default",
         auth_type: type[AuthBase] = HTTPBasicAuth,
-        extra_options: dict[str, Any] | None = None,
+        extra_options: dict[str, Any] = {},
         tcp_keep_alive: bool = True,
         tcp_keep_alive_idle: int = 120,
         tcp_keep_alive_count: int = 20,
