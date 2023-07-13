@@ -1,10 +1,11 @@
 """This module contains the Azure WASB hook's asynchronous implementation."""
-from typing import Any, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Union
 
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
-from azure.storage.blob._models import BlobProperties
 from azure.storage.blob.aio import BlobClient, BlobServiceClient, ContainerClient
 
 Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
@@ -55,9 +56,7 @@ class WasbHookAsync(WasbHook):
             app_id = conn.login
             app_secret = conn.password
             token_credential = ClientSecretCredential(tenant, app_id, app_secret)
-            return BlobServiceClient(
-                account_url=conn.host, credential=token_credential, **extra  # type:ignore[arg-type]
-            )
+            return BlobServiceClient(account_url=conn.host, credential=token_credential, **extra)
 
         sas_token = extra.pop("sas_token", extra.pop("extra__wasb__sas_token", None))
         if sas_token:
@@ -113,11 +112,11 @@ class WasbHookAsync(WasbHook):
     async def get_blobs_list_async(
         self,
         container_name: str,
-        prefix: Optional[str] = None,
-        include: Optional[List[str]] = None,
+        prefix: str | None = None,
+        include: list[str] | None = None,
         delimiter: str = "/",
         **kwargs: Any,
-    ) -> List[BlobProperties]:
+    ) -> list[str]:
         """
         List blobs in a given container.
 
