@@ -13,6 +13,7 @@ from sqlalchemy.orm import joinedload
 
 
 def log_checker_with_retry(max_retries, log_container):
+    """Fetch task logs with retry."""
     retries = 0
     while retries < max_retries:
         try:
@@ -39,6 +40,9 @@ def log_checker_with_retry(max_retries, log_container):
 
 
 def log_checker(ti_id: str, expected: str, notexpected: str, try_number: int = 1, **context: dict):
+    """Get Task logs of a given TI, also validate expected substring,
+    we can also provide a substring which is not expected
+    """
     time.sleep(30)
     dagrun = context["dag_run"]
     task_instances = dagrun.get_task_instances()
@@ -64,19 +68,17 @@ def log_checker(ti_id: str, expected: str, notexpected: str, try_number: int = 1
 
         log_container, _ = task_log_reader.read_log_chunks(ti, try_number, {"download_logs": True})
         logs = log_checker_with_retry(10, log_container)
-        print(f"Found logs: '''{logs}'''")
+        print(f"Found logs: {logs}")
         assert notexpect not in logs
         assert expect in logs
-        print(f"Found '''{expect}''' but not '''{notexpect}'''")
+        print(f"Found {expect} but not {notexpect}")
 
     # make sure expected output appeared
     check(this_task_instance, expected, notexpected)
 
 
 def assert_homomorphic(task_group_names, **context):
-    """
-    The structure of all of the task groups above should be the same
-    """
+    """The structure of all of the task groups above should be the same"""
     # get the dag in dot notation, focus only on its edges
     dag = context["dag"]
     print(dag)
@@ -103,7 +105,7 @@ def assert_homomorphic(task_group_names, **context):
 
 
 def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, str]:
-    # This function returns a dictionary of task_ids and a tasks state from a list of task_ids
+    """This function returns a dictionary of task_ids and a tasks state from a list of task_ids"""
     dag_instance = context["dag"]
     logical_date = context["logical_date"]
 
@@ -120,8 +122,8 @@ def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, s
 
 
 def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
-    # This function makes an assertion that supposed task states are actually that state
-    # If the tasks are that state then it returns the value passed in, unaltered.
+    """This function makes an assertion that supposed task states are actually that state"""
+    """If the tasks are that state then it returns the value passed in, unaltered."""
     dag_instance = context["dag"]
     logical_date = context["logical_date"]
 
@@ -140,6 +142,7 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
 
 
 def add_conn(conn_id: str, conn_type: str, host: str, username: str, pw: str, scheme: str, port: int):
+    """This method can be used to create a new conn"""
     try:
         BaseHook().get_connection(conn_id)
         print("The connection has been made previously.")
@@ -160,6 +163,7 @@ def add_conn(conn_id: str, conn_type: str, host: str, username: str, pw: str, sc
 
 
 def delete_conn(connection_id):
+    """This method can be used to delete a conn"""
     conn = Connection().get_connection_from_secrets(connection_id)
     session = settings.Session()
     session.delete(conn)
