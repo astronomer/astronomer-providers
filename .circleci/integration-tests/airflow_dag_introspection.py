@@ -1,19 +1,18 @@
-from airflow.hooks.base import BaseHook
-from airflow.utils.log.log_reader import TaskLogReader
-from airflow.utils.dot_renderer import render_dag
-from airflow.models.taskinstance import TaskInstance
-from airflow.models import Connection
-from airflow.exceptions import AirflowNotFoundException
-from airflow import settings
+import time
+from textwrap import indent
 
+from airflow import settings
+from airflow.exceptions import AirflowNotFoundException
+from airflow.hooks.base import BaseHook
+from airflow.models import Connection
+from airflow.models.taskinstance import TaskInstance
+from airflow.utils.dot_renderer import render_dag
+from airflow.utils.log.log_reader import TaskLogReader
 from airflow.utils.session import create_session
 from sqlalchemy.orm import joinedload
 
-from textwrap import indent
-import time
 
-
-def log_checker_with_retry(max_retries,log_container):
+def log_checker_with_retry(max_retries, log_container):
     retries = 0
     while retries < max_retries:
         try:
@@ -43,13 +42,9 @@ def log_checker(ti_id: str, expected: str, notexpected: str, try_number: int = 1
     time.sleep(30)
     dagrun = context["dag_run"]
     task_instances = dagrun.get_task_instances()
-    this_task_instance = next(filter(  # ti_call
-        lambda ti: ti.task_id == ti_id,
-        task_instances))
-    dag_id = context["dag"].dag_id
-    task_id = this_task_instance.task_id
-    run_id = context["dag_run"].run_id
-    map_index = -1
+    this_task_instance = next(filter(lambda ti: ti.task_id == ti_id, task_instances))  # ti_call
+    context["dag"].dag_id
+    context["dag_run"].run_id
 
     def check(ti, expect, notexpect):
         with create_session() as session:
@@ -67,21 +62,15 @@ def log_checker(ti_id: str, expected: str, notexpected: str, try_number: int = 1
             ).first()
         task_log_reader = TaskLogReader()
 
-        log_container, _ = task_log_reader.read_log_chunks(
-            ti, try_number, {"download_logs": True}
-        )
-        logs = log_checker_with_retry(10,log_container)
+        log_container, _ = task_log_reader.read_log_chunks(ti, try_number, {"download_logs": True})
+        logs = log_checker_with_retry(10, log_container)
         print(f"Found logs: '''{logs}'''")
         assert notexpect not in logs
         assert expect in logs
         print(f"Found '''{expect}''' but not '''{notexpect}'''")
 
     # make sure expected output appeared
-    check(
-        this_task_instance,
-        expected,
-        notexpected
-    )
+    check(this_task_instance, expected, notexpected)
 
 
 def assert_homomorphic(task_group_names, **context):
@@ -99,13 +88,11 @@ def assert_homomorphic(task_group_names, **context):
 
     # bin them by task group, then remove the group names
     group_strings = []
-    # removes everything thats not a task name
+    # removes everything that's not a task name
     for name in task_group_names:
         print(name)
         relevant_lines = filter(lambda x: name in x, lines)
-        normalized_lines = map(
-            lambda x: x.strip().replace(name, ""), sorted(relevant_lines)
-        )
+        normalized_lines = (x.strip().replace(name, "") for x in sorted(relevant_lines))
         edges_str = "\n".join(normalized_lines)
         group_strings.append(edges_str)
         print(indent(edges_str, "    "))
@@ -117,15 +104,12 @@ def assert_homomorphic(task_group_names, **context):
 
 def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, str]:
     # This function returns a dictionary of task_ids and a tasks state from a list of task_ids
-    dag_instance = context['dag']
-    logical_date = context['logical_date']
+    dag_instance = context["dag"]
+    logical_date = context["logical_date"]
 
     ls_of_statuses = []
     for i in task_ids:
-        j = TaskInstance(
-            dag_instance.get_task(i),
-            execution_date=logical_date
-        ).current_state()
+        j = TaskInstance(dag_instance.get_task(i), execution_date=logical_date).current_state()
         ls_of_statuses.append(j)
 
     for i, j in zip(task_ids, ls_of_statuses):
@@ -138,15 +122,12 @@ def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, s
 def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
     # This function makes an assertion that supposed task states are actually that state
     # If the tasks are that state then it returns the value passed in, unaltered.
-    dag_instance = context['dag']
-    logical_date = context['logical_date']
+    dag_instance = context["dag"]
+    logical_date = context["logical_date"]
 
     ls_of_statuses = []
     for i in task_ids_and_assertions.keys():
-        j = TaskInstance(
-            dag_instance.get_task(i),
-            execution_date=logical_date
-        ).current_state()
+        j = TaskInstance(dag_instance.get_task(i), execution_date=logical_date).current_state()
         ls_of_statuses.append(j)
 
     for i, j, k in zip(task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses):
@@ -158,20 +139,11 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
     return task_ids_and_assertions
 
 
-def add_conn(
-        conn_id: str,
-        conn_type: str,
-        host: str,
-        username: str,
-        pw: str,
-        scheme: str,
-        port: int
-):
+def add_conn(conn_id: str, conn_type: str, host: str, username: str, pw: str, scheme: str, port: int):
     try:
-        found = BaseHook().get_connection(conn_id)
+        BaseHook().get_connection(conn_id)
         print("The connection has been made previously.")
     except AirflowNotFoundException:
-        found = None
         remote_connection = Connection(
             conn_id=conn_id,
             conn_type=conn_type,

@@ -16,7 +16,6 @@ from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
 from airflow_dag_introspection import log_checker
 
-
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
@@ -109,11 +108,15 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         dag_run = context["dag_run"]
         task_instances = dag_run.get_task_instances()
 
-        task_failure_message_list: List[str] = [f":red_circle: {ti.task_id} \n" for ti in task_instances if ti.state == "failed"]
+        task_failure_message_list: List[str] = [
+            f":red_circle: {ti.task_id} \n" for ti in task_instances if ti.state == "failed"
+        ]
 
         if task_failure_message_list:
-             output_list.append("\nSome of Master DAG tasks failed, please check with deployment link below \n")
-             output_list.extend(task_failure_message_list)
+            output_list.append(
+                "\nSome of Master DAG tasks failed, please check with deployment link below \n"
+            )
+            output_list.extend(task_failure_message_list)
         output_list.append(deployment_message)
         logging.info("%s", "".join(output_list))
         # Send dag run report on Slack
@@ -178,14 +181,15 @@ with DAG(
     check_logs_data = PythonOperator(
         task_id="check_logs",
         python_callable=log_checker,
-        op_args=["get_airflow_version", "{{ ti.xcom_pull(task_ids='get_airflow_version') }}", "this_string_should_not_be_present_in_logs"],
-
+        op_args=[
+            "get_airflow_version",
+            "{{ ti.xcom_pull(task_ids='get_airflow_version') }}",
+            "this_string_should_not_be_present_in_logs",
+        ],
     )
 
-
-    airflow_version_check = (get_airflow_version,check_logs_data)
+    airflow_version_check = (get_airflow_version, check_logs_data)
     chain(*airflow_version_check)
-
 
     get_airflow_executor = BashOperator(
         task_id="get_airflow_executor",
