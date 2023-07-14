@@ -69,8 +69,8 @@ def log_checker(ti_id: str, expected: str, notexpected: str, try_number: int = 1
         log_container, _ = task_log_reader.read_log_chunks(ti, try_number, {"download_logs": True})
         logs = log_checker_with_retry(10, log_container)
         print(f"Found logs: {logs}")
-        assert notexpect not in logs
-        assert expect in logs
+        assert notexpect not in logs  # nosec: B101
+        assert expect in logs  # nosec: B101
         print(f"Found {expect} but not {notexpect}")
 
     # make sure expected output appeared
@@ -101,7 +101,7 @@ def assert_homomorphic(task_group_names, **context):
 
     # these should be identical
     for xgroup, ygroup in zip(group_strings, group_strings[1:]):
-        assert xgroup == ygroup
+        assert xgroup == ygroup  # nosec: B101
 
 
 def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, str]:
@@ -134,7 +134,7 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
 
     for i, j, k in zip(task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses):
         print(f"The state for the task with task_id: '{i}' is state: '{k}'")
-        assert j == k
+        assert j == k  # nosec: B101
     # By making an assert before the return statement the assert has to pass before a return statement is made
     # so as long as the states passed in are the same as the states generated from the TaskInstance class,
     # this return value will be correct even though it's the same unaltered value passed in.
