@@ -16,6 +16,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check head commit message
+        env:
+          head_commit_title: ${{ github.event.head_commit.message }}
+        run: |
+          python ./.github/scripts/validate_release_commit.py "$head_commit_title"
+
       - name: Install commitizen
         run: |
           pip3 install commitizen
