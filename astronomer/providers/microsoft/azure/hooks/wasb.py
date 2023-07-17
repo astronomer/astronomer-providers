@@ -1,5 +1,7 @@
 """This module contains the Azure WASB hook's asynchronous implementation."""
-from typing import Any, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Union
 
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 from azure.core.exceptions import ResourceNotFoundError
@@ -55,9 +57,7 @@ class WasbHookAsync(WasbHook):
             app_id = conn.login
             app_secret = conn.password
             token_credential = ClientSecretCredential(tenant, app_id, app_secret)
-            return BlobServiceClient(
-                account_url=conn.host, credential=token_credential, **extra  # type:ignore[arg-type]
-            )
+            return BlobServiceClient(account_url=conn.host, credential=token_credential, **extra)
 
         sas_token = extra.pop("sas_token", extra.pop("extra__wasb__sas_token", None))
         if sas_token:
@@ -113,11 +113,11 @@ class WasbHookAsync(WasbHook):
     async def get_blobs_list_async(
         self,
         container_name: str,
-        prefix: Optional[str] = None,
-        include: Optional[List[str]] = None,
+        prefix: str | None = None,
+        include: list[str] | None = None,
         delimiter: str = "/",
         **kwargs: Any,
-    ) -> List[BlobProperties]:
+    ) -> list[BlobProperties]:
         """
         List blobs in a given container.
 
@@ -130,10 +130,10 @@ class WasbHookAsync(WasbHook):
         :param delimiter: filters objects based on the delimiter (for e.g '.csv')
         """
         container = self._get_container_client(container_name)
-        blob_list = []
+        blob_list: list[BlobProperties] = []
         blobs = container.walk_blobs(name_starts_with=prefix, include=include, delimiter=delimiter, **kwargs)
         async for blob in blobs:
-            blob_list.append(blob.name)
+            blob_list.append(blob)
         return blob_list
 
     async def check_for_prefix_async(self, container_name: str, prefix: str, **kwargs: Any) -> bool:
