@@ -177,7 +177,6 @@ with DAG(
     get_airflow_version = BashOperator(
         task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
     )
-    #
     check_logs_data = PythonOperator(
         task_id="check_logs",
         python_callable=log_checker,
