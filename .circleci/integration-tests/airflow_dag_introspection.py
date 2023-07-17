@@ -17,7 +17,7 @@ def log_checker_with_retry(max_retries, log_container):
     retries = 0
     while retries < max_retries:
         try:
-            if log_container and log_container[0] and log_container[0][0]
+            if log_container and log_container[0] and log_container[0][0]:
                 logs = log_container[0][0][1]
                 break
             else:
@@ -128,13 +128,13 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
     logical_date = context["logical_date"]
 
     ls_of_statuses = []
-    for i in task_ids_and_assertions.keys():
-        j = TaskInstance(dag_instance.get_task(i), execution_date=logical_date).current_state()
-        ls_of_statuses.append(j)
+    for task_id in task_ids_and_assertions.keys():
+        current_state = TaskInstance(dag_instance.get_task(task_id), execution_date=logical_date).current_state()
+        ls_of_statuses.append(current_state)
 
-    for i, j, k in zip(task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses):
-        print(f"The state for the task with task_id: '{i}' is state: '{k}'")
-        assert j == k  # nosec: B101
+    for task_id, state, actual_state in zip(task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses):
+        print(f"The state for the task with task_id: '{task_id}' is state: '{actual_state}'")
+        assert state == actual_state  # nosec: B101
     # By making an assert before the return statement the assert has to pass before a return statement is made
     # so as long as the states passed in are the same as the states generated from the TaskInstance class,
     # this return value will be correct even though it's the same unaltered value passed in.
