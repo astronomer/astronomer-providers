@@ -27,7 +27,7 @@ def log_checker_with_retry(max_retries, log_container):
             print("IndexError occurred. Retrying...")
             retries += 1
         except Exception as e:
-            print(f"An exception occurred: {str(e)}")
+            print(f"An exception occurred: {e}")
             if retries < max_retries:
                 # Wait for some time before retrying
                 time.sleep(60)
