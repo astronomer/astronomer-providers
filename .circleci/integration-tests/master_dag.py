@@ -209,7 +209,7 @@ with DAG(
             "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *s3* ]] && echo 'aws' ||"
             "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *gcs* ]] && echo 'gcs' ||"
             "echo 'unknown'))"
-        )
+        ),
         do_xcom_push=True,
     )
 

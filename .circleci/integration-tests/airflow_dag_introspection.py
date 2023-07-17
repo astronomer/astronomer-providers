@@ -12,9 +12,10 @@ from airflow.utils.session import create_session
 from sqlalchemy.orm import joinedload
 
 
-def log_checker_with_retry(max_retries, log_container):
+def log_checker_with_retry(max_retries: int, log_container: list):
     """Fetch task logs with retry."""
     retries = 0
+    print(f"type is {type(log_container)}")
     while retries < max_retries:
         try:
             if log_container and log_container[0] and log_container[0][0]:
