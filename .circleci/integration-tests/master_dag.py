@@ -204,7 +204,12 @@ with DAG(
 
     get_astro_cloud_provider = BashOperator(
         task_id="get_astro_cloud_provider",
-        bash_command="[[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *azure* ]] && echo 'azure' || ([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *s3* ]] && echo 'aws' || ([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *gcs* ]] && echo 'gcs' || echo 'unknown'))",
+        bash_command=(
+            "[[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *azure* ]] && echo 'azure' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *s3* ]] && echo 'aws' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *gcs* ]] && echo 'gcs' ||"
+            "echo 'unknown'))"
+        )
         do_xcom_push=True,
     )
 
