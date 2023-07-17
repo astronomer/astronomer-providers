@@ -129,10 +129,14 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
 
     ls_of_statuses = []
     for task_id in task_ids_and_assertions.keys():
-        current_state = TaskInstance(dag_instance.get_task(task_id), execution_date=logical_date).current_state()
+        current_state = TaskInstance(
+            dag_instance.get_task(task_id), execution_date=logical_date
+        ).current_state()
         ls_of_statuses.append(current_state)
 
-    for task_id, state, actual_state in zip(task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses):
+    for task_id, state, actual_state in zip(
+        task_ids_and_assertions.keys(), task_ids_and_assertions.values(), ls_of_statuses
+    ):
         print(f"The state for the task with task_id: '{task_id}' is state: '{actual_state}'")
         assert state == actual_state  # nosec: B101
     # By making an assert before the return statement the assert has to pass before a return statement is made
