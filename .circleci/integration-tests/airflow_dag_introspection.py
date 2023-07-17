@@ -17,7 +17,7 @@ def log_checker_with_retry(max_retries, log_container):
     retries = 0
     while retries < max_retries:
         try:
-            if len(log_container) > 0 and len(log_container[0]) > 0 and len(log_container[0][0]) > 1:
+            if log_container and log_container[0] and log_container[0][0];
                 logs = log_container[0][0][1]
                 break
             else:
