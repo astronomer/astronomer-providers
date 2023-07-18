@@ -138,17 +138,6 @@ jobs:
           echo "rc_issue_url=$rc_issue_url"
           echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
 
-      - name: Create RC branch
-        id: create_rc_branch
-        run: |
-          current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
-          echo "Current timestamp is" $current_timestamp
-          branch_name="rc-test-$current_timestamp"
-          git checkout -b $branch_name
-
-          echo "rc_testing_branch=$branch_name"
-          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
-
       - name: Update project dependencies to use RC providers
         run: |
           rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
@@ -156,7 +145,37 @@ jobs:
           echo "Updating setup.cfg with RC provider packages on $rc_issue_url"
           python3 dev/integration_test_scripts/replace_dependencies.py --issue-url $rc_issue_url
 
+      - name: Check repo providers updated
+        id: check-repo-provideres-updated
+        run: |
+          difference=`git diff`
+          if [ -z "$difference" ]
+          then
+            echo "No provider changed"
+            echo "no_prvider_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "$difference"
+          fi
+
+      - name: Create RC branch
+        id: create_rc_branch
+        run: |
+          if [ "${{ steps.check-repo-provideres-updated.outputs.no_prvider_changed }}" != "true" ]
+          then
+            current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
+            echo "Current timestamp is" $current_timestamp
+            branch_name="rc-test-$current_timestamp"
+            git checkout -b $branch_name
+
+          else
+            branch_name=""
+          fi
+          echo "rc_testing_branch=$branch_name"
+          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
+
+
       - name: Commit changes and create a pull request
+        if: steps.create_rc_branch.outputs.rc_testing_branch != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -176,8 +195,14 @@ jobs:
     needs: [validate-manual-input, create-branch-for-testing-rc-release]
     if: |
       always() &&
-      needs.create-branch-for-testing-rc-release.result == 'success' ||
-      (needs.validate-manual-input.result == 'success' && inputs.rc_testing_branch )
+      (
+        needs.create-branch-for-testing-rc-release.result == 'success'  &&
+        needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch != ''
+      ) ||
+      (
+        needs.validate-manual-input.result == 'success' &&
+        inputs.rc_testing_branch
+      )
     runs-on: 'ubuntu-20.04'
     steps:
       - name: export rc_testing_branch
