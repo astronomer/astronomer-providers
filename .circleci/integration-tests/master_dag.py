@@ -14,7 +14,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from airflow_dag_introspection import log_checker
+from airflow_dag_introspection import check_log
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
@@ -179,7 +179,7 @@ with DAG(
     )
     check_logs_data = PythonOperator(
         task_id="check_logs",
-        python_callable=log_checker,
+        python_callable=check_log,
         op_args=[
             "get_airflow_version",
             "{{ ti.xcom_pull(task_ids='get_airflow_version') }}",
