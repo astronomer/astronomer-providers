@@ -129,7 +129,7 @@ def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
     logical_date = context["logical_date"]
 
     ls_of_statuses = []
-    for task_id in task_ids_and_assertions.keys():
+    for task_id in task_ids_and_assertions:
         current_state = TaskInstance(
             dag_instance.get_task(task_id), execution_date=logical_date
         ).current_state()
