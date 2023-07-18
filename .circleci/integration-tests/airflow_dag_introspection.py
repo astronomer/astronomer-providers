@@ -123,8 +123,8 @@ def get_the_task_states(task_ids: list[str, str, str], **context) -> dict[str, s
 
 
 def assert_the_task_states(task_ids_and_assertions: dict[str, str], **context):
-    """This function makes an assertion that supposed task states are actually that state"""
-    """If the tasks are that state then it returns the value passed in, unaltered."""
+    """This function makes an assertion that supposed task states are actually that state.
+    If the tasks are that state then it returns the value passed in, unaltered."""
     dag_instance = context["dag"]
     logical_date = context["logical_date"]
 
