@@ -14,6 +14,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
+from airflow_dag_introspection import check_log
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
@@ -63,11 +64,12 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
         astronomer_providers_version = context["ti"].xcom_pull(task_ids="get_astronomer_providers_version")
+        astro_cloud_provider = context["ti"].xcom_pull(task_ids="get_astro_cloud_provider")
 
         if IS_RUNTIME_RELEASE:
-            airflow_version_message = f"Results generated for Runtime version `{os.environ['ASTRONOMER_RUNTIME_VERSION']}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` \n\n"
+            airflow_version_message = f"Results generated for Runtime version `{os.environ['ASTRONOMER_RUNTIME_VERSION']}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` and cloud provider `{astro_cloud_provider}`\n\n"
         else:
-            airflow_version_message = f"The below run is on Airflow version `{airflow_version}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}`\n\n"
+            airflow_version_message = f"The below run is on Airflow version `{airflow_version}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` and cloud provider `{astro_cloud_provider}`\n\n"
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
         deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
@@ -103,6 +105,18 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         if failed_dag_count > 0:
             output_list.append("*Failure Details:* \n")
             output_list.extend(message_list)
+        dag_run = context["dag_run"]
+        task_instances = dag_run.get_task_instances()
+
+        task_failure_message_list: List[str] = [
+            f":red_circle: {ti.task_id} \n" for ti in task_instances if ti.state == "failed"
+        ]
+
+        if task_failure_message_list:
+            output_list.append(
+                "\nSome of Master DAG tasks failed, please check with deployment link below \n"
+            )
+            output_list.extend(task_failure_message_list)
         output_list.append(deployment_message)
         logging.info("%s", "".join(output_list))
         # Send dag run report on Slack
@@ -163,6 +177,18 @@ with DAG(
     get_airflow_version = BashOperator(
         task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
     )
+    check_logs_data = PythonOperator(
+        task_id="check_logs",
+        python_callable=check_log,
+        op_args=[
+            "get_airflow_version",
+            "{{ ti.xcom_pull(task_ids='get_airflow_version') }}",
+            "this_string_should_not_be_present_in_logs",
+        ],
+    )
+
+    airflow_version_check = (get_airflow_version, check_logs_data)
+    chain(*airflow_version_check)
 
     get_airflow_executor = BashOperator(
         task_id="get_airflow_executor",
@@ -173,6 +199,17 @@ with DAG(
     get_astronomer_providers_version = BashOperator(
         task_id="get_astronomer_providers_version",
         bash_command="airflow providers get astronomer-providers -o json | jq '.[0].Version'",
+        do_xcom_push=True,
+    )
+
+    get_astro_cloud_provider = BashOperator(
+        task_id="get_astro_cloud_provider",
+        bash_command=(
+            "[[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *azure* ]] && echo 'azure' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *s3* ]] && echo 'aws' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *gcs* ]] && echo 'gcs' ||"
+            "echo 'unknown'))"
+        ),
         do_xcom_push=True,
     )
 
@@ -317,9 +354,10 @@ with DAG(
 
     start >> [
         list_installed_pip_packages,
-        get_airflow_version,
+        airflow_version_check[0],
         get_airflow_executor,
         get_astronomer_providers_version,
+        get_astro_cloud_provider,
         emr_eks_trigger_tasks[0],
         emr_sensor_trigger_tasks[0],
         aws_misc_dags_tasks[0],
@@ -339,9 +377,10 @@ with DAG(
 
     last_task = [
         list_installed_pip_packages,
-        get_airflow_version,
+        airflow_version_check[-1],
         get_airflow_executor,
         get_astronomer_providers_version,
+        get_astro_cloud_provider,
         amazon_trigger_tasks[-1],
         emr_eks_trigger_tasks[-1],
         emr_sensor_trigger_tasks[-1],
