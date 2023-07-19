@@ -53,6 +53,7 @@ with DAG(
                 'echo \'{"message": "good afternoon!"}\' > /airflow/xcom/return.json'
             ),
         ],
+        do_xcom_push=True,
     )
     # [END howto_operator_kubernetes_pod_async]
 
