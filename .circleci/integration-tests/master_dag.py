@@ -66,10 +66,19 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         astronomer_providers_version = context["ti"].xcom_pull(task_ids="get_astronomer_providers_version")
         astro_cloud_provider = context["ti"].xcom_pull(task_ids="get_astro_cloud_provider")
 
-        if IS_RUNTIME_RELEASE:
-            airflow_version_message = f"Results generated for Runtime version `{os.environ['ASTRONOMER_RUNTIME_VERSION']}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` and cloud provider `{astro_cloud_provider}`\n\n"
-        else:
-            airflow_version_message = f"The below run is on Airflow version `{airflow_version}` with `{airflow_executor}` and astronomer-providers version `{astronomer_providers_version}` and cloud provider `{astro_cloud_provider}`\n\n"
+        report_details = [
+            f"*{header}:* `{value}`\n"
+            for header, value in [
+                ("Runtime version", os.getenv("ASTRONOMER_RUNTIME_VERSION", "N/A")),
+                ("Airflow version", airflow_version),
+                ("Executor", airflow_executor),
+                ("astronomer-providers version", astronomer_providers_version),
+                ("Cloud provider", astro_cloud_provider),
+            ]
+        ]
+
+        report_details.insert(0, "Results generated for:\n\n")
+        report_details.append("\n")  # Adding an additional newline at the end
 
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
         deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
@@ -96,12 +105,13 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
                 message_list.append(dr_status)
                 message_list.extend(failed_tasks)
                 failed_dag_count += 1
+
         output_list = [
-            airflow_version_message,
             f"*Total DAGS*: {dag_count} \n",
             f"*Success DAGS*: {dag_count-failed_dag_count} :green_apple: \n",
             f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
         ]
+        output_list = report_details + output_list
         if failed_dag_count > 0:
             output_list.append("*Failure Details:* \n")
             output_list.extend(message_list)
