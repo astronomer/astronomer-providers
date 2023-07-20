@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.state import State
@@ -40,7 +40,7 @@ with DAG(
     default_args=default_args,
     tags=["example", "async", "core"],
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     # [START howto_sensor_external_task_async]
     waiting_for_task = ExternalTaskSensorAsync(

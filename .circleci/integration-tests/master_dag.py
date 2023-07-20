@@ -10,7 +10,7 @@ from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperato
 from airflow.models import DagRun
 from airflow.models.baseoperator import chain
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
@@ -357,7 +357,7 @@ with DAG(
         provide_context=True,
     )
 
-    end = DummyOperator(
+    end = EmptyOperator(
         task_id="end",
         trigger_rule="all_success",
     )

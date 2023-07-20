@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import asynctest
 import pytest
 from airflow import AirflowException
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.triggers.base import TriggerEvent
 from airflow.utils.state import DagRunState, TaskInstanceState
 
@@ -35,7 +35,7 @@ class TestTaskStateTrigger:
         session.add(dag_run)
         session.commit()
 
-        external_task = DummyOperator(task_id=self.TASK_ID, dag=dag)
+        external_task = EmptyOperator(task_id=self.TASK_ID, dag=dag)
         instance = get_task_instance(external_task)
         session.add(instance)
         session.commit()

@@ -6,7 +6,7 @@ from typing import Any
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from airflow.utils.state import State
@@ -104,7 +104,7 @@ with DAG(
     tags=["example", "aws-nuke"],
     is_paused_upon_creation=False,
 ) as dag:
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     get_airflow_version = BashOperator(
         task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
