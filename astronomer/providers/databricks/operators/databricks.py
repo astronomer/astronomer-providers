@@ -10,6 +10,7 @@ from airflow.providers.databricks.operators.databricks import (
     DatabricksRunNowOperator,
     DatabricksSubmitRunOperator,
 )
+
 from astronomer.providers.databricks.triggers.databricks import DatabricksTrigger
 from astronomer.providers.utils.typing_compat import Context
 

@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+
 from astronomer.providers.databricks.operators.databricks import (
     DatabricksRunNowOperatorAsync,
     DatabricksSubmitRunOperatorAsync,
