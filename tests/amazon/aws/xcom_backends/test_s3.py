@@ -13,7 +13,7 @@ import pytest
 from airflow import settings
 from airflow.configuration import conf
 from airflow.models.xcom import BaseXCom
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 from astronomer.providers.amazon.aws.xcom_backends.s3 import (
     S3XComBackend,
