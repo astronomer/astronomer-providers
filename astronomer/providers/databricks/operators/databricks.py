@@ -403,6 +403,13 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
         except TypeError:
             # for apache-airflow-providers-databricks>=3.2.0
             hook = self._get_hook(caller="DatabricksRunNowOperatorAsync")
+
+        if "job_name" in self.json:
+            job_id = hook.find_job_id_by_name(self.json["job_name"])
+            if job_id is None:
+                raise AirflowException(f"Job ID for job name {self.json['job_name']} can not be found")
+            self.json["job_id"] = job_id
+            del self.json["job_name"]
         self.run_id = hook.run_now(self.json)
 
         if self.do_xcom_push:

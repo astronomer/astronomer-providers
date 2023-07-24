@@ -364,6 +364,31 @@ class TestDatabricksRunNowOperatorAsync:
 
         assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
 
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.find_job_id_by_name")
+    @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
+    @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.run_now")
+    @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
+    def test_databricks_run_now_operator_async(
+        self, run_now_response, get_run_page_url_response, get_run, find_job_id_by_name
+    ):
+        """
+        Asserts that a task is deferred and an DatabricksTrigger will be fired
+        when the DatabricksRunNowOperatorAsync is executed.
+        """
+        run_now_response.return_value = {"run_id": RUN_ID}
+        get_run_page_url_response.return_value = RUN_PAGE_URL
+        get_run.return_value = make_run_with_state_mock("RUNNING", "SUCCESS")
+        find_job_id_by_name.return_value = 1
+
+        operator = DatabricksRunNowOperatorAsync(
+            task_id="run_now", databricks_conn_id=CONN_ID, job_name="mock_name"
+        )
+
+        with pytest.raises(TaskDeferred) as exc:
+            operator.execute(context=create_context(operator))
+
+        assert isinstance(exc.value.trigger, DatabricksTrigger), "Trigger is not a DatabricksTrigger"
+
     def test_databricks_run_now_execute_complete(self):
         """Asserts that logging occurs as expected"""
         operator = DatabricksRunNowOperatorAsync(
