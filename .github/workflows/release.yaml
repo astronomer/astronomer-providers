@@ -17,25 +17,37 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check head commit message
+        id: check_head_commit_message
+        continue-on-error: true
         run: |
           head_commit_message=`git log --format=%s -1`
           python ./.github/scripts/validate_release_commit.py $head_commit_message
+          if [ $? -eq 1 ]
+          then
+            echo "valid_release_message=False" >> $GITHUB_OUTPUT
+          else
+            echo "valid_release_message=True" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install commitizen
+        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
         run: |
           pip3 install commitizen
 
       - name: Setup Github Actions git user
+        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
         run: |
           git config --global user.email "airflow-oss-bot@astronomer.io"
           git config --global user.name "airflow-oss-bot"
 
       - name: Tag and push tag for triggering release
+        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
         run: |
           git tag `cz version -p`
           git push origin `cz version -p`
 
       - name: Bump version for new development
+        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
         run: |
           make ASTRO_PROVIDER_VERSION=dev bump-version
           git add .
