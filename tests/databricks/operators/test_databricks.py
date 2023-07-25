@@ -368,7 +368,7 @@ class TestDatabricksRunNowOperatorAsync:
     @mock.patch("airflow.providers.databricks.hooks.databricks.DatabricksHook.get_run")
     @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.run_now")
     @mock.patch("astronomer.providers.databricks.hooks.databricks.DatabricksHook.get_run_page_url")
-    def test_databricks_run_now_operator_async(
+    def test_databricks_run_now_operator_async_with_job_name(
         self, run_now_response, get_run_page_url_response, get_run, find_job_id_by_name
     ):
         """
