@@ -8,7 +8,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   trigger-release-process:
-    if: github.event.pull_request.merged == true && startswith(github.event.head_commit.message, 'Release ')
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -17,10 +17,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check head commit message
-        env:
-          head_commit_title: ${{ github.event.head_commit.message }}
         run: |
-          python ./.github/scripts/validate_release_commit.py "$head_commit_title"
+          head_commit_message=`git log --format=%s -1`
+          python ./.github/scripts/validate_release_commit.py $head_commit_message
 
       - name: Install commitizen
         run: |
