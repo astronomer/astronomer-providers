@@ -77,7 +77,7 @@ Tag and push the commit
 -----------------------
 
 Once the release branch has been approved and merged to ``main``, checkout to the ``main`` branch.
-Tag that commit with a tag that matches the version number (``git tag 1.2.1 <latest commit sha>``),
+It will trigger the GitHub Actions to tag that commit with a tag that matches the version number (``git tag 1.2.1 <latest commit sha>``),
 and then push the tag (``git push origin 1.2.1``).
 
 CircleCI will handle the rest - building, testing, and pushing the resulting

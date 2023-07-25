@@ -1,5 +1,5 @@
 ---
-name: deploy-integration-tests-to-astro-cloud
+name: Deploy integration tests to astro cloud
 
 on:  # yamllint disable-line rule:truthy
   schedule:
