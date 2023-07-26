@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-from io import StringIO
 from typing import Any, Iterable
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
 from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
+from airflow.providers.common.sql.hooks.sql import DbApiHook
 from asgiref.sync import sync_to_async
-from snowflake.connector.util_text import split_statements
 
 from astronomer.providers.utils.typing_compat import Context
 
@@ -121,10 +120,7 @@ class RedshiftDataHook(AwsBaseHook):
         if not sql:
             raise AirflowException("SQL query is None.")
         try:
-            if isinstance(sql, str):
-                split_statements_tuple = split_statements(StringIO(sql))
-                sql = [sql_string for sql_string, _ in split_statements_tuple if sql_string]
-
+            sql = DbApiHook.split_sql_string(sql) if isinstance(sql, str) else sql
             try:
                 # for apache-airflow-providers-amazon>=3.0.0
                 client = self.get_conn()
