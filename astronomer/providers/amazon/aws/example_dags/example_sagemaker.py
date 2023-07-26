@@ -264,7 +264,7 @@ def get_aws_sagemaker_session(task_instance: TaskInstance) -> None:
 
     client = boto3.client("sts", **AWS_SAGEMAKER_CREDS)
     try:
-        response = client.get_session_token(DurationSeconds=1800)
+        response = client.get_session_token(DurationSeconds=7200)
         task_instance.xcom_push(
             key="sagemaker_credentials",
             value=json.loads(json.dumps(response["Credentials"], cls=AirflowJsonEncoder)),
