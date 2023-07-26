@@ -1,13 +1,6 @@
 Changelog
 =========
 
-1.17.2 (2023-07-25)
--------------------
-
-Bug Fixes
-"""""""""
-* ``DatabricksRunNowOperatorAsync``: get job_id through Databricks API if job_name is passed
-
 1.17.1 (2023-06-22)
 -------------------
 
