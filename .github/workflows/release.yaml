@@ -51,4 +51,5 @@ jobs:
         run: |
           make ASTRO_PROVIDER_VERSION=dev bump-version
           git add .
+          git commit -m "Bump version to `cz version -p`"
           git push origin main
