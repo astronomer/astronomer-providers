@@ -72,9 +72,11 @@ class SnowflakeTrigger(BaseTrigger):
             run_state = await hook.get_query_status(self.query_ids, self.poll_interval)
             if run_state:
                 yield TriggerEvent(run_state)
+                return
             else:
                 error_message = f"{self.task_id} failed with terminal state: {run_state}"
                 yield TriggerEvent({"status": "error", "message": error_message})
+                return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
@@ -137,6 +139,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
                 statement_status = await hook.get_sql_api_query_status(query_id)
                 if statement_status["status"] == "error":
                     yield TriggerEvent(statement_status)
+                    return
                 if statement_status["status"] == "success":
                     statement_query_ids.extend(statement_status["statement_handles"])
             yield TriggerEvent(
@@ -145,6 +148,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
                     "statement_query_ids": statement_query_ids,
                 }
             )
+            return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
@@ -270,7 +274,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                                 "message": "Found expected markers.",
                             }
                         )
-
+                        return
                     else:
                         self.log.info(
                             (
@@ -286,5 +290,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 else:
                     error_message = f"{self._task_id} failed with terminal state: {run_state}"
                     yield TriggerEvent({"status": "error", "message": error_message})
+                    return
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
