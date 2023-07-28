@@ -1,5 +1,7 @@
 """This module contains Google GKE operators."""
-from typing import Any, Dict, Optional, Sequence, Union
+from __future__ import annotations
+
+from typing import Any, Sequence, Union
 
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
@@ -67,12 +69,12 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         location: str,
         cluster_name: str,
         use_internal_ip: bool = False,
-        project_id: Optional[str] = None,
+        project_id: str | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        impersonation_chain: Union[str, Sequence[str]] | None = None,
         regional: bool = False,
         poll_interval: float = 5,
-        logging_interval: Optional[int] = None,
+        logging_interval: int | None = None,
         do_xcom_push: bool = True,
         **kwargs: Any,
     ) -> None:
@@ -84,11 +86,12 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         self.use_internal_ip = use_internal_ip
         self.impersonation_chain = impersonation_chain
         self.regional = regional
-        self.pod_name: str = ""
-        self.pod_namespace: str = ""
         self.poll_interval = poll_interval
         self.logging_interval = logging_interval
         self.do_xcom_push = do_xcom_push
+
+        self.pod_name: str = ""
+        self.pod_namespace: str = ""
 
     def _get_or_create_pod(self, context: Context) -> None:
         """A wrapper to fetch GKE config and get or create a pod"""
@@ -123,7 +126,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
                 location=self.location,
                 use_internal_ip=self.use_internal_ip,
             ) as config_file:
-                hook_params: Dict[str, Any] = {
+                hook_params: dict[str, Any] = {
                     "cluster_context": self.cluster_context,
                     "config_file": config_file,
                     "in_cluster": self.in_cluster,
@@ -168,12 +171,12 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             method_name=self.trigger_reentry.__name__,
         )
 
-    def execute_complete(self, context: Context, event: Dict[str, Any]) -> Any:  # type: ignore[override]
+    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:  # type: ignore[override]
         """Callback for trigger once task reach terminal state"""
         self.trigger_reentry(context=context, event=event)
 
     @staticmethod
-    def raise_for_trigger_status(event: Dict[str, Any]) -> None:
+    def raise_for_trigger_status(event: dict[str, Any]) -> None:
         """Raise exception if pod is not in expected state."""
         if event["status"] == "error":
             description = event["description"]
@@ -182,7 +185,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             else:
                 raise AirflowException(description)
 
-    def trigger_reentry(self, context: Context, event: Dict[str, Any]) -> Any:
+    def trigger_reentry(self, context: Context, event: dict[str, Any]) -> Any:
         """
         Point of re-entry from trigger.
 

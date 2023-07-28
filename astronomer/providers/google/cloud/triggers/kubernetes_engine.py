@@ -1,4 +1,6 @@
-from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
+from __future__ import annotations
+
+from typing import Any, AsyncIterator, Sequence, Union
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
 from airflow.triggers.base import TriggerEvent
@@ -9,6 +11,7 @@ from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
 from astronomer.providers.google.cloud import _get_gke_config_file
+
 
 
 class GKEStartPodTrigger(WaitContainerTrigger):
@@ -41,15 +44,15 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         name: str,
         cluster_name: str = "default",
         use_internal_ip: bool = False,
-        project_id: Optional[str] = None,
+        project_id: str | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        impersonation_chain: Union[str, Sequence[str]] | None = None,
         regional: bool = False,
-        cluster_context: Optional[str] = None,
-        in_cluster: Optional[bool] = None,
+        cluster_context: str | None = None,
+        in_cluster: bool | None = None,
         poll_interval: float = 5.0,
         pending_phase_timeout: float = 120.0,
-        logging_interval: Optional[int] = None,
+        logging_interval: int | None = None,
     ):
         super().__init__(
             container_name=self.BASE_CONTAINER_NAME,
@@ -72,7 +75,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         self.pending_phase_timeout = pending_phase_timeout
         self.logging_interval = logging_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serialize GKEStartPodTrigger object"""
         return (
             "astronomer.providers.google.cloud.triggers.kubernetes_engine.GKEStartPodTrigger",
@@ -106,7 +109,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 location=self.location,
                 use_internal_ip=self.use_internal_ip,
             ) as config_file:
-                hook_params: Dict[str, Any] = {
+                hook_params: dict[str, Any] = {
                     "cluster_context": self.cluster_context,
                     "config_file": config_file,
                     "in_cluster": self.in_cluster,
