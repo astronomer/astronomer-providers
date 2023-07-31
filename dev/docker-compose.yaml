@@ -21,8 +21,8 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "5"
     ASTRONOMER_ENVIRONMENT: local
     # AWS_NUKE_DAG_SCHEDULE: "28 6 * * *"
-    # AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
-    # OPENLINEAGE_URL: http://host.docker.internal:5050/
+    AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
+    OPENLINEAGE_URL: http://host.docker.internal:5050/
     # OPENLINEAGE_EXTRACTORS: "astronomer.providers.google.cloud.extractors.bigquery.BigQueryAsyncExtractor;\
     #                         astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor;\
     #                         astronomer.providers.amazon.aws.extractors.redshift.RedshiftAsyncExtractor"
