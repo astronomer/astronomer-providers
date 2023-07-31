@@ -11,6 +11,7 @@ x-airflow-common:
   environment:
     &airflow-common-env
     DB_BACKEND: postgres
+    AIRFLOW__LOGGING__LOGGING_LEVEL: DEBUG
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres:5432/airflow
@@ -22,7 +23,7 @@ x-airflow-common:
     ASTRONOMER_ENVIRONMENT: local
     # AWS_NUKE_DAG_SCHEDULE: "28 6 * * *"
     # AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
-    # OPENLINEAGE_URL: http://host.docker.internal:5050/
+    OPENLINEAGE_URL: http://host.docker.internal:5050/
     # OPENLINEAGE_EXTRACTORS: "astronomer.providers.google.cloud.extractors.bigquery.BigQueryAsyncExtractor;\
     #                         astronomer.providers.snowflake.extractors.snowflake.SnowflakeAsyncExtractor;\
     #                         astronomer.providers.amazon.aws.extractors.redshift.RedshiftAsyncExtractor"
