@@ -250,3 +250,37 @@ jobs:
       astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
+
+  deploy-rc-testing-branch-to-astro-cloud-on-GCP:
+    needs: export-rc-testing-branch-name
+    if: |
+      always() &&
+      needs.export-rc-testing-branch-name.result == 'success'
+    uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
+    with:
+      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
+      environment_to_deploy: 'providers-integration-tests'
+    secrets:
+      docker_registry: ${{ secrets.DOCKER_REGISTRY }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-deployment-to-be-ready-and-trigger-master-dag-on-GCP:
+    needs: [deploy-rc-testing-branch-to-astro-cloud, export-rc-testing-branch-name]
+    if: |
+      always() &&
+      needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
+    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    with:
+      git_rev: ${{ needs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
+      dags_to_trigger_after_deployment: "example_master_dag"
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_SECRET }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
