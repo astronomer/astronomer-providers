@@ -96,7 +96,7 @@ jobs:
       - run:
           name: Run pre-commit
           command: |
-            pip install pre-commit
+            pip install "pre-commit>=3.0.0"
             pre-commit run markdown-link-check --all-files || { git --no-pager diff && false ; }
       - save_cache:
           key: v1-pc-cache-{{ checksum "pre-commit-cache-key.txt" }}-
