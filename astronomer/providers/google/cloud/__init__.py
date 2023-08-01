@@ -5,9 +5,12 @@ import tempfile
 from contextlib import contextmanager
 from typing import Generator, Sequence
 
+import yaml
 from airflow.exceptions import AirflowException
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.utils.process_utils import execute_in_subprocess, patch_environ
+from google.auth import default, impersonated_credentials
+from google.cloud.container_v1 import ClusterManagerClient
 
 KUBE_CONFIG_ENV_VAR = "KUBECONFIG"
 
@@ -68,6 +71,34 @@ def _get_gke_config_file(
                     impersonation_account,
                 ]
             )
+            creds, _ = default()
+            impersonated_creds = impersonated_credentials.Credentials(
+                source_credentials=creds,
+                target_principal=impersonation_account,
+                target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+
+            try:
+                client = ClusterManagerClient(credentials=impersonated_creds)
+                name = f"projects/{project_id}/locations/{location}/clusters/{cluster_name}"
+                cluster = client.get_cluster(name=name)
+                if not use_internal_ip:
+                    cluster_url = f"https://{cluster.endpoint}"
+                else:
+                    cluster_url = f"https://{cluster.private_cluster_config.private_endpoint}"
+                ssl_ca_cert = cluster.master_auth.cluster_ca_certificate
+            except Exception as e:
+                raise Exception(f"Error while creating impersonated creds: {e}")
+
+            with open(conf_file.name, "r") as input_file:
+                config_content = yaml.safe_load(input_file.read())
+
+            config_content["users"][0]["user"]["token"] = impersonated_creds.token
+            config_content["clusters"][0]["server"] = cluster_url
+            config_content["clusters"][0]["certificate-authority-data"] = ssl_ca_cert
+            with open(conf_file.name, "w") as output_file:
+                yaml.dump(config_content, output_file, default_flow_style=False)
+
         if regional:
             cmd.append("--region")
         else:
