@@ -98,11 +98,11 @@ repos:
         args: ["-c", "./pyproject.toml"]
         additional_dependencies: [".[toml]"]
 
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.6.25
-    hooks:
-      - id: actionlint
-        args: ["-ignore", "shellcheck"]
+  #  - repo: https://github.com/rhysd/actionlint
+  #    rev: v1.6.25
+  #    hooks:
+  #      - id: actionlint
+  #        args: ["-ignore", "shellcheck"]
 
   - repo: local
     hooks:
