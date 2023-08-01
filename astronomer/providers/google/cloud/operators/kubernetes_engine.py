@@ -1,7 +1,7 @@
 """This module contains Google GKE operators."""
 from __future__ import annotations
 
-from typing import Any, Sequence, Union
+from typing import Any, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
@@ -71,7 +71,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
         use_internal_ip: bool = False,
         project_id: str | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Union[str, Sequence[str]] | None = None,
+        impersonation_chain: str | Sequence[str] | None = None,
         regional: bool = False,
         poll_interval: float = 5,
         logging_interval: int | None = None,

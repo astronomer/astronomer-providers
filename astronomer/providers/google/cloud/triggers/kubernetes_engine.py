@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Sequence, Union
+from typing import Any, AsyncIterator, Sequence
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
 from airflow.triggers.base import TriggerEvent
@@ -11,7 +11,6 @@ from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
 from astronomer.providers.google.cloud import _get_gke_config_file
-
 
 
 class GKEStartPodTrigger(WaitContainerTrigger):
@@ -46,7 +45,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         use_internal_ip: bool = False,
         project_id: str | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Union[str, Sequence[str]] | None = None,
+        impersonation_chain: str | Sequence[str] | None = None,
         regional: bool = False,
         cluster_context: str | None = None,
         in_cluster: bool | None = None,
@@ -97,7 +96,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Wait for pod to reach terminal state"""
         try:
             with _get_gke_config_file(
