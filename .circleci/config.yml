@@ -76,7 +76,7 @@ executors:
     parameters:
       python_version:
         type: string
-        default: "3.7"
+        default: "3.8"
     docker:
       - image: cimg/python:<<parameters.python_version>>
 
