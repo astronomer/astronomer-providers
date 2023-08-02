@@ -19,7 +19,6 @@ expected_test_python_3_11_extra = {
     if key not in extra_to_exclude
 }
 
-found_test_python_3_11_extra = set(config["options.extras_require"].get("test_python_3_11", "").split())
 if not found_test_python_3_11_extra:
     raise SystemExit("Missing 'test_python_3_11' extra in setup.cfg")
 
