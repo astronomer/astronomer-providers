@@ -11,15 +11,14 @@ repo_dir = Path(__file__).parent.parent.parent
 config = configparser.ConfigParser(strict=False)
 config.read(repo_dir / "setup.cfg")
 
-all_extra = set()
 extra_to_exclude = {"tests", "mypy", "docs", "all", "test_python_3_11", "apache.hive"}
-for key, extra_value in config["options.extras_require"].items():
-    if key in extra_to_exclude:
-        continue
-    reqs = extra_value.split()
-    all_extra |= set(reqs)
+expected_test_python_3_11_extra = {
+    req
+    for key, extra_value in config["options.extras_require"].items()
+    for req in extra_value.split()
+    if key not in extra_to_exclude
+}
 
-expected_test_python_3_11_extra = all_extra
 found_test_python_3_11_extra = set(config["options.extras_require"].get("test_python_3_11", "").split())
 if not found_test_python_3_11_extra:
     raise SystemExit("Missing 'test_python_3_11' extra in setup.cfg")
