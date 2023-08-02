@@ -168,8 +168,8 @@ jobs:
             - ~/.pyenv/versions/
           key: docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
 
-  # This run unit tests for Python3.11 only and exclude Apache Hive test since
-  # currently, Airflow Hive provider excluded from Python3.11
+  # This runs unit tests for Python3.11 only and excludes the Apache Hive test since
+  # Currently, the Airflow Hive provider is excluded from Python3.11 in Airflow
   # Check the issue https://github.com/cloudera/python-sasl/issues/30 for detail
   # PR to bring back Airflow Apache Hive provider https://github.com/apache/airflow/pull/32607
   test-python3-11:
