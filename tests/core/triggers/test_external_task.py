@@ -2,7 +2,6 @@ import asyncio
 from unittest import mock
 from unittest.mock import AsyncMock
 
-import asynctest
 import pytest
 from airflow import AirflowException
 from airflow.operators.empty import EmptyOperator
@@ -222,7 +221,7 @@ class TestExternalDeploymentTaskTrigger:
         assert TriggerEvent({"state": "error", "message": "Test exception"}) == actual
 
     @pytest.mark.asyncio
-    @asynctest.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
+    @mock.patch("astronomer.providers.http.hooks.http.HttpHookAsync.run")
     async def test_deployment_complete(self, mock_run):
         """Assert ExternalDeploymentTaskTrigger runs and complete the run in success state"""
         mock.AsyncMock(HttpHookAsync)

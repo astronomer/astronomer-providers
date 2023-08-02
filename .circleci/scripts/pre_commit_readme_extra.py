@@ -10,7 +10,7 @@ config = configparser.ConfigParser(strict=False)
 config.read(repo_dir / "setup.cfg")
 
 all_extra = []
-extra_to_exclude = {"tests", "mypy", "docs"}
+extra_to_exclude = {"tests", "mypy", "docs", "test_python_3_11"}
 all_extras = set(config["options.extras_require"].keys()) - extra_to_exclude
 
 readme_path = repo_dir / "README.rst"

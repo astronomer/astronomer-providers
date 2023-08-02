@@ -42,6 +42,10 @@ workflows:
           <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
+      - test-python3-11:
+          <<: *all_branches_and_version_tag
+          requires:
+            - markdown-link-check
       - test:
           name: test-python<< matrix.python_version >>
           matrix:
@@ -164,6 +168,42 @@ jobs:
             - ~/.pyenv/versions/
           key: docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}
 
+  # This runs unit tests for Python3.11 only and excludes the Apache Hive test since
+  # Currently, the Airflow Hive provider is excluded from Python3.11 in Airflow
+  # Check the issue https://github.com/cloudera/python-sasl/issues/30 for detail
+  # PR to bring back Airflow Apache Hive provider https://github.com/apache/airflow/pull/32607
+  test-python3-11:
+    description: "Test Python-3.11"
+    executor:
+      name: docker-executor
+      python_version: "3.11"
+    parallelism: 4
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+      - run:
+          name: Install Dependencies
+          command: pip install -U -e .[test_python_3_11,tests]
+      - run:
+          name: Run tests
+          command: |
+            set -e
+            TEST_FILES=$(circleci tests \
+                glob "tests/**/test_*.py" | \
+                sed '/tests\/apache\/hive/d' | \
+                circleci tests split --split-by=timings \
+            )
+            pytest --junit-xml=test-report/report.xml $TEST_FILES
+      - store_test_results:
+          path: test-report
+      - save_cache:
+          paths:
+            - ~/.cache/pip
+            - ~/.pyenv/versions/
+          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
 
   test:
     parameters:
