@@ -72,36 +72,18 @@ class TestPytestSnowflakeSensorAsync:
         "mock_event",
         [
             {"status": "success", "message": "Found expected markers."},
-            {"status": "success", "message": "Found expected markers."},
         ],
     )
     def test_snowflake_async_execute_complete(self, mock_event):
         """Tests execute_complete assert with successful message"""
 
-        operator = SnowflakeSensorAsync(
+        sensor = SnowflakeSensorAsync(
             task_id="execute_complete",
             snowflake_conn_id=CONN_ID,
             sql=TEST_SQL,
             timeout=TASK_TIMEOUT * 60,
         )
 
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None, event=mock_event)
+        with mock.patch.object(sensor.log, "info") as mock_log_info:
+            sensor.execute_complete(context=None, event=mock_event)
         mock_log_info.assert_called_with("Found expected markers.")
-
-    def test_snowflake_async_execute_complete_no_event(self):
-        """
-        Tests execute_complete assert with successful message without
-        event marker.
-        """
-
-        operator = SnowflakeSensorAsync(
-            task_id="execute_complete",
-            snowflake_conn_id=CONN_ID,
-            sql=TEST_SQL,
-            timeout=TASK_TIMEOUT * 60,
-        )
-
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None)
-        mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")

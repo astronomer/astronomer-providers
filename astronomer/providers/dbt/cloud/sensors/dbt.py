@@ -1,10 +1,10 @@
 import time
 from typing import Any, Dict
 
-from airflow import AirflowException
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
+from astronomer.providers.utils.sensor_util import handle_error, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -35,7 +35,7 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
 
     def execute(self, context: "Context") -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context=context):
+        if not poke(self, context):
             end_time = time.time() + self.timeout
             self.defer(
                 timeout=self.execution_timeout,
@@ -56,6 +56,6 @@ class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
         successful.
         """
         if event["status"] in ["error", "cancelled"]:
-            raise AirflowException(event["message"])
+            handle_error(self.soft_fail, event["message"])
         self.log.info(event["message"])
         return int(event["run_id"])

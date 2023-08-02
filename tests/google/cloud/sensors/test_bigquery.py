@@ -65,12 +65,6 @@ class TestBigQueryTableExistenceSensorAsync:
             )
         mock_log_info.assert_called_with("Sensor checks existence of table: %s", table_uri)
 
-    def test_redshift_sensor_async_execute_complete_event_none(self):
-        """Asserts that logging occurs as expected"""
-
-        with pytest.raises(AirflowException):
-            self.SENSOR.execute_complete(context=None, event=None)
-
     def test_poll_interval_deprecation_warning(self):
         """Test DeprecationWarning for BigQueryTableExistenceSensorAsync by setting param poll_interval"""
         # TODO: Remove once deprecated

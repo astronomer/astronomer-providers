@@ -2,7 +2,6 @@ import warnings
 from datetime import timedelta
 from typing import Any, Dict
 
-from airflow import AirflowException
 from airflow.providers.microsoft.azure.sensors.data_factory import (
     AzureDataFactoryPipelineRunStatusSensor,
 )
@@ -10,6 +9,7 @@ from airflow.providers.microsoft.azure.sensors.data_factory import (
 from astronomer.providers.microsoft.azure.triggers.data_factory import (
     ADFPipelineRunStatusSensorTrigger,
 )
+from astronomer.providers.utils.sensor_util import handle_error, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -43,7 +43,7 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=ADFPipelineRunStatusSensorTrigger(
@@ -64,6 +64,5 @@ class AzureDataFactoryPipelineRunStatusSensorAsync(AzureDataFactoryPipelineRunSt
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
+                handle_error(self.soft_fail, event["message"])
             self.log.info(event["message"])
-        return None

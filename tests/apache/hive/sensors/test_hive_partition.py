@@ -78,14 +78,3 @@ class TestHivePartitionSensorAsync:
         mock_log_info.assert_called_with(
             "Success criteria met. Found partition %s in table: %s", TEST_PARTITION, TEST_TABLE
         )
-
-    def test_hive_partition_sensor_async_execute_failure_no_event(self, context):
-        """Tests that an AirflowException is raised in case of no event"""
-        task = HivePartitionSensorAsync(
-            task_id="task-id",
-            table=TEST_TABLE,
-            partition=TEST_PARTITION,
-            metastore_conn_id=TEST_METASTORE_CONN_ID,
-        )
-        with pytest.raises(AirflowException):
-            task.execute_complete(context=None, event=None)

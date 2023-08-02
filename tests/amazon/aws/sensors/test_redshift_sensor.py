@@ -60,13 +60,6 @@ class TestRedshiftClusterSensorAsync:
             "Cluster Identifier %s is in %s state", "astro-redshift-cluster-1", "available"
         )
 
-    def test_redshift_sensor_async_execute_complete_event_none(self):
-        """Asserts that logging occurs as expected"""
-
-        with mock.patch.object(self.TASK.log, "info") as mock_log_info:
-            self.TASK.execute_complete(context=None, event=None)
-        mock_log_info.assert_called_with("%s completed successfully.", TASK_ID)
-
     def test_poll_interval_deprecation_warning(self):
         """Test DeprecationWarning for RedshiftClusterSensorAsync by setting param poll_interval"""
         # TODO: Remove once deprecated

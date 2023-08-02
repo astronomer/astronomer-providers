@@ -4,7 +4,7 @@ import warnings
 from datetime import timedelta
 from typing import Any, Callable, Sequence, cast
 
-from airflow.exceptions import AirflowException, AirflowSkipException
+from airflow.exceptions import AirflowSkipException
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 from airflow.sensors.base import BaseSensorOperator
 
@@ -12,6 +12,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
 )
+from astronomer.providers.utils.sensor_util import handle_error, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -124,9 +125,7 @@ class S3KeySensorAsync(S3KeySensor):
             else:
                 self._defer()
         if event["status"] == "error":
-            if event["soft_fail"]:
-                raise AirflowSkipException(event["message"])
-            raise AirflowException(event["message"])
+            handle_error(self.soft_fail, event["message"])
         return None
 
 
@@ -195,7 +194,7 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
 
     def execute(self, context: Context) -> None:
         """Defers Trigger class to check for changes in the number of objects at prefix in AWS S3"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=S3KeysUnchangedTrigger(
@@ -220,7 +219,7 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
         successful.
         """
         if event["status"] == "error":
-            raise AirflowException(event["message"])
+            handle_error(self.soft_fail, event["message"])
         return None
 
 

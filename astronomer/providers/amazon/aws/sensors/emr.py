@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from airflow import AirflowException
+from airflow.exceptions import AirflowSkipException
 from airflow.providers.amazon.aws.sensors.emr import (
     EmrContainerSensor,
     EmrJobFlowSensor,
@@ -15,6 +16,7 @@ from astronomer.providers.amazon.aws.triggers.emr import (
     EmrJobFlowSensorTrigger,
     EmrStepSensorTrigger,
 )
+from astronomer.providers.utils.sensor_util import handle_error, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -35,7 +37,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=EmrContainerSensorTrigger(
@@ -58,7 +60,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
+                handle_error(self.soft_fail, event["message"])
             self.log.info(event["message"])
         return None
 
@@ -84,7 +86,7 @@ class EmrStepSensorAsync(EmrStepSensor):
 
     def execute(self, context: Context) -> None:
         """Deferred and give control to trigger"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=EmrStepSensorTrigger(
@@ -106,8 +108,7 @@ class EmrStepSensorAsync(EmrStepSensor):
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
-
+                handle_error(self.soft_fail, event["message"])
             self.log.info(event.get("message"))
             self.log.info("%s completed successfully.", self.job_flow_id)
 
@@ -149,6 +150,8 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
             return None
 
         if state == "TERMINATED_WITH_ERRORS":
+            if self.soft_fail:  # pragma: no cover
+                AirflowSkipException(f"EMR job failed: {self.failure_message_from_response(response)}")
             raise AirflowException(f"EMR job failed: {self.failure_message_from_response(response)}")
 
         self.defer(
@@ -171,6 +174,6 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
+                handle_error(self.soft_fail, event["message"])
             self.log.info(event["message"])
         return None

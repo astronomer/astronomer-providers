@@ -1,13 +1,14 @@
-from datetime import timedelta
-from typing import Dict, Optional
+from __future__ import annotations
 
-from airflow.exceptions import AirflowException
+from datetime import timedelta
+
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
 
 from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
+from astronomer.providers.utils.sensor_util import handle_error
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -57,7 +58,7 @@ class HivePartitionSensorAsync(HivePartitionSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: Context, event: dict[str, str] | None = None) -> str:  # type: ignore[return]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -69,5 +70,4 @@ class HivePartitionSensorAsync(HivePartitionSensor):
                     "Success criteria met. Found partition %s in table: %s", self.partition, self.table
                 )
                 return event["message"]
-            raise AirflowException(event["message"])
-        raise AirflowException("No event received in trigger callback")
+            handle_error(self.soft_fail, event["message"])
