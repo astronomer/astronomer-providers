@@ -4,7 +4,6 @@ from typing import Any, AsyncIterator, Sequence
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
 from airflow.triggers.base import TriggerEvent
-from kubernetes_asyncio import client
 from kubernetes_asyncio.client import CoreV1Api
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
@@ -108,6 +107,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                 regional=self.regional,
                 location=self.location,
                 use_internal_ip=self.use_internal_ip,
+                cluster_context=self.cluster_context,
             ) as config_file:
                 hook_params: dict[str, Any] = {
                     "cluster_context": self.cluster_context,
@@ -115,7 +115,6 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                     "in_cluster": self.in_cluster,
                 }
                 hook = KubernetesHookAsync(conn_id=None, **hook_params)
-
                 async with await hook.get_api_client_async() as api_client:
                     v1_api = CoreV1Api(api_client)
                     state = await self.wait_for_pod_start(v1_api)
@@ -125,7 +124,7 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                                 "status": "done",
                                 "namespace": self.namespace,
                                 "pod_name": self.name,
-                                "descirption": "succeeded",
+                                "description": "succeeded",
                             }
                         )
                     elif state == PodPhase.FAILED:
@@ -141,4 +140,4 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                         event = await self.wait_for_container_completion(v1_api)
                 yield event
         except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e), "descirption": f"Failed due to {e}"})
+            yield TriggerEvent({"status": "error", "message": str(e), "description": f"Failed due to {e}"})

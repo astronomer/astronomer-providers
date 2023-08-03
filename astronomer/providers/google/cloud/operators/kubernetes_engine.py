@@ -103,6 +103,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
             regional=self.regional,
             location=self.location,
             use_internal_ip=self.use_internal_ip,
+            cluster_context=self.cluster_context,
         ) as config_file:
             self.config_file = config_file
             self.pod_request_obj = self.build_pod_request_obj(context)
@@ -125,6 +126,7 @@ class GKEStartPodOperatorAsync(KubernetesPodOperator):
                 regional=self.regional,
                 location=self.location,
                 use_internal_ip=self.use_internal_ip,
+                cluster_context=self.cluster_context,
             ) as config_file:
                 hook_params: dict[str, Any] = {
                     "cluster_context": self.cluster_context,
