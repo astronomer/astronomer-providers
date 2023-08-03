@@ -32,10 +32,11 @@ SQL_MULTIPLE_STMTS = (
 SINGLE_STMT = "select i from user_test order by i;"
 
 
-def test_check_queries_finish():
+@pytest.mark.parametrize("query_status,expected_response", [(QueryStatus.SUCCESS, True), (QueryStatus.RUNNING, False)])
+def test_check_queries_finish(query_status, expected_response):
     mock_conn = MagicMock()
-    mock_conn.get_query_status_throw_if_error.return_value = QueryStatus.SUCCESS
-    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is True
+    mock_conn.get_query_status_throw_if_error.return_value = query_status
+    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is expected_response
 
 
 class TestSnowflakeOperatorAsync:
