@@ -5,13 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
-from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.operators.snowflake import (
     SnowflakeOperatorAsync,
     SnowflakeSqlApiOperatorAsync,
-    _check_queries_finish,
 )
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSqlApiTrigger,
