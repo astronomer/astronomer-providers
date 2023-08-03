@@ -23,8 +23,6 @@ except ImportError:  # pragma: no cover
     )
 
 from astronomer.providers.snowflake.hooks.snowflake import (
-    ABORTING_MESSAGE,
-    FAILED_WITH_ERROR_MESSAGE,
     SnowflakeHookAsync,
     fetch_all_snowflake_handler,
 )
