@@ -32,7 +32,9 @@ SQL_MULTIPLE_STMTS = (
 SINGLE_STMT = "select i from user_test order by i;"
 
 
-@pytest.mark.parametrize("query_status,expected_response", [(QueryStatus.SUCCESS, True), (QueryStatus.RUNNING, False)])
+@pytest.mark.parametrize(
+    "query_status,expected_response", [(QueryStatus.SUCCESS, True), (QueryStatus.RUNNING, False)]
+)
 def test_check_queries_finish(query_status, expected_response):
     mock_conn = MagicMock()
     mock_conn.get_query_status_throw_if_error.return_value = query_status
