@@ -4,6 +4,7 @@ from typing import Any, AsyncIterator, Sequence
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
 from airflow.triggers.base import TriggerEvent
+from kubernetes_asyncio import client
 from kubernetes_asyncio.client import CoreV1Api
 
 from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHookAsync
@@ -120,7 +121,12 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                     state = await self.wait_for_pod_start(v1_api)
                     if state == PodPhase.SUCCEEDED:
                         event = TriggerEvent(
-                            {"status": "done", "namespace": self.namespace, "pod_name": self.name}
+                            {
+                                "status": "done",
+                                "namespace": self.namespace,
+                                "pod_name": self.name,
+                                "descirption": "succeeded",
+                            }
                         )
                     elif state == PodPhase.FAILED:
                         event = TriggerEvent(
@@ -135,4 +141,4 @@ class GKEStartPodTrigger(WaitContainerTrigger):
                         event = await self.wait_for_container_completion(v1_api)
                 yield event
         except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
+            yield TriggerEvent({"status": "error", "message": str(e), "descirption": f"Failed due to {e}"})
