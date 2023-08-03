@@ -41,27 +41,11 @@ from astronomer.providers.utils.typing_compat import Context
 
 def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
     """Check whether snowflake queries finish (in aborting, failed_with_error or success)"""
+    success_query = 0
     with closing(conn) as conn:
         for query_id in query_ids:
-            status = conn.get_query_status(query_id)
-
-            if status == QueryStatus.ABORTING:
-                raise AirflowException(f"sfquid: {query_id}, ABORTING: {ABORTING_MESSAGE}")
-            elif status == QueryStatus.FAILED_WITH_ERROR:
-                raise AirflowException(f"sfquid {query_id}, FAILED_WITH_ERROR: {FAILED_WITH_ERROR_MESSAGE}")
-            elif status == QueryStatus.DISCONNECTED:
-                # even though disconncedted is not actually a finished status,
-                # it's going to fail.
-                # by including it into this function, we can catch the error in an
-                # earlier stage
-                raise AirflowException(
-                    f"sfquid {query_id}, "
-                    "DISCONNECTED: The session’s connection is broken. "
-                    "The query’s state will change to “FAILED_WITH_ERROR” soon."
-                )
-            elif status == QueryStatus.SUCCESS:
-                pass
-            elif status in (
+            status = conn.get_query_status_throw_if_error(query_id)
+            if status in (
                 QueryStatus.RUNNING,
                 QueryStatus.QUEUED,
                 QueryStatus.DISCONNECTED,
@@ -70,11 +54,10 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
                 QueryStatus.NO_DATA,
                 QueryStatus.FAILED_WITH_INCIDENT,
             ):
-                return False
-            else:
-                raise ValueError(f"Unexpected QueryStatus: {str(status)}")
-
-    return True
+                continue
+            elif status == QueryStatus.SUCCESS:
+                success_query += 1
+    return len(query_ids) == success_query
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
