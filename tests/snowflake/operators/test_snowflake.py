@@ -5,11 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
+from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
 from astronomer.providers.snowflake.operators.snowflake import (
     SnowflakeOperatorAsync,
     SnowflakeSqlApiOperatorAsync,
+    _check_queries_finish,
 )
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSqlApiTrigger,
@@ -28,6 +30,12 @@ SQL_MULTIPLE_STMTS = (
 )
 
 SINGLE_STMT = "select i from user_test order by i;"
+
+
+def test_check_queries_finish():
+    mock_conn = MagicMock()
+    mock_conn.get_query_status_throw_if_error.return_value = QueryStatus.SUCCESS
+    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is True
 
 
 class TestSnowflakeOperatorAsync:
