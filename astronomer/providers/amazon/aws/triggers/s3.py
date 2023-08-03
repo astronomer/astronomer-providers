@@ -80,7 +80,7 @@ class S3KeyTrigger(BaseTrigger):
                                 client, self.bucket_name, self.bucket_key, self.wildcard_match
                             )
                             await asyncio.sleep(self.poke_interval)
-                            files = [{"Size", s3_object["Size"]} for s3_object in s3_objects]
+                            files = [{"Size": s3_object["Size"]} for s3_object in s3_objects]
                             yield TriggerEvent({"status": "running", "files": files})
                         else:
                             yield TriggerEvent({"status": "success"})
