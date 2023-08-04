@@ -39,10 +39,11 @@ from astronomer.providers.utils.typing_compat import Context
 
 def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
     """Check whether snowflake queries finish (in aborting, failed_with_error or success)"""
-    success_query = 0
     with closing(conn) as conn:
         for query_id in query_ids:
             status = conn.get_query_status_throw_if_error(query_id)
+            if status == QueryStatus.SUCCESS:
+                continue
             if status in (
                 QueryStatus.RUNNING,
                 QueryStatus.QUEUED,
@@ -52,10 +53,8 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
                 QueryStatus.NO_DATA,
                 QueryStatus.FAILED_WITH_INCIDENT,
             ):
-                continue
-            elif status == QueryStatus.SUCCESS:
-                success_query += 1
-    return len(query_ids) == success_query
+                return False
+    return True
 
 
 class SnowflakeOperatorAsync(SnowflakeOperator):
