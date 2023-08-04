@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def poke(cls: BaseSensorOperator, context: Context) -> bool:  # pragma: no cover
     """Wrapper to call the sensor method"""
     try:
-        return cls.poke(context)
+        return cls.poke(context)  # type: ignore[return-value]
     except Exception as e:
         if cls.soft_fail:
             raise AirflowSkipException(str(e))
