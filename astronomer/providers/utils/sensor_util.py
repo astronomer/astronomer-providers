@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.sensors.base import BaseSensorOperator
