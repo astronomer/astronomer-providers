@@ -2,7 +2,7 @@ import datetime
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.exceptions import AirflowException, TaskDeferred, AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.providers.common.sql.hooks.sql import DbApiHook
 
@@ -87,3 +87,15 @@ class TestPytestSnowflakeSensorAsync:
         with mock.patch.object(sensor.log, "info") as mock_log_info:
             sensor.execute_complete(context=None, event=mock_event)
         mock_log_info.assert_called_with("Found expected markers.")
+
+    def test_soft_fail_enable(self, context):
+        """Sensor should raise AirflowSkipException if soft_fail is True and error occur"""
+        sensor = SnowflakeSensorAsync(
+            task_id="snowflake_sensor",
+            snowflake_conn_id=CONN_ID,
+            sql=TEST_SQL,
+            timeout=TASK_TIMEOUT * 60,
+            soft_fail=True
+        )
+        with pytest.raises(AirflowSkipException):
+            sensor.execute(context)
