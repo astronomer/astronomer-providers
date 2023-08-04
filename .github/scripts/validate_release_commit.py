@@ -2,7 +2,7 @@ import re
 import sys
 
 if __name__ == "__main__":
-    pattern = r"^Release \d{1,}\.\d{1,}\.\d{1,}$"
+    pattern = r"^Release \d{1,}\.\d{1,}\.\d{1,}( \(#\d+\)){0,1}$"
     if len(sys.argv) == 2:
         commit_message = sys.argv[1]
         if not re.fullmatch(pattern, commit_message):
