@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from airflow.exceptions import AirflowException, AirflowSkipException
+from airflow.sensors.base import BaseSensorOperator
 
 if TYPE_CHECKING:  # pragma: no cover
     from astronomer.providers.utils.typing_compat import Context
 
 
-def poke(cls: Any, context: Context) -> bool | None:  # pragma: no cover
+def poke(cls: BaseSensorOperator, context: Context) -> bool:  # pragma: no cover
     """Wrapper to call the sensor method"""
     try:
         return cls.poke(context)  # type: ignore[no-any-return]
