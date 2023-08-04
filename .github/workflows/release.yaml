@@ -45,11 +45,3 @@ jobs:
         run: |
           git tag `cz version -p`
           git push origin `cz version -p`
-
-      - name: Bump version for new development
-        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
-        run: |
-          make ASTRO_PROVIDER_VERSION=dev bump-version
-          git add .
-          git commit -m "Bump version to `cz version -p`"
-          git push origin main
