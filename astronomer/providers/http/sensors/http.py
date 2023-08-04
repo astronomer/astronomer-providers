@@ -68,7 +68,7 @@ class HttpSensorAsync(HttpSensor):
     ) -> None:
         self.endpoint = endpoint
         # TODO: Remove once deprecated
-        if poll_interval:
+        if kwargs.get("poke_interval") is None:
             self.poke_interval = poll_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
