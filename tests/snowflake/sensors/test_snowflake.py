@@ -2,7 +2,7 @@ import datetime
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException, TaskDeferred, AirflowSkipException
+from airflow.exceptions import AirflowException, AirflowSkipException, TaskDeferred
 from airflow.models.dag import DAG
 from airflow.providers.common.sql.hooks.sql import DbApiHook
 
@@ -95,7 +95,7 @@ class TestPytestSnowflakeSensorAsync:
             snowflake_conn_id=CONN_ID,
             sql=TEST_SQL,
             timeout=TASK_TIMEOUT * 60,
-            soft_fail=True
+            soft_fail=True,
         )
         with pytest.raises(AirflowSkipException):
             sensor.execute(context)
