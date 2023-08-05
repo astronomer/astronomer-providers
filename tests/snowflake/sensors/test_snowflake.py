@@ -71,7 +71,8 @@ class TestPytestSnowflakeSensorAsync:
     @pytest.mark.parametrize(
         "mock_event",
         [
-            None, {"status": "success", "message": "Found expected markers."},
+            None,
+            {"status": "success", "message": "Found expected markers."},
         ],
     )
     def test_snowflake_async_execute_complete(self, mock_event):
