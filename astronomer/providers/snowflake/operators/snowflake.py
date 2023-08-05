@@ -44,7 +44,7 @@ def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bo
             status = conn.get_query_status_throw_if_error(query_id)
             if status == QueryStatus.SUCCESS:
                 continue
-            if status in (
+            elif status in (
                 QueryStatus.RUNNING,
                 QueryStatus.QUEUED,
                 QueryStatus.DISCONNECTED,
