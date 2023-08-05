@@ -90,7 +90,7 @@ class TestS3KeyTrigger:
     async def test_run_check_fn_success(self, mock_get_files, mock_client):
         """Test if the task is run is in trigger with check_fn."""
 
-        mock_get_files.return_value = ["test"]
+        mock_get_files.return_value = [{"Size": 123, "Key": "test.csv"}]
         mock_client.return_value.check_key.return_value = True
         trigger = S3KeyTrigger(
             bucket_key="s3://test_bucket/file",
@@ -100,7 +100,7 @@ class TestS3KeyTrigger:
         )
         generator = trigger.run()
         actual = await generator.asend(None)
-        assert TriggerEvent({"status": "running", "files": ["test"]}) == actual
+        assert TriggerEvent({"status": "running", "files": [{"Size": 123}]}) == actual
 
 
 class TestS3KeysUnchangedTrigger:
