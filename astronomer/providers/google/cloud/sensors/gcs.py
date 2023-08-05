@@ -18,7 +18,7 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
-from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 

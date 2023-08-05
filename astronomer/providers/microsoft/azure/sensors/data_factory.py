@@ -9,7 +9,7 @@ from airflow.providers.microsoft.azure.sensors.data_factory import (
 from astronomer.providers.microsoft.azure.triggers.data_factory import (
     ADFPipelineRunStatusSensorTrigger,
 )
-from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 

@@ -4,7 +4,7 @@ from typing import Any, Dict
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
 
 from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
-from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 

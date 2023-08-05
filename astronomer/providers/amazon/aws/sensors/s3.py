@@ -12,7 +12,7 @@ from astronomer.providers.amazon.aws.triggers.s3 import (
     S3KeysUnchangedTrigger,
     S3KeyTrigger,
 )
-from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 

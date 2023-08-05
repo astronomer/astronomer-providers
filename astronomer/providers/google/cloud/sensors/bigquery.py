@@ -10,7 +10,7 @@ from airflow.providers.google.cloud.sensors.bigquery import BigQueryTableExisten
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryTableExistenceTrigger,
 )
-from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
