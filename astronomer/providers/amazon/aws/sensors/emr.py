@@ -60,7 +60,7 @@ class EmrContainerSensorAsync(EmrContainerSensor):
         """
         if event:
             if event["status"] == "error":
-                handle_error(self.soft_fail, event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
         return None
 
