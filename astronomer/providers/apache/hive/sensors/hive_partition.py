@@ -8,7 +8,7 @@ from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
-from astronomer.providers.utils.sensor_util import handle_error
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -70,4 +70,4 @@ class HivePartitionSensorAsync(HivePartitionSensor):
                     "Success criteria met. Found partition %s in table: %s", self.partition, self.table
                 )
                 return event["message"]
-            handle_error(self.soft_fail, event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])

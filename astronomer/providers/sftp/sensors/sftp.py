@@ -6,7 +6,7 @@ from airflow.providers.sftp.sensors.sftp import SFTPSensor
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 from astronomer.providers.sftp.triggers.sftp import SFTPTrigger
-from astronomer.providers.utils.sensor_util import handle_error
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -79,7 +79,7 @@ class SFTPSensorAsync(SFTPSensor):
         """
         if event is not None:
             if "status" in event and event["status"] == "error":
-                handle_error(self.soft_fail, event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             if "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
                 self.log.info(event["message"])

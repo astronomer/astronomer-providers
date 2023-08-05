@@ -18,7 +18,7 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -83,7 +83,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
         successful.
         """
         if event["status"] == "error":
-            handle_error(self.soft_fail, event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
         self.log.info("File %s was found in bucket %s.", self.object, self.bucket)
         return event["message"]
 
@@ -156,7 +156,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         self.log.info("Sensor checks existence of objects: %s, %s", self.bucket, self.prefix)
         if event["status"] == "success":
             return event["matches"]
-        handle_error(self.soft_fail, event["message"])
+        raise_error_or_skip_exception(self.soft_fail, event["message"])
 
 
 class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
@@ -242,7 +242,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         if event:
             if event["status"] == "success":
                 return event["message"]
-            handle_error(self.soft_fail, event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
 
 
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
@@ -318,4 +318,4 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                     "Sensor checks update time for object %s in bucket : %s", self.object, self.bucket
                 )
                 return event["message"]
-            handle_error(self.soft_fail, event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])

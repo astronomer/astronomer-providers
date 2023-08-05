@@ -16,7 +16,7 @@ from astronomer.providers.amazon.aws.triggers.emr import (
     EmrJobFlowSensorTrigger,
     EmrStepSensorTrigger,
 )
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -108,7 +108,7 @@ class EmrStepSensorAsync(EmrStepSensor):
         """
         if event:
             if event["status"] == "error":
-                handle_error(self.soft_fail, event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event.get("message"))
             self.log.info("%s completed successfully.", self.job_flow_id)
 
@@ -174,6 +174,6 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
         """
         if event:
             if event["status"] == "error":
-                handle_error(self.soft_fail, event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
         return None

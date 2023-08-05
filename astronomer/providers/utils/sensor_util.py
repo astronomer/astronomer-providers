@@ -20,7 +20,7 @@ def poke(cls: BaseSensorOperator, context: Context) -> bool:  # pragma: no cover
             raise e
 
 
-def handle_error(soft_fail: bool, error_message: str) -> None:  # pragma: no cover
+def raise_error_or_skip_exception(soft_fail: bool, error_message: str) -> None:  # pragma: no cover
     """Raise error based on soft_fail flag"""
     if soft_fail:
         raise AirflowSkipException(error_message)

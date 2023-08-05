@@ -8,7 +8,7 @@ from airflow.providers.common.sql.sensors.sql import SqlSensor
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSensorTrigger,
 )
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -98,5 +98,5 @@ class SnowflakeSensorAsync(SqlSensor):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                handle_error(self.soft_fail, event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])

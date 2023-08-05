@@ -7,7 +7,7 @@ from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftCluste
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
 )
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -60,7 +60,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         if event:
             if "status" in event and event["status"] == "error":
                 msg = "{}: {}".format(event["status"], event["message"])
-                handle_error(self.soft_fail, msg)
+                raise_error_or_skip_exception(self.soft_fail, msg)
             if "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
                 self.log.info(

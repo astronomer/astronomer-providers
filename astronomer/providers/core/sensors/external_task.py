@@ -10,7 +10,7 @@ from astronomer.providers.core.triggers.external_task import (
     TaskStateTrigger,
 )
 from astronomer.providers.http.sensors.http import HttpSensorAsync
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
                 error = f"The external task {self.external_task_id} in DAG {self.external_dag_id} failed."
             else:
                 error = f"The external DAG {self.external_dag_id} failed."
-            handle_error(self.soft_fail, error)
+            raise_error_or_skip_exception(self.soft_fail, error)
         return None
 
     def get_execution_dates(self, context: Context) -> List[datetime.datetime]:

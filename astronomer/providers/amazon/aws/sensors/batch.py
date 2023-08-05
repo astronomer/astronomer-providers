@@ -5,7 +5,7 @@ from typing import Any, Dict
 from airflow.providers.amazon.aws.sensors.batch import BatchSensor
 
 from astronomer.providers.amazon.aws.triggers.batch import BatchSensorTrigger
-from astronomer.providers.utils.sensor_util import handle_error, poke
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception, poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -64,5 +64,5 @@ class BatchSensorAsync(BatchSensor):
         successful.
         """
         if "status" in event and event["status"] == "error":
-            handle_error(self.soft_fail, event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
         self.log.info(event["message"])
