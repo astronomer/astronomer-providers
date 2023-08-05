@@ -100,4 +100,5 @@ class SnowflakeSensorAsync(SqlSensor):
             if "status" in event and event["status"] == "error":
                 raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
-        self.log.info("%s completed successfully.", self.task_id)
+        else:
+            self.log.info("%s completed successfully.", self.task_id)

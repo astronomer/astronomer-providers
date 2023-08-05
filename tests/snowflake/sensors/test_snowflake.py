@@ -71,7 +71,7 @@ class TestPytestSnowflakeSensorAsync:
     @pytest.mark.parametrize(
         "mock_event",
         [
-            {"status": "success", "message": "Found expected markers."},
+            None, {"status": "success", "message": "Found expected markers."},
         ],
     )
     def test_snowflake_async_execute_complete(self, mock_event):
@@ -86,7 +86,10 @@ class TestPytestSnowflakeSensorAsync:
 
         with mock.patch.object(sensor.log, "info") as mock_log_info:
             sensor.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("Found expected markers.")
+        if mock_event:
+            mock_log_info.assert_called_with("Found expected markers.")
+        else:
+            mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
 
     def test_soft_fail_enable(self, context):
         """Sensor should raise AirflowSkipException if soft_fail is True and error occur"""
