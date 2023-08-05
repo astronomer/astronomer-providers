@@ -58,6 +58,7 @@ workflows:
           <<: *all_branches_and_version_tag
           requires:
             - test
+            - test-python3-11
             - build-docs
             - mypy
       - hold:
