@@ -90,7 +90,7 @@ class SnowflakeSensorAsync(SqlSensor):
                 method_name=self.execute_complete.__name__,
             )
 
-    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, str] | None = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
