@@ -4,14 +4,14 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 
-from astronomer.providers.google.cloud import (
+from astronomer.providers.google.cloud.gke_utils import (
     _get_impersonation_token,
     _write_token_into_config,
 )
 
 
-@mock.patch("astronomer.providers.google.cloud.ClusterManagerClient")
-@mock.patch("astronomer.providers.google.cloud.impersonated_credentials")
+@mock.patch("astronomer.providers.google.cloud.gke_utils.ClusterManagerClient")
+@mock.patch("astronomer.providers.google.cloud.gke_utils.impersonated_credentials")
 def test__get_impersonation_token(mock_impersonated_credentials, mock_cluster_manager_client):
     mock_token = MagicMock()
     mock_impersonated_credentials.Credentials.return_value.token = mock_token
@@ -23,8 +23,8 @@ def test__get_impersonation_token(mock_impersonated_credentials, mock_cluster_ma
     )
 
 
-@mock.patch("astronomer.providers.google.cloud.ClusterManagerClient")
-@mock.patch("astronomer.providers.google.cloud.impersonated_credentials")
+@mock.patch("astronomer.providers.google.cloud.gke_utils.ClusterManagerClient")
+@mock.patch("astronomer.providers.google.cloud.gke_utils.impersonated_credentials")
 def test__get_impersonation_token_with_exception(mock_impersonated_credentials, mock_cluster_manager_client):
     mock_token = MagicMock()
     mock_impersonated_credentials.Credentials.return_value.token = mock_token

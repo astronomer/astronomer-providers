@@ -10,7 +10,7 @@ from astronomer.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     WaitContainerTrigger,
 )
-from astronomer.providers.google.cloud import _get_gke_config_file
+from astronomer.providers.google.cloud.gke_utils import _get_gke_config_file
 
 
 class GKEStartPodTrigger(WaitContainerTrigger):

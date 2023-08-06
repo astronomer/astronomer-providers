@@ -17,7 +17,7 @@ from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from astronomer.providers.cncf.kubernetes.triggers.wait_container import (
     PodLaunchTimeoutException,
 )
-from astronomer.providers.google.cloud import _get_gke_config_file
+from astronomer.providers.google.cloud.gke_utils import _get_gke_config_file
 from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
     GKEStartPodTrigger,
 )
