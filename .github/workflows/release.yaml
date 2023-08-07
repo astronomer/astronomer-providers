@@ -14,14 +14,14 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
 
       - name: Check head commit message
         id: check_head_commit_message
         continue-on-error: true
         run: |
           head_commit_message=`git log --format=%s -1`
-          python ./.github/scripts/validate_release_commit.py $head_commit_message
+          python ./.github/scripts/validate_release_commit.py "$head_commit_message"
           if [ $? -eq 1 ]
           then
             echo "valid_release_message=False" >> $GITHUB_OUTPUT
@@ -45,11 +45,3 @@ jobs:
         run: |
           git tag `cz version -p`
           git push origin `cz version -p`
-
-      - name: Bump version for new development
-        if: ${{ steps.check_head_commit_message.outputs.valid_release_message == 'True' }}
-        run: |
-          make ASTRO_PROVIDER_VERSION=dev bump-version
-          git add .
-          git commit -m "Bump version to `cz version -p`"
-          git push origin main
