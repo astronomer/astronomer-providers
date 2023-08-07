@@ -113,6 +113,9 @@ Extras
 
 .. EXTRA_DOC_END
 
+.. note::
+    astronomer-providers[apache.hive] is not supported for Python3.11
+
 Example Usage
 -------------
 
