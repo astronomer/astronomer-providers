@@ -2,12 +2,12 @@ import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
-from airflow.exceptions import AirflowException
 from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor
 
 from astronomer.providers.amazon.aws.triggers.redshift_cluster import (
     RedshiftClusterSensorTrigger,
 )
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -38,7 +38,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
 
     def execute(self, context: Context) -> None:
         """Check for the target_status and defers using the trigger"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=RedshiftClusterSensorTrigger(
@@ -60,7 +60,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
         if event:
             if "status" in event and event["status"] == "error":
                 msg = "{}: {}".format(event["status"], event["message"])
-                raise AirflowException(msg)
+                raise_error_or_skip_exception(self.soft_fail, msg)
             if "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
                 self.log.info(

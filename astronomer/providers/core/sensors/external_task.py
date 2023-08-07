@@ -1,7 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from airflow.exceptions import AirflowException
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
 
@@ -11,6 +10,7 @@ from astronomer.providers.core.triggers.external_task import (
     TaskStateTrigger,
 )
 from astronomer.providers.http.sensors.http import HttpSensorAsync
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
 
         # Work out if we are a DAG sensor or a Task sensor
         # Defer to our trigger
-        if not self.poke(context=context):
+        if not poke(self, context):
             if (
                 not self.external_task_id
             ):  # Tempting to explicitly check for None, but this captures falsely values
@@ -71,11 +71,10 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
         count_allowed = self.get_count(execution_dates, session, self.allowed_states)
         if count_allowed != len(execution_dates):
             if self.external_task_id:
-                raise AirflowException(
-                    f"The external task {self.external_task_id} in DAG {self.external_dag_id} failed."
-                )
+                error = f"The external task {self.external_task_id} in DAG {self.external_dag_id} failed."
             else:
-                raise AirflowException(f"The external DAG {self.external_dag_id} failed.")
+                error = f"The external DAG {self.external_dag_id} failed."
+            raise_error_or_skip_exception(self.soft_fail, error)
         return None
 
     def get_execution_dates(self, context: Context) -> List[datetime.datetime]:

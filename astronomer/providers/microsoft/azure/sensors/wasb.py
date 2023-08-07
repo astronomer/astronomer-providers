@@ -2,7 +2,6 @@ import warnings
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
-from airflow import AirflowException
 from airflow.providers.microsoft.azure.sensors.wasb import (
     WasbBlobSensor,
     WasbPrefixSensor,
@@ -12,6 +11,7 @@ from astronomer.providers.microsoft.azure.triggers.wasb import (
     WasbBlobSensorTrigger,
     WasbPrefixSensorTrigger,
 )
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -53,7 +53,7 @@ class WasbBlobSensorAsync(WasbBlobSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=WasbBlobSensorTrigger(
@@ -74,10 +74,8 @@ class WasbBlobSensorAsync(WasbBlobSensor):
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
-        else:
-            raise AirflowException("Did not receive valid event from the triggerer")
 
 
 class WasbPrefixSensorAsync(WasbPrefixSensor):
@@ -126,7 +124,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=WasbPrefixSensorTrigger(
@@ -149,7 +147,5 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
         """
         if event:
             if event["status"] == "error":
-                raise AirflowException(event["message"])
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
-        else:
-            raise AirflowException("Did not receive valid event from the triggerer")

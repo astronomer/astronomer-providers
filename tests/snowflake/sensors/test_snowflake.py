@@ -2,7 +2,7 @@ import datetime
 from unittest import mock
 
 import pytest
-from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.exceptions import AirflowException, AirflowSkipException, TaskDeferred
 from airflow.models.dag import DAG
 from airflow.providers.common.sql.hooks.sql import DbApiHook
 
@@ -71,37 +71,35 @@ class TestPytestSnowflakeSensorAsync:
     @pytest.mark.parametrize(
         "mock_event",
         [
-            {"status": "success", "message": "Found expected markers."},
+            None,
             {"status": "success", "message": "Found expected markers."},
         ],
     )
     def test_snowflake_async_execute_complete(self, mock_event):
         """Tests execute_complete assert with successful message"""
 
-        operator = SnowflakeSensorAsync(
+        sensor = SnowflakeSensorAsync(
             task_id="execute_complete",
             snowflake_conn_id=CONN_ID,
             sql=TEST_SQL,
             timeout=TASK_TIMEOUT * 60,
         )
 
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("Found expected markers.")
+        with mock.patch.object(sensor.log, "info") as mock_log_info:
+            sensor.execute_complete(context=None, event=mock_event)
+        if mock_event:
+            mock_log_info.assert_called_with("Found expected markers.")
+        else:
+            mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
 
-    def test_snowflake_async_execute_complete_no_event(self):
-        """
-        Tests execute_complete assert with successful message without
-        event marker.
-        """
-
-        operator = SnowflakeSensorAsync(
-            task_id="execute_complete",
+    def test_soft_fail_enable(self, context):
+        """Sensor should raise AirflowSkipException if soft_fail is True and error occur"""
+        sensor = SnowflakeSensorAsync(
+            task_id="snowflake_sensor",
             snowflake_conn_id=CONN_ID,
             sql=TEST_SQL,
             timeout=TASK_TIMEOUT * 60,
+            soft_fail=True,
         )
-
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None)
-        mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
+        with pytest.raises(AirflowSkipException):
+            sensor.execute(context)

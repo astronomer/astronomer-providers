@@ -6,6 +6,7 @@ from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.http.sensors.http import HttpSensor
 
 from astronomer.providers.http.triggers.http import HttpTrigger
+from astronomer.providers.utils.sensor_util import poke
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -103,7 +104,7 @@ class HttpSensorAsync(HttpSensor):
         if self.response_check:
             self.log.warning("Since response_check param is passed, using the sync version of the sensor.")
             super().execute(context=context)
-        elif not self.poke(context=context):
+        elif not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=HttpTrigger(

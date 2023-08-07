@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Sequence
 
-from airflow import AirflowException
 from airflow.providers.common.sql.sensors.sql import SqlSensor
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSensorTrigger,
 )
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -72,7 +72,7 @@ class SnowflakeSensorAsync(SqlSensor):
 
     def execute(self, context: Context) -> None:
         """Check for query result in Snowflake by deferring using the trigger"""
-        if not self.poke(context=context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=SnowflakeSensorTrigger(
@@ -90,11 +90,7 @@ class SnowflakeSensorAsync(SqlSensor):
                 method_name=self.execute_complete.__name__,
             )
 
-    def execute_complete(
-        self,
-        context: Context,
-        event: dict[str, str | list[str]] | None = None,
-    ) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, str] | None = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -102,8 +98,7 @@ class SnowflakeSensorAsync(SqlSensor):
         """
         if event:
             if "status" in event and event["status"] == "error":
-                raise AirflowException(event["message"])
-
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
         else:
             self.log.info("%s completed successfully.", self.task_id)

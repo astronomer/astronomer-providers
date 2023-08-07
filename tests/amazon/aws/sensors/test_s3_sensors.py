@@ -285,6 +285,12 @@ class TestS3KeySensorAsync:
         with pytest.raises(exception):
             sensor.execute(context={})
 
+    def test_soft_fail_enable(self, context):
+        """Sensor should raise AirflowSkipException if soft_fail is True and error occur"""
+        sensor = S3KeySensorAsync(task_id="s3_key_sensor", bucket_key="file_in_bucket", soft_fail=True)
+        with pytest.raises(AirflowSkipException):
+            sensor.execute(context)
+
 
 class TestS3KeysUnchangedSensorAsync:
     @mock.patch(f"{MODULE}.S3KeysUnchangedSensorAsync.defer")

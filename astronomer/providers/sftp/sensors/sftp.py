@@ -2,11 +2,11 @@ from datetime import timedelta
 from typing import Any, Dict, Optional
 
 from airflow.configuration import conf
-from airflow.exceptions import AirflowException
 from airflow.providers.sftp.sensors.sftp import SFTPSensor
 
 from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 from astronomer.providers.sftp.triggers.sftp import SFTPTrigger
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -79,11 +79,7 @@ class SFTPSensorAsync(SFTPSensor):
         """
         if event is not None:
             if "status" in event and event["status"] == "error":
-                raise AirflowException(event["message"])
-
+                raise_error_or_skip_exception(self.soft_fail, event["message"])
             if "status" in event and event["status"] == "success":
                 self.log.info("%s completed successfully.", self.task_id)
                 self.log.info(event["message"])
-                return None
-
-        raise AirflowException("No event received in trigger callback")

@@ -44,19 +44,14 @@ class TestWasbBlobSensorAsync:
 
     @pytest.mark.parametrize(
         "event",
-        [None, {"status": "success", "message": "Job completed"}],
+        [{"status": "success", "message": "Job completed"}],
     )
     def test_wasb_blob_sensor_execute_complete_success(self, event):
         """Assert execute_complete log success message when trigger fire with target status."""
 
-        if not event:
-            with pytest.raises(AirflowException) as exception_info:
-                self.SENSOR.execute_complete(context=None, event=None)
-            assert exception_info.value.args[0] == "Did not receive valid event from the triggerer"
-        else:
-            with mock.patch.object(self.SENSOR.log, "info") as mock_log_info:
-                self.SENSOR.execute_complete(context={}, event=event)
-            mock_log_info.assert_called_with(event["message"])
+        with mock.patch.object(self.SENSOR.log, "info") as mock_log_info:
+            self.SENSOR.execute_complete(context={}, event=event)
+        mock_log_info.assert_called_with(event["message"])
 
     def test_wasb_blob_sensor_execute_complete_failure(self):
         """Assert execute_complete method raises an exception when the triggerer fires an error event."""
@@ -103,19 +98,14 @@ class TestWasbPrefixSensorAsync:
 
     @pytest.mark.parametrize(
         "event",
-        [None, {"status": "success", "message": "Job completed"}],
+        [{"status": "success", "message": "Job completed"}],
     )
     def test_wasb_prefix_sensor_execute_complete_success(self, event):
         """Assert execute_complete log success message when trigger fire with target status."""
 
-        if not event:
-            with pytest.raises(AirflowException) as exception_info:
-                self.SENSOR.execute_complete(context=None, event=None)
-            assert exception_info.value.args[0] == "Did not receive valid event from the triggerer"
-        else:
-            with mock.patch.object(self.SENSOR.log, "info") as mock_log_info:
-                self.SENSOR.execute_complete(context={}, event=event)
-            mock_log_info.assert_called_with(event["message"])
+        with mock.patch.object(self.SENSOR.log, "info") as mock_log_info:
+            self.SENSOR.execute_complete(context={}, event=event)
+        mock_log_info.assert_called_with(event["message"])
 
     def test_wasb_prefix_sensor_execute_complete_failure(self):
         """Assert execute_complete method raises an exception when the triggerer fires an error event."""

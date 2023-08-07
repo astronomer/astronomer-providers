@@ -1,9 +1,10 @@
 """This module contains Google Cloud Storage sensors."""
+from __future__ import annotations
+
 import warnings
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
-from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensor,
     GCSObjectsWithPrefixExistenceSensor,
@@ -17,6 +18,7 @@ from astronomer.providers.google.cloud.triggers.gcs import (
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -61,7 +63,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=GCSBlobTrigger(
@@ -74,14 +76,14 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Dict[str, str]) -> str:
+    def execute_complete(self, context: Context, event: dict[str, str]) -> str:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
         if event["status"] == "error":
-            raise AirflowException(event["message"])
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
         self.log.info("File %s was found in bucket %s.", self.object, self.bucket)
         return event["message"]
 
@@ -132,7 +134,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=GCSPrefixBlobTrigger(
@@ -145,9 +147,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
                 method_name="execute_complete",
             )
 
-    def execute_complete(
-        self, context: Dict[str, Any], event: Dict[str, Union[str, List[str]]]
-    ) -> Union[str, List[str]]:
+    def execute_complete(self, context: dict[str, Any], event: dict[str, Any]) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -156,7 +156,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         self.log.info("Sensor checks existence of objects: %s, %s", self.bucket, self.prefix)
         if event["status"] == "success":
             return event["matches"]
-        raise AirflowException(event["message"])
+        raise_error_or_skip_exception(self.soft_fail, event["message"])
 
 
 class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
@@ -216,7 +216,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         hook_params = {"impersonation_chain": self.impersonation_chain}
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=GCSUploadSessionTrigger(
@@ -233,7 +233,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: dict[str, Any], event: dict[str, str] | None = None) -> str:  # type: ignore[return]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -242,8 +242,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
         if event:
             if event["status"] == "success":
                 return event["message"]
-            raise AirflowException(event["message"])
-        raise AirflowException("No event received in trigger callback")
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
 
 
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
@@ -293,7 +292,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
         if hasattr(self, "delegate_to"):
             hook_params["delegate_to"] = self.delegate_to
 
-        if not self.poke(context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=GCSCheckBlobUpdateTimeTrigger(
@@ -307,7 +306,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: dict[str, Any], event: dict[str, str] | None = None) -> str:  # type: ignore[return]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -319,5 +318,4 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
                     "Sensor checks update time for object %s in bucket : %s", self.object, self.bucket
                 )
                 return event["message"]
-            raise AirflowException(event["message"])
-        raise AirflowException("No event received in trigger callback")
+            raise_error_or_skip_exception(self.soft_fail, event["message"])

@@ -1,14 +1,16 @@
 """This module contains Google Big Query sensors."""
+from __future__ import annotations
+
 import warnings
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
-from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.sensors.bigquery import BigQueryTableExistenceSensor
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryTableExistenceTrigger,
 )
+from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -63,7 +65,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         if hasattr(self, "delegate_to"):  # pragma: no cover
             hook_params["delegate_to"] = self.delegate_to
 
-        if not self.poke(context=context):
+        if not poke(self, context):
             self.defer(
                 timeout=timedelta(seconds=self.timeout),
                 trigger=BigQueryTableExistenceTrigger(
@@ -77,7 +79,7 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Dict[str, Any], event: Optional[Dict[str, str]] = None) -> str:
+    def execute_complete(self, context: dict[str, Any], event: dict[str, str] | None = None) -> str:  # type: ignore[return]
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
@@ -88,5 +90,4 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
         if event:
             if event["status"] == "success":
                 return event["message"]
-            raise AirflowException(event["message"])
-        raise AirflowException("No event received in trigger callback")
+            raise_error_or_skip_exception(self.soft_fail, event["message"])
