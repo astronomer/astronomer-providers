@@ -6,7 +6,7 @@ Changelog
 
 Bug Fixes
 """""""""
-* Raise ``AirflowSkipExecption`` for sensors when ``soft_fail`` is set (#1276)
+* Raise ``AirflowSkipExecption`` for sensors when ``soft_fail`` is set to True(#1276)
 * ``S3KeyTrigger``: Call S3 sensor check_fn only with file size attribute (#1278)
 * ``HttpSensorAsync``: Fix incorrect warning when poke_interval is passed (#1281)
 
