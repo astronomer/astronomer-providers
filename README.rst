@@ -113,6 +113,9 @@ Extras
 
 .. EXTRA_DOC_END
 
+.. note::
+    astronomer-providers[apache.hive] is not supported for Python3.11
+
 Example Usage
 -------------
 
@@ -185,6 +188,7 @@ Limitations
 
 - In Airflow sensors have a param ``mode`` which can be ``poke`` and ``reschedule``.
   In async sensors, this param has no usage since tasks gets deferred to Triggerer.
+- astronomer-providers[apache.hive] is not supported for Python3.11
 
 License
 -------
