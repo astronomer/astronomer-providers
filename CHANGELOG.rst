@@ -1,6 +1,19 @@
 Changelog
 =========
 
+1.17.3 (2023-08-07)
+-------------------
+
+Bug Fixes
+"""""""""
+* Raise ``AirflowSkipException`` for sensors when ``soft_fail`` is set to True(#1276)
+* ``S3KeyTrigger``: Call S3 sensor check_fn only with file size attribute (#1278)
+* ``HttpSensorAsync``: Fix incorrect warning when poke_interval is passed (#1281)
+
+Note
+"""""""""
+* ``hive`` provider is not supported on Python 3.11 (#1237)
+
 1.17.2 (2023-07-26)
 -------------------
 
