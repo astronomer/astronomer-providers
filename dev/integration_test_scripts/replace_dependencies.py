@@ -39,7 +39,7 @@ def _parse_pinned_package_from_pypi_url(url: str) -> str:
     as an example, this function extract the path of it and returns
     "apache-airflow-providers-apache-livy==3.5.0rc1"
 
-    :param cncf_url: PyPI URL of the provider to test
+    :param url: PyPI URL of the provider to test
     """
     package_name, version = urlparse(url).path.split("/")[2:]
     return f"{package_name}=={version}"
