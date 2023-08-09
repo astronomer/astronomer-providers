@@ -227,8 +227,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
-            - deps-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - deps-abc-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+            - deps-abc-main-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
       - run:
           name: Install Dependencies for sasl
           command: |
@@ -254,7 +254,7 @@ jobs:
           paths:
             - ~/.cache/pip
             - ~/.pyenv/versions/
-          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
+          key: deps-abc-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}
   generate-constraints:
     parameters:
       python_version:
