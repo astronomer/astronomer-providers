@@ -35,6 +35,7 @@ class TestKubernetesPodOperatorAsync:
 
     @mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
+    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
@@ -47,6 +48,7 @@ class TestKubernetesPodOperatorAsync:
         await_pod_completion,
         find_pod,
         raise_for_trigger_status,
+        get_kube_client,
         cleanup,
         mock_client,
     ):
@@ -64,6 +66,7 @@ class TestKubernetesPodOperatorAsync:
 
     @mock.patch("airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator.client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
+    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
@@ -76,6 +79,7 @@ class TestKubernetesPodOperatorAsync:
         await_pod_completion,
         find_pod,
         raise_for_trigger_status,
+        get_kube_client,
         cleanup,
         mock_client,
     ):
@@ -90,6 +94,7 @@ class TestKubernetesPodOperatorAsync:
         fetch_container_logs.is_called_with(pod, "base")
 
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
+    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.raise_for_trigger_status")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
@@ -102,6 +107,7 @@ class TestKubernetesPodOperatorAsync:
         await_pod_completion,
         find_pod,
         raise_for_trigger_status,
+        get_kube_client,
         cleanup,
     ):
         """Assert if pod not found then raise exception"""
@@ -112,6 +118,7 @@ class TestKubernetesPodOperatorAsync:
             op.trigger_reentry(context, None)
 
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.cleanup")
+    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(f"{KUBE_POD_MOD}.KubernetesPodOperatorAsync.find_pod")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.await_pod_completion")
     @mock.patch("airflow.providers.cncf.kubernetes.utils.pod_manager.PodManager.fetch_container_logs")
@@ -122,6 +129,7 @@ class TestKubernetesPodOperatorAsync:
         fetch_container_logs,
         await_pod_completion,
         find_pod,
+        get_kube_client,
         cleanup,
     ):
         """Assert that trigger_reentry raise exception in case of error"""
