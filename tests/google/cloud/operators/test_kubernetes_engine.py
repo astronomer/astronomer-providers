@@ -7,9 +7,6 @@ from airflow.providers.cncf.kubernetes.utils.pod_manager import (
     PodLoggingStatus,
     PodPhase,
 )
-from kubernetes.client import models as k8s
-from kubernetes.client.models.v1_object_meta import V1ObjectMeta
-
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import (
     PodNotFoundException,
 )
@@ -22,6 +19,8 @@ from astronomer.providers.google.cloud.operators.kubernetes_engine import (
 from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
     GKEStartPodTrigger,
 )
+from kubernetes.client import models as k8s
+from kubernetes.client.models.v1_object_meta import V1ObjectMeta
 from tests.utils.airflow_util import create_context
 
 PROJECT_ID = "astronomer-***-providers"
@@ -192,7 +191,6 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.cleanup"
     )
-    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync"
         ".raise_for_trigger_status"
@@ -216,7 +214,6 @@ class TestGKEStartPodOperatorAsync:
         await_pod_completion,
         find_pod,
         raise_for_trigger_status,
-        get_kube_client,
         cleanup,
         mock_client,
     ):
@@ -235,7 +232,6 @@ class TestGKEStartPodOperatorAsync:
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync.cleanup"
     )
-    @mock.patch("airflow.kubernetes.kube_client.get_kube_client")
     @mock.patch(
         "astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync"
         ".raise_for_trigger_status"
@@ -255,7 +251,6 @@ class TestGKEStartPodOperatorAsync:
         await_pod_completion,
         find_pod,
         raise_for_trigger_status,
-        get_kube_client,
         cleanup,
         mock_client,
     ):
