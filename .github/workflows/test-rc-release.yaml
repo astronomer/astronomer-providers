@@ -116,6 +116,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.base_git_rev }}
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
 
       - name: Install dev dependency
         run: |
@@ -166,13 +167,11 @@ jobs:
             echo "Current timestamp is" $current_timestamp
             branch_name="rc-test-$current_timestamp"
             git checkout -b $branch_name
-
           else
             branch_name=""
           fi
           echo "rc_testing_branch=$branch_name"
           echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
-
 
       - name: Commit changes and create a pull request
         if: steps.create_rc_branch.outputs.rc_testing_branch != ''
