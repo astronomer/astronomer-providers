@@ -70,6 +70,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             f"*{header}:* `{value}`\n"
             for header, value in [
                 ("Runtime version", os.getenv("ASTRONOMER_RUNTIME_VERSION", "N/A")),
+                ("Python version", os.getenv("PYTHON_VERSION", "N/A")),
                 ("Airflow version", airflow_version),
                 ("Executor", airflow_executor),
                 ("astronomer-providers version", astronomer_providers_version),
