@@ -35,11 +35,10 @@ def _get_impersonation_token(
         client.get_cluster(name=name)
     except Exception as e:
         raise Exception(f"Error while creating impersonated creds: {e}") from e
-    return impersonated_creds.token  # type: ignore[no-any-return]
+    return str(impersonated_creds.token)
 
 
 def _write_token_into_config(config_name: str, token: str, cluster_context: str | None = None) -> None:
-    # breakpoint()
     with open(config_name) as input_file:
         config_content = yaml.safe_load(input_file.read())
 

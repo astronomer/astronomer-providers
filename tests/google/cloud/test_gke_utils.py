@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import yaml
-
 from astronomer.providers.google.cloud.gke_utils import (
     _get_impersonation_token,
     _write_token_into_config,
@@ -15,12 +14,9 @@ from astronomer.providers.google.cloud.gke_utils import (
 def test__get_impersonation_token(mock_impersonated_credentials, mock_cluster_manager_client):
     mock_token = MagicMock()
     mock_impersonated_credentials.Credentials.return_value.token = mock_token
-    assert (
-        _get_impersonation_token(
-            MagicMock(), "impersonation_account", "project_id", "location", "cluster_name"
-        )
-        == mock_token
-    )
+    assert _get_impersonation_token(
+        MagicMock(), "impersonation_account", "project_id", "location", "cluster_name"
+    ) == str(mock_token)
 
 
 @mock.patch("astronomer.providers.google.cloud.gke_utils.ClusterManagerClient")
