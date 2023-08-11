@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import tempfile
 from contextlib import contextmanager
@@ -13,6 +12,7 @@ from airflow.utils.process_utils import execute_in_subprocess, patch_environ
 from google.auth import impersonated_credentials
 from google.cloud.container_v1 import ClusterManagerClient
 from google.oauth2.service_account import Credentials
+from kubernetes_asyncio.config.kube_config import KubeConfigLoader
 
 KUBE_CONFIG_ENV_VAR = "KUBECONFIG"
 
@@ -42,33 +42,15 @@ def _write_token_into_config(config_name: str, token: str, cluster_context: str 
     with open(config_name) as input_file:
         config_content = yaml.safe_load(input_file.read())
 
-    try:
-        if not cluster_context:
-            cluster_context = config_content["current-context"]
-
-        user_name = ""
-        for context in config_content["contexts"]:
-            if context["name"] == cluster_context:
-                user_name = context["context"]["user"]
-                break
-
-        user_index = 0
-        for u_index, user in enumerate(config_content["users"]):
-            if user["name"] == user_name:
-                user_index = u_index
-                break
-
-        # update the token
-        config_content["users"][user_index]["user"]["auth-provider"] = {
-            "name": "gcp",
-            "config": {"access-token": token},
-        }
-    except KeyError as e:
-        logging.exception(e)
-        return
+    kube_config_loader = KubeConfigLoader(config_content)
+    kube_config_loader.set_active_context(cluster_context)
+    kube_config_loader._user.value["auth-provider"] = {
+        "name": "gcp",
+        "config": {"access-token": token},
+    }
 
     with open(config_name, "w") as output_file:
-        yaml.dump(config_content, output_file)
+        yaml.dump(kube_config_loader._config.value, output_file)
 
 
 @contextmanager
