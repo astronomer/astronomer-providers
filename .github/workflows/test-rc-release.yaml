@@ -123,8 +123,8 @@ jobs:
 
       - name: Setup Github Actions git user
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Actions"
+          git config --global user.email "airflow-oss-bot@astronomer.io"
+          git config --global user.name "airflow-oss-bot"
 
       - name: Export GitHub RC provider testing url
         id: export-rc-issue-url
