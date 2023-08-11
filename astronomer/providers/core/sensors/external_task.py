@@ -63,7 +63,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
                 )
 
     @provide_session
-    def execute_complete(  # type: ignore[override]
+    def execute_complete(
         self, context: Context, session: "Session", event: Optional[Dict[str, Any]] = None
     ) -> None:
         """Verifies that there is a success status for each task via execution date."""
