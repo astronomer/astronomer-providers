@@ -152,7 +152,7 @@ jobs:
           if [ -z "$difference" ]
           then
             echo "No provider changed"
-            echo "no_prvider_changed=true" >> $GITHUB_OUTPUT
+            echo "no_provider_changed=true" >> $GITHUB_OUTPUT
           else
             echo "$difference"
           fi
@@ -160,7 +160,7 @@ jobs:
       - name: Create RC branch
         id: create_rc_branch
         run: |
-          if [ "${{ steps.check-repo-provideres-updated.outputs.no_prvider_changed }}" != "true" ]
+          if [ "${{ steps.check-repo-provideres-updated.outputs.no_provider_changed }}" != "true" ]
           then
             current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
             echo "Current timestamp is" $current_timestamp
