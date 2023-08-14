@@ -84,6 +84,7 @@ class S3KeyTrigger(BaseTrigger):
                             yield TriggerEvent({"status": "running", "files": files})
                         else:
                             yield TriggerEvent({"status": "success"})
+                    self.log.info("Sleeping for %s seconds", self.poke_interval)
                     await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e), "soft_fail": self.soft_fail})
