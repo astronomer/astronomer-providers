@@ -5,6 +5,7 @@ from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow import AirflowException
 from airflow.models import DagRun, TaskInstance
+from airflow.providers.http.hooks.http import HttpHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
@@ -12,7 +13,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from astronomer.providers.http.triggers.http import HttpTrigger
-from airflow.providers.http.hooks.http import HttpHook
 
 
 class TaskStateTrigger(BaseTrigger):
@@ -175,10 +175,7 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
         """
         from airflow.utils.state import State
 
-        hook = HttpHook(
-            method="GET", 
-            http_conn_id=self.http_conn_id
-            )
+        hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
         while True:
             try:
                 response = hook.run(
