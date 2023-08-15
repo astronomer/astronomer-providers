@@ -106,14 +106,9 @@ class BigQueryHookAsync(GoogleBaseHookAsync):
         tolerance_pct_str = str(tolerance * 100) + "%" if tolerance else None
 
         error_msg = (
-            "Test failed.\nPass value:{pass_value_conv}\n"
-            "Tolerance:{tolerance_pct_str}\n"
-            "Query:\n{sql}\nResults:\n{records!s}"
-        ).format(
-            pass_value_conv=pass_value_conv,
-            tolerance_pct_str=tolerance_pct_str,
-            sql=sql,
-            records=records,
+            f"Test failed.\nPass value:{pass_value_conv}\n"
+            f"Tolerance:{tolerance_pct_str}\n"
+            f"Query:\n{sql}\nResults:\n{records!s}"
         )
 
         if not is_numeric_value_check:

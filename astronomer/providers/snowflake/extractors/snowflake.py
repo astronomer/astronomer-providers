@@ -78,8 +78,8 @@ class SnowflakeAsyncExtractor(BaseExtractor):
             )
         elif len(query_ids) > 1:
             warnings_msg = (
-                "Found more than one query id for task {0}: {1} This might indicate that this task "
-                "might be better as multiple jobs".format(task_name, query_ids)
+                f"Found more than one query id for task {task_name}: {query_ids} This might indicate that this task "
+                "might be better as multiple jobs"
             )
             self.log.warning(warnings_msg)
 
