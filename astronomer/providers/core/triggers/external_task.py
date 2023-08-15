@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from astronomer.providers.http.triggers.http import HttpTrigger
+from airflow.providers.http.hooks.http import HttpHook
 
 
 class TaskStateTrigger(BaseTrigger):
@@ -169,21 +170,24 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
-        Makes a series of asynchronous http calls via an http hook poll for state of the job
+        Makes a series of http calls via an http hook poll for state of the job
         run until it reaches a failure state or success state. It yields a Trigger if response state is successful.
         """
         from airflow.utils.state import State
 
-        hook = self._get_async_hook()
+        hook = HttpHook(
+            method="GET", 
+            http_conn_id=self.http_conn_id
+            )
         while True:
             try:
-                response = await hook.run(
+                response = hook.run(
                     endpoint=self.endpoint,
                     data=self.data,
                     headers=self.headers,
                     extra_options=self.extra_options,
                 )
-                resp_json = await response.json()
+                resp_json = response.json()
                 if resp_json["state"] in State.finished:
                     yield TriggerEvent(resp_json)
                 else:
