@@ -115,20 +115,19 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not self.poke(context=context):
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=ExternalDeploymentTaskTrigger(
-                    http_conn_id=self.http_conn_id,
-                    method=self.hook.method,
-                    endpoint=self.endpoint,
-                    data=self.request_params,
-                    headers=self.headers,
-                    extra_options=self.extra_options,
-                    poke_interval=self.poke_interval,
-                ),
-                method_name="execute_complete",
-            )
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=ExternalDeploymentTaskTrigger(
+                http_conn_id=self.http_conn_id,
+                method=self.hook.method,
+                endpoint=self.endpoint,
+                data=self.request_params,
+                headers=self.headers,
+                extra_options=self.extra_options,
+                poke_interval=self.poke_interval,
+            ),
+            method_name="execute_complete",
+        )
 
     def execute_complete(self, context: "Context", event: Optional[Dict[str, Any]] = None) -> Any:
         """
