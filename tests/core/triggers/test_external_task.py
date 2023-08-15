@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from airflow import AirflowException
 from airflow.operators.empty import EmptyOperator
+from airflow.providers.http.hooks.http import HttpHook
 from airflow.triggers.base import TriggerEvent
 from airflow.utils.state import DagRunState, TaskInstanceState
 
@@ -12,7 +13,6 @@ from astronomer.providers.core.triggers.external_task import (
     ExternalDeploymentTaskTrigger,
     TaskStateTrigger,
 )
-from airflow.providers.http.hooks.http import HttpHook
 from tests.utils.airflow_util import get_dag_run, get_task_instance
 from tests.utils.config import Config
 
