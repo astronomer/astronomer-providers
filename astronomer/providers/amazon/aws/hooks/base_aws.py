@@ -1,3 +1,4 @@
+"""This module contains async AWS Base Hook for deferrable operators and sensors."""
 from __future__ import annotations
 
 from typing import Any
@@ -74,10 +75,12 @@ class AwsBaseHookAsync(AwsBaseHook):
 
     @staticmethod
     def _create_basic_session(session_kwargs: dict[str, Any]) -> boto3.session.Session:
+        """Create a basic boto3 session."""
         return boto3.session.Session(**session_kwargs)
 
     @staticmethod
     def _assume_role(sts_client: boto3.client, conn_config: AwsConnectionWrapper) -> Any:
+        """Assume the role using the STS client."""
         kw = {
             "RoleSessionName": "RoleSession",
             "RoleArn": conn_config.role_arn,
@@ -86,6 +89,7 @@ class AwsBaseHookAsync(AwsBaseHook):
         return sts_client.assume_role(**kw)
 
     def _refresh_credentials(self) -> dict[str, str]:
+        """Refresh the credentials using the STS client."""
         conn_config = AwsConnectionWrapper(
             conn=self.get_connection(self.aws_conn_id),  # type: ignore[arg-type]
             region_name=self.region_name,
@@ -113,6 +117,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     def _update_session_with_assume_role(
         self, async_session: AioSession, conn_config: AwsConnectionWrapper
     ) -> AioSession:
+        """Update the session with the assume role credentials."""
         # Refreshable credentials do have initial credentials
         params = {
             "metadata": self._refresh_credentials(),
@@ -132,7 +137,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     async def get_role_credentials(
         async_session: AioSession, conn_config: AwsConnectionWrapper
     ) -> dict[str, str] | None:
-        """Get the role_arn, method credentials from connection details and get the role credentials detail"""
+        """Get the role_arn, method credentials from connection details and get the role credentials detail."""
         async with async_session.create_client(
             "sts",
             aws_access_key_id=conn_config.aws_access_key_id,

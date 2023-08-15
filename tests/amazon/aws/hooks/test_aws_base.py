@@ -190,3 +190,28 @@ def test_refresh_credentials(mock_get_connection, mock_assume_role, mock_aws_bas
     assert credentials["secret_key"] == "secret"
     assert credentials["token"] == "token"
     assert credentials["expiry_time"] == datetime(2015, 1, 1).isoformat()
+
+
+@mock.patch("astronomer.providers.amazon.aws.hooks.base_aws.AwsBaseHookAsync._assume_role")
+@mock.patch("astronomer.providers.amazon.aws.hooks.base_aws.AwsBaseHookAsync.get_connection")
+def test_refresh_credentials_raises_exception(
+    mock_get_connection, mock_assume_role, mock_aws_base_hook_async
+):
+    mock_conn = Connection(
+        login="test",
+        password="",
+        extra=json.dumps(
+            {
+                "region_name": "test",
+                "role_arn": "arn:aws:iam::test:role/test",
+                "assume_role_method": "assume_role",
+            }
+        ),
+    )
+    mock_get_connection.return_value = mock_conn
+
+    mock_response = {"ResponseMetadata": {"HTTPStatusCode": 403}}
+    mock_assume_role.return_value = mock_response
+
+    with pytest.raises(RuntimeError):
+        mock_aws_base_hook_async._refresh_credentials()
