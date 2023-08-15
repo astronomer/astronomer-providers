@@ -174,7 +174,15 @@ def test_refresh_credentials(mock_get_connection, mock_assume_role, mock_aws_bas
     )
     mock_get_connection.return_value = mock_conn
 
-    mock_response = {"ResponseMetadata": {"HTTPStatusCode": 200}, "Credentials": {"AccessKeyId": "key", "SecretAccessKey": "secret", "SessionToken": "token", "Expiration": datetime(2015, 1, 1)}}
+    mock_response = {
+        "ResponseMetadata": {"HTTPStatusCode": 200},
+        "Credentials": {
+            "AccessKeyId": "key",
+            "SecretAccessKey": "secret",
+            "SessionToken": "token",
+            "Expiration": datetime(2015, 1, 1),
+        },
+    }
     mock_assume_role.return_value = mock_response
 
     credentials = mock_aws_base_hook_async._refresh_credentials()
