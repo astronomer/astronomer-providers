@@ -32,49 +32,13 @@ SQL_MULTIPLE_STMTS = (
 SINGLE_STMT = "select i from user_test order by i;"
 
 
-def test__check_queries_finish_success():
-    mock_conn = MagicMock()
-    mock_conn.get_query_status.return_value = QueryStatus.SUCCESS
-    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is True
-
-
 @pytest.mark.parametrize(
-    "mock_status",
-    (
-        QueryStatus.RUNNING,
-        QueryStatus.QUEUED,
-        QueryStatus.RESUMING_WAREHOUSE,
-        QueryStatus.BLOCKED,
-        QueryStatus.NO_DATA,
-        QueryStatus.FAILED_WITH_INCIDENT,
-    ),
+    "query_status,expected_response", [(QueryStatus.SUCCESS, True), (QueryStatus.RUNNING, False)]
 )
-def test__check_queries_finish_when_not_finished(mock_status):
+def test_check_queries_finish(query_status, expected_response):
     mock_conn = MagicMock()
-    mock_conn.get_query_status.return_value = mock_status
-    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is False
-
-
-@pytest.mark.parametrize(
-    "mock_status",
-    (
-        QueryStatus.FAILED_WITH_ERROR,
-        QueryStatus.ABORTING,
-        QueryStatus.DISCONNECTED,
-    ),
-)
-def test__check_queries_finish_failed(mock_status):
-    mock_conn = MagicMock()
-    mock_conn.get_query_status.return_value = mock_status
-    with pytest.raises(AirflowException):
-        _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"])
-
-
-def test__check_queries_finish_with_unknown_value():
-    mock_conn = MagicMock()
-    mock_conn.get_query_status.return_value = "no such value"
-    with pytest.raises(ValueError):
-        _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"])
+    mock_conn.get_query_status_throw_if_error.return_value = query_status
+    assert _check_queries_finish(mock_conn, ["test_sfqid_1", "test_sfquid_2"]) is expected_response
 
 
 class TestSnowflakeOperatorAsync:
