@@ -108,5 +108,12 @@ bump-version:  ## Bump versions in files locally. By default bump to DEV. set en
 		cz bump $(ASTRO_PROVIDER_VERSION) --files-only;\
     fi
 
+prepare-release:  ## Create a release branch, bump version and draft changelog. set env ASTRO_PROVIDER_VERSION to change default version. see docs https://github.com/astronomer/astronomer-providers/blob/main/RELEASING.rst#update-the-version-number
+	$(eval branch_name := "release-$(subst .,-,$(ASTRO_PROVIDER_VERSION))")
+	git checkout -b $(branch_name)
+	cz bump $(ASTRO_PROVIDER_VERSION) --files-only
+	python dev/prepare_release_scripts/changelog_drafter.py $(ASTRO_PROVIDER_VERSION)
+	echo "We still need to update the CHANGELOG.rst manually."
+
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
