@@ -75,7 +75,6 @@ else
 fi
 
 
-# Command to delete the EKS cluster and node group attached with it. Make sure to wait for the cluster to be deleted so
-# that the task reports for any potential failures.
-eksctl delete cluster $EKS_CLUSTER_NAME --wait --force --timeout 60m0s --region $AWS_DEFAULT_REGION
-echo "EKS cluster '$EKS_CLUSTER_NAME' deleted."
+# Command to delete the EKS cluster and node group attached with it.
+eksctl delete cluster $EKS_CLUSTER_NAME --force --region $AWS_DEFAULT_REGION
+echo "EKS cluster '$EKS_CLUSTER_NAME' delete initiated."
