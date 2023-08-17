@@ -31,7 +31,7 @@ jobs:
     if: |
       contains(fromJSON('["both", "providers-integration-tests"]'), inputs.environment_to_deploy) ||
       github.event_name == 'schedule'
-    uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
+    uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
       environment_to_deploy: 'providers-integration-tests'
@@ -48,7 +48,7 @@ jobs:
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests
-    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    uses: ./.github/workflows/reuse-wf-trigger-dag.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
       dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
@@ -64,7 +64,7 @@ jobs:
     if: |
       contains(fromJSON('["both", "providers-integration-tests-on-KE"]'), inputs.environment_to_deploy) ||
       github.event_name == 'schedule'
-    uses: ./.github/workflows/deploy-to-astro-cloud-reuse-wf.yaml
+    uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
       environment_to_deploy: 'providers-integration-tests-on-KE'
@@ -81,7 +81,7 @@ jobs:
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
     needs: deploy-to-providers-integration-tests-on-KE
-    uses: ./.github/workflows/trigger-dag-reuse-wf.yaml
+    uses: ./.github/workflows/reuse-wf-trigger-dag.yaml
     with:
       git_rev: ${{ inputs.git_rev }}
       dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}

@@ -1,5 +1,5 @@
 ---
-name: Deploy to astro cloud
+name: (Reusable workflows) Deploy to astro cloud
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:

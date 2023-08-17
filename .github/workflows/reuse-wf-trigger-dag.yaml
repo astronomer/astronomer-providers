@@ -1,5 +1,5 @@
 ---
-name: Wait for deployment and trigger dags
+name: (Reusable workflows) Wait for deployment and trigger dags
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:
