@@ -4,7 +4,9 @@ import pytest
 from airflow.triggers.base import TriggerEvent
 from kubernetes_asyncio import client
 
-from astronomer.providers.google.cloud.triggers.kubernetes_engine import GKEStartPodTrigger
+from astronomer.providers.google.cloud.triggers.kubernetes_engine import (
+    GKEStartPodTrigger,
+)
 
 PROJECT_ID = "astronomer-***-providers"
 LOCATION = "us-west1"
@@ -59,7 +61,10 @@ class TestGKEStartPodTrigger:
     @pytest.mark.parametrize(
         "mock_state, expected_value",
         [
-            ("Succeeded", {"status": "done", "namespace": NAMESPACE, "pod_name": POD_NAME}),
+            (
+                "Succeeded",
+                {"status": "done", "namespace": NAMESPACE, "pod_name": POD_NAME, "description": "succeeded"},
+            ),
             (
                 "Failed",
                 {
@@ -117,5 +122,6 @@ class TestGKEStartPodTrigger:
             {
                 "status": "error",
                 "message": "Invalid kube-config file. Expected key current-context in kube-config",
+                "description": "Failed due to Invalid kube-config file. Expected key current-context in kube-config",
             }
         )

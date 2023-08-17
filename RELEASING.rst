@@ -1,15 +1,6 @@
 How to release?
 ===============
 
-Create a new release branch from main
--------------------------------------
-
-Create a new release branch from ``main`` branch with the name ``release-<version>``.
-e.g. If you want to release version ``1.17.6``, you can create a new branch called ``release-1-17-6`` cut from ``main`` branch.
-
-Note: It is important to prefix your release branch name with ``release-``. This is because we run a CircleCI job to generate
-the constraints files only on such branches and the ``main`` branch.
-
 Decide on the new version number
 --------------------------------
 
@@ -23,8 +14,35 @@ incrementing are as follows:
 
 **Minor** and **Patch** versions should not contain any breaking changes.
 
+Update metadata and create a pull request to main
+-------------------------------------------------
+
+This includes the following steps which are detailed below.
+
+1. Create a new release branch from main
+2. Update the version number
+3. Write the changelog
+
+
+Or you can use make target ``prepare-release`` (make sure you're on the ``main`` branch and have the latest tag on your local machine)
+
+.. code-block:: shell
+
+  make ASTRO_PROVIDER_VERSION=<RELEASE_VERSION> prepare-release
+
+It creates the release branch, checkout to it, bump the version number, extract all the commit messages between the previous release to the latest commit and write them in to CHANGELOG.rst. The only thing you need to do is updating CHANGELOG.rst manually.
+
+Create a new release branch from main
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create a new release branch from ``main`` branch with the name ``release-<version>``.
+e.g. If you want to release version ``1.17.6``, you can create a new branch called ``release-1-17-6`` cut from ``main`` branch.
+
+Note: It is important to prefix your release branch name with ``release-``. This is because we run a CircleCI job to generate
+the constraints files only on such branches and the ``main`` branch.
+
 Update the version number
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will need to update it in:
 
@@ -49,7 +67,7 @@ Bump versions locally
 Note: ``<RELEASE_VERSION>`` is the software version you want to release.
 
 Compare the commits introduced since the last release to aid building the CHANGELOG
------------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the following link to compare the commits introduced since the last release (e.g. 1.15.4)
 
@@ -58,7 +76,7 @@ You can use the following link to compare the commits introduced since the last 
 Note: Make sure to replace the last release version in the above URL
 
 Write the changelog
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 Add the new release to ``CHANGELOG.rst``, along with as many release notes
 as you can (more information is always better than less, though try to group
@@ -71,7 +89,6 @@ Commit the release
 Bundle up these changes into a single commit with the message in the format
 "Release 1.2.1". Submit a pull request for this commit and wait for approval
 unless you are releasing an urgent security fix.
-
 
 Tag and push the commit
 -----------------------

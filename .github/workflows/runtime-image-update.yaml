@@ -88,8 +88,8 @@ jobs:
       - name: Setup Github Actions git user
         if: steps.check_tag_updated.outputs.tag_updated == 'true'
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Actions"
+          git config --global user.email "airflow-oss-bot@astronomer.io"
+          git config --global user.name "airflow-oss-bot"
 
       - name: Commit changes and create a pull request
         if: steps.check_tag_updated.outputs.tag_updated == 'true'

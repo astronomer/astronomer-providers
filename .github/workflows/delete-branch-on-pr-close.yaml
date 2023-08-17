@@ -18,8 +18,8 @@ jobs:
         env:
           branch_name: ${{ github.event.pull_request.head.ref }}
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "action@github.com"
+          git config --global user.name "airflow-oss-bot"
+          git config --global user.email "airflow-oss-bot@astronomer.io"
           git fetch --prune --all
 
           if [[ "$branch_name" == rc-test-* ]]; then
