@@ -45,7 +45,7 @@ workflows:
           matrix:
             parameters:
               python_version: ["3.11"]
-              airflow_version: ["2.6.3"]
+              airflow_version: ["2.6.3", "2.7.0"]
           <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
@@ -269,7 +269,7 @@ jobs:
             sudo apt-get install libsasl2-dev
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[test_python_3_11,tests] apache-airflow==<<parameters.airflow_version>>
+          command: pip install -U -e .[all,tests] apache-airflow==<<parameters.airflow_version>>
       - run:
           name: Generate Constraints
           command: pip freeze
