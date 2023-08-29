@@ -57,7 +57,7 @@ workflows:
           name: test-python<< matrix.python_version >>
           matrix:
             parameters:
-              python_version: ["3.8", "3.9", "3.10"]
+              python_version: ["3.8", "3.9", "3.10", "3.11"]
           <<: *all_branches_and_version_tag
           requires:
             - markdown-link-check
