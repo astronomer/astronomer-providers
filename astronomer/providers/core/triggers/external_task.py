@@ -190,7 +190,9 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
                     return
                 else:
                     self.log.info(
-                        "The current status is %s. Sleeping for %s seconds", resp_json.get("state"), self.poke_interval
+                        "The current status is %s. Sleeping for %s seconds",
+                        resp_json.get("state"),
+                        self.poke_interval,
                     )
                     await asyncio.sleep(self.poke_interval)
             except AirflowException as exc:
