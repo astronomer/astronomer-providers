@@ -185,11 +185,15 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
                     extra_options=self.extra_options,
                 )
                 resp_json = response.json()
+                self.log.info("The current status is %s", resp_json.get("state"))
                 if resp_json["state"] in State.finished:
                     yield TriggerEvent(resp_json)
+                    return
                 else:
                     await asyncio.sleep(self.poke_interval)
             except AirflowException as exc:
                 if str(exc).startswith("404"):
+                    self.log.info("Task not found %s", str(exc))
                     await asyncio.sleep(self.poke_interval)
                 yield TriggerEvent({"state": "error", "message": str(exc)})
+                return
