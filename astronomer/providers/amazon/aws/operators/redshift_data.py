@@ -32,7 +32,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
         self.poll_interval = poll_interval
         super().__init__(**kwargs)
 
-    def execute(self, context: Context) -> None:  # type: ignore[override]
+    def execute(self, context: Context) -> None:
         """
         Makes a sync call to RedshiftDataHook, executes the query and gets back the list of query_ids and
         defers trigger to poll for the status for the queries executed.
