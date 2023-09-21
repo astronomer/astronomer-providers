@@ -23,7 +23,7 @@ class HttpHookAsync(BaseHook):
         headers can also be specified in the Extra field in json format.
     :param auth_type: The auth type for the service
     :param keep_response: Keep the aiohttp response returned by run method without releasing it.
-        Use it with caution. Withouing properly releasing reponse, it might cause "Unclosed connection" error.
+        Use it with caution. Withouing properly releasing response, it might cause "Unclosed connection" error.
         See https://github.com/astronomer/astronomer-providers/issues/909
     :type auth_type: AuthBase of python aiohttp lib
     """
@@ -60,7 +60,7 @@ class HttpHookAsync(BaseHook):
         data: dict[str, Any] | str | None = None,
         headers: dict[str, Any] | None = None,
         extra_options: dict[str, Any] | None = None,
-    ) -> "ClientResponse":
+    ) -> ClientResponse:
         r"""
         Performs an asynchronous HTTP request call
 

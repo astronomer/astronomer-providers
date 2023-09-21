@@ -5,6 +5,7 @@ import pytest
 from aiohttp.client_exceptions import ClientConnectionError
 from airflow.exceptions import AirflowException
 from airflow.models import Connection
+
 from astronomer.providers.http.hooks.http import HttpHookAsync
 
 
@@ -93,7 +94,7 @@ class TestHttpHookAsync:
         ):
             resp = await hook.run("v1/test")
             with pytest.raises(ClientConnectionError, match="Connection closed"):
-                resp_payload = await resp.json()
+                await resp.json()
 
     @pytest.mark.asyncio
     async def test_post_request_and_get_json_with_keep_response(self, aioresponse):
