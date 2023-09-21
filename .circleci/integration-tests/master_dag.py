@@ -209,7 +209,7 @@ with DAG(
 
     get_astronomer_providers_version = BashOperator(
         task_id="get_astronomer_providers_version",
-        bash_command="airflow providers get astronomer-providers -o json | jq '.[0].Version'",
+        bash_command="pip show astronomer-providers | grep -i version | awk '{print $2}'",
         do_xcom_push=True,
     )
 
