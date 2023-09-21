@@ -40,6 +40,7 @@ class HttpHookAsync(BaseHook):
         auth_type: Any = aiohttp.BasicAuth,
         retry_limit: int = 3,
         retry_delay: float = 1.0,
+        *,
         keep_response: bool = False,
     ) -> None:
         self.http_conn_id = http_conn_id
