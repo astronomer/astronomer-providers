@@ -2,9 +2,9 @@ import logging
 from unittest import mock
 
 import pytest
+from aiohttp.client_exceptions import ClientConnectionError
 from airflow.exceptions import AirflowException
 from airflow.models import Connection
-
 from astronomer.providers.http.hooks.http import HttpHookAsync
 
 
@@ -54,7 +54,8 @@ class TestHttpHookAsync:
         return Connection(
             conn_id="http_default",
             conn_type="http",
-            host="test:8080/",
+            host="test",
+            port=8080,
             extra='{"bearer": "test"}',
         )
 
@@ -74,6 +75,45 @@ class TestHttpHookAsync:
         ):
             resp = await hook.run("v1/test")
             assert resp.status == 200
+
+    @pytest.mark.asyncio
+    async def test_post_request_and_get_json_without_keep_response(self, aioresponse):
+        hook = HttpHookAsync()
+        payload = '{"status":{"status": 200}}'
+
+        aioresponse.post(
+            "http://test:8080/v1/test",
+            status=200,
+            payload=payload,
+            reason="OK",
+        )
+
+        with mock.patch(
+            "airflow.hooks.base.BaseHook.get_connection", side_effect=self.get_airflow_connection
+        ):
+            resp = await hook.run("v1/test")
+            with pytest.raises(ClientConnectionError, match="Connection closed"):
+                resp_payload = await resp.json()
+
+    @pytest.mark.asyncio
+    async def test_post_request_and_get_json_with_keep_response(self, aioresponse):
+        hook = HttpHookAsync(keep_response=True)
+        payload = '{"status":{"status": 200}}'
+
+        aioresponse.post(
+            "http://test:8080/v1/test",
+            status=200,
+            payload=payload,
+            reason="OK",
+        )
+
+        with mock.patch(
+            "airflow.hooks.base.BaseHook.get_connection", side_effect=self.get_airflow_connection
+        ):
+            resp = await hook.run("v1/test")
+            resp_payload = await resp.json()
+            assert resp.status == 200
+            assert resp_payload == payload
 
     @pytest.mark.asyncio
     async def test_post_request_with_error_code(self, aioresponse):
