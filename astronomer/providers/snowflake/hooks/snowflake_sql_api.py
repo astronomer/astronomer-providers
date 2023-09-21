@@ -9,10 +9,9 @@ import aiohttp
 import requests
 from airflow import AirflowException
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerator
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-
-from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerator
 
 
 class SnowflakeSqlApiHookAsync(SnowflakeHook):
@@ -141,7 +140,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:  # pragma: no cover
             raise AirflowException(
-                f"Response: {e.response.content}, " f"Status Code: {e.response.status_code}"
+                f"Response: {e.response.content!r}, " f"Status Code: {e.response.status_code}"
             )  # pragma: no cover
         json_response = response.json()
         self.log.info("Snowflake SQL POST API response: %s", json_response)
@@ -204,7 +203,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 self.log.info(response.json())
             except requests.exceptions.HTTPError as e:
                 raise AirflowException(
-                    f"Response: {e.response.content}, Status Code: {e.response.status_code}"
+                    f"Response: {e.response.content!r}, Status Code: {e.response.status_code}"
                 )
 
     @staticmethod
