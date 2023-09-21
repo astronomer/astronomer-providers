@@ -50,7 +50,7 @@ class HttpHookAsync(BaseHook):
 
     async def run(
         self,
-        endpoint: str | Nonr = None,
+        endpoint: str | None = None,
         data: dict[str, Any] | str | None = None,
         headers: dict[str, Any] | None = None,
         extra_options: dict[str, Any] | None = None,
@@ -80,10 +80,10 @@ class HttpHookAsync(BaseHook):
                 # schema defaults to HTTP
                 schema = conn.schema if conn.schema else "http"
                 host = conn.host if conn.host else ""
-                self.base_url = schema + "://" + host
+                self.base_url = f"{schema}://{host}"
 
             if conn.port:
-                self.base_url = self.base_url + ":" + str(conn.port)
+                self.base_url = f"{self.base_url}:{conn.port}"
             if conn.login:
                 auth = self.auth_type(conn.login, conn.password)
             if conn.extra:
@@ -95,7 +95,7 @@ class HttpHookAsync(BaseHook):
             _headers.update(headers)
 
         if self.base_url and not self.base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
-            url = self.base_url + "/" + endpoint
+            url = f"{self.base_url}/{endpoint}"
         else:
             url = (self.base_url or "") + (endpoint or "")
 
@@ -133,7 +133,7 @@ class HttpHookAsync(BaseHook):
                             self.log.exception("HTTP error with status: %s", e.status)
                             # In this case, the user probably made a mistake.
                             # Don't retry.
-                            raise AirflowException(str(e.status) + ":" + e.message)
+                            raise AirflowException(f"{e.status}:{e.message}")
 
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
