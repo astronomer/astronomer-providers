@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import asyncio
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -48,10 +50,10 @@ class HttpHookAsync(BaseHook):
 
     async def run(
         self,
-        endpoint: Optional[str] = None,
-        data: Optional[Union[Dict[str, Any], str]] = None,
-        headers: Optional[Dict[str, Any]] = None,
-        extra_options: Optional[Dict[str, Any]] = None,
+        endpoint: str | Nonr = None,
+        data: dict[str, Any] | str | None = None,
+        headers: dict[str, Any] | None = None,
+        extra_options: dict[str, Any] | None = None,
     ) -> "ClientResponse":
         r"""
         Performs an asynchronous HTTP request call
