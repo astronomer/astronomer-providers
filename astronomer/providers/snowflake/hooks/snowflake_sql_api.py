@@ -9,9 +9,10 @@ import aiohttp
 import requests
 from airflow import AirflowException
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerator
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
+
+from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerator
 
 
 class SnowflakeSqlApiHookAsync(SnowflakeHook):
