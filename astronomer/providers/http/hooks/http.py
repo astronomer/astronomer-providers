@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import asyncio
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -20,6 +22,9 @@ class HttpHookAsync(BaseHook):
         API url i.e https://www.google.com/ and optional authentication credentials. Default
         headers can also be specified in the Extra field in json format.
     :param auth_type: The auth type for the service
+    :param keep_response: Keep the aiohttp response returned by run method without releasing it.
+        Use it with caution. Without properly releasing response, it might cause "Unclosed connection" error.
+        See https://github.com/astronomer/astronomer-providers/issues/909
     :type auth_type: AuthBase of python aiohttp lib
     """
 
@@ -35,6 +40,8 @@ class HttpHookAsync(BaseHook):
         auth_type: Any = aiohttp.BasicAuth,
         retry_limit: int = 3,
         retry_delay: float = 1.0,
+        *,
+        keep_response: bool = False,
     ) -> None:
         self.http_conn_id = http_conn_id
         self.method = method.upper()
@@ -45,14 +52,15 @@ class HttpHookAsync(BaseHook):
             raise ValueError("Retry limit must be greater than equal to 1")
         self.retry_limit = retry_limit
         self.retry_delay = retry_delay
+        self.keep_response = keep_response
 
     async def run(
         self,
-        endpoint: Optional[str] = None,
-        data: Optional[Union[Dict[str, Any], str]] = None,
-        headers: Optional[Dict[str, Any]] = None,
-        extra_options: Optional[Dict[str, Any]] = None,
-    ) -> "ClientResponse":
+        endpoint: str | None = None,
+        data: dict[str, Any] | str | None = None,
+        headers: dict[str, Any] | None = None,
+        extra_options: dict[str, Any] | None = None,
+    ) -> ClientResponse:
         r"""
         Performs an asynchronous HTTP request call
 
@@ -78,10 +86,10 @@ class HttpHookAsync(BaseHook):
                 # schema defaults to HTTP
                 schema = conn.schema if conn.schema else "http"
                 host = conn.host if conn.host else ""
-                self.base_url = schema + "://" + host
+                self.base_url = f"{schema}://{host}"
 
             if conn.port:
-                self.base_url = self.base_url + ":" + str(conn.port)
+                self.base_url = f"{self.base_url}:{conn.port}"
             if conn.login:
                 auth = self.auth_type(conn.login, conn.password)
             if conn.extra:
@@ -93,7 +101,7 @@ class HttpHookAsync(BaseHook):
             _headers.update(headers)
 
         if self.base_url and not self.base_url.endswith("/") and endpoint and not endpoint.startswith("/"):
-            url = self.base_url + "/" + endpoint
+            url = f"{self.base_url}/{endpoint}"
         else:
             url = (self.base_url or "") + (endpoint or "")
 
@@ -109,29 +117,34 @@ class HttpHookAsync(BaseHook):
 
             attempt_num = 1
             while True:
-                async with request_func(
+                response = await request_func(
                     url,
                     json=data if self.method in ("POST", "PATCH") else None,
                     params=data if self.method == "GET" else None,
                     headers=headers,
                     auth=auth,
                     **extra_options,
-                ) as response:
-                    try:
-                        response.raise_for_status()
-                        return response
-                    except ClientResponseError as e:
-                        self.log.warning(
-                            "[Try %d of %d] Request to %s failed.",
-                            attempt_num,
-                            self.retry_limit,
-                            url,
-                        )
-                        if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
-                            self.log.exception("HTTP error with status: %s", e.status)
-                            # In this case, the user probably made a mistake.
-                            # Don't retry.
-                            raise AirflowException(str(e.status) + ":" + e.message)
+                )
+                try:
+                    response.raise_for_status()
+                    if not self.keep_response:
+                        response.release()
+                    return response
+                except ClientResponseError as e:
+                    self.log.warning(
+                        "[Try %d of %d] Request to %s failed.",
+                        attempt_num,
+                        self.retry_limit,
+                        url,
+                    )
+                    if not self._retryable_error_async(e) or attempt_num == self.retry_limit:
+                        self.log.exception("HTTP error with status: %s", e.status)
+                        response.release()
+                        # In this case, the user probably made a mistake.
+                        # Don't retry.
+                        raise AirflowException(f"{e.status}:{e.message}")
+
+                response.release()
 
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
