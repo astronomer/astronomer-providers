@@ -1,6 +1,24 @@
 Changelog
 =========
 
+1.18.0 (2023-09-25)
+-------------------
+
+Enhancements
+""""""""""""
+* Add ``keep_response`` parameter to ``HttpHookAsync``  (#1330)
+* Add AioRefreshableCredentials to AwsBaseHookAsync (#1304)
+
+Bug Fixes
+"""""""""
+* Fix ExternalDeploymentTaskSensorAsync by making simple http requests instead of aiohttp (#1306)
+* Fix impersonation failure on GKE start pod operator async (#1274)
+
+Misc
+"""""
+* Bring back hive provider for Python3.11 (#1317)
+
+
 1.17.3 (2023-08-07)
 -------------------
 
