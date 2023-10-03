@@ -1,7 +1,0 @@
----
-# https://yamllint.readthedocs.io/en/stable/
-extends: default
-
-rules:
-  line-length:
-    max: 110
