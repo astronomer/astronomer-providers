@@ -3,7 +3,7 @@ import base64
 from typing import Any, Dict, Tuple, cast
 
 import aiohttp
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectorError, ClientResponseError
 from airflow import __version__
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
@@ -133,7 +133,7 @@ class DatabricksHookAsync(DatabricksHook):
                     )
                     response.raise_for_status()
                     return cast(Dict[str, Any], await response.json())
-                except ClientResponseError as e:
+                except (ClientConnectorError, ClientResponseError) as e:
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry rather raise exception
