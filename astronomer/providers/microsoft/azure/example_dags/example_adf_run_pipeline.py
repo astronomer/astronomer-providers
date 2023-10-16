@@ -7,7 +7,6 @@ from typing import cast
 from airflow import DAG
 from airflow.models.xcom_arg import XComArg
 from airflow.operators.python import PythonOperator
-
 from astronomer.providers.microsoft.azure.operators.data_factory import (
     AzureDataFactoryRunPipelineOperatorAsync,
 )
@@ -86,7 +85,7 @@ def create_adf_storage_pipeline() -> None:
     df_resource = Factory(location=LOCATION)
     df = adf_client.factories.create_or_update(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, df_resource)
     while df.provisioning_state != "Succeeded":
-        df = adf_client.factories.get(RESOURCE_GROUP_NAME, DATAFACTORY_NAME)
+        df = adf_client.factories.get(RESOURCE_GROUP_NAME, DATAFACTORY_NAME)  # type: ignore[assignment]
         time.sleep(1)
 
     # Create an Azure Storage linked service
@@ -95,17 +94,17 @@ def create_adf_storage_pipeline() -> None:
     storage_string = SecureString(value=CONNECTION_STRING)
 
     ls_azure_storage = LinkedServiceResource(
-        properties=AzureStorageLinkedService(connection_string=storage_string)
+        properties=AzureStorageLinkedService(connection_string=storage_string)  # type: ignore[arg-type]
     )
     adf_client.linked_services.create_or_update(
         RESOURCE_GROUP_NAME, DATAFACTORY_NAME, STORAGE_LINKED_SERVICE_NAME, ls_azure_storage
     )
 
     # Create an Azure blob dataset (input)
-    ds_ls = LinkedServiceReference(reference_name=STORAGE_LINKED_SERVICE_NAME)
+    ds_ls = LinkedServiceReference(type="LinkedServiceReference", reference_name=STORAGE_LINKED_SERVICE_NAME)
     ds_azure_blob = DatasetResource(
         properties=AzureBlobDataset(
-            linked_service_name=ds_ls, folder_path=BLOB_PATH, file_name=BLOB_FILE_NAME
+            linked_service_name=ds_ls, folder_path=BLOB_PATH, file_name=BLOB_FILE_NAME  # type: ignore[arg-type]
         )
     )
     adf_client.datasets.create_or_update(
@@ -114,7 +113,7 @@ def create_adf_storage_pipeline() -> None:
 
     # Create an Azure blob dataset (output)
     ds_out_azure_blob = DatasetResource(
-        properties=AzureBlobDataset(linked_service_name=ds_ls, folder_path=OUTPUT_BLOB_PATH)
+        properties=AzureBlobDataset(linked_service_name=ds_ls, folder_path=OUTPUT_BLOB_PATH)  # type: ignore[arg-type]
     )
     adf_client.datasets.create_or_update(
         RESOURCE_GROUP_NAME, DATAFACTORY_NAME, DATASET_OUTPUT_NAME, ds_out_azure_blob
@@ -123,8 +122,8 @@ def create_adf_storage_pipeline() -> None:
     # Create a copy activity
     blob_source = BlobSource()
     blob_sink = BlobSink()
-    ds_in_ref = DatasetReference(reference_name=DATASET_INPUT_NAME)
-    ds_out_ref = DatasetReference(reference_name=DATASET_OUTPUT_NAME)
+    ds_in_ref = DatasetReference(type="DatasetReferenceType", reference_name=DATASET_INPUT_NAME)
+    ds_out_ref = DatasetReference(type="DatasetReferenceType", reference_name=DATASET_OUTPUT_NAME)
     copy_activity = CopyActivity(
         name=ACTIVITY_NAME, inputs=[ds_in_ref], outputs=[ds_out_ref], source=blob_source, sink=blob_sink
     )
