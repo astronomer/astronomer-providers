@@ -7,6 +7,7 @@ from typing import cast
 from airflow import DAG
 from airflow.models.xcom_arg import XComArg
 from airflow.operators.python import PythonOperator
+
 from astronomer.providers.microsoft.azure.operators.data_factory import (
     AzureDataFactoryRunPipelineOperatorAsync,
 )
