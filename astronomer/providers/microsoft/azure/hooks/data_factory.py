@@ -75,7 +75,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
 
     def __init__(self, azure_data_factory_conn_id: str):
         """Initialize the hook instance."""
-        self._async_conn: DataFactoryManagementClient = None
+        self._async_conn: DataFactoryManagementClient | None = None
         self.conn_id = azure_data_factory_conn_id
         super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
 

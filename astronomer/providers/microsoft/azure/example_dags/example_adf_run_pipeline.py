@@ -40,8 +40,6 @@ df_params = {"location": LOCATION}
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "azure_data_factory_conn_id": "azure_data_factory_default",
-    "factory_name": DATAFACTORY_NAME,  # This can also be specified in the ADF connection.
-    "resource_group_name": RESOURCE_GROUP_NAME,  # This can also be specified in the ADF connection.
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
@@ -194,6 +192,8 @@ with DAG(
     run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_wait",
         pipeline_name=PIPELINE_NAME,
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
     )
     # [END howto_operator_adf_run_pipeline_async]
 
@@ -201,6 +201,8 @@ with DAG(
     run_pipeline_no_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_no_wait",
         pipeline_name=PIPELINE_NAME,
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
         wait_for_termination=False,
     )
     # [END howto_operator_adf_run_pipeline]
@@ -209,6 +211,8 @@ with DAG(
     pipeline_run_sensor_async = AzureDataFactoryPipelineRunStatusSensorAsync(
         task_id="pipeline_run_sensor_async",
         run_id=cast(str, XComArg(run_pipeline_wait, key="run_id")),
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
     )
     # [END howto_sensor_pipeline_run_sensor_async]
 
