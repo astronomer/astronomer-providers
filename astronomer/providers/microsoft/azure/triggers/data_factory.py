@@ -6,6 +6,7 @@ from airflow.providers.microsoft.azure.hooks.data_factory import (
     AzureDataFactoryPipelineRunStatus,
 )
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+
 from astronomer.providers.microsoft.azure.hooks.data_factory import (
     AzureDataFactoryHookAsync,
 )

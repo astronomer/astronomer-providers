@@ -82,7 +82,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     async def get_async_conn(self) -> DataFactoryManagementClient:
         """Get async connection and connect to azure data factory."""
         if self._conn is not None:
-            return self._conn
+            return cast(DataFactoryManagementClient, self._conn)
 
         conn = await sync_to_async(self.get_connection)(self.conn_id)
         extras = conn.extra_dejson
@@ -147,7 +147,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 factory_name=factory_name,
                 resource_group_name=resource_group_name,
             )
-            status: str = pipeline_run.status
+            status: str = cast(str, pipeline_run.status)
             return status
         except Exception as e:
             raise AirflowException(e)
