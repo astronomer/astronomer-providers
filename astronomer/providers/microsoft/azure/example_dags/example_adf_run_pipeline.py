@@ -123,8 +123,8 @@ def create_adf_storage_pipeline() -> None:
     # Create a copy activity
     blob_source = BlobSource()
     blob_sink = BlobSink()
-    ds_in_ref = DatasetReference(type="DatasetReferenceType", reference_name=DATASET_INPUT_NAME)
-    ds_out_ref = DatasetReference(type="DatasetReferenceType", reference_name=DATASET_OUTPUT_NAME)
+    ds_in_ref = DatasetReference(type="DatasetReference", reference_name=DATASET_INPUT_NAME)
+    ds_out_ref = DatasetReference(type="DatasetReference", reference_name=DATASET_OUTPUT_NAME)
     copy_activity = CopyActivity(
         name=ACTIVITY_NAME, inputs=[ds_in_ref], outputs=[ds_out_ref], source=blob_source, sink=blob_sink
     )
