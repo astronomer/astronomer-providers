@@ -1,12 +1,11 @@
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow.providers.microsoft.azure.hooks.data_factory import (
     AzureDataFactoryPipelineRunStatus,
 )
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-
 from astronomer.providers.microsoft.azure.hooks.data_factory import (
     AzureDataFactoryHookAsync,
 )
@@ -29,8 +28,8 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
         run_id: str,
         azure_data_factory_conn_id: str,
         poke_interval: float,
-        resource_group_name: Optional[str] = None,
-        factory_name: Optional[str] = None,
+        resource_group_name: str,
+        factory_name: str,
     ):
         super().__init__()
         self.run_id = run_id
@@ -108,8 +107,8 @@ class AzureDataFactoryTrigger(BaseTrigger):
         run_id: str,
         azure_data_factory_conn_id: str,
         end_time: float,
-        resource_group_name: Optional[str] = None,
-        factory_name: Optional[str] = None,
+        resource_group_name: str,
+        factory_name: str,
         wait_for_termination: bool = True,
         check_interval: int = 60,
     ):
