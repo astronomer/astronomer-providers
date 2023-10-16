@@ -113,8 +113,8 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     async def get_pipeline_run(
         self,
         run_id: str,
-        resource_group_name: str | None = None,
-        factory_name: str | None = None,
+        resource_group_name: str,
+        factory_name: str,
         **config: Any,
     ) -> PipelineRun:
         """
@@ -132,7 +132,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 raise AirflowException(e)
 
     async def get_adf_pipeline_run_status(
-        self, run_id: str, resource_group_name: str | None = None, factory_name: str | None = None
+        self, run_id: str, resource_group_name: str, factory_name: str
     ) -> str:
         """
         Connect to Azure Data Factory asynchronously and get the pipeline status by run_id.
