@@ -25,6 +25,8 @@ class TestAzureDataFactoryRunPipelineOperatorAsync:
         task_id="run_pipeline",
         pipeline_name="pipeline",
         parameters={"myParam": "value"},
+        factory_name="factory_name",
+        resource_group_name="resource_group_name",
     )
 
     @mock.patch(f"{MODULE}.AzureDataFactoryRunPipelineOperatorAsync.defer")

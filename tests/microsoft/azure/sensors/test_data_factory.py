@@ -19,6 +19,8 @@ class TestAzureDataFactoryPipelineRunStatusSensorAsync:
     SENSOR = AzureDataFactoryPipelineRunStatusSensorAsync(
         task_id="pipeline_run_sensor_async",
         run_id=RUN_ID,
+        factory_name="factory_name",
+        resource_group_name="resource_group_name",
     )
 
     @mock.patch(f"{MODULE}.AzureDataFactoryPipelineRunStatusSensorAsync.defer")
@@ -61,5 +63,9 @@ class TestAzureDataFactoryPipelineRunStatusSensorAsync:
         # TODO: Remove once deprecated
         with pytest.warns(expected_warning=DeprecationWarning):
             AzureDataFactoryPipelineRunStatusSensorAsync(
-                task_id="pipeline_run_sensor_async", run_id=self.RUN_ID, poll_interval=5.0
+                task_id="pipeline_run_sensor_async",
+                run_id=self.RUN_ID,
+                poll_interval=5.0,
+                factory_name="factory_name",
+                resource_group_name="resource_group_name",
             )
