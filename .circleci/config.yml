@@ -168,7 +168,7 @@ jobs:
             make clean html
       - save_cache:
           paths:
-            - ~/.cache/pip
+            # - ~/.cache/pip
             - ~/.pyenv/versions/
           # yamllint disable-line rule:line-length
           key: docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}-{{ .Environment.CACHE_VERSION }}
