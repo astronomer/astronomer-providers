@@ -160,7 +160,7 @@ jobs:
             sudo apt-get install libsasl2-dev
       - run:
           name: Install Dependencies
-          command: pip install -U -e .[all,docs,mypy]
+          command: pip install -U -e .[docs]
       - run:
           name: Run Sphinx
           command: |
