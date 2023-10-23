@@ -75,14 +75,14 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
 
     def __init__(self, azure_data_factory_conn_id: str):
         """Initialize the hook instance."""
-        self._async_conn: DataFactoryManagementClient = None
+        self._async_conn: DataFactoryManagementClient | None = None
         self.conn_id = azure_data_factory_conn_id
         super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
 
     async def get_async_conn(self) -> DataFactoryManagementClient:
         """Get async connection and connect to azure data factory."""
         if self._conn is not None:
-            return self._conn
+            return cast(DataFactoryManagementClient, self._conn)  # pragma: no cover
 
         conn = await sync_to_async(self.get_connection)(self.conn_id)
         extras = conn.extra_dejson
@@ -113,8 +113,8 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     async def get_pipeline_run(
         self,
         run_id: str,
-        resource_group_name: str | None = None,
-        factory_name: str | None = None,
+        resource_group_name: str,
+        factory_name: str,
         **config: Any,
     ) -> PipelineRun:
         """
@@ -132,7 +132,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 raise AirflowException(e)
 
     async def get_adf_pipeline_run_status(
-        self, run_id: str, resource_group_name: str | None = None, factory_name: str | None = None
+        self, run_id: str, resource_group_name: str, factory_name: str
     ) -> str:
         """
         Connect to Azure Data Factory asynchronously and get the pipeline status by run_id.
@@ -147,7 +147,7 @@ class AzureDataFactoryHookAsync(AzureDataFactoryHook):
                 factory_name=factory_name,
                 resource_group_name=resource_group_name,
             )
-            status: str = pipeline_run.status
+            status: str = cast(str, pipeline_run.status)
             return status
         except Exception as e:
             raise AirflowException(e)

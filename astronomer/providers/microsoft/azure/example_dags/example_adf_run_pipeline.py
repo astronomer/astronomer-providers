@@ -40,8 +40,6 @@ df_params = {"location": LOCATION}
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
     "azure_data_factory_conn_id": "azure_data_factory_default",
-    "factory_name": DATAFACTORY_NAME,  # This can also be specified in the ADF connection.
-    "resource_group_name": RESOURCE_GROUP_NAME,  # This can also be specified in the ADF connection.
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
@@ -88,7 +86,7 @@ def create_adf_storage_pipeline() -> None:
     df_resource = Factory(location=LOCATION)
     df = adf_client.factories.create_or_update(RESOURCE_GROUP_NAME, DATAFACTORY_NAME, df_resource)
     while df.provisioning_state != "Succeeded":
-        df = adf_client.factories.get(RESOURCE_GROUP_NAME, DATAFACTORY_NAME)
+        df = adf_client.factories.get(RESOURCE_GROUP_NAME, DATAFACTORY_NAME)  # type: ignore[assignment]
         time.sleep(1)
 
     # Create an Azure Storage linked service
@@ -97,17 +95,17 @@ def create_adf_storage_pipeline() -> None:
     storage_string = SecureString(value=CONNECTION_STRING)
 
     ls_azure_storage = LinkedServiceResource(
-        properties=AzureStorageLinkedService(connection_string=storage_string)
+        properties=AzureStorageLinkedService(connection_string=storage_string)  # type: ignore[arg-type]
     )
     adf_client.linked_services.create_or_update(
         RESOURCE_GROUP_NAME, DATAFACTORY_NAME, STORAGE_LINKED_SERVICE_NAME, ls_azure_storage
     )
 
     # Create an Azure blob dataset (input)
-    ds_ls = LinkedServiceReference(reference_name=STORAGE_LINKED_SERVICE_NAME)
+    ds_ls = LinkedServiceReference(type="LinkedServiceReference", reference_name=STORAGE_LINKED_SERVICE_NAME)
     ds_azure_blob = DatasetResource(
         properties=AzureBlobDataset(
-            linked_service_name=ds_ls, folder_path=BLOB_PATH, file_name=BLOB_FILE_NAME
+            linked_service_name=ds_ls, folder_path=BLOB_PATH, file_name=BLOB_FILE_NAME  # type: ignore[arg-type]
         )
     )
     adf_client.datasets.create_or_update(
@@ -116,7 +114,7 @@ def create_adf_storage_pipeline() -> None:
 
     # Create an Azure blob dataset (output)
     ds_out_azure_blob = DatasetResource(
-        properties=AzureBlobDataset(linked_service_name=ds_ls, folder_path=OUTPUT_BLOB_PATH)
+        properties=AzureBlobDataset(linked_service_name=ds_ls, folder_path=OUTPUT_BLOB_PATH)  # type: ignore[arg-type]
     )
     adf_client.datasets.create_or_update(
         RESOURCE_GROUP_NAME, DATAFACTORY_NAME, DATASET_OUTPUT_NAME, ds_out_azure_blob
@@ -125,8 +123,8 @@ def create_adf_storage_pipeline() -> None:
     # Create a copy activity
     blob_source = BlobSource()
     blob_sink = BlobSink()
-    ds_in_ref = DatasetReference(reference_name=DATASET_INPUT_NAME)
-    ds_out_ref = DatasetReference(reference_name=DATASET_OUTPUT_NAME)
+    ds_in_ref = DatasetReference(type="DatasetReference", reference_name=DATASET_INPUT_NAME)
+    ds_out_ref = DatasetReference(type="DatasetReference", reference_name=DATASET_OUTPUT_NAME)
     copy_activity = CopyActivity(
         name=ACTIVITY_NAME, inputs=[ds_in_ref], outputs=[ds_out_ref], source=blob_source, sink=blob_sink
     )
@@ -194,6 +192,8 @@ with DAG(
     run_pipeline_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_wait",
         pipeline_name=PIPELINE_NAME,
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
     )
     # [END howto_operator_adf_run_pipeline_async]
 
@@ -201,6 +201,8 @@ with DAG(
     run_pipeline_no_wait = AzureDataFactoryRunPipelineOperatorAsync(
         task_id="run_pipeline_no_wait",
         pipeline_name=PIPELINE_NAME,
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
         wait_for_termination=False,
     )
     # [END howto_operator_adf_run_pipeline]
@@ -209,6 +211,8 @@ with DAG(
     pipeline_run_sensor_async = AzureDataFactoryPipelineRunStatusSensorAsync(
         task_id="pipeline_run_sensor_async",
         run_id=cast(str, XComArg(run_pipeline_wait, key="run_id")),
+        factory_name=DATAFACTORY_NAME,
+        resource_group_name=RESOURCE_GROUP_NAME,
     )
     # [END howto_sensor_pipeline_run_sensor_async]
 
