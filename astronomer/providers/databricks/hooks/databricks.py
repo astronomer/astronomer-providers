@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 import base64
-from typing import Any, Dict, Tuple, cast
+from typing import Any, Dict, cast
 
 import aiohttp
 from aiohttp import ClientConnectorError, ClientResponseError
@@ -50,7 +52,7 @@ class DatabricksHookAsync(DatabricksHook):
 
         return RunState(life_cycle_state, result_state, state_message)
 
-    async def get_run_response(self, run_id: str) -> Dict[str, Any]:
+    async def get_run_response(self, run_id: str) -> dict[str, Any]:
         """
         Makes Async API call to get the run state info.
 
@@ -60,7 +62,7 @@ class DatabricksHookAsync(DatabricksHook):
         response = await self._do_api_call_async(GET_RUN_ENDPOINT, json)
         return response
 
-    async def get_run_output_response(self, task_run_id: str) -> Dict[str, Any]:
+    async def get_run_output_response(self, task_run_id: str) -> dict[str, Any]:
         """
         Retrieves run output of the run.
 
@@ -71,8 +73,8 @@ class DatabricksHookAsync(DatabricksHook):
         return run_output
 
     async def _do_api_call_async(
-        self, endpoint_info: Tuple[str, str], json: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, endpoint_info: tuple[str, str], json: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Utility function to perform an asynchronous API call with retries
 
