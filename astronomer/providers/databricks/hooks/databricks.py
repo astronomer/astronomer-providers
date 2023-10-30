@@ -152,7 +152,8 @@ class DatabricksHookAsync(DatabricksHook):
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
 
-    def _retryable_error_async(self, exception: ClientConnectorError | ClientResponseError) -> bool:
+    @staticmethod
+    def _retryable_error_async(exception: ClientConnectorError | ClientResponseError) -> bool:
         """
         Determines whether or not an exception that was thrown might be successful
         on a subsequent attempt.
