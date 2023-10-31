@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from aiohttp import ClientConnectorError
 from airflow import __version__ as provider_version
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
@@ -291,3 +292,7 @@ class TestDatabricksHookAsync:
         mock_do_api_async.return_value = MOCK_GET_OUTPUT_RESPONSE
         run_output = await hook.get_run_output_response(RUN_ID)
         assert run_output == MOCK_GET_OUTPUT_RESPONSE
+
+    def test___retryable_error_async_with_client_connector_error(self):
+        exception = ClientConnectorError(connection_key="", os_error=OSError())
+        assert DatabricksHookAsync._retryable_error_async(exception) is True

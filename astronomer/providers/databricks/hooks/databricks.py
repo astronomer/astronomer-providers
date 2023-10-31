@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import base64
-from typing import Any, Dict, Tuple, cast
+from typing import Any, Dict, cast
 
 import aiohttp
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectorError, ClientResponseError
 from airflow import __version__
 from airflow.exceptions import AirflowException
 from airflow.providers.databricks.hooks.databricks import (
@@ -50,7 +52,7 @@ class DatabricksHookAsync(DatabricksHook):
 
         return RunState(life_cycle_state, result_state, state_message)
 
-    async def get_run_response(self, run_id: str) -> Dict[str, Any]:
+    async def get_run_response(self, run_id: str) -> dict[str, Any]:
         """
         Makes Async API call to get the run state info.
 
@@ -60,7 +62,7 @@ class DatabricksHookAsync(DatabricksHook):
         response = await self._do_api_call_async(GET_RUN_ENDPOINT, json)
         return response
 
-    async def get_run_output_response(self, task_run_id: str) -> Dict[str, Any]:
+    async def get_run_output_response(self, task_run_id: str) -> dict[str, Any]:
         """
         Retrieves run output of the run.
 
@@ -71,8 +73,8 @@ class DatabricksHookAsync(DatabricksHook):
         return run_output
 
     async def _do_api_call_async(
-        self, endpoint_info: Tuple[str, str], json: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, endpoint_info: tuple[str, str], json: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Utility function to perform an asynchronous API call with retries
 
@@ -133,7 +135,7 @@ class DatabricksHookAsync(DatabricksHook):
                     )
                     response.raise_for_status()
                     return cast(Dict[str, Any], await response.json())
-                except ClientResponseError as e:
+                except (ClientConnectorError, ClientResponseError) as e:
                     if not self._retryable_error_async(e):
                         # In this case, the user probably made a mistake.
                         # Don't retry rather raise exception
@@ -150,7 +152,8 @@ class DatabricksHookAsync(DatabricksHook):
                 attempt_num += 1
                 await asyncio.sleep(self.retry_delay)
 
-    def _retryable_error_async(self, exception: ClientResponseError) -> bool:
+    @staticmethod
+    def _retryable_error_async(exception: ClientConnectorError | ClientResponseError) -> bool:
         """
         Determines whether or not an exception that was thrown might be successful
         on a subsequent attempt.
@@ -164,4 +167,6 @@ class DatabricksHookAsync(DatabricksHook):
         :return: if the status is retryable
         :rtype: bool
         """
-        return exception.status >= 500
+        if isinstance(exception, ClientResponseError):
+            return exception.status >= 500
+        return True
