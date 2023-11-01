@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.18.1 (2023-11-01)
+-------------------
+
+Bug Fixes
+"""""""""
+* Handle ClientConnectorError to allow for retries (#1338)
+* Make "resource_group_name" and "factory_name" required in Azure DataFactory hook and trigger (#1341)
+
+
 1.18.0 (2023-09-25)
 -------------------
 
