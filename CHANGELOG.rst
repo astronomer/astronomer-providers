@@ -7,7 +7,7 @@ Changelog
 Bug Fixes
 """""""""
 * Handle ``ClientConnectorError`` to allow for retries (#1338)
-* Make "resource_group_name" and "factory_name" required in Azure DataFactory hook and trigger (#1341)
+* Make ``resource_group_name`` and ``factory_name`` required in Azure DataFactory hook and trigger (#1341)
 
 
 1.18.0 (2023-09-25)
