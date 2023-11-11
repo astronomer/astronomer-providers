@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.18.2 (2023-11-11)
+-------------------
+
+Bug Fixes
+"""""""""
+* Pin max versions for CNCF Kubernetes and Google Airflow providers (#1359)
+* Pin ``connexion==2.14.2`` due to issue with latest release version3.0.0 (#1354)
+
 1.18.1 (2023-11-01)
 -------------------
 
