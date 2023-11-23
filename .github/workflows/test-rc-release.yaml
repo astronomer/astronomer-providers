@@ -51,8 +51,7 @@ jobs:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-master-dag:
@@ -67,10 +66,8 @@ jobs:
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ASTRONOMER_KEY_SECRET }}
-      organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
 
   deploy-rc-testing-branch-to-astro-cloud-on-GCP:
     needs: check-airflow-provider-rc-release
@@ -85,8 +82,7 @@ jobs:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_SECRET }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-master-dag-on-GCP:
@@ -101,7 +97,5 @@ jobs:
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_ASTRONOMER_KEY_SECRET }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
