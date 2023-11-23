@@ -46,7 +46,7 @@ def trigger_dag_runs(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("astro_subdomain", help="subdomain of the Astro Cloud", type=str)
+    parser.add_argument("organization_id", help="organization id", type=str)
     parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud", type=str)
     parser.add_argument("token", help="astro workspace token", type=str)
     parser.add_argument(
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     trigger_dag_runs(
         dag_ids=dag_ids,
-        astro_subdomain=args.astro_subdomain,
+        astro_subdomain=args.organization_id,
         deployment_id=args.deployment_id,
         bearer_token=args.token.strip(),
     )
