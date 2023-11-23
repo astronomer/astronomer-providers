@@ -70,6 +70,5 @@ jobs:
           python3 dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.astro_subdomain }} \
             ${{ secrets.deployment_id }} \
-            ${{ secrets.astronomer_key_id }} \
-            ${{ secrets.astronomer_key_secret }} \
+            ${{ secrets.bearer_token }} \
             --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
