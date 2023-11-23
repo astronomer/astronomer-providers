@@ -12,8 +12,7 @@ set -e
 #         - DOCKER_REGISTRY: Docker registry domain. Script will push the docker image here.
 #         - ORGANIZATION_ID: Astro cloud deployment organization Id. Get it from UI.
 #         - DEPLOYMENT_ID: Astro cloud deployment Id. Get it from UI.
-#         - ASTRONOMER_KEY_ID: Astro cloud deployment service account API key Id.
-#         - ASTRONOMER_KEY_SECRET: Astro cloud deployment service account API key secret.
+#         - TOKEN: Astro workspace token.
 
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PROJECT_PATH=${SCRIPT_PATH}/../../
@@ -25,9 +24,8 @@ function echo_help() {
     echo "DOCKER_REGISTRY:        Docker registry"
     echo "ORGANIZATION_ID         Astro cloud organization Id"
     echo "DEPLOYMENT_ID           Astro cloud Deployment id"
-    echo "ASTRONOMER_KEY_ID       Astro cloud service account API key id"
-    echo "ASTRONOMER_KEY_SECRET   Astro cloud service account API key secret"
-    echo "bash script.sh astro-cloud <DOCKER_REGISTRY> <ORGANIZATION_ID>  <DEPLOYMENT_ID> <ASTRONOMER_KEY_ID> <ASTRONOMER_KEY_SECRET>"
+    echo "TOKEN     Astro workspace token"
+    echo "bash script.sh astro-cloud <DOCKER_REGISTRY> <ORGANIZATION_ID>  <DEPLOYMENT_ID> <TOKEN>"
 }
 
 # Delete if source old source files exist
@@ -49,15 +47,13 @@ DEPLOYMENT_INSTANCE=$1
 DOCKER_REGISTRY=""
 ORGANIZATION_ID=""
 DEPLOYMENT_ID=""
-ASTRONOMER_KEY_ID=""
-ASTRONOMER_KEY_SECRET=""
+TOKEN=""
 
 if [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
   DOCKER_REGISTRY=$2
   ORGANIZATION_ID=$3
   DEPLOYMENT_ID=$4
-  ASTRONOMER_KEY_ID=$5
-  ASTRONOMER_KEY_SECRET=$6
+  TOKEN=$5
 else
   echo "Valid value for DEPLOYMENT_INSTANCE can only be astro-cloud"
   echo_help
@@ -80,45 +76,43 @@ BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
 if [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
   IMAGE_NAME=${DOCKER_REGISTRY}/${ORGANIZATION_ID}/${DEPLOYMENT_ID}:ci-${BUILD_NUMBER}
   docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile.astro_cloud "${SCRIPT_PATH}"
-  docker login "${DOCKER_REGISTRY}" -u "${ASTRONOMER_KEY_ID}" -p "${ASTRONOMER_KEY_SECRET}"
+  docker login "${DOCKER_REGISTRY}" -u "cli" -p "${TOKEN}"
   docker push "${IMAGE_NAME}"
 
-  TOKEN=$( curl --location --request POST "https://auth.astronomer.io/oauth/token" \
-        --header "content-type: application/json" \
-        --data-raw "{
-            \"client_id\": \"$ASTRONOMER_KEY_ID\",
-            \"client_secret\": \"$ASTRONOMER_KEY_SECRET\",
-            \"audience\": \"astronomer-ee\",
-            \"grant_type\": \"client_credentials\"}" | jq -r '.access_token' )
+
   # Step 5. Create the Image
   echo "get image id"
-  IMAGE=$( curl --location --request POST "https://api.astronomer.io/hub/v1" \
-        --header "Authorization: Bearer $TOKEN" \
+  IMAGE=$( curl --location --request POST "https://api.astronomer-stage.io/hub/graphql" \
+        --header "Authorization: Bearer "${TOKEN}"" \
         --header "Content-Type: application/json" \
         --data-raw "{
-            \"query\" : \"mutation imageCreate(\n    \$input: ImageCreateInput!\n) {\n    imageCreate (\n    input: \$input\n) {\n    id\n    tag\n    repository\n    digest\n    env\n    labels\n    deploymentId\n  }\n}\",
+            \"query\" : \"mutation CreateImage(\n    \$input: CreateImageInput!\n) {\n    createImage (\n    input: \$input\n) {\n    id\n    tag\n    repository\n    digest\n    env\n    labels\n    deploymentId\n  }\n}\",
             \"variables\" : {
                 \"input\" : {
                     \"deploymentId\" : \"$DEPLOYMENT_ID\",
                     \"tag\" : \"ci-$BUILD_NUMBER\"
                     }
                 }
-            }" | jq -r '.data.imageCreate.id')
+            }" | jq -r '.data.createImage.id')
   # Step 6. Deploy the Image
   echo "deploy image"
-  curl --location --request POST "https://api.astronomer.io/hub/v1" \
+
+  curl --location --request POST "https://api.astronomer-stage.io/hub/graphql" \
           --header "Authorization: Bearer $TOKEN" \
           --header "Content-Type: application/json" \
           --data-raw "{
-              \"query\" : \"mutation imageDeploy(\n    \$input: ImageDeployInput!\n  ) {\n    imageDeploy(\n      input: \$input\n    ) {\n      id\n      deploymentId\n      digest\n      env\n      labels\n      name\n      tag\n      repository\n    }\n}\",
+              \"query\" : \"mutation DeployImage(\n    \$input: DeployImageInput!\n  ) {\n    deployImage(\n      input: \$input\n    ) {\n      id\n      deploymentId\n      digest\n      env\n      labels\n      name\n      tag\n      repository\n    }\n}\",
               \"variables\" : {
                   \"input\" : {
-                      \"id\" : \"$IMAGE\",
+                      \"deploymentId\" : \"$DEPLOYMENT_ID\",
+                      \"imageId\" : \"$IMAGE\",
                       \"tag\" : \"ci-$BUILD_NUMBER\",
-                      \"repository\" : \"images.astronomer.cloud/$ORGANIZATION_ID/$DEPLOYMENT_ID\"
+                      \"repository\" : \"images.astronomer-stage.cloud/$ORGANIZATION_ID/$DEPLOYMENT_ID\",
+                      \"dagDeployEnabled\":false
                       }
                   }
             }"
+
 fi
 
 clean

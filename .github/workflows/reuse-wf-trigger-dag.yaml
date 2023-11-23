@@ -23,12 +23,6 @@ on:  # yamllint disable-line rule:truthy
       deployment_id:
         description: 'astro cloud deployment_id'
         required: true
-      astronomer_key_id:
-        description: 'astro cloud astronomer_key_id'
-        required: true
-      astronomer_key_secret:
-        description: 'astro cloud astronomer_key_secret'
-        required: true
       organization_id:
         description: 'astro cloud organization_id'
         required: true
