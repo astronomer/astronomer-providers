@@ -22,7 +22,7 @@ def trigger_dag_runs(
     :param bearer_token: bearer token to be used for authentication with the Airflow REST API
     """
     short_deployment_id = f"d{deployment_id[-7:]}"
-    integration_tests_deployment_url = f"https://{astro_subdomain}.astronomer.run/{short_deployment_id}"
+    integration_tests_deployment_url = f"https://{astro_subdomain}.astronomer-stage.run/{short_deployment_id}"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
