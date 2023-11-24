@@ -1,0 +1,148 @@
+connections:
+  - conn_id: aws_s3_default
+    conn_type: emr
+    extra:
+       aws_access_key_id: $AWS_ACCESS_KEY_ID
+       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+       region_name: "us-east-2"
+       db_user: "awsuser"
+       database: "astro_dev"
+       cluster_identifier: "astro-providers-cluster"
+       iam: true
+
+  - conn_id: aws_default
+    conn_type: emr
+    extra:
+       aws_access_key_id: $AWS_ACCESS_KEY_ID
+       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+       region_name: "us-east-2"
+       db_user: "awsuser"
+       database: "astro_dev"
+       cluster_identifier: $REDSHIFT_CLUSTER_IDENTIFIER
+       iam: true
+
+
+  - conn_id: aws_conn
+    conn_type: aws
+    login: $AWS_ACCESS_KEY_ID
+    password: $AWS_SECRET_ACCESS_KEY
+    extra:
+       aws_access_key_id: $AWS_ACCESS_KEY_ID
+       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+       region_name: "us-east-2"
+       db_user: "awsuser"
+       database: "astro_dev"
+       cluster_identifier: "astro-providers-cluster"
+       iam: true
+
+
+  - conn_id: azure_data_factory_default
+    conn_type: azure_data_factory
+    login: 8169d4ed-1b71-49fa-85f1-c3ea07fb8f96
+    password: $AZURE_DATA_FACTORY_PASSWORD
+    extra:
+         "tenantId": "b84efac8-cfee-467a-b223-23b9aea1486d"
+         "subscriptionId": "86f88b35-1eee-47a6-893f-67cd56b3b0d3"
+         "resource_group_name": "team_provider_resource_group_test_1ADFProvidersTeamDataFactoryTest"
+
+
+
+  - conn_id: databricks_default
+    conn_type: databricks
+    host: dbc-9c390870-65ef.cloud.databricks.com
+    schema:
+    login:
+    password: $DATABRICKS_PASSWORD
+    extra:
+      "token": $DATABRICKS_PASSWORD
+
+  - conn_id: dbt_cloud_default
+    conn_type: dbt_cloud
+    login: 88348
+    password: $DBT_CLOUD_PASSWORD
+    extra:
+
+  - conn_id: google_cloud_default
+    conn_type: google_cloud_platform
+    schema: default
+    extra:
+       extra__google_cloud_platform__project: "astronomer-airflow-providers"
+       extra__google_cloud_platform__keyfile_dict: $GCP_PLATFORM_KEYFILE_SECRET
+       extra__google_cloud_platform__num_retries: 5
+
+  - conn_id: google_impersonation
+    conn_type: google_cloud_platform
+    schema: default
+    extra:
+       extra__google_cloud_platform__project: "astronomer-airflow-providers"
+       extra__google_cloud_platform__keyfile_dict: $GCP_PLATFORM_KEYFILE_SECRET
+       extra__google_cloud_platform__num_retries: 5
+
+
+  - conn_id: http_slack
+    conn_type: slackwebhook
+    password: $SLACK_WEBHOOK_PASSWORD
+    extra:
+       timeout: 42
+
+  - conn_id: redshift_default
+    conn_type: redshift
+    extra:
+       aws_access_key_id: $AWS_ACCESS_KEY_ID
+       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+       region_name: "us-east-2"
+       db_user: "awsuser"
+       database: "astro_dev"
+       cluster_identifier: $REDSHIFT_CLUSTER_IDENTIFIER
+       iam: true
+
+  - conn_id: snowflake_api_default
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    login: providersuser
+    schema: PROVIDERS_SCHEMA
+    extra:
+      extra__snowflake__account: "gp21411.us-east-1"
+      extra__snowflake__database: "SANDBOX"
+      extra__snowflake__insecure_mode: false
+      extra__snowflake__region: ""
+      extra__snowflake__warehouse: "ROBOTS"
+      database: PROVIDERS_FIVETRAN_DEV
+      snowflake__insecure_mode: false
+      role : PROVIDERSUSER
+      extra__snowflake__role: PROVIDERSUSER
+      private_key_content: $SNOWFLAKE_PRIVE_PASSWORD_KEY
+
+  - conn_id: snowflake_default
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    login: providersuser
+    password: $SNOWFLAKE_PASSWORD
+    schema: PROVIDERS_SCHEMA
+    extra:
+      account: "gp21411.us-east-1"
+      warehouse: "ROBOTS"
+      database: PROVIDERS_FIVETRAN_DEV
+      snowflake__insecure_mode: false
+      Role: PROVIDERSUSER
+
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    login: providersuser
+    password: $SNOWFLAKE_PASSWORD
+    schema: PROVIDERS_SCHEMA
+    extra:
+      account: "gp21411.us-east-1"
+      warehouse: "ROBOTS"
+      database: PROVIDERS_FIVETRAN_DEV
+      snowflake__insecure_mode: false
+      Role: PROVIDERSUSER
+
+
+  - conn_id: wasb_default
+    conn_type: wasb
+    host:
+    port:
+    login: "providerstorage"
+    password: $WASB_PASSWORD
