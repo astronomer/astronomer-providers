@@ -68,7 +68,7 @@ jobs:
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
-      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -83,6 +83,6 @@ jobs:
       dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
-      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_ON_KE_DEPLOYMENT_ID }}
+      deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_GCP_DEPLOYMENT_ID }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
