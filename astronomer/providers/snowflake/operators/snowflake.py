@@ -181,7 +181,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.log.info("SQL after adding query tag: %s", self.sql)
 
         hook = self.get_db_hook()
-        hook.run(self.sql, parameters=self.parameters)  # type: ignore[arg-type]
+        hook.run(self.sql, parameters=self.parameters)
         self.query_ids = hook.query_ids
 
         if self.do_xcom_push:
@@ -350,9 +350,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
             token_life_time=self.token_life_time,
             token_renewal_delta=self.token_renewal_delta,
         )
-        hook.execute_query(
-            self.sql, statement_count=self.statement_count, bindings=self.bindings  # type: ignore[arg-type]
-        )
+        hook.execute_query(self.sql, statement_count=self.statement_count, bindings=self.bindings)
         self.query_ids = hook.query_ids
         self.log.info("List of query ids %s", self.query_ids)
 
