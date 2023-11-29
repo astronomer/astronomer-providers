@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.18.3 (2023-11-29)
+-------------------
+
+Misc
+"""""
+* Revert "Pin max versions for CNCF Kubernetes and Google Airflow providers (#1359)" (#1368)
+
 1.18.2 (2023-11-11)
 -------------------
 
