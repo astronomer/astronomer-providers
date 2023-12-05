@@ -162,11 +162,14 @@ class DatabricksHookAsync(DatabricksHook):
             - requests_exceptions.ConnectionError
             - requests_exceptions.Timeout
             - anything with a status code >= 500
+            - status code == 403
 
         Most retryable errors are covered by status code >= 500.
         :return: if the status is retryable
         :rtype: bool
         """
         if isinstance(exception, ClientResponseError):
-            return exception.status >= 500
+            status_code = exception.status
+            # according to user feedback, 403 sometimes works after retry
+            return status_code >= 500 or status_code == 403
         return True

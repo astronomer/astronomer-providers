@@ -179,8 +179,9 @@ class TestDatabricksHookAsync:
         with pytest.raises(AirflowException):
             await hook._do_api_call_async(GET_RUN_ENDPOINT, params)
 
+    @pytest.mark.parametrize("status_code", (500, 503, 403))
     @pytest.mark.asyncio
-    async def test_do_api_call_async_retryable_error(self, aioresponse):
+    async def test_do_api_call_async_retryable_error(self, aioresponse, status_code):
         """
         Asserts that the Databricks hook will attempt another API call as many
         times as the retry_limit when a retryable error is returned by the API.
@@ -194,7 +195,7 @@ class TestDatabricksHookAsync:
 
         aioresponse.get(
             f"https://localhost/api/{api_version}/jobs/runs/get?run_id=unit_test_run_id",
-            status=500,
+            status=status_code,
             repeat=True,
         )
 
