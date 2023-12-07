@@ -12,8 +12,12 @@ CHANGELOG_PATH = "CHANGELOG.rst"
 
 # fmt: off
 EXCLUDE_PATTERN = (
-    r"((\[pre\-commit\.ci\] pre-commit autoupdate)|"
-    r"((ci|tests|build)\(.*\): (.*)))"
+    r"("
+    r"(\[pre\-commit\.ci\] pre-commit autoupdate)|"
+    r"((ci|tests|build)\(.*\): (.*))|"
+    r"(Bump version to \d+.\d+.\d+-dev1)|"
+    r"(Update runtime image tag to \d+.\d+.\d+-python-3.\d+-base)"
+    r")"
     r"( \(#\d+\)){0,1}"
 )
 # fmt: on
