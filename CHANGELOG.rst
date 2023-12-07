@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.18.4 (2023-12-07)
+-------------------
+
+Bug Fixes
+"""""""""
+* DatabricksHookAsync: include 403 as retryable error (#1376)
+
 1.18.3 (2023-11-29)
 -------------------
 
