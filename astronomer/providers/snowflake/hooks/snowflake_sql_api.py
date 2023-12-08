@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import aiohttp
 import requests
@@ -140,10 +140,10 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:  # pragma: no cover
-            if TYPE_CHECKING:
-                assert e.response is not None
+            if e.response is None:
+                raise e
             raise AirflowException(
-                f"Response: {e.response.content.decode()}, " f"Status Code: {e.response.status_code}"
+                f"Response: {e.response.content}, " f"Status Code: {e.response.status_code}"
             )  # pragma: no cover
         json_response = response.json()
         self.log.info("Snowflake SQL POST API response: %s", json_response)
@@ -205,10 +205,10 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 response.raise_for_status()
                 self.log.info(response.json())
             except requests.exceptions.HTTPError as e:
-                if TYPE_CHECKING:
-                    assert e.response is not None
+                if e.response is None:
+                    raise e
                 raise AirflowException(
-                    f"Response: {e.response.content.decode()}, Status Code: {e.response.status_code}"
+                    f"Response: {e.response.content}, Status Code: {e.response.status_code}"
                 )
 
     @staticmethod
