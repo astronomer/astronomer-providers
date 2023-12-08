@@ -143,7 +143,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
             if e.response is None:
                 raise e
             raise AirflowException(
-                f"Response: {e.response.content}, " f"Status Code: {e.response.status_code}"
+                f"Response: {e.response.content!r}, " f"Status Code: {e.response.status_code}"
             )  # pragma: no cover
         json_response = response.json()
         self.log.info("Snowflake SQL POST API response: %s", json_response)
@@ -208,7 +208,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 if e.response is None:
                     raise e
                 raise AirflowException(
-                    f"Response: {e.response.content}, Status Code: {e.response.status_code}"
+                    f"Response: {e.response.content!r}, Status Code: {e.response.status_code}"
                 )
 
     @staticmethod
