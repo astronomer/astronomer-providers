@@ -11,10 +11,10 @@ from airflow.providers.google.cloud.operators.gcs import (
 from airflow.providers.google.cloud.transfers.local_to_gcs import (
     LocalFilesystemToGCSOperator,
 )
-
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensor
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
-    GCSObjectsWithPrefixExistenceSensorAsync,
+    # GCSObjectsWithPrefixExistenceSensorAsync,
     GCSObjectUpdateSensorAsync,
     GCSUploadSessionCompleteSensorAsync,
 )
@@ -79,7 +79,7 @@ with DAG(
     # [END howto_sensor_gcs_object_exists_async]
 
     # [START howto_sensor_gcs_object_with_prefix_existence_async]
-    gcs_object_with_prefix_exists = GCSObjectsWithPrefixExistenceSensorAsync(
+    gcs_object_with_prefix_exists = GCSObjectsWithPrefixExistenceSensor(
         bucket=BUCKET_1,
         prefix=PATH_TO_UPLOAD_FILE_PREFIX,
         task_id="gcs_object_with_prefix_exists_task",
