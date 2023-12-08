@@ -15,7 +15,7 @@ from google.cloud.dataproc_v1.types import clusters
 try:
     OptionalRetry = Union[retries.AsyncRetry, gapic_v1.method._MethodDefault]
 except AttributeError:
-    OptionalRetry = Union[retries.AsyncRetry, object]
+    OptionalRetry = Union[retries.AsyncRetry, object]  # type: ignore[misc]
 
 JobType = Union[Job, Any]
 
