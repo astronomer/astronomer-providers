@@ -140,8 +140,9 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:  # pragma: no cover
+            assert e.response is not None
             raise AirflowException(
-                f"Response: {e.response.content!r}, " f"Status Code: {e.response.status_code}"
+                f"Response: {e.response.content.decode()}, " f"Status Code: {e.response.status_code}"
             )  # pragma: no cover
         json_response = response.json()
         self.log.info("Snowflake SQL POST API response: %s", json_response)
@@ -203,8 +204,9 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 response.raise_for_status()
                 self.log.info(response.json())
             except requests.exceptions.HTTPError as e:
+                assert e.response is not None
                 raise AirflowException(
-                    f"Response: {e.response.content!r}, Status Code: {e.response.status_code}"
+                    f"Response: {e.response.content.decode()}, Status Code: {e.response.status_code}"
                 )
 
     @staticmethod
