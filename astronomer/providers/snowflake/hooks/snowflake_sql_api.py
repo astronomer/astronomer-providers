@@ -140,6 +140,8 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:  # pragma: no cover
+            if e.response is None:
+                raise e
             raise AirflowException(
                 f"Response: {e.response.content!r}, " f"Status Code: {e.response.status_code}"
             )  # pragma: no cover
@@ -203,6 +205,8 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
                 response.raise_for_status()
                 self.log.info(response.json())
             except requests.exceptions.HTTPError as e:
+                if e.response is None:  # pragma: no cover
+                    raise e
                 raise AirflowException(
                     f"Response: {e.response.content!r}, Status Code: {e.response.status_code}"
                 )
