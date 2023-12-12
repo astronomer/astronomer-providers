@@ -3,7 +3,7 @@ from typing import Any, Optional, Sequence, Tuple, Union
 
 from airflow.providers.google.common.consts import CLIENT_INFO
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-from google.api_core import gapic_v1
+from google.api_core import gapic_v1, retry_async as retries
 from google.api_core.client_options import ClientOptions
 from google.cloud.dataproc_v1 import (
     ClusterControllerAsyncClient,
