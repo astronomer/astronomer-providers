@@ -3,15 +3,19 @@ from typing import Any, Optional, Sequence, Tuple, Union
 
 from airflow.providers.google.common.consts import CLIENT_INFO
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-from google.api_core import gapic_v1
+from google.api_core import gapic_v1, retry_async as retries
 from google.api_core.client_options import ClientOptions
-from google.api_core.retry import Retry
 from google.cloud.dataproc_v1 import (
     ClusterControllerAsyncClient,
     Job,
     JobControllerAsyncClient,
 )
 from google.cloud.dataproc_v1.types import clusters
+
+try:
+    OptionalRetry = Union[retries.AsyncRetry, gapic_v1.method._MethodDefault]
+except AttributeError:  # pragma: no cover
+    OptionalRetry = Union[retries.AsyncRetry, object]  # type: ignore[misc]
 
 JobType = Union[Job, Any]
 
@@ -68,7 +72,7 @@ class DataprocHookAsync(GoogleBaseHook):
         region: str,
         cluster_name: str,
         project_id: str,
-        retry: Union[Retry, gapic_v1.method._MethodDefault] = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> clusters.Cluster:
         """
@@ -98,7 +102,7 @@ class DataprocHookAsync(GoogleBaseHook):
         timeout: float = 5,
         region: Optional[str] = None,
         location: Optional[str] = None,
-        retry: Union[Retry, gapic_v1.method._MethodDefault] = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> JobType:
         """
