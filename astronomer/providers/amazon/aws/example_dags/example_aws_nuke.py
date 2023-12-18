@@ -69,7 +69,7 @@ def generate_task_report(**context: Any) -> None:
         # Send the report as a Slack message
         SlackWebhookOperator(
             task_id="send_slack_report",
-            http_conn_id=SLACK_WEBHOOK_CONN,
+            slack_webhook_conn_id=SLACK_WEBHOOK_CONN,
             message=report,
             channel=SLACK_CHANNEL,
             username=SLACK_USERNAME,
