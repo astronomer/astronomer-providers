@@ -81,8 +81,9 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         report_details.insert(0, "Results generated for:\n\n")
         report_details.append("\n")  # Adding an additional newline at the end
 
+        cloud_ui_deployment_link = os.getenv("AIRFLOW__ASTRONOMER__CLOUD_UI_URL", None)
         master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
-        deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
+        deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on <{cloud_ui_deployment_link}|Astro Cloud deployment> \n"
 
         dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
