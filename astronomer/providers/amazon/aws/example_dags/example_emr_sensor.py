@@ -109,7 +109,7 @@ with DAG(
     # [START howto_sensor_emr_step_async]
     watch_step = EmrStepSensorAsync(
         task_id="watch_step",
-        job_flow_id=create_job_flow.output,  # type: ignore[arg-type]
+        job_flow_id=create_job_flow.output,
         step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[0] }}",
         aws_conn_id=AWS_CONN_ID,
     )
