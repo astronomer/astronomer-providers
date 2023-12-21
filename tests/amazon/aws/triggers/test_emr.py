@@ -64,8 +64,6 @@ def _emr_describe_step_response(state):
     }
 
 
-
-
 class TestEmrJobFlowSensorTrigger:
     TRIGGER = EmrJobFlowSensorTrigger(
         job_flow_id=JOB_ID,
