@@ -6,7 +6,6 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from astronomer.providers.amazon.aws.hooks.emr import (
     EmrContainerHookAsync,
     EmrJobFlowHookAsync,
-    EmrStepSensorHookAsync,
 )
 
 
@@ -36,52 +35,6 @@ class EmrContainerBaseTrigger(BaseTrigger):
         self.poll_interval = poll_interval
         self.max_tries = max_tries
         super().__init__(**kwargs)
-
-
-class EmrContainerSensorTrigger(EmrContainerBaseTrigger):
-    """Poll for the status of EMR container until reaches terminal state"""
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes EmrContainerSensorTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.amazon.aws.triggers.emr.EmrContainerSensorTrigger",
-            {
-                "virtual_cluster_id": self.virtual_cluster_id,
-                "job_id": self.job_id,
-                "aws_conn_id": self.aws_conn_id,
-                "max_tries": self.max_tries,
-                "poll_interval": self.poll_interval,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
-        """Make async connection to EMR container, polls for the job state"""
-        hook = EmrContainerHookAsync(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
-        try:
-            try_number: int = 1
-            while True:
-                query_status = await hook.check_job_status(job_id=self.job_id)
-                if query_status is None or query_status in ("PENDING", "SUBMITTED", "RUNNING"):
-                    await asyncio.sleep(self.poll_interval)
-                elif query_status in ("FAILED", "CANCELLED", "CANCEL_PENDING"):
-                    msg = f"EMR Containers sensor failed {query_status}"
-                    yield TriggerEvent({"status": "error", "message": msg})
-                else:
-                    msg = "EMR Containers sensors completed"
-                    yield TriggerEvent({"status": "success", "message": msg})
-
-                if self.max_tries and try_number >= self.max_tries:
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "message": "Timeout: Maximum retry limit exceed",
-                            "job_id": self.job_id,
-                        }
-                    )
-
-                try_number += 1
-        except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
 
 
 class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
@@ -157,73 +110,6 @@ class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
                     )
 
                 try_number += 1
-        except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
-
-
-class EmrStepSensorTrigger(BaseTrigger):
-    """
-    A trigger that fires once AWS EMR cluster step reaches either target or failed state
-
-    :param job_flow_id: job_flow_id which contains the step check the state of
-    :param step_id: step to check the state of
-    :param aws_conn_id: aws connection to use, defaults to 'aws_default'
-    :param poke_interval: Time in seconds to wait between two consecutive call to
-        check emr cluster step state
-    :param target_states: the target states, sensor waits until
-        step reaches any of these states
-    :param failed_states: the failure states, sensor fails when
-        step reaches any of these states
-    """
-
-    def __init__(
-        self,
-        job_flow_id: str,
-        step_id: str,
-        aws_conn_id: str,
-        poke_interval: float,
-        target_states: Optional[Iterable[str]] = None,
-        failed_states: Optional[Iterable[str]] = None,
-    ):
-        super().__init__()
-        self.job_flow_id = job_flow_id
-        self.step_id = step_id
-        self.aws_conn_id = aws_conn_id
-        self.poke_interval = poke_interval
-        self.target_states = target_states or ["COMPLETED"]
-        self.failed_states = failed_states or ["CANCELLED", "FAILED", "INTERRUPTED"]
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes EmrStepSensorTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.amazon.aws.triggers.emr.EmrStepSensorTrigger",
-            {
-                "job_flow_id": self.job_flow_id,
-                "step_id": self.step_id,
-                "aws_conn_id": self.aws_conn_id,
-                "poke_interval": self.poke_interval,
-                "target_states": self.target_states,
-                "failed_states": self.failed_states,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
-        """Run until AWS EMR cluster step reach target or failed state"""
-        hook = EmrStepSensorHookAsync(
-            aws_conn_id=self.aws_conn_id, job_flow_id=self.job_flow_id, step_id=self.step_id
-        )
-        try:
-            while True:
-                response = await hook.emr_describe_step()
-                state = hook.state_from_response(response)
-                if state in self.target_states:
-                    yield TriggerEvent({"status": "success", "message": f"Job flow currently {state}"})
-                elif state in self.failed_states:
-                    yield TriggerEvent(
-                        {"status": "error", "message": hook.failure_message_from_response(response)}
-                    )
-                self.log.info("EMR step state is %s. Sleeping for %s seconds.", state, self.poke_interval)
-                await asyncio.sleep(self.poke_interval)
         except Exception as e:
             yield TriggerEvent({"status": "error", "message": str(e)})
 
