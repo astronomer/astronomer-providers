@@ -300,6 +300,7 @@ class TestS3KeysUnchangedSensorAsync:
         assert isinstance(task, S3KeysUnchangedSensor)
         assert task.deferrable is True
 
+
 class TestS3KeySizeSensorAsync(unittest.TestCase):
     def test_deprecation_warnings_generated(self):
         with pytest.warns(expected_warning=DeprecationWarning):
