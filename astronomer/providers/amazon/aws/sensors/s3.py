@@ -9,10 +9,9 @@ from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchanged
 from airflow.sensors.base import BaseSensorOperator
 
 from astronomer.providers.amazon.aws.triggers.s3 import (
-    S3KeysUnchangedTrigger,
     S3KeyTrigger,
 )
-from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
+from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -155,72 +154,21 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
 
 class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
     """
-    Checks for changes in the number of objects at prefix in AWS S3
-    bucket and returns True if the inactivity period has passed with no
-    increase in the number of objects. Note, this sensor will not behave correctly
-    in reschedule mode, as the state of the listed objects in the S3 bucket will
-    be lost between rescheduled invocations.
-
-    :param bucket_name: Name of the S3 bucket
-    :param prefix: The prefix being waited on. Relative path from bucket root level.
-    :param aws_conn_id: a reference to the s3 connection
-    :param verify: Whether or not to verify SSL certificates for S3 connection.
-        By default SSL certificates are verified.
-        You can provide the following values:
-
-        - ``False``: do not validate SSL certificates. SSL will still be used
-                 (unless use_ssl is False), but SSL certificates will not be
-                 verified.
-        - ``path/to/cert/bundle.pem``: A filename of the CA cert bundle to uses.
-                 You can specify this argument if you want to use a different
-                 CA cert bundle than the one used by botocore.
-    :param inactivity_period: The total seconds of inactivity to designate
-        keys unchanged. Note, this mechanism is not real time and
-        this operator may not return until a poke_interval after this period
-        has passed with no additional objects sensed.
-    :param min_objects: The minimum number of objects needed for keys unchanged
-        sensor to be considered valid.
-    :param previous_objects: The set of object ids found during the last poke.
-    :param allow_delete: Should this sensor consider objects being deleted
-        between pokes valid behavior. If true a warning message will be logged
-        when this happens. If false an error will be raised.
+    This class is deprecated.
+    Please use :class: `~airflow.providers.amazon.aws.sensors.s3.S3KeysUnchangedSensor`.
     """
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(**kwargs)
-
-    def execute(self, context: Context) -> None:
-        """Defers Trigger class to check for changes in the number of objects at prefix in AWS S3"""
-        if not poke(self, context):
-            self.defer(
-                timeout=timedelta(seconds=self.timeout),
-                trigger=S3KeysUnchangedTrigger(
-                    bucket_name=self.bucket_name,
-                    prefix=self.prefix,
-                    inactivity_period=self.inactivity_period,
-                    min_objects=self.min_objects,
-                    previous_objects=self.previous_objects,
-                    inactivity_seconds=self.inactivity_seconds,
-                    allow_delete=self.allow_delete,
-                    aws_conn_id=self.aws_conn_id,
-                    verify=self.verify,
-                    last_activity_time=self.last_activity_time,
-                ),
-                method_name="execute_complete",
-            )
-
-    def execute_complete(self, context: Context, event: Any = None) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise_error_or_skip_exception(self.soft_fail, event["message"])
-        return None
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        warnings.warn(
+            (
+                "This module is deprecated. "
+                "Please use `airflow.providers.amazon.aws.sensors.s3.S3KeysUnchangedSensor` "
+                "and set deferrable to True instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return super().__init__(*args, deferrable=True, **kwargs)
 
 
 class S3PrefixSensorAsync(BaseSensorOperator):
