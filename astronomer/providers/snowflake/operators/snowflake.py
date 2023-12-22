@@ -130,7 +130,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
         self.authenticator = authenticator
         self.session_parameters = session_parameters
         self.snowflake_conn_id = snowflake_conn_id
-        if self.__class__.__base__.__name__ != "SnowflakeOperator":
+        if self.__class__.__base__.__name__ != "SnowflakeOperator":  # type: ignore[union-attr]
             # It's better to do str check of the parent class name because currently SnowflakeOperator
             # is deprecated and in future OSS SnowflakeOperator may be removed
             if any(
@@ -319,7 +319,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
         self.token_renewal_delta = token_renewal_delta
         self.bindings = bindings
         self.execute_async = False
-        if self.__class__.__base__.__name__ != "SnowflakeOperator":
+        if self.__class__.__base__.__name__ != "SnowflakeOperator":  # type: ignore[union-attr]
             # It's better to do str check of the parent class name because currently SnowflakeOperator
             # is deprecated and in future OSS SnowflakeOperator may be removed
             if any(
