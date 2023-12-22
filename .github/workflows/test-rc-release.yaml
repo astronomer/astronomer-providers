@@ -38,7 +38,7 @@ jobs:
     secrets:
       BOT_ACCESS_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}
     outputs:
-      rc_issue_url: ${{ jobs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
+      rc_issue_url: ${{ steps.export-rc-issue-url.outputs.rc_issue_url }}
 
   deploy-rc-testing-branch-to-astro-cloud:
     needs: check-airflow-provider-rc-release
@@ -55,7 +55,7 @@ jobs:
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      
+
   wait-for-deployment-to-be-ready-and-trigger-master-dag:
     needs: [deploy-rc-testing-branch-to-astro-cloud, check-airflow-provider-rc-release]
     if: |
