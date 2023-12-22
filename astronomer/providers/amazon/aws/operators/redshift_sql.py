@@ -39,7 +39,7 @@ class RedshiftSQLOperatorAsync(RedshiftSQLOperator):
     ) -> None:
         self.redshift_conn_id = redshift_conn_id
         self.poll_interval = poll_interval
-        if self.__class__.__base__.__name__ == "RedshiftSQLOperator":
+        if self.__class__.__base__.__name__ == "RedshiftSQLOperator":  # type: ignore[union-attr]
             # It's better to do str check of the parent class name because currently RedshiftSQLOperator
             # is deprecated and in future OSS RedshiftSQLOperator may be removed
             super().__init__(**kwargs)
