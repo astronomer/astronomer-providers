@@ -51,7 +51,7 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   check-rc-testing-announcement:
     runs-on: 'ubuntu-20.04'
-  #  if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -116,7 +116,7 @@ jobs:
 
   validate-manual-input:
     runs-on: 'ubuntu-20.04'
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Validate user input
         if: |
