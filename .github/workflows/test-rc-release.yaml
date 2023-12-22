@@ -42,7 +42,7 @@ jobs:
     needs: check-airflow-provider-rc-release
     if: |
       always() &&
-      needs.check-airflow-provider-rc-release.result == 'success'
+      needs.check-airflow-provider-rc-release.outputs.rc_issue_url != ''
     uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
@@ -73,7 +73,7 @@ jobs:
     needs: check-airflow-provider-rc-release
     if: |
       always() &&
-      needs.check-airflow-provider-rc-release.result == 'success'
+      needs.check-airflow-provider-rc-release.outputs.rc_issue_url != ''
     uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
