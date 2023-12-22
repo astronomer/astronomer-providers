@@ -55,12 +55,7 @@ jobs:
       deployment_id: ${{ secrets.PROVIDER_INTEGRATION_TESTS_DEPLOYMENT_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    outputs:
-      rc_testing_branch:
-        description: 'personal access token for the bot to push the commit and create pull request'
-        value: ${{ jobs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
-
-
+      
   wait-for-deployment-to-be-ready-and-trigger-master-dag:
     needs: [deploy-rc-testing-branch-to-astro-cloud, check-airflow-provider-rc-release]
     if: |
