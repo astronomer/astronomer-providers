@@ -1,10 +1,9 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, Iterable, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 from astronomer.providers.amazon.aws.hooks.emr import (
-    EmrContainerHookAsync,
     EmrJobFlowHookAsync,
 )
 
@@ -35,83 +34,6 @@ class EmrContainerBaseTrigger(BaseTrigger):
         self.poll_interval = poll_interval
         self.max_tries = max_tries
         super().__init__(**kwargs)
-
-
-class EmrContainerOperatorTrigger(EmrContainerBaseTrigger):
-    """Poll for the status of EMR container until reaches terminal state"""
-
-    INTERMEDIATE_STATES: List[str] = ["PENDING", "SUBMITTED", "RUNNING"]
-    FAILURE_STATES: List[str] = ["FAILED", "CANCELLED", "CANCEL_PENDING"]
-    SUCCESS_STATES: List[str] = ["COMPLETED"]
-    TERMINAL_STATES: List[str] = ["COMPLETED", "FAILED", "CANCELLED", "CANCEL_PENDING"]
-
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes EmrContainerOperatorTrigger arguments and classpath."""
-        return (
-            "astronomer.providers.amazon.aws.triggers.emr.EmrContainerOperatorTrigger",
-            {
-                "virtual_cluster_id": self.virtual_cluster_id,
-                "job_id": self.job_id,
-                "aws_conn_id": self.aws_conn_id,
-                "max_tries": self.max_tries,
-                "poll_interval": self.poll_interval,
-            },
-        )
-
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
-        """Run until EMR container reaches the desire state"""
-        hook = EmrContainerHookAsync(aws_conn_id=self.aws_conn_id, virtual_cluster_id=self.virtual_cluster_id)
-        try:
-            try_number: int = 1
-            while True:
-                query_state = await hook.check_job_status(self.job_id)
-                if query_state is None:
-                    self.log.info("Try %s: Invalid query state. Retrying again", try_number)
-                    await asyncio.sleep(self.poll_interval)
-                elif query_state in self.FAILURE_STATES:
-                    self.log.info(
-                        "Try %s: Query execution completed. Final state is %s", try_number, query_state
-                    )
-                    error_message = await hook.get_job_failure_reason(self.job_id)
-                    message = (
-                        f"EMR Containers job failed. Final state is {query_state}. "
-                        f"query_execution_id is {self.job_id}. Error: {error_message}"
-                    )
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "message": message,
-                            "job_id": self.job_id,
-                        }
-                    )
-                elif query_state in self.SUCCESS_STATES:
-                    self.log.info(
-                        "Try %s: Query execution completed. Final state is %s", try_number, query_state
-                    )
-                    yield TriggerEvent(
-                        {
-                            "status": "success",
-                            "message": f"EMR Containers Operator success {query_state}",
-                            "job_id": self.job_id,
-                        }
-                    )
-                else:
-                    self.log.info(
-                        "Try %s: Query is still in non-terminal state - %s", try_number, query_state
-                    )
-                    await asyncio.sleep(self.poll_interval)
-                if self.max_tries and try_number >= self.max_tries:
-                    yield TriggerEvent(
-                        {
-                            "status": "error",
-                            "message": "Timeout: Maximum retry limit exceed",
-                            "job_id": self.job_id,
-                        }
-                    )
-
-                try_number += 1
-        except Exception as e:
-            yield TriggerEvent({"status": "error", "message": str(e)})
 
 
 class EmrJobFlowSensorTrigger(BaseTrigger):
