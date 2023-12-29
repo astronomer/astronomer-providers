@@ -23,10 +23,10 @@ SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 
 REGRESSION_CLUSTER_AWS_ACCESS_KEY = os.getenv("REGRESSION_CLUSTER_AWS_ACCESS_KEY", "**********")
-REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY = os.getenv("REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY", "***********")
+REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY = os.getenv(
+    "REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY", "***********"
+)
 REGRESSION_CLUSTER_AWS_DEFAULT_REGION = os.getenv("REGRESSION_CLUSTER_AWS_DEFAULT_REGION", "us-east-1")
-
-
 
 
 def generate_task_report(**context: Any) -> None:
@@ -134,10 +134,10 @@ with DAG(
     terminate_regression_clusters = BashOperator(
         task_id="terminate_regression_clusters",
         bash_command=f"set -e; "
-                     f"aws configure set aws_access_key_id {REGRESSION_CLUSTER_AWS_ACCESS_KEY}; "
-                     f"aws configure set aws_secret_access_key {REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY}; "
-                     f"aws configure set default.region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; "
-                     f"for cluster in $(aws eks list-clusters --region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION} --output json | jq -r '.clusters[]'); do aws eks delete-cluster --name '$cluster' --region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; done"
+        f"aws configure set aws_access_key_id {REGRESSION_CLUSTER_AWS_ACCESS_KEY}; "
+        f"aws configure set aws_secret_access_key {REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY}; "
+        f"aws configure set default.region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; "
+        f"sh $AIRFLOW_HOME/dags/delete_eks_cluster_and_nodes.sh {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}",
     )
 
     execute_aws_nuke = BashOperator(
