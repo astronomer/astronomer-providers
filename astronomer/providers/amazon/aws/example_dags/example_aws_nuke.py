@@ -137,7 +137,7 @@ with DAG(
         f"aws configure set aws_access_key_id {REGRESSION_CLUSTER_AWS_ACCESS_KEY}; "
         f"aws configure set aws_secret_access_key {REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY}; "
         f"aws configure set default.region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; "
-        f"sh $AIRFLOW_HOME/dags/delete_eks_cluster_and_nodes.sh {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}",
+        f"sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_nodes.sh {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}",
     )
 
     execute_aws_nuke = BashOperator(
