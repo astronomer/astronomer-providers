@@ -22,6 +22,12 @@ SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 
+REGRESSION_CLUSTER_AWS_ACCESS_KEY = os.getenv("REGRESSION_CLUSTER_AWS_ACCESS_KEY", "**********")
+REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY = os.getenv("REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY", "***********")
+REGRESSION_CLUSTER_AWS_DEFAULT_REGION = os.getenv("REGRESSION_CLUSTER_AWS_DEFAULT_REGION", "us-east-1")
+
+
+
 
 def generate_task_report(**context: Any) -> None:
     """Generate a report of the task statuses for the DAG run and send it to configured Slack channel for alerts."""
@@ -125,6 +131,15 @@ with DAG(
         f"aws emr-containers list-virtual-clusters --state RUNNING --region {AWS_DEFAULT_REGION} | jq -r '.virtualClusters[].id' | xargs -I % aws emr-containers delete-virtual-cluster --id % --region {AWS_DEFAULT_REGION}; ",
     )
 
+    terminate_regression_clusters = BashOperator(
+        task_id="terminate_regression_clusters",
+        bash_command=f"set -e; "
+                     f"aws configure set aws_access_key_id {REGRESSION_CLUSTER_AWS_ACCESS_KEY}; "
+                     f"aws configure set aws_secret_access_key {REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY}; "
+                     f"aws configure set default.region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; "
+                     f"for cluster in $(aws eks list-clusters --region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION} --output json | jq -r '.clusters[]'); do aws eks delete-cluster --name '$cluster' --region {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}; done"
+    )
+
     execute_aws_nuke = BashOperator(
         task_id="execute_aws_nuke",
         bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
@@ -163,6 +178,7 @@ with DAG(
         start
         >> [get_airflow_version, get_airflow_executor]
         >> terminate_running_emr_virtual_clusters
+        >> terminate_regression_clusters
         >> execute_aws_nuke
         >> delete_stale_emr_vpcs
         >> delete_stale_emr_iam_roles
