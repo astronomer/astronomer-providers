@@ -140,6 +140,15 @@ with DAG(
         f"sh $AIRFLOW_HOME/dags/example_delete_eks_cluster_and_nodes.sh {REGRESSION_CLUSTER_AWS_DEFAULT_REGION}",
     )
 
+    terminate_oidc_providers = BashOperator(
+        task_id="terminate_oidc_providers",
+        bash_command=f"set -e; "
+        f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
+        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
+        f"aws configure set default.region {AWS_DEFAULT_REGION}; "
+        f"sh $AIRFLOW_HOME/dags/example_delete_oidc.sh",
+    )
+
     execute_aws_nuke = BashOperator(
         task_id="execute_aws_nuke",
         bash_command=f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
@@ -179,6 +188,7 @@ with DAG(
         >> [get_airflow_version, get_airflow_executor]
         >> terminate_running_emr_virtual_clusters
         >> terminate_dag_authoring_regression_clusters
+        >> terminate_oidc_providers
         >> execute_aws_nuke
         >> delete_stale_emr_vpcs
         >> delete_stale_emr_iam_roles
