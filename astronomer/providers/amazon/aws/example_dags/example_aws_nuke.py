@@ -131,8 +131,8 @@ with DAG(
         f"aws emr-containers list-virtual-clusters --state RUNNING --region {AWS_DEFAULT_REGION} | jq -r '.virtualClusters[].id' | xargs -I % aws emr-containers delete-virtual-cluster --id % --region {AWS_DEFAULT_REGION}; ",
     )
 
-    terminate_regression_clusters = BashOperator(
-        task_id="terminate_regression_clusters",
+    terminate_dag_authoring_regression_clusters = BashOperator(
+        task_id="terminate_dag_authoring_regression_clusters",
         bash_command=f"set -e; "
         f"aws configure set aws_access_key_id {REGRESSION_CLUSTER_AWS_ACCESS_KEY}; "
         f"aws configure set aws_secret_access_key {REGRESSION_CLUSTER_AWS_SECRET_ACCESS_KEY}; "
@@ -178,7 +178,7 @@ with DAG(
         start
         >> [get_airflow_version, get_airflow_executor]
         >> terminate_running_emr_virtual_clusters
-        >> terminate_regression_clusters
+        >> terminate_dag_authoring_regression_clusters
         >> execute_aws_nuke
         >> delete_stale_emr_vpcs
         >> delete_stale_emr_iam_roles
