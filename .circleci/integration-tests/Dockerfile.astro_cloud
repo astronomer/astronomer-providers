@@ -8,7 +8,7 @@ USER root
 
 RUN apt-get update -y \
     && apt-get install -y software-properties-common \
-    && apt-get install -y wget procps gnupg2
+    && apt-get install -y wget procps gnupg2 \
     && libxml2-dev libxslt-dev zlib1g-dev
 
 # Install openjdk-8
