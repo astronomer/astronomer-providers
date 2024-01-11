@@ -200,7 +200,7 @@ with DAG(
     )
 
     check_encoded_data = PythonOperator(
-        task_id="check_logs",
+        task_id="check_encoded_data",
         python_callable=check_log,
         op_args=[
             "get_airflow_version",
