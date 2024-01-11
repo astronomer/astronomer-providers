@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Dict, Optional
+import warnings
+from typing import Any
 
 import botocore.exceptions
 
@@ -10,11 +13,19 @@ class RedshiftHookAsync(AwsBaseHookAsync):
     """Interact with AWS Redshift using aiobotocore python library"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use :class: `~airflow.providers.amazon.aws.hooks.redshift_cluster.RedshiftHook`."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         kwargs["client_type"] = "redshift"
         kwargs["resource_type"] = "redshift"
         super().__init__(*args, **kwargs)
 
-    async def cluster_status(self, cluster_identifier: str, delete_operation: bool = False) -> Dict[str, Any]:
+    async def cluster_status(self, cluster_identifier: str, delete_operation: bool = False) -> dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and get the status
         and returns the status of the cluster based on the cluster_identifier passed
@@ -38,9 +49,9 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         self,
         cluster_identifier: str,
         skip_final_cluster_snapshot: bool = True,
-        final_cluster_snapshot_identifier: Optional[str] = None,
+        final_cluster_snapshot_identifier: str | None = None,
         polling_period_seconds: float = 5.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
         deletes the cluster based on the cluster_identifier passed
@@ -77,7 +88,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
 
     async def pause_cluster(
         self, cluster_identifier: str, polling_period_seconds: float = 5.0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
         pause the cluster based on the cluster_identifier passed
@@ -106,7 +117,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         self,
         cluster_identifier: str,
         polling_period_seconds: float = 5.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Connects to the AWS redshift cluster via aiobotocore and
         resume the cluster for the cluster_identifier passed
@@ -137,7 +148,7 @@ class RedshiftHookAsync(AwsBaseHookAsync):
         expected_state: str,
         flag: asyncio.Event,
         delete_operation: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Make call self.cluster_status to know the status and run till the expected_state is met and set the flag
 

@@ -50,7 +50,7 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
     This class is deprecated.
     Please use :class: `~airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftPauseClusterOperator`.
     """
-    
+
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
             (
