@@ -1,11 +1,8 @@
-
-from airflow.providers.amazon.aws.sensors.emr import (
-    EmrContainerSensor,
-    EmrStepSensor,
-)
+from airflow.providers.amazon.aws.sensors.emr import EmrContainerSensor, EmrJobFlowSensor, EmrStepSensor
 
 from astronomer.providers.amazon.aws.sensors.emr import (
     EmrContainerSensorAsync,
+    EmrJobFlowSensorAsync,
     EmrStepSensorAsync,
 )
 
@@ -48,9 +45,9 @@ class TestEmrStepSensorAsync:
 
 class TestEmrJobFlowSensorAsync:
     def test_init(self):
-        task = EmrStepSensorAsync(
+        task = EmrJobFlowSensorAsync(
             task_id=TASK_ID,
             job_flow_id=JOB_ID,
         )
-        assert isinstance(task, EmrStepSensor)
+        assert isinstance(task, EmrJobFlowSensor)
         assert task.deferrable is True

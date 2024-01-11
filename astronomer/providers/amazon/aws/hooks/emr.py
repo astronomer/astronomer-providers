@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Dict, Optional
 
 from botocore.exceptions import ClientError
@@ -146,6 +147,14 @@ class EmrJobFlowHookAsync(AwsBaseHookAsync):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use :class: `~airflow.providers.amazon.aws.hooks.emr.EmrHook`."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         kwargs["client_type"] = "emr"
         super().__init__(*args, **kwargs)
 

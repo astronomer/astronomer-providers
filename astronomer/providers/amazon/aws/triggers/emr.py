@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import asyncio
-from typing import Any, AsyncIterator, Dict, Iterable, Optional, Tuple
+import warnings
+from typing import Any, AsyncIterator, Iterable
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -25,7 +28,7 @@ class EmrContainerBaseTrigger(BaseTrigger):
         job_id: str,
         aws_conn_id: str = "aws_default",
         poll_interval: int = 10,
-        max_tries: Optional[int] = None,
+        max_tries: int | None = None,
         **kwargs: Any,
     ):
         self.virtual_cluster_id = virtual_cluster_id
@@ -54,9 +57,17 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
         job_flow_id: str,
         aws_conn_id: str,
         poll_interval: float,
-        target_states: Optional[Iterable[str]] = None,
-        failed_states: Optional[Iterable[str]] = None,
+        target_states: Iterable[str] | None = None,
+        failed_states: Iterable[str] | None = None,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use :class: `~airflow.providers.amazon.aws.triggers.emr.EmrTerminateJobFlowTrigger."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_flow_id = job_flow_id
         self.aws_conn_id = aws_conn_id
@@ -64,7 +75,7 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
         self.target_states = target_states or ["TERMINATED"]
         self.failed_states = failed_states or ["TERMINATED_WITH_ERRORS"]
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes EmrJobFlowSensorTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.emr.EmrJobFlowSensorTrigger",
@@ -77,7 +88,7 @@ class EmrJobFlowSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Make async connection to EMR container, polls for the target job state"""
         hook = EmrJobFlowHookAsync(aws_conn_id=self.aws_conn_id)
         try:
