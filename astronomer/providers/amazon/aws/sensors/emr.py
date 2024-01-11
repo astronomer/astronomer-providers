@@ -16,6 +16,16 @@ class EmrContainerSensorAsync(EmrContainerSensor):
     """
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        poll_interval = kwargs.pop("poll_interval")
+        if poll_interval:
+            self.poke_interval = poll_interval
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         warnings.warn(
             (
                 "This module is deprecated. "
