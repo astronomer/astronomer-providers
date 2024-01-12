@@ -199,8 +199,8 @@ with DAG(
         ],
     )
 
-    check_encoded_data = PythonOperator(
-        task_id="check_encoded_data",
+    check_swedish_data = PythonOperator(
+        task_id="check_swedish_data",
         python_callable=check_log,
         op_args=[
             "get_airflow_version",
@@ -209,7 +209,7 @@ with DAG(
         ],
     )
 
-    airflow_version_check = (get_airflow_version, check_logs_data, check_encoded_data)
+    airflow_version_check = (get_airflow_version, check_logs_data, check_swedish_data)
     chain(*airflow_version_check)
 
     get_airflow_executor = BashOperator(
