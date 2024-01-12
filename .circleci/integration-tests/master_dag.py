@@ -187,7 +187,7 @@ with DAG(
     )
 
     get_airflow_version = BashOperator(
-        task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
+        task_id="get_airflow_version", bash_command="airflow version && echo åäö", do_xcom_push=True
     )
     check_logs_data = PythonOperator(
         task_id="check_logs",
@@ -199,7 +199,20 @@ with DAG(
         ],
     )
 
-    airflow_version_check = (get_airflow_version, check_logs_data)
+    # The below task `check_non_ascii_data` is specifically added to test the astronomer logging
+    # providers for non-ASCII characters, as we have providers' tests running on all
+    # cloud providers, and we do not want multiple deployments for this.
+    check_non_ascii_data = PythonOperator(
+        task_id="check_non_ascii_data",
+        python_callable=check_log,
+        op_args=[
+            "get_airflow_version",
+            "åäö",
+            "this_string_should_not_be_present_in_logs",
+        ],
+    )
+
+    airflow_version_check = (get_airflow_version, check_logs_data, check_non_ascii_data)
     chain(*airflow_version_check)
 
     get_airflow_executor = BashOperator(
