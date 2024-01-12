@@ -199,8 +199,15 @@ with DAG(
         ],
     )
 
-    check_swedish_data = PythonOperator(
-        task_id="check_swedish_data",
+    """
+    This task is specifically added to test the astronomer logging
+    provider for non-ASCII character testing, as we have providers'
+    tests running on all cloud providers, and we do not want
+    multiple deployments for this.
+    """
+
+    check_non_ascii_data = PythonOperator(
+        task_id="check_non_ascii_data",
         python_callable=check_log,
         op_args=[
             "get_airflow_version",
@@ -209,7 +216,7 @@ with DAG(
         ],
     )
 
-    airflow_version_check = (get_airflow_version, check_logs_data, check_swedish_data)
+    airflow_version_check = (get_airflow_version, check_logs_data, check_non_ascii_data)
     chain(*airflow_version_check)
 
     get_airflow_executor = BashOperator(
