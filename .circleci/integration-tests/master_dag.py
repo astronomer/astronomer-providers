@@ -187,8 +187,11 @@ with DAG(
     )
 
     get_airflow_version = BashOperator(
-        task_id="get_airflow_version", bash_command="airflow version && echo åäö", do_xcom_push=True
+        task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
     )
+
+    print_non_ascii_data = BashOperator(task_id="print_non_ascii_data", bash_command="echo åäö")
+
     check_logs_data = PythonOperator(
         task_id="check_logs",
         python_callable=check_log,
@@ -206,13 +209,13 @@ with DAG(
         task_id="check_non_ascii_data",
         python_callable=check_log,
         op_args=[
-            "get_airflow_version",
+            "print_non_ascii_data",
             "åäö",
             "this_string_should_not_be_present_in_logs",
         ],
     )
 
-    airflow_version_check = (get_airflow_version, check_logs_data, check_non_ascii_data)
+    airflow_version_check = (get_airflow_version, check_logs_data, print_non_ascii_data, check_non_ascii_data)
     chain(*airflow_version_check)
 
     get_airflow_executor = BashOperator(
