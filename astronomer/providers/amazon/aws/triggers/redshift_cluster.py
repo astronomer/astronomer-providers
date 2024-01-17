@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -30,6 +31,14 @@ class RedshiftClusterTrigger(BaseTrigger):
         skip_final_cluster_snapshot: bool = True,
         final_cluster_snapshot_identifier: Optional[str] = None,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use hooks in :module: `~airflow.providers.amazon.aws.triggers.redshift_cluster`."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.task_id = task_id
         self.polling_period_seconds = polling_period_seconds
