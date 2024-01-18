@@ -23,7 +23,7 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        return super().__init__(*args, deferrable=True, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
 
 
 class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
@@ -42,7 +42,7 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        return super().__init__(*args, deferrable=True, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
 
 
 class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
@@ -61,4 +61,4 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        return super().__init__(*args, deferrable=True, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
