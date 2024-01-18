@@ -19,4 +19,4 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        return super().__init__(*args, deferrable=True, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
