@@ -23,11 +23,8 @@ class FileSensorAsync(FileSensor):
     :param recursive: when set to ``True``, enables recursive directory matching behavior of
         ``**`` in glob filepath parameter. Defaults to ``False``.
     """
-    def __init__(
-            self,
-            *args,
-            **kwargs
-    ):
+
+    def __init__(self, *args, **kwargs):
         warnings.warn(
             (
                 "This module is deprecated and will be removed in airflow>=2.9.0"
