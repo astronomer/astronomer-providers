@@ -76,18 +76,8 @@ class WasbBlobSensorTrigger(BaseTrigger):
 
 class WasbPrefixSensorTrigger(BaseTrigger):
     """
-    WasbPrefixSensorTrigger is fired as a deferred class with params to run the task in trigger worker.
-    It checks for the existence of a blob with the given prefix in the provided container.
-
-    :param container_name: name of the container in which the blob should be searched for
-    :param prefix: prefix of the blob to check existence for
-    :param include: specifies one or more additional datasets to include in the
-            response. Options include: ``snapshots``, ``metadata``, ``uncommittedblobs``,
-            ``copy`, ``deleted``
-    :param delimiter: filters objects based on the delimiter (for e.g '.csv')
-    :param wasb_conn_id: the connection identifier for connecting to Azure WASB
-    :param poke_interval:  polling period in seconds to check for the status
-    :param public_read: whether an anonymous public read access should be used. Default is False
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.triggers.wasb.WasbPrefixSensorTrigger` instead.
     """
 
     def __init__(
@@ -100,6 +90,14 @@ class WasbPrefixSensorTrigger(BaseTrigger):
         public_read: bool = False,
         poke_interval: float = 5.0,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.microsoft.azure.triggers.wasb.WasbPrefixSensorTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.container_name = container_name
         self.prefix = prefix
