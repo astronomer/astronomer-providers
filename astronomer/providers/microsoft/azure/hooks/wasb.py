@@ -1,6 +1,7 @@
 """This module contains the Azure WASB hook's asynchronous implementation."""
 from __future__ import annotations
 
+import warnings
 from typing import Any, Union
 
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
@@ -14,10 +15,8 @@ Credentials = Union[ClientSecretCredential, DefaultAzureCredential]
 
 class WasbHookAsync(WasbHook):
     """
-    An async hook that connects to Azure WASB to perform operations.
-
-    :param wasb_conn_id: reference to the :ref:`wasb connection <howto/connection:wasb>`
-    :param public_read: whether an anonymous public read access should be used. default is False
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.hooks.wasb.WasbHook` instead.
     """
 
     def __init__(
@@ -26,6 +25,14 @@ class WasbHookAsync(WasbHook):
         public_read: bool = False,
     ) -> None:
         """Initialize the hook instance."""
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.microsoft.azure.hooks.wasb.WasbHook` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.conn_id = wasb_conn_id
         self.public_read = public_read
         self.blob_service_client: BlobServiceClient = self.get_conn()
