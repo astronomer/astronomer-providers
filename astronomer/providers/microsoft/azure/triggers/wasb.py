@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -8,14 +9,8 @@ from astronomer.providers.microsoft.azure.hooks.wasb import WasbHookAsync
 
 class WasbBlobSensorTrigger(BaseTrigger):
     """
-    WasbBlobSensorTrigger is fired as deferred class with params to run the task in trigger worker to check for
-    existence of the given blob in the provided container.
-
-    :param container_name: name of the container in which the blob should be searched for
-    :param blob_name: name of the blob to check existence for
-    :param wasb_conn_id: the connection identifier for connecting to Azure WASB
-    :param poke_interval:  polling period in seconds to check for the status
-    :param public_read: whether an anonymous public read access should be used. Default is False
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.triggers.wasb.WasbBlobSensorTrigger` instead.
     """
 
     def __init__(
@@ -26,6 +21,14 @@ class WasbBlobSensorTrigger(BaseTrigger):
         public_read: bool = False,
         poke_interval: float = 5.0,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.microsoft.azure.triggers.wasb.WasbBlobSensorTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.container_name = container_name
         self.blob_name = blob_name
