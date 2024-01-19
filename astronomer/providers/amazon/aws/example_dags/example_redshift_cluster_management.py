@@ -98,6 +98,7 @@ with DAG(
         task_id="resume_redshift_cluster",
         cluster_identifier=REDSHIFT_CLUSTER_IDENTIFIER,
         aws_conn_id=AWS_CONN_ID,
+        max_attempts=20,
     )
     # [END howto_operator_redshift_resume_cluster_async]
 
