@@ -13,7 +13,6 @@ from airflow.providers.google.cloud.sensors.gcs import (
 )
 
 from astronomer.providers.google.cloud.triggers.gcs import (
-    GCSBlobTrigger,
     GCSCheckBlobUpdateTimeTrigger,
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
@@ -24,26 +23,14 @@ from astronomer.providers.utils.typing_compat import Context
 
 class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     """
-    Checks for the existence of a file in Google Cloud Storage.
-
-    :param bucket: The Google Cloud Storage bucket where the object is.
-    :param object: The name of the object to check in the Google cloud storage bucket.
-    :param google_cloud_conn_id: The connection ID to use when connecting to Google Cloud Storage.
-    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
-        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
-        account making the request must have domain-wide delegation enabled.
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.sensors.gcs.GCSObjectExistenceSensor`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(
         self,
+        *args: Any,
         polling_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
@@ -56,36 +43,17 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        super().__init__(**kwargs)
 
-    def execute(self, context: Context) -> None:
-        """Airflow runs this method on the worker and defers using the trigger."""
-        hook_params = {"impersonation_chain": self.impersonation_chain}
-        if hasattr(self, "delegate_to"):
-            hook_params["delegate_to"] = self.delegate_to
-        if not poke(self, context):
-            self.defer(
-                timeout=timedelta(seconds=self.timeout),
-                trigger=GCSBlobTrigger(
-                    bucket=self.bucket,
-                    object_name=self.object,
-                    poke_interval=self.poke_interval,
-                    google_cloud_conn_id=self.google_cloud_conn_id,
-                    hook_params=hook_params,
-                ),
-                method_name="execute_complete",
-            )
-
-    def execute_complete(self, context: Context, event: dict[str, str]) -> str:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise_error_or_skip_exception(self.soft_fail, event["message"])
-        self.log.info("File %s was found in bucket %s.", self.object, self.bucket)
-        return event["message"]
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use :class: `~airflow.providers.google.cloud.sensors.gcs.GCSObjectExistenceSensor`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, deferrable=True, **kwargs)
 
 
 class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSensor):

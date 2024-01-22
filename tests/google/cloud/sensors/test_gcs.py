@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
@@ -10,7 +11,6 @@ from astronomer.providers.google.cloud.sensors.gcs import (
     GCSUploadSessionCompleteSensorAsync,
 )
 from astronomer.providers.google.cloud.triggers.gcs import (
-    GCSBlobTrigger,
     GCSCheckBlobUpdateTimeTrigger,
     GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
@@ -27,47 +27,16 @@ MODULE = "astronomer.providers.google.cloud.sensors.gcs"
 
 
 class TestGCSObjectExistenceSensorAsync:
-    OPERATOR = GCSObjectExistenceSensorAsync(
-        task_id="gcs-object",
-        bucket=TEST_BUCKET,
-        object=TEST_OBJECT,
-        google_cloud_conn_id=TEST_GCP_CONN_ID,
-    )
+    def test_init(self):
+        task = GCSObjectExistenceSensorAsync(
+            task_id="gcs-object",
+            bucket=TEST_BUCKET,
+            object=TEST_OBJECT,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
+        )
 
-    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.defer")
-    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.poke", return_value=True)
-    def test_gcs_object_existence_sensor_async_finish_before_deferred(self, mock_poke, mock_defer, context):
-        """Assert task is not deferred when it receives a finish status before deferring"""
-        self.OPERATOR.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch(f"{MODULE}.GCSObjectExistenceSensorAsync.poke", return_value=False)
-    def test_gcs_object_existence_sensor_async(self, context):
-        """
-        Asserts that a task is deferred and a GCSBlobTrigger will be fired
-        when the GCSObjectExistenceSensorAsync is executed.
-        """
-
-        with pytest.raises(TaskDeferred) as exc:
-            self.OPERATOR.execute(context)
-        assert isinstance(exc.value.trigger, GCSBlobTrigger), "Trigger is not a GCSBlobTrigger"
-
-    def test_gcs_object_existence_sensor_async_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-
-        with pytest.raises(AirflowException):
-            self.OPERATOR.execute_complete(
-                context=context, event={"status": "error", "message": "test failure message"}
-            )
-
-    def test_gcs_object_existence_sensor_async_execute_complete(self, context):
-        """Asserts that logging occurs as expected"""
-
-        with mock.patch.object(self.OPERATOR.log, "info") as mock_log_info:
-            self.OPERATOR.execute_complete(
-                context=context, event={"status": "success", "message": "Job completed"}
-            )
-        mock_log_info.assert_called_with("File %s was found in bucket %s.", TEST_OBJECT, TEST_BUCKET)
+        assert isinstance(task, GCSObjectExistenceSensor)
+        assert task.deferrable is True
 
 
 class TestGCSObjectsWithPrefixExistenceSensorAsync:

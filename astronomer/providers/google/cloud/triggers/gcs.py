@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import os
+import warnings
 from datetime import datetime
-from typing import Any, AsyncIterator, Dict, List, Optional, Set, Tuple
+from typing import Any, AsyncIterator
 
 from aiohttp import ClientSession
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -26,8 +29,17 @@ class GCSBlobTrigger(BaseTrigger):
         object_name: str,
         poke_interval: float,
         google_cloud_conn_id: str,
-        hook_params: Dict[str, Any],
+        hook_params: dict[str, Any],
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSBlobTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__()
         self.bucket = bucket
         self.object_name = object_name
@@ -35,7 +47,7 @@ class GCSBlobTrigger(BaseTrigger):
         self.google_cloud_conn_id: str = google_cloud_conn_id
         self.hook_params = hook_params
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes GCSBlobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSBlobTrigger",
@@ -48,7 +60,7 @@ class GCSBlobTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Simple loop until the relevant file/folder is found."""
         try:
             hook = self._get_async_hook()
@@ -102,7 +114,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         prefix: str,
         poke_interval: float,
         google_cloud_conn_id: str,
-        hook_params: Dict[str, Any],
+        hook_params: dict[str, Any],
     ):
         super().__init__(
             bucket=bucket,
@@ -113,7 +125,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         )
         self.prefix = prefix
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes GCSPrefixBlobTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger",
@@ -126,7 +138,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Simple loop until the matches are found for the given prefix on the bucket."""
         try:
             hook = self._get_async_hook()
@@ -143,7 +155,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
 
-    async def _list_blobs_with_prefix(self, hook: GCSHookAsync, bucket_name: str, prefix: str) -> List[str]:
+    async def _list_blobs_with_prefix(self, hook: GCSHookAsync, bucket_name: str, prefix: str) -> list[str]:
         """
         Returns list of blobs which matches the given prefix for the given bucket.
 
@@ -189,10 +201,10 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         prefix: str,
         poke_interval: float,
         google_cloud_conn_id: str,
-        hook_params: Dict[str, Any],
+        hook_params: dict[str, Any],
         inactivity_period: float = 60 * 60,
         min_objects: int = 1,
-        previous_objects: Optional[Set[str]] = None,
+        previous_objects: set[str] | None = None,
         allow_delete: bool = True,
     ):
         super().__init__(
@@ -207,9 +219,9 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         self.previous_objects = previous_objects if previous_objects else set()
         self.inactivity_seconds = 0.0
         self.allow_delete = allow_delete
-        self.last_activity_time: Optional[datetime] = None
+        self.last_activity_time: datetime | None = None
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes GCSUploadSessionTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger",
@@ -226,7 +238,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Simple loop until no change in any new files or deleted in list blob is
         found for the inactivity_period.
@@ -254,7 +266,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         """
         return datetime.now()
 
-    def _is_bucket_updated(self, current_objects: Set[str]) -> Dict[str, str]:
+    def _is_bucket_updated(self, current_objects: set[str]) -> dict[str, str]:
         """
         Checks whether new objects have been uploaded and the inactivity_period
         has passed and updates the state of the sensor accordingly.
@@ -336,7 +348,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         ts: datetime,
         poke_interval: float,
         google_cloud_conn_id: str,
-        hook_params: Dict[str, Any],
+        hook_params: dict[str, Any],
     ):
         super().__init__()
         self.bucket = bucket
@@ -346,7 +358,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         self.google_cloud_conn_id: str = google_cloud_conn_id
         self.hook_params = hook_params
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes GCSCheckBlobUpdateTimeTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger",
@@ -360,7 +372,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Simple loop until the object updated time is greater than ts datetime in bucket."""
         try:
             hook = self._get_async_hook()
@@ -379,7 +391,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
 
     async def _is_blob_updated_after(
         self, hook: GCSHookAsync, bucket_name: str, object_name: str, ts: datetime
-    ) -> Tuple[bool, Dict[str, Any]]:
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Checks if the object in the bucket is updated.
 

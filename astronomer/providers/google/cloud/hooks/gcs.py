@@ -1,5 +1,6 @@
 """This module contains a Google Cloud Storage hook."""
-from typing import cast
+import warnings
+from typing import Any, cast
 
 from aiohttp import ClientSession as ClientSession
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
@@ -13,6 +14,17 @@ DEFAULT_TIMEOUT = 60
 
 class GCSHookAsync(GoogleBaseHookAsync):
     """GCSHookAsync run on the trigger worker, inherits from GoogleBaseHookAsync"""
+
+    def __init__(self, **kwargs: Any):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.hooks.gcs.GCSAsyncHook` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**kwargs)
 
     sync_hook_class = GCSHook
 
