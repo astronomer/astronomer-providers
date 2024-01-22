@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import datetime
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
@@ -74,7 +76,7 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
 
     @provide_session
     def execute_complete(  # type: ignore[override]
-        self, context: Context, session: "Session", event: Optional[Dict[str, Any]] = None
+        self, context: Context, session: Session, event: dict[str, Any] | None = None
     ) -> None:
         """Verifies that there is a success status for each task via execution date."""
         execution_dates = self.get_execution_dates(context)
@@ -87,10 +89,10 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
             raise_error_or_skip_exception(self.soft_fail, error)
         return None
 
-    def get_execution_dates(self, context: Context) -> List[datetime.datetime]:
+    def get_execution_dates(self, context: Context) -> list[datetime.datetime]:
         """Helper function to set execution dates depending on which context and/or internal fields are populated."""
         if self.execution_delta:
-            execution_date = context["execution_date"] - self.execution_delta
+            execution_date: datetime.datetime = context["execution_date"] - self.execution_delta
         elif self.execution_date_fn:
             execution_date = self._handle_execution_date_fn(context=context)
         else:
@@ -139,7 +141,7 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
             method_name="execute_complete",
         )
 
-    def execute_complete(self, context: "Context", event: Optional[Dict[str, Any]] = None) -> Any:
+    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Return true and log the response if state is not success state raise ValueError

@@ -79,7 +79,7 @@ def generate_task_report(**context: Any) -> None:
             message=report,
             channel=SLACK_CHANNEL,
             username=SLACK_USERNAME,
-        ).execute(context=None)
+        ).execute(context={})
     except Exception as exception:
         logging.exception("Error occur while sending slack alert.")
         raise exception

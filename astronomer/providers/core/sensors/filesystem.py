@@ -24,7 +24,7 @@ class FileSensorAsync(FileSensor):
         ``**`` in glob filepath parameter. Defaults to ``False``.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (
                 "This module is deprecated and will be removed in airflow>=2.9.0"
