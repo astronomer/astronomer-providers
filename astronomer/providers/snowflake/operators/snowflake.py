@@ -12,7 +12,7 @@ from snowflake.connector import SnowflakeConnection
 from snowflake.connector.constants import QueryStatus
 
 try:
-    from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+    from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator, SnowflakeSqlApiOperator
 except ImportError:  # pragma: no cover
     # For apache-airflow-providers-snowflake > 3.3.0
     # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
@@ -219,7 +219,7 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
             raise AirflowException("Did not receive valid event from the trigerrer")
 
 
-class SnowflakeSqlApiOperatorAsync(SnowflakeOperator):
+class SnowflakeSqlApiOperatorAsync(SnowflakeSqlApiOperator):
     """
     This class is deprecated and will be removed in 2.0.0.
     Use :class: `~airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator` instead.
