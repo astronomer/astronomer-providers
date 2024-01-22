@@ -338,14 +338,14 @@ with DAG(
     create_bucket = S3CreateBucketOperator(
         task_id="create_bucket",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        bucket_name=test_setup["bucket_name"],
+        bucket_name=test_setup["bucket_name"],  # type: ignore[index]
     )
 
     upload_dataset = S3CreateObjectOperator(
         task_id="upload_dataset",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        s3_bucket=test_setup["bucket_name"],
-        s3_key=test_setup["raw_data_s3_key_input"],
+        s3_bucket=test_setup["bucket_name"],  # type: ignore[index]
+        s3_key=test_setup["raw_data_s3_key_input"],  # type: ignore[index]
         data=DATASET,
         replace=True,
     )
@@ -353,8 +353,8 @@ with DAG(
     upload_training_dataset = S3CreateObjectOperator(
         task_id="upload_training_dataset",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        s3_bucket=test_setup["bucket_name"],
-        s3_key=test_setup["train_data_csv"],
+        s3_bucket=test_setup["bucket_name"],  # type: ignore[index]
+        s3_key=test_setup["train_data_csv"],  # type: ignore[index]
         data=TRAIN_DATASET,
         replace=True,
     )
@@ -362,8 +362,8 @@ with DAG(
     upload_transform_dataset = S3CreateObjectOperator(
         task_id="upload_transform_dataset",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        s3_bucket=test_setup["bucket_name"],
-        s3_key=test_setup["transform_data_csv"],
+        s3_bucket=test_setup["bucket_name"],  # type: ignore[index]
+        s3_key=test_setup["transform_data_csv"],  # type: ignore[index]
         data=TRANSFORM_DATASET,
         replace=True,
     )
@@ -371,7 +371,7 @@ with DAG(
     preprocess_raw_data = SageMakerProcessingOperatorAsync(
         task_id="preprocess_raw_data",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        config=test_setup["processing_config"],
+        config=test_setup["processing_config"],  # type: ignore[index]
     )
     # [END howto_operator_sagemaker_processing_async]
 
@@ -380,7 +380,7 @@ with DAG(
         task_id="train_model",
         aws_conn_id=SAGEMAKER_CONN_ID,
         print_log=False,
-        config=test_setup["training_config"],
+        config=test_setup["training_config"],  # type: ignore[index]
     )
     # [END howto_operator_sagemaker_training_async]
 
@@ -388,14 +388,14 @@ with DAG(
     test_model = SageMakerTransformOperatorAsync(
         task_id="test_model",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        config=test_setup["transform_config"],
+        config=test_setup["transform_config"],  # type: ignore[index]
     )
     # [END howto_operator_sagemaker_transform_async]
 
     delete_model = SageMakerDeleteModelOperator(
         task_id="delete_model",
         aws_conn_id=SAGEMAKER_CONN_ID,
-        config={"ModelName": test_setup["model_name"]},
+        config={"ModelName": test_setup["model_name"]},  # type: ignore[index]
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
@@ -403,7 +403,7 @@ with DAG(
         task_id="delete_bucket",
         aws_conn_id=SAGEMAKER_CONN_ID,
         trigger_rule=TriggerRule.ALL_DONE,
-        bucket_name=test_setup["bucket_name"],
+        bucket_name=test_setup["bucket_name"],  # type: ignore[index]
         force_delete=True,
     )
 
