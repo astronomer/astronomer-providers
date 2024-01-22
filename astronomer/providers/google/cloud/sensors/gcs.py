@@ -27,7 +27,7 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     ) -> None:
         # TODO: Remove once deprecated
         if polling_interval:
-            self.poke_interval = polling_interval
+            kwargs["poke_interval"] = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
@@ -62,7 +62,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
     ) -> None:
         # TODO: Remove once deprecated
         if polling_interval:
-            self.poke_interval = polling_interval
+            kwargs["poke_interval"] = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
@@ -96,7 +96,7 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
     ) -> None:
         # TODO: Remove once deprecated
         if polling_interval:
-            self.poke_interval = polling_interval
+            kwargs["poke_interval"] = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
@@ -131,7 +131,7 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     ) -> None:
         # TODO: Remove once deprecated
         if polling_interval:
-            self.poke_interval = polling_interval
+            kwargs["poke_interval"] = polling_interval
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
