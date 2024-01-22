@@ -1,4 +1,5 @@
 import datetime
+import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from airflow.sensors.external_task import ExternalTaskSensor
@@ -23,6 +24,15 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
         poke_interval: float = 5.0,
         **kwargs: Any,
     ) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in airflow>=2.9.0"
+                "Please use `airflow.sensors.external_task.ExternalTaskSensor` "
+                "and set deferrable to True instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(**kwargs)
         self.poke_interval = poke_interval
 

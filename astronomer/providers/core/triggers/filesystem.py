@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import os
 import typing
+import warnings
 from glob import glob
 from typing import Any, Dict, Tuple
 
@@ -26,6 +27,15 @@ class FileTrigger(BaseTrigger):
         recursive: bool = False,
         poll_interval: float = 5.0,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in airflow>=2.9.0"
+                "Please use `airflow.triggers.file.FileTrigger` "
+                "and set deferrable to True instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.filepath = filepath
         self.recursive = recursive
