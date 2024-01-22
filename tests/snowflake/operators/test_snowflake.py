@@ -14,7 +14,6 @@ from astronomer.providers.snowflake.operators.snowflake import (
     _check_queries_finish,
 )
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
-    SnowflakeSqlApiTrigger,
     SnowflakeTrigger,
 )
 from tests.utils.airflow_util import create_context
@@ -158,156 +157,13 @@ class TestSnowflakeSqlApiOperatorAsync:
         "mock_sql, statement_count, query_ids",
         [(SQL_MULTIPLE_STMTS, 4, (1, 2, 3, 4)), (SINGLE_STMT, 1, (5,))],
     )
-    @mock.patch("astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperatorAsync.defer")
-    @mock.patch("requests.session")
-    @mock.patch("astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiHookAsync")
-    def test_snowflake_sql_api_execute_operator_async_succeeded_before_defer(
-        self,
-        mock_hook,
-        mock_session,
-        mock_defer,
-        mock_sql,
-        statement_count,
-        query_ids,
-    ):
-        """
-        Asserts that a task is deferred and an SnowflakeSqlApiTrigger will be fired
-        when the SnowflakeSqlApiOperatorAsync is executed.
-        """
-        mock_hook.return_value = MagicMock()
-        mock_hook.return_value.query_ids = query_ids
-        mock_hook.return_value.get_request_url_header_params.return_value = ("", "", "")
-
-        mock_session.return_value.__enter__.return_value.get.return_value.__enter__.return_value.status_code = (
-            200
-        )
-
-        operator = SnowflakeSqlApiOperatorAsync(
+    def test_init(self, mock_sql, statement_count, query_ids):
+        task = SnowflakeSqlApiOperatorAsync(
             task_id=TASK_ID,
             snowflake_conn_id=CONN_ID,
             sql=mock_sql,
             statement_count=statement_count,
         )
 
-        operator.execute(create_context(operator))
-
-        assert not mock_defer.called
-
-    @pytest.mark.parametrize(
-        "mock_sql, statement_count, query_ids",
-        [(SQL_MULTIPLE_STMTS, 4, (1, 2, 3, 4)), (SINGLE_STMT, 1, (5,))],
-    )
-    @mock.patch("astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperatorAsync.defer")
-    @mock.patch("requests.session")
-    @mock.patch("astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiHookAsync")
-    def test_snowflake_sql_api_execute_operator_async_failed_before_defer(
-        self,
-        mock_hook,
-        mock_session,
-        mock_defer,
-        mock_sql,
-        statement_count,
-        query_ids,
-    ):
-        """
-        Asserts that a task is deferred and an SnowflakeSqlApiTrigger will be fired
-        when the SnowflakeSqlApiOperatorAsync is executed.
-        """
-        mock_hook.return_value = MagicMock()
-        mock_hook.return_value.query_ids = query_ids
-        mock_hook.return_value.get_request_url_header_params.return_value = ("", "", "")
-
-        mock_session.return_value.__enter__.return_value.get.return_value.__enter__.return_value.status_code = (
-            422
-        )
-
-        operator = SnowflakeSqlApiOperatorAsync(
-            task_id=TASK_ID,
-            snowflake_conn_id=CONN_ID,
-            sql=mock_sql,
-            statement_count=statement_count,
-        )
-
-        with pytest.raises(AirflowException):
-            operator.execute(create_context(operator))
-
-        assert not mock_defer.called
-
-    @pytest.mark.parametrize(
-        "mock_sql, statement_count, query_ids",
-        [(SQL_MULTIPLE_STMTS, 4, (1, 2, 3, 4)), (SINGLE_STMT, 1, (5,))],
-    )
-    @mock.patch("requests.session")
-    @mock.patch("astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiHookAsync")
-    def test_snowflake_sql_api_execute_operator_async(
-        self,
-        mock_hook,
-        mock_session,
-        mock_sql,
-        statement_count,
-        query_ids,
-    ):
-        """
-        Asserts that a task is deferred and an SnowflakeSqlApiTrigger will be fired
-        when the SnowflakeSqlApiOperatorAsync is executed.
-        """
-        mock_hook.return_value = MagicMock()
-        mock_hook.return_value.query_ids = query_ids
-        mock_hook.return_value.get_request_url_header_params.return_value = ("", "", "")
-
-        mock_session.return_value.__enter__.return_value.get.return_value.__enter__.return_value.status_code = (
-            202
-        )
-
-        operator = SnowflakeSqlApiOperatorAsync(
-            task_id=TASK_ID,
-            snowflake_conn_id=CONN_ID,
-            sql=mock_sql,
-            statement_count=statement_count,
-        )
-
-        with pytest.raises(TaskDeferred) as exc:
-            operator.execute(create_context(operator))
-
-        assert isinstance(
-            exc.value.trigger, SnowflakeSqlApiTrigger
-        ), "Trigger is not a SnowflakeSqlApiTrigger"
-
-    def test_snowflake_sql_api_execute_complete_failure(self):
-        """Test SnowflakeSqlApiOperatorAsync raise AirflowException of error event"""
-
-        operator = SnowflakeSqlApiOperatorAsync(
-            task_id=TASK_ID,
-            snowflake_conn_id=CONN_ID,
-            sql=SQL_MULTIPLE_STMTS,
-            statement_count=4,
-        )
-        with pytest.raises(AirflowException):
-            operator.execute_complete(
-                context=None,
-                event={"status": "error", "message": "Test failure message", "type": "FAILED_WITH_ERROR"},
-            )
-
-    @pytest.mark.parametrize(
-        "mock_event",
-        [
-            None,
-            ({"status": "success", "statement_query_ids": ["uuid", "uuid"]}),
-        ],
-    )
-    @mock.patch(
-        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.check_query_output"
-    )
-    def test_snowflake_sql_api_execute_complete(self, mock_conn, mock_event):
-        """Tests execute_complete assert with successful message"""
-
-        operator = SnowflakeSqlApiOperatorAsync(
-            task_id=TASK_ID,
-            snowflake_conn_id=CONN_ID,
-            sql=SQL_MULTIPLE_STMTS,
-            statement_count=4,
-        )
-
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("%s completed successfully.", TASK_ID)
+        assert isinstance(task, SnowflakeSqlApiOperatorAsync)
+        assert task.deferrable is True
