@@ -37,15 +37,8 @@ workflows:
           name: constraints-<< matrix.python_version >>-<< matrix.airflow_version >>
           matrix:
             parameters:
-              python_version: ["3.8", "3.9", "3.10"]
-              airflow_version: ["2.4.3", "2.5.3", "2.6.3"]
-          <<: *main_and_release_branches
-      - generate-constraints-python-3-11:
-          name: constraints-<< matrix.python_version >>-<< matrix.airflow_version >>
-          matrix:
-            parameters:
-              python_version: ["3.11"]
-              airflow_version: ["2.6.3", "2.7.0"]
+              python_version: ["3.8", "3.9", "3.10", "3.11"]
+              airflow_version: ["2.6.3", "2.7.3", "2.8.1"]
           <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
@@ -245,37 +238,6 @@ jobs:
              | sort
              | grep -v "@"
              > constraints-<<parameters.python_version>>-<<parameters.airflow_version>>.txt
-      - store_artifacts:
-          path: constraints-<<parameters.python_version>>-<<parameters.airflow_version>>.txt
-  generate-constraints-python-3-11:
-    parameters:
-      python_version:
-        description: "Python Version"
-        type: string
-      airflow_version:
-        description: "Airflow Version"
-        type: string
-    description: Test Python-<<parameters.python_version>>
-    executor:
-      name: docker-executor
-      python_version: "<<parameters.python_version>>"
-    steps:
-      - checkout
-      - run:
-          name: Install Dependencies for sasl
-          command: |
-            sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
-            sudo apt-get install libsasl2-dev
-      - run:
-          name: Install Dependencies
-          command: pip install -U -e .[all,tests] apache-airflow==<<parameters.airflow_version>>
-      - run:
-          name: Generate Constraints
-          command: pip freeze
-            | sort
-            | grep -v "@"
-            > constraints-<<parameters.python_version>>-<<parameters.airflow_version>>.txt
       - store_artifacts:
           path: constraints-<<parameters.python_version>>-<<parameters.airflow_version>>.txt
 
