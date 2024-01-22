@@ -50,7 +50,7 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
 
     def __init__(
         self,
-        *args,
+        *args: Any,
         include: Optional[List[str]] = None,
         delimiter: Optional[str] = "/",
         poll_interval: float = 5.0,
