@@ -14,14 +14,8 @@ from astronomer.providers.microsoft.azure.hooks.data_factory import (
 
 class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
     """
-    ADFPipelineRunStatusSensorTrigger is fired as deferred class with params to run the task in trigger worker, when
-    ADF Pipeline is running
-
-    :param run_id: The pipeline run identifier.
-    :param azure_data_factory_conn_id: The connection identifier for connecting to Azure Data Factory.
-    :param poke_interval:  polling period in seconds to check for the status
-    :param resource_group_name: The resource group name.
-    :param factory_name: The data factory name.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.triggers.data_factory.ADFPipelineRunStatusSensorTrigger` instead.
     """
 
     def __init__(

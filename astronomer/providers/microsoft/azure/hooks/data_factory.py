@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from functools import wraps
 from typing import Any, TypeVar, Union, cast
 
@@ -68,13 +69,20 @@ def provide_targeted_factory_async(func: T) -> T:
 
 class AzureDataFactoryHookAsync(AzureDataFactoryHook):
     """
-    An Async Hook connects to Azure DataFactory to perform pipeline operations.
-
-    :param azure_data_factory_conn_id: The :ref:`Azure Data Factory connection id<howto/connection:adf>`.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHook` instead.
     """
 
     def __init__(self, azure_data_factory_conn_id: str):
         """Initialize the hook instance."""
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.microsoft.azure.hooks.data_factory.AzureDataFactoryHook` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._async_conn: DataFactoryManagementClient | None = None
         self.conn_id = azure_data_factory_conn_id
         super().__init__(azure_data_factory_conn_id=azure_data_factory_conn_id)
