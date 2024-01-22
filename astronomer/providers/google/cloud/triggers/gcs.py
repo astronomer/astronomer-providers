@@ -368,6 +368,14 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         google_cloud_conn_id: str,
         hook_params: dict[str, Any],
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.bucket = bucket
         self.object_name = object_name
