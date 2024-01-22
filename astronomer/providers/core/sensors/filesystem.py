@@ -1,4 +1,5 @@
 import os
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
@@ -22,6 +23,18 @@ class FileSensorAsync(FileSensor):
     :param recursive: when set to ``True``, enables recursive directory matching behavior of
         ``**`` in glob filepath parameter. Defaults to ``False``.
     """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in airflow>=2.9.0"
+                "Please use `airflow.sensors.filesystem.FileSensor` "
+                "and set deferrable to True instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
     def execute(self, context: Context) -> None:
         """Airflow runs this method on the worker and defers using the trigger."""

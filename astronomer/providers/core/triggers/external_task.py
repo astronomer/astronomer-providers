@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import typing
+import warnings
 from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow import AirflowException
@@ -105,6 +106,15 @@ class DagStateTrigger(BaseTrigger):
         execution_dates: List[datetime.datetime],
         poll_interval: float = 5.0,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in airflow>=2.9.0"
+                "Please use `airflow.triggers.external_task.WorkflowTrigger` "
+                "and set deferrable to True instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.dag_id = dag_id
         self.states = states
