@@ -13,13 +13,17 @@ DEFAULT_TIMEOUT = 60
 
 
 class GCSHookAsync(GoogleBaseHookAsync):
-    """GCSHookAsync run on the trigger worker, inherits from GoogleBaseHookAsync"""
+    """GCSHookAsync run on the trigger worker, inherits from GoogleBaseHookAsync
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.hooks.gcs.GCSAsyncHook` instead
+    """
 
     def __init__(self, **kwargs: Any):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.google.cloud.hooks.gcs.GCSAsyncHook` instead"
+                "Use `airflow.providers.google.cloud.hooks.gcs.GCSAsyncHook` instead"
             ),
             DeprecationWarning,
             stacklevel=2,

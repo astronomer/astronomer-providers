@@ -1,4 +1,3 @@
-
 from airflow.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensor,
     GCSObjectsWithPrefixExistenceSensor,
@@ -46,6 +45,7 @@ class TestGCSObjectsWithPrefixExistenceSensorAsync:
 
         assert isinstance(task, GCSObjectsWithPrefixExistenceSensor)
         assert task.deferrable is True
+
 
 class TestGCSUploadSessionCompleteSensorAsync:
     def test_init(self):

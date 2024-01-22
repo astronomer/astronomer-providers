@@ -80,6 +80,7 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
         )
         super().__init__(*args, deferrable=True, **kwargs)
 
+
 class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
     """
     This class is deprecated.

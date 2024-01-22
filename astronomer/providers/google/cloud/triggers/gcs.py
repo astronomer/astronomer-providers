@@ -17,6 +17,9 @@ class GCSBlobTrigger(BaseTrigger):
     """
     A trigger that fires and it finds the requested file or folder present in the given bucket.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSBlobTrigger` instead
+
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param google_cloud_conn_id: reference to the Google Connection
@@ -34,7 +37,7 @@ class GCSBlobTrigger(BaseTrigger):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSBlobTrigger` instead"
+                "Use `airflow.providers.google.cloud.triggers.gcs.GCSBlobTrigger` instead"
             ),
             DeprecationWarning,
             stacklevel=2,
@@ -102,6 +105,9 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
     A trigger that fires and it looks for all the objects in the given bucket
     which matches the given prefix if not found sleep for certain interval and checks again.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger` instead
+
     :param bucket: the bucket in the google cloud storage where the objects are residing.
     :param prefix: The prefix of the blob_names to match in the Google cloud storage bucket
     :param google_cloud_conn_id: reference to the Google Connection
@@ -119,7 +125,7 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger` instead"
+                "Use `airflow.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger` instead"
             ),
             DeprecationWarning,
             stacklevel=2,
@@ -185,6 +191,9 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
     bucket and returns Trigger Event if the inactivity period has passed with no
     increase in the number of objects.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead
+
     :param bucket: The Google Cloud Storage bucket where the objects are.
         expected.
     :param prefix: The name of the prefix to check in the Google cloud
@@ -219,7 +228,7 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead"
+                "Use `airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead"
             ),
             DeprecationWarning,
             stacklevel=2,
@@ -351,6 +360,9 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
     """
     A trigger that makes an async call to GCS to check whether the object is updated in a bucket.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger` instead
+
     :param bucket: google cloud storage bucket name cloud storage where the objects are residing.
     :param object_name: the file or folder present in the bucket
     :param ts: datetime object
@@ -371,7 +383,7 @@ class GCSCheckBlobUpdateTimeTrigger(BaseTrigger):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead"
+                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSCheckBlobUpdateTimeTrigger` instead"
             ),
             DeprecationWarning,
             stacklevel=2,
