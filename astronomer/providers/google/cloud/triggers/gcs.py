@@ -116,6 +116,15 @@ class GCSPrefixBlobTrigger(GCSBlobTrigger):
         google_cloud_conn_id: str,
         hook_params: dict[str, Any],
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSPrefixBlobTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__(
             bucket=bucket,
             object_name=prefix,

@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor, GCSObjectsWithPrefixExistenceSensor
 
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
@@ -12,7 +12,6 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 )
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSCheckBlobUpdateTimeTrigger,
-    GCSPrefixBlobTrigger,
     GCSUploadSessionTrigger,
 )
 from tests.utils.airflow_util import create_context
@@ -40,65 +39,16 @@ class TestGCSObjectExistenceSensorAsync:
 
 
 class TestGCSObjectsWithPrefixExistenceSensorAsync:
-    OPERATOR = GCSObjectsWithPrefixExistenceSensorAsync(
-        task_id="gcs-obj-prefix",
-        bucket=TEST_BUCKET,
-        prefix=TEST_OBJECT,
-        google_cloud_conn_id=TEST_GCP_CONN_ID,
-    )
-
-    @mock.patch(f"{MODULE}.GCSObjectsWithPrefixExistenceSensorAsync.defer")
-    @mock.patch(f"{MODULE}.GCSObjectsWithPrefixExistenceSensorAsync.poke", return_value=True)
-    def test_gcs_object_with_prefix_existence_sensor_async_finish_before_deferred(
-        self, mock_poke, mock_defer, context
-    ):
-        """Assert task is not deferred when it receives a finish status before deferring"""
-        self.OPERATOR.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch(f"{MODULE}.GCSObjectsWithPrefixExistenceSensorAsync.poke", return_value=False)
-    def test_gcs_object_with_prefix_existence_sensor_async(self, context):
-        """
-        Asserts that a task is deferred and a GCSPrefixBlobTrigger will be fired
-        when the GCSObjectsWithPrefixExistenceSensorAsync is executed.
-        """
-
-        with pytest.raises(TaskDeferred) as exc:
-            self.OPERATOR.execute(context)
-        assert isinstance(exc.value.trigger, GCSPrefixBlobTrigger), "Trigger is not a GCSPrefixBlobTrigger"
-
-    def test_gcs_object_with_prefix_existence_sensor_async_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-
-        with pytest.raises(AirflowException):
-            self.OPERATOR.execute_complete(
-                context=context, event={"status": "error", "message": "test failure message"}
-            )
-
-    def test_gcs_object_with_prefix_existence_sensor_async_execute_complete(self, context):
-        """Asserts that logging occurs as expected"""
-
-        with mock.patch.object(self.OPERATOR.log, "info") as mock_log_info:
-            self.OPERATOR.execute_complete(
-                context=context,
-                event={"status": "success", "message": "Job completed", "matches": [TEST_OBJECT]},
-            )
-        mock_log_info.assert_called_with(
-            "Sensor checks existence of objects: %s, %s", TEST_BUCKET, TEST_OBJECT
+    def test_init(self):
+        task = GCSObjectsWithPrefixExistenceSensorAsync(
+            task_id="gcs-obj-prefix",
+            bucket=TEST_BUCKET,
+            prefix=TEST_OBJECT,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
         )
 
-    def test_poll_interval_deprecation_warning_prefix_existence(self):
-        """Test DeprecationWarning for GCSObjectsWithPrefixExistenceSensorAsync by setting param poll_interval"""
-        # TODO: Remove once deprecated
-        with pytest.warns(expected_warning=DeprecationWarning):
-            GCSObjectsWithPrefixExistenceSensorAsync(
-                task_id="task-id",
-                bucket=TEST_BUCKET,
-                prefix=TEST_OBJECT,
-                google_cloud_conn_id=TEST_GCP_CONN_ID,
-                polling_interval=5.0,
-            )
-
+        assert isinstance(task, GCSObjectsWithPrefixExistenceSensor)
+        assert task.deferrable is True
 
 class TestGCSUploadSessionCompleteSensorAsync:
     OPERATOR = GCSUploadSessionCompleteSensorAsync(
