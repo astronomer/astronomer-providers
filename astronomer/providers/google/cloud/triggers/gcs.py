@@ -216,6 +216,15 @@ class GCSUploadSessionTrigger(GCSPrefixBlobTrigger):
         previous_objects: set[str] | None = None,
         allow_delete: bool = True,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.triggers.gcs.GCSUploadSessionTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__(
             bucket=bucket,
             prefix=prefix,

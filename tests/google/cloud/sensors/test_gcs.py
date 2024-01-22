@@ -2,7 +2,11 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor, GCSObjectsWithPrefixExistenceSensor
+from airflow.providers.google.cloud.sensors.gcs import (
+    GCSObjectExistenceSensor,
+    GCSObjectsWithPrefixExistenceSensor,
+    GCSUploadSessionCompleteSensor,
+)
 
 from astronomer.providers.google.cloud.sensors.gcs import (
     GCSObjectExistenceSensorAsync,
@@ -12,7 +16,6 @@ from astronomer.providers.google.cloud.sensors.gcs import (
 )
 from astronomer.providers.google.cloud.triggers.gcs import (
     GCSCheckBlobUpdateTimeTrigger,
-    GCSUploadSessionTrigger,
 )
 from tests.utils.airflow_util import create_context
 
@@ -51,65 +54,18 @@ class TestGCSObjectsWithPrefixExistenceSensorAsync:
         assert task.deferrable is True
 
 class TestGCSUploadSessionCompleteSensorAsync:
-    OPERATOR = GCSUploadSessionCompleteSensorAsync(
-        task_id="gcs-obj-session",
-        bucket=TEST_BUCKET,
-        google_cloud_conn_id=TEST_GCP_CONN_ID,
-        prefix=TEST_OBJECT,
-        inactivity_period=TEST_INACTIVITY_PERIOD,
-        min_objects=TEST_MIN_OBJECTS,
-    )
-
-    @mock.patch(f"{MODULE}.GCSUploadSessionCompleteSensorAsync.defer")
-    @mock.patch(f"{MODULE}.GCSUploadSessionCompleteSensorAsync.poke", return_value=True)
-    def test_gcs_upload_session_complete_sensor_async_finish_before_deferred(
-        self, mock_poke, mock_defer, context
-    ):
-        """Assert task is not deferred when it receives a finish status before deferring"""
-        self.OPERATOR.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch(f"{MODULE}.GCSUploadSessionCompleteSensorAsync.poke", return_value=False)
-    def test_gcs_upload_session_complete_sensor_async(self, context):
-        """
-        Asserts that a task is deferred and a GCSUploadSessionTrigger will be fired
-        when the GCSUploadSessionCompleteSensorAsync is executed.
-        """
-
-        with pytest.raises(TaskDeferred) as exc:
-            self.OPERATOR.execute(context)
-        assert isinstance(
-            exc.value.trigger, GCSUploadSessionTrigger
-        ), "Trigger is not a GCSUploadSessionTrigger"
-
-    def test_gcs_upload_session_complete_sensor_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-
-        with pytest.raises(AirflowException):
-            self.OPERATOR.execute_complete(
-                context=context, event={"status": "error", "message": "test failure message"}
-            )
-
-    def test_gcs_upload_session_complete_sensor_async_execute_complete(self, context):
-        """Asserts that execute complete is completed as expected"""
-
-        assert self.OPERATOR.execute_complete(
-            context=context, event={"status": "success", "message": "success"}
+    def test_init(self):
+        task = GCSUploadSessionCompleteSensorAsync(
+            task_id="gcs-obj-session",
+            bucket=TEST_BUCKET,
+            google_cloud_conn_id=TEST_GCP_CONN_ID,
+            prefix=TEST_OBJECT,
+            inactivity_period=TEST_INACTIVITY_PERIOD,
+            min_objects=TEST_MIN_OBJECTS,
         )
 
-    def test_poll_interval_deprecation_warning_gcs_upload_session(self):
-        """Test DeprecationWarning for GCSUploadSessionCompleteSensorAsync by setting param poll_interval"""
-        # TODO: Remove once deprecated
-        with pytest.warns(expected_warning=DeprecationWarning):
-            GCSUploadSessionCompleteSensorAsync(
-                task_id="task-id",
-                bucket=TEST_BUCKET,
-                google_cloud_conn_id=TEST_GCP_CONN_ID,
-                prefix=TEST_OBJECT,
-                inactivity_period=TEST_INACTIVITY_PERIOD,
-                min_objects=TEST_MIN_OBJECTS,
-                polling_interval=5.0,
-            )
+        assert isinstance(task, GCSUploadSessionCompleteSensor)
+        assert task.deferrable is True
 
 
 class TestGCSObjectUpdateSensorAsync:
