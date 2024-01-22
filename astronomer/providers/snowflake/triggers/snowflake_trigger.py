@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from datetime import timedelta
 from typing import Any, AsyncIterator
 
@@ -81,14 +82,8 @@ class SnowflakeTrigger(BaseTrigger):
 
 class SnowflakeSqlApiTrigger(BaseTrigger):
     """
-    SnowflakeSqlApi Trigger inherits from the BaseTrigger,it is fired as
-    deferred class with params to run the task in trigger worker and
-    fetch the status for the query ids passed
-
-    :param task_id: Reference to task id of the Dag
-    :param poll_interval:  polling period in seconds to check for the status
-    :param query_ids: List of Query ids to run and poll for the status
-    :param snowflake_conn_id: Reference to Snowflake connection id
+    This class is deprecated and will be removed in 2.0.0.
+        Use :class: `~airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead.
     """
 
     def __init__(
@@ -99,6 +94,14 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
         token_life_time: timedelta,
         token_renewal_delta: timedelta,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.poll_interval = poll_interval
         self.query_ids = query_ids
