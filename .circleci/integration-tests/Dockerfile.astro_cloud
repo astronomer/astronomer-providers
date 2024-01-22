@@ -89,4 +89,6 @@ RUN cp astronomer_migration_dag.py  ${AIRFLOW_HOME}/dags/
 RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
 # we have an issue with connexion==3.0.0, so for now pinning previous stable version
 RUN pip install connexion==2.14.2
+# Temporary pin of pendulum until the required changes for pendulum 3.0 are handled in Astro
+RUN pip install pendulum==2.1.2
 USER astro
