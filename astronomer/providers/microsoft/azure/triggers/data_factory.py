@@ -1,5 +1,6 @@
 import asyncio
 import time
+import warnings
 from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow.providers.microsoft.azure.hooks.data_factory import (
@@ -73,16 +74,8 @@ class ADFPipelineRunStatusSensorTrigger(BaseTrigger):
 
 class AzureDataFactoryTrigger(BaseTrigger):
     """
-    AzureDataFactoryTrigger is triggered when Azure data factory pipeline job succeeded or failed.
-    When wait_for_termination is set to False it triggered immediately with success status
-
-    :param run_id: Run id of a Azure data pipeline run job.
-    :param azure_data_factory_conn_id: The connection identifier for connecting to Azure Data Factory.
-    :param end_time: Time in seconds when triggers will timeout.
-    :param resource_group_name: The resource group name.
-    :param factory_name: The data factory name.
-    :param wait_for_termination: Flag to wait on a pipeline run's termination.
-    :param check_interval: Time in seconds to check on a pipeline run's status.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.microsoft.azure.triggers.data_factory.AzureDataFactoryTrigger` instead.
     """
 
     QUEUED = "Queued"
@@ -107,6 +100,14 @@ class AzureDataFactoryTrigger(BaseTrigger):
         wait_for_termination: bool = True,
         check_interval: int = 60,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.microsoft.azure.triggers.data_factory.AzureDataFactoryTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.azure_data_factory_conn_id = azure_data_factory_conn_id
         self.check_interval = check_interval
