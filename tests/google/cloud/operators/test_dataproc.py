@@ -227,7 +227,6 @@ class TestDataprocDeleteClusterOperatorAsync:
 
 
 class TestDataprocSubmitJobOperatorAsync:
-
     def test_init(self):
         task = DataprocSubmitJobOperatorAsync(
             task_id="task-id", job=SPARK_JOB, region=TEST_REGION, project_id=TEST_PROJECT_ID
@@ -235,6 +234,7 @@ class TestDataprocSubmitJobOperatorAsync:
 
         assert isinstance(task, DataprocSubmitJobOperator)
         assert task.deferrable is True
+
 
 class TestDataprocUpdateClusterOperatorAsync:
     OPERATOR = DataprocUpdateClusterOperatorAsync(
