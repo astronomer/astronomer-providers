@@ -18,6 +18,9 @@ from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerat
 
 class SnowflakeSqlApiHookAsync(SnowflakeHook):
     """
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead.
+
     A client to interact with Snowflake using SQL API  and allows submitting
     multiple SQL statements in a single request. In combination with aiohttp, make post request to submit SQL
     statements for execution, poll to check the status of the execution of a statement. Fetch query results
@@ -46,8 +49,6 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         the time you connect to Snowflake
     :param token_life_time: lifetime of the JWT Token in timedelta
     :param token_renewal_delta: Renewal time of the JWT Token in  timedelta
-    This class is deprecated and will be removed in 2.0.0.
-    Use :class: `~airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead.
     """
 
     LIFETIME = timedelta(minutes=59)  # The tokens will have a 59 minute lifetime
