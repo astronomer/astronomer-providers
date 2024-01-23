@@ -4,6 +4,7 @@ import asyncio
 import fnmatch
 import os
 import re
+import warnings
 from datetime import datetime
 from functools import wraps
 from inspect import signature
@@ -43,12 +44,24 @@ def provide_bucket_name_async(func: T) -> T:
 
 
 class S3HookAsync(AwsBaseHookAsync):
-    """Interact with AWS S3, using the aiobotocore library."""
+    """Interact with AWS S3, using the aiobotocore library.
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.hooks.s3.S3Hook` instead
+    """
 
     conn_type = "s3"
     hook_name = "S3"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.s3.S3Hook`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         kwargs["client_type"] = "s3"
         kwargs["resource_type"] = "s3"
         super().__init__(*args, **kwargs)
