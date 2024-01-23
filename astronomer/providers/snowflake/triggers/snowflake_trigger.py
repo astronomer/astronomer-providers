@@ -97,7 +97,7 @@ class SnowflakeSqlApiTrigger(BaseTrigger):
         warnings.warn(
             (
                 "This class is deprecated and will be removed in 2.0.0."
-                "Use :class: `~airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead"
+                "Use `airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead"
             ),
             DeprecationWarning,
             stacklevel=2,
