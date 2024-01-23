@@ -17,8 +17,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
-from google.api_core.exceptions import AlreadyExists, NotFound
-from google.cloud.dataproc_v1 import Cluster
+from google.api_core.exceptions import NotFound
 
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
@@ -29,41 +28,9 @@ from astronomer.providers.utils.typing_compat import Context
 
 class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
     """
-    Create a new cluster on Google Cloud Dataproc Asynchronously.
-
-    :param project_id: The ID of the google cloud project in which
-        to create the cluster. (templated)
-    :param cluster_name: Name of the cluster to create
-    :param labels: Labels that will be assigned to created cluster
-    :param cluster_config: Required. The cluster config to create.
-        If a dict is provided, it must be of the same form as the protobuf message
-        :class:`~google.cloud.dataproc_v1.types.ClusterConfig`
-    :param virtual_cluster_config: Optional. The virtual cluster config, used when creating a Dataproc
-        cluster that does not directly control the underlying compute resources, for example, when creating a
-        `Dataproc-on-GKE cluster
-        <https://cloud.google.com/dataproc/docs/concepts/jobs/dataproc-gke#create-a-dataproc-on-gke-cluster>`
-    :param region: The specified region where the dataproc cluster is created.
-    :param delete_on_error: If true the cluster will be deleted if created with ERROR state. Default
-        value is true.
-    :param use_if_exists: If true use existing cluster
-    :param request_id: Optional. A unique id used to identify the request. If the server receives two
-        ``DeleteClusterRequest`` requests with the same id, then the second request will be ignored and the
-        first ``google.longrunning.Operation`` created and stored in the backend is returned.
-    :param retry: A retry object used to retry requests. If ``None`` is specified, requests will not be
-        retried.
-    :param timeout: The amount of time, in seconds, to wait for the request to complete. Note that if
-        ``retry`` is specified, the timeout applies to each individual attempt.
-    :param metadata: Additional metadata that is provided to the method.
-    :param gcp_conn_id: The connection ID to use connecting to Google Cloud.
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
-    :param polling_interval: Time in seconds to sleep between checks of cluster status
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.operators.dataproc.DataprocCreateClusterOperator`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(
@@ -72,69 +39,17 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
-        super().__init__(**kwargs)
-        self.polling_interval = polling_interval
-
-    def execute(self, context: Context) -> Any:
-        """Call create cluster API and defer to DataprocCreateClusterTrigger to check the status"""
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
-        DataprocLink.persist(
-            context=context, task_instance=self, url=DATAPROC_CLUSTER_LINK, resource=self.cluster_name
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.operators.dataproc.DataprocCreateClusterOperator`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
-        try:
-            hook.create_cluster(
-                region=self.region,
-                project_id=self.project_id,
-                cluster_name=self.cluster_name,
-                cluster_config=self.cluster_config,
-                labels=self.labels,
-                request_id=self.request_id,
-                retry=self.retry,
-                timeout=self.timeout,
-                metadata=self.metadata,
-            )
-        except AlreadyExists:
-            if not self.use_if_exists:
-                raise
-            self.log.info("Cluster already exists.")
-
-        cluster = hook.get_cluster(
-            project_id=self.project_id, region=self.region, cluster_name=self.cluster_name
-        )
-        if cluster.status.state == cluster.status.State.RUNNING:
-            self.log.info("Cluster created.")
-            return Cluster.to_dict(cluster)
-        else:
-            end_time: float = time.time() + self.timeout
-            self.defer(
-                trigger=DataprocCreateClusterTrigger(
-                    project_id=self.project_id,
-                    region=self.region,
-                    cluster_name=self.cluster_name,
-                    end_time=end_time,
-                    metadata=self.metadata,
-                    delete_on_error=self.delete_on_error,
-                    cluster_config=self.cluster_config,
-                    labels=self.labels,
-                    gcp_conn_id=self.gcp_conn_id,
-                    impersonation_chain=self.impersonation_chain,
-                    polling_interval=self.polling_interval,
-                ),
-                method_name="execute_complete",
-            )
-
-    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event and event["status"] == "success":
-            self.log.info("Cluster created successfully \n %s", event["data"])
-            return event["data"]
-        elif event and event["status"] == "error":
-            raise AirflowException(event["message"])
-        raise AirflowException("No event received in trigger callback")
+        kwargs["polling_interval_seconds"] = polling_interval
+        super().__init__(deferrable=True, **kwargs)
 
 
 class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):

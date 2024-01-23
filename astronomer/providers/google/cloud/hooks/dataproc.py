@@ -21,7 +21,22 @@ JobType = Union[Job, Any]
 
 
 class DataprocHookAsync(GoogleBaseHook):
-    """Async Hook for Google Cloud Dataproc APIs"""
+    """Async Hook for Google Cloud Dataproc APIs
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.hooks.dataproc.DataprocAsyncHook` instead
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.hooks.dataproc.DataprocAsyncHook`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
     def get_cluster_client(
         self, region: Optional[str] = None, location: Optional[str] = None
