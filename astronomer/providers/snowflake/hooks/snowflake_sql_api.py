@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,8 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         the time you connect to Snowflake
     :param token_life_time: lifetime of the JWT Token in timedelta
     :param token_renewal_delta: Renewal time of the JWT Token in  timedelta
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead.
     """
 
     LIFETIME = timedelta(minutes=59)  # The tokens will have a 59 minute lifetime
@@ -58,6 +61,14 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         *args: Any,
         **kwargs: Any,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use `airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.snowflake_conn_id = snowflake_conn_id
         self.token_life_time = token_life_time
         self.token_renewal_delta = token_renewal_delta
