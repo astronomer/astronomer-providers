@@ -1,5 +1,6 @@
 import asyncio
 import time
+import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.providers.dbt.cloud.hooks.dbt import DbtCloudJobRunStatus
@@ -10,14 +11,8 @@ from astronomer.providers.dbt.cloud.hooks.dbt import DbtCloudHookAsync
 
 class DbtCloudRunJobTrigger(BaseTrigger):
     """
-    DbtCloudRunJobTrigger is triggered with run id and account id, makes async Http call to dbt and get the status
-    for the submitted job with run id in polling interval of time.
-
-    :param conn_id: The connection identifier for connecting to Dbt.
-    :param run_id: The ID of a dbt Cloud job.
-    :param end_time: Time in seconds to wait for a job run to reach a terminal status. Defaults to 7 days.
-    :param account_id: The ID of a dbt Cloud account.
-    :param poll_interval:  polling period in seconds to check for the status.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.dbt.triggers.dbt.DbtCloudRunJobTrigger` instead.
     """
 
     def __init__(
@@ -28,6 +23,14 @@ class DbtCloudRunJobTrigger(BaseTrigger):
         poll_interval: float,
         account_id: Optional[int],
     ):
+        warnings.warn(
+            (
+                "This class is deprecated. "
+                "Use `airflow.providers.dbt.triggers.dbt.DbtCloudRunJobTrigger` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.run_id = run_id
         self.account_id = account_id

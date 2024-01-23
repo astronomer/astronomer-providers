@@ -1,61 +1,35 @@
-import time
-from typing import Any, Dict
+from __future__ import annotations
+
+import warnings
+from typing import Any
 
 from airflow.providers.dbt.cloud.sensors.dbt import DbtCloudJobRunSensor
-
-from astronomer.providers.dbt.cloud.triggers.dbt import DbtCloudRunJobTrigger
-from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
-from astronomer.providers.utils.typing_compat import Context
 
 
 class DbtCloudJobRunSensorAsync(DbtCloudJobRunSensor):
     """
-    Checks the status of a dbt Cloud job run.
-
-    .. seealso::
-        For more information on sync Sensor DbtCloudJobRunSensor, take a look at the guide::
-        :ref:`howto/operator:DbtCloudJobRunSensor`
-
-    :param dbt_cloud_conn_id: The connection identifier for connecting to dbt Cloud.
-    :param run_id: The job run identifier.
-    :param account_id: The dbt Cloud account identifier.
-    :param timeout: Time in seconds to wait for a job run to reach a terminal status. Defaults to 7 days.
+    This class is deprecated.
+    Use :class: `~airflow.providers.dbt.cloud.sensors.dbt.DbtCloudJobRunSensor` instead
+    and set `deferrable` param to `True` instead.
     """
 
-    def __init__(
-        self,
-        *,
-        poll_interval: float = 5,
-        timeout: float = 60 * 60 * 24 * 7,
-        **kwargs: Any,
-    ):
-        self.poll_interval = poll_interval
-        self.timeout = timeout
-        super().__init__(**kwargs)
-
-    def execute(self, context: "Context") -> None:
-        """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        if not poke(self, context):
-            end_time = time.time() + self.timeout
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=DbtCloudRunJobTrigger(
-                    run_id=self.run_id,
-                    conn_id=self.dbt_cloud_conn_id,
-                    account_id=self.account_id,
-                    poll_interval=self.poll_interval,
-                    end_time=end_time,
-                ),
-                method_name="execute_complete",
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated. "
+                "Use `airflow.providers.dbt.cloud.sensors.dbt.DbtCloudJobRunSensor` "
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # TODO: Remove once deprecated
+        if kwargs.get("poll_interval"):
+            warnings.warn(
+                "Argument `poll_interval` is deprecated and will be removed "
+                "in a future release.  Please use  `poke_interval` instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
-
-    def execute_complete(self, context: "Context", event: Dict[str, Any]) -> int:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] in ["error", "cancelled"]:
-            raise_error_or_skip_exception(self.soft_fail, event["message"])
-        self.log.info(event["message"])
-        return int(event["run_id"])
+            kwargs["poke_interval"] = kwargs.pop("poll_interval")
+        super().__init__(*args, deferrable=True, **kwargs)
