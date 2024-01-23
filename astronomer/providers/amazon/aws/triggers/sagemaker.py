@@ -38,7 +38,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
         warnings.warn(
             (
                 "This module is deprecated and will be removed in 2.0.0."
-                "Please use `airflow.providers.amazon.aws.hooks.batch.SageMakerTrigger`"
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerTrigger`"
             ),
             DeprecationWarning,
             stacklevel=2,
@@ -94,6 +94,9 @@ class SagemakerTrigger(BaseTrigger):
     SagemakerTrigger is common trigger for both transform and training sagemaker job and it is
      fired as deferred class with params to run the task in triggerer.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.sagemaker.SageMakerTrigger` instead
+
     :param job_name: name of the job to check status
     :param job_type: Type of the sagemaker job whether it is Transform or Training
     :param response_key: The key which needs to be look in the response.
@@ -114,6 +117,14 @@ class SagemakerTrigger(BaseTrigger):
         end_time: float | None = None,
         aws_conn_id: str = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_name = job_name
         self.job_type = job_type
