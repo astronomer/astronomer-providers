@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import asyncio
+import warnings
 from random import sample
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
@@ -12,6 +15,9 @@ from astronomer.providers.amazon.aws.hooks.base_aws import AwsBaseHookAsync
 class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
     """
     Async client for AWS Batch services.
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook` instead
 
     :param max_retries: exponential back-off retries, 4200 = 48 hours;
         polling is only used when waiters is None
@@ -41,12 +47,20 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         - `Exponential Backoff And Jitter <https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/>`_
     """
 
-    def __init__(self, job_id: Optional[str], waiters: Any = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, job_id: str | None, waiters: Any = None, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.batch_client.BatchClientHook`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(*args, **kwargs)
         self.job_id = job_id
         self.waiters = waiters
 
-    async def monitor_job(self) -> Union[Dict[str, str], None]:
+    async def monitor_job(self) -> dict[str, str] | None:
         """
         Monitor an AWS Batch job
         monitor_job can raise an exception or an AirflowTaskTimeout can be raised if execution_timeout
@@ -92,7 +106,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         raise AirflowException(f"AWS Batch job ({job_id}) has unknown status: {job}")
 
     @staticmethod
-    async def delay(delay: Union[int, float, None] = None) -> None:  # type: ignore[override]
+    async def delay(delay: int | (float | None) = None) -> None:  # type: ignore[override]
         """
         Pause execution for ``delay`` seconds.
 
@@ -116,7 +130,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
             delay = BatchClientHookAsync.add_jitter(delay)
         await asyncio.sleep(delay)
 
-    async def wait_for_job(self, job_id: str, delay: Union[int, float, None] = None) -> None:  # type: ignore[override]
+    async def wait_for_job(self, job_id: str, delay: int | (float | None) = None) -> None:  # type: ignore[override]
         """
         Wait for Batch job to complete
 
@@ -131,7 +145,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         self.log.info("AWS Batch job (%s) has completed", job_id)
 
     async def poll_for_job_complete(  # type: ignore[override]
-        self, job_id: str, delay: Union[int, float, None] = None
+        self, job_id: str, delay: int | (float | None) = None
     ) -> None:
         """
         Poll for job completion. The status that indicates job completion
@@ -150,7 +164,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         await self.poll_job_status(job_id, complete_status)
 
     async def poll_for_job_running(  # type: ignore[override]
-        self, job_id: str, delay: Union[int, float, None] = None
+        self, job_id: str, delay: int | (float | None) = None
     ) -> None:
         """
         Poll for job running. The status that indicates a job is running or
@@ -172,7 +186,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         running_status = [self.RUNNING_STATE, self.SUCCESS_STATE, self.FAILURE_STATE]
         await self.poll_job_status(job_id, running_status)
 
-    async def get_job_description(self, job_id: str) -> Dict[str, str]:  # type: ignore[override]
+    async def get_job_description(self, job_id: str) -> dict[str, str]:  # type: ignore[override]
         """
         Get job description (using status_retries).
 
@@ -210,7 +224,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
                 )
                 await self.delay(pause)
 
-    async def poll_job_status(self, job_id: str, match_status: List[str]) -> bool:  # type: ignore[override]
+    async def poll_job_status(self, job_id: str, match_status: list[str]) -> bool:  # type: ignore[override]
         """
         Poll for job status using an exponential back-off strategy (with max_retries).
         The Batch job status polled are:
