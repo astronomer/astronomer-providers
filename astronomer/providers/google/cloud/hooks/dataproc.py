@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import warnings
-from typing import Any, Optional, Sequence, Tuple, Union
+from typing import Any, Sequence, Union
 
 from airflow.providers.google.common.consts import CLIENT_INFO
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
@@ -27,7 +29,7 @@ class DataprocHookAsync(GoogleBaseHook):
     Use :class: `~airflow.providers.google.cloud.hooks.dataproc.DataprocAsyncHook` instead
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (
                 "This module is deprecated and will be removed in 2.0.0."
@@ -39,7 +41,7 @@ class DataprocHookAsync(GoogleBaseHook):
         super().__init__(*args, **kwargs)
 
     def get_cluster_client(
-        self, region: Optional[str] = None, location: Optional[str] = None
+        self, region: str | None = None, location: str | None = None
     ) -> ClusterControllerAsyncClient:
         """
         Get async cluster controller client for GCP Dataproc.
@@ -61,7 +63,7 @@ class DataprocHookAsync(GoogleBaseHook):
         )
 
     def get_job_client(
-        self, region: Optional[str] = None, location: Optional[str] = None
+        self, region: str | None = None, location: str | None = None
     ) -> JobControllerAsyncClient:
         """
         Get async job controller for GCP Dataproc.
@@ -88,7 +90,7 @@ class DataprocHookAsync(GoogleBaseHook):
         cluster_name: str,
         project_id: str,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        metadata: Sequence[Tuple[str, str]] = (),
+        metadata: Sequence[tuple[str, str]] = (),
     ) -> clusters.Cluster:
         """
         Get a cluster details from GCP using `ClusterControllerAsyncClient`
@@ -115,10 +117,10 @@ class DataprocHookAsync(GoogleBaseHook):
         job_id: str,
         project_id: str,
         timeout: float = 5,
-        region: Optional[str] = None,
-        location: Optional[str] = None,
+        region: str | None = None,
+        location: str | None = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        metadata: Sequence[Tuple[str, str]] = (),
+        metadata: Sequence[tuple[str, str]] = (),
     ) -> JobType:
         """
         Gets the resource representation for a job using `JobControllerAsyncClient`.
@@ -143,8 +145,8 @@ class DataprocHookAsync(GoogleBaseHook):
         return job
 
     def _get_client_options_and_region(
-        self, region: Optional[str] = None, location: Optional[str] = None
-    ) -> Tuple[ClientOptions, Optional[str]]:
+        self, region: str | None = None, location: str | None = None
+    ) -> tuple[ClientOptions, str | None]:
         """
         Checks for location if present or not and creates a client options using the provided region/location
 
