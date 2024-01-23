@@ -1,4 +1,7 @@
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from __future__ import annotations
+
+import warnings
+from typing import Any, AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -9,6 +12,10 @@ class BatchOperatorTrigger(BaseTrigger):
     """
     Checks for the state of a previously submitted job to AWS Batch.
     BatchOperatorTrigger is fired as deferred class with params to poll the job state in Triggerer
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.batch.BatchOperatorTrigger` instead
+
 
     :param job_id: the job ID, usually unknown (None) until the
         submit_job operation gets the jobId defined by AWS Batch
@@ -24,12 +31,20 @@ class BatchOperatorTrigger(BaseTrigger):
 
     def __init__(
         self,
-        job_id: Optional[str],
+        job_id: str | None,
         waiters: Any,
         max_retries: int,
-        region_name: Optional[str],
-        aws_conn_id: Optional[str] = "aws_default",
+        region_name: str | None,
+        aws_conn_id: str | None = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.triggers.batch.BatchOperatorTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_id = job_id
         self.waiters = waiters
@@ -37,7 +52,7 @@ class BatchOperatorTrigger(BaseTrigger):
         self.aws_conn_id = aws_conn_id
         self.region_name = region_name
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes BatchOperatorTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.batch.BatchOperatorTrigger",
@@ -50,7 +65,7 @@ class BatchOperatorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Make async connection using aiobotocore library to AWS Batch,
         periodically poll for the job status on the Triggerer
