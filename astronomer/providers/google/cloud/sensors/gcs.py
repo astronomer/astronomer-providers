@@ -78,7 +78,8 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
             DeprecationWarning,
             stacklevel=2,
         )
-        super().__init__(*args, deferrable=True, **kwargs)
+        # https://github.com/python/mypy/issues/6799#issuecomment-1882059741
+        super().__init__(*args, deferrable=True, **kwargs)  # type: ignore[misc]
 
 
 class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
@@ -113,7 +114,8 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
             DeprecationWarning,
             stacklevel=2,
         )
-        super().__init__(*args, deferrable=True, **kwargs)
+        # https://github.com/python/mypy/issues/6799#issuecomment-1882059741
+        super().__init__(*args, deferrable=True, **kwargs)  # type: ignore[misc]
 
 
 class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
@@ -147,4 +149,5 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
             DeprecationWarning,
             stacklevel=2,
         )
-        super().__init__(*args, deferrable=True, **kwargs)
+        # https://github.com/python/mypy/issues/6799#issuecomment-1882059741
+        super().__init__(*args, deferrable=True, **kwargs)  # type: ignore[misc]
