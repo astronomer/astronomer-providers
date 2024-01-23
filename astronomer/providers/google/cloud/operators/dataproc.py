@@ -17,12 +17,8 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocSubmitJobOperator,
     DataprocUpdateClusterOperator,
 )
-from google.api_core.exceptions import NotFound
 
-from astronomer.providers.google.cloud.triggers.dataproc import (
-    DataprocCreateClusterTrigger,
-    DataprocDeleteClusterTrigger,
-)
+from astronomer.providers.google.cloud.triggers.dataproc import DataprocCreateClusterTrigger
 from astronomer.providers.utils.typing_compat import Context
 
 
@@ -54,31 +50,9 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
 
 class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
     """
-    Delete a cluster on Google Cloud Dataproc Asynchronously.
-
-    :param region: Required. The Cloud Dataproc region in which to handle the request (templated).
-    :param cluster_name: Required. The cluster name (templated).
-    :param project_id: Optional. The ID of the Google Cloud project that the cluster belongs to (templated).
-    :param cluster_uuid: Optional. Specifying the ``cluster_uuid`` means the RPC should fail
-        if cluster with specified UUID does not exist.
-    :param request_id: Optional. A unique id used to identify the request. If the server receives two
-        ``DeleteClusterRequest`` requests with the same id, then the second request will be ignored and the
-        first ``google.longrunning.Operation`` created and stored in the backend is returned.
-    :param retry: A retry object used to retry requests. If ``None`` is specified, requests will not be
-        retried.
-    :param timeout: The amount of time, in seconds, to wait for the request to complete. Note that if
-        ``retry`` is specified, the timeout applies to each individual attempt.
-    :param metadata: Additional metadata that is provided to the method.
-    :param gcp_conn_id: The connection ID to use connecting to Google Cloud.
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
-    :param polling_interval: Time in seconds to sleep between checks of cluster status
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperator`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(
@@ -87,61 +61,20 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
-        super().__init__(**kwargs)
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperator`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(deferrable=True, **kwargs)
+
         self.polling_interval = polling_interval
         if self.timeout is None:
             self.timeout: float = 24 * 60 * 60
-
-    def execute(self, context: Context) -> None:
-        """Call delete cluster API and defer to wait for cluster to completely deleted"""
-        hook = DataprocHook(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
-        self.log.info("Deleting cluster: %s", self.cluster_name)
-        hook.delete_cluster(
-            project_id=self.project_id,
-            region=self.region,
-            cluster_name=self.cluster_name,
-            cluster_uuid=self.cluster_uuid,
-            request_id=self.request_id,
-            retry=self.retry,
-            metadata=self.metadata,
-        )
-
-        try:
-            hook.get_cluster(project_id=self.project_id, region=self.region, cluster_name=self.cluster_name)
-        except NotFound:
-            self.log.info("Cluster deleted.")
-            return
-        except Exception as e:
-            raise AirflowException(str(e))
-
-        end_time: float = time.time() + self.timeout
-
-        self.defer(
-            trigger=DataprocDeleteClusterTrigger(
-                gcp_conn_id=self.gcp_conn_id,
-                project_id=self.project_id,
-                region=self.region,
-                cluster_name=self.cluster_name,
-                request_id=self.request_id,
-                retry=self.retry,
-                end_time=end_time,
-                metadata=self.metadata,
-                impersonation_chain=self.impersonation_chain,
-            ),
-            method_name="execute_complete",
-        )
-
-    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event and event["status"] == "error":
-            raise AirflowException(event["message"])
-        elif event is None:
-            raise AirflowException("No event received in trigger callback")
-        self.log.info("Cluster deleted.")
 
 
 class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):

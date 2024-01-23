@@ -2,9 +2,9 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.providers.google.cloud.hooks.bigquery import NotFound
 from airflow.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperator,
+    DataprocDeleteClusterOperator,
     DataprocSubmitJobOperator,
 )
 from google.cloud import dataproc
@@ -18,7 +18,6 @@ from astronomer.providers.google.cloud.operators.dataproc import (
 )
 from astronomer.providers.google.cloud.triggers.dataproc import (
     DataprocCreateClusterTrigger,
-    DataprocDeleteClusterTrigger,
 )
 
 TEST_PROJECT_ID = "test_project_id"
@@ -49,66 +48,12 @@ class TestDataprocCreateClusterOperatorAsync:
 
 
 class TestDataprocDeleteClusterOperatorAsync:
-    OPERATOR = DataprocDeleteClusterOperatorAsync(
-        task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
-    )
-
-    @mock.patch(
-        "astronomer.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperatorAsync.defer"
-    )
-    @mock.patch(f"{MODULE}.get_cluster")
-    @mock.patch(f"{MODULE}.delete_cluster")
-    def test_dataproc_operator_create_cluster_execute_async_finish_before_defer(
-        self, mock_delete_cluster, mock_get_cluster, mock_defer, context
-    ):
-        mock_delete_cluster.return_value = {}
-        mock_get_cluster.side_effect = NotFound("test")
-        self.OPERATOR.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch(
-        "astronomer.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperatorAsync.defer"
-    )
-    @mock.patch(f"{MODULE}.get_cluster")
-    @mock.patch(f"{MODULE}.delete_cluster")
-    def test_dataproc_operator_create_cluster_execute_async_unexpected_error_before_defer(
-        self, mock_delete_cluster, mock_get_cluster, mock_defer, context
-    ):
-        mock_delete_cluster.return_value = {}
-        mock_get_cluster.side_effect = Exception("Unexpected")
-        with pytest.raises(AirflowException):
-            self.OPERATOR.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch(f"{MODULE}.get_cluster")
-    @mock.patch(f"{MODULE}.delete_cluster")
-    def test_dataproc_delete_operator_execute_async(self, mock_delete_cluster, get_cluster, context):
-        """
-        Asserts that a task is deferred and a DataprocDeleteClusterTrigger will be fired
-        when the DataprocDeleteClusterOperatorAsync is executed.
-        """
-        mock_delete_cluster.return_value = {}
-        with pytest.raises(TaskDeferred) as exc:
-            self.OPERATOR.execute(context)
-        assert isinstance(
-            exc.value.trigger, DataprocDeleteClusterTrigger
-        ), "Trigger is not a DataprocDeleteClusterTrigger"
-
-    def test_dataproc_delete_operator_execute_complete_success(self, context):
-        """assert that execute_complete execute without error when receive success signal from trigger"""
-        assert self.OPERATOR.execute_complete(context=context, event={"status": "success"}) is None
-
-    @pytest.mark.parametrize(
-        "event",
-        [
-            ({"status": "error", "message": "test failure message"}),
-            None,
-        ],
-    )
-    def test_dataproc_delete_operator_execute_complete_exception(self, event, context):
-        """assert that execute_complete raise exception when receive error from trigger"""
-        with pytest.raises(AirflowException):
-            self.OPERATOR.execute_complete(context=context, event=event)
+    def test_init(self):
+        task = DataprocDeleteClusterOperatorAsync(
+            task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
+        )
+        assert isinstance(task, DataprocDeleteClusterOperator)
+        assert task.deferrable is True
 
 
 class TestDataprocSubmitJobOperatorAsync:
