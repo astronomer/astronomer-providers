@@ -221,8 +221,9 @@ class SnowflakeOperatorAsync(SnowflakeOperator):
 
 class SnowflakeSqlApiOperatorAsync(SnowflakeSqlApiOperator):
     """
-    This class is deprecated and will be removed in 2.0.0.
-    Use :class: `~airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator` instead.
+    This class is deprecated.
+    Use :class: `~airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator` instead
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
