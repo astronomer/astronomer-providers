@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple, Union
+import warnings
+from typing import Any, AsyncIterator, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.providers.google.cloud.hooks.dataproc import DataprocHook
@@ -36,16 +39,16 @@ class DataprocCreateClusterTrigger(BaseTrigger):
     def __init__(
         self,
         *,
-        project_id: Optional[str] = None,
-        region: Optional[str] = None,
+        project_id: str | None = None,
+        region: str | None = None,
         cluster_name: str,
         end_time: float,
-        metadata: Sequence[Tuple[str, str]] = (),
+        metadata: Sequence[tuple[str, str]] = (),
         delete_on_error: bool = True,
-        cluster_config: Optional[Union[Dict[str, Any], clusters.Cluster]] = None,
-        labels: Optional[Dict[str, str]] = None,
+        cluster_config: dict[str, Any] | clusters.Cluster | None = None,
+        labels: dict[str, str] | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        impersonation_chain: str | Sequence[str] | None = None,
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
@@ -62,7 +65,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes DataprocCreateClusterTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.dataproc.DataprocCreateClusterTrigger",
@@ -81,7 +84,7 @@ class DataprocCreateClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Check the status of cluster until reach the terminal state"""
         while self.end_time > time.time():
             try:
@@ -212,11 +215,11 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
         self,
         cluster_name: str,
         end_time: float,
-        project_id: Optional[str] = None,
-        region: Optional[str] = None,
-        metadata: Sequence[Tuple[str, str]] = (),
+        project_id: str | None = None,
+        region: str | None = None,
+        metadata: Sequence[tuple[str, str]] = (),
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        impersonation_chain: str | Sequence[str] | None = None,
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
@@ -230,7 +233,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
         self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes DataprocDeleteClusterTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.dataproc.DataprocDeleteClusterTrigger",
@@ -246,7 +249,7 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Wait until cluster is deleted completely"""
         hook = DataprocHookAsync(gcp_conn_id=self.gcp_conn_id, impersonation_chain=self.impersonation_chain)
         while self.end_time > time.time():
@@ -274,6 +277,9 @@ class DataProcSubmitTrigger(BaseTrigger):
     """
     Check for the state of a previously submitted Dataproc job.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~ airflow.providers.google.cloud.triggers.dataproc.DataprocSubmitTrigger` instead
+
     :param dataproc_job_id: The Dataproc job ID to poll. (templated)
     :param region: Required. The Cloud Dataproc region in which to handle the request. (templated)
     :param project_id: The ID of the google cloud project in which
@@ -293,12 +299,20 @@ class DataProcSubmitTrigger(BaseTrigger):
         self,
         *,
         dataproc_job_id: str,
-        region: Optional[str] = None,
-        project_id: Optional[str] = None,
+        region: str | None = None,
+        project_id: str | None = None,
         gcp_conn_id: str = "google_cloud_default",
-        impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+        impersonation_chain: str | Sequence[str] | None = None,
         polling_interval: float = 5.0,
     ) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use `airflow.providers.google.cloud.triggers.dataproc.DataprocSubmitTrigger` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.project_id = project_id
         self.gcp_conn_id = gcp_conn_id
@@ -307,7 +321,7 @@ class DataProcSubmitTrigger(BaseTrigger):
         self.impersonation_chain = impersonation_chain
         self.polling_interval = polling_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes DataProcSubmitTrigger arguments and classpath."""
         return (
             "astronomer.providers.google.cloud.triggers.dataproc.DataProcSubmitTrigger",
@@ -321,7 +335,7 @@ class DataProcSubmitTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Simple loop until the job running on Google Cloud DataProc is completed or not"""
         try:
             hook = DataprocHookAsync(
@@ -338,7 +352,7 @@ class DataProcSubmitTrigger(BaseTrigger):
             yield TriggerEvent({"status": "error", "message": str(e)})
             return
 
-    async def _get_job_status(self, hook: DataprocHookAsync) -> Dict[str, str]:
+    async def _get_job_status(self, hook: DataprocHookAsync) -> dict[str, str]:
         """Gets the status of the given job_id from the Google Cloud DataProc"""
         job = await hook.get_job(job_id=self.dataproc_job_id, region=self.region, project_id=self.project_id)
         state = job.status.state
