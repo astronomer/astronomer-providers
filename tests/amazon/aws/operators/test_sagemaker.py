@@ -4,6 +4,10 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.amazon.aws.hooks.sagemaker import SageMakerHook
 from airflow.providers.amazon.aws.operators import sagemaker
+from airflow.providers.amazon.aws.operators.sagemaker import (
+    SageMakerProcessingOperator,
+    SageMakerTransformOperator,
+)
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.operators.sagemaker import (
@@ -142,7 +146,7 @@ class TestSagemakerProcessingOperatorAsync:
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
-        assert isinstance(task, SageMakerProcessingOperatorAsync)
+        assert isinstance(task, SageMakerProcessingOperator)
         assert task.deferrable is True
 
 
@@ -159,7 +163,7 @@ class TestSagemakerTransformOperatorAsync:
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
-        assert isinstance(task, SageMakerProcessingOperatorAsync)
+        assert isinstance(task, SageMakerTransformOperator)
         assert task.deferrable is True
 
 
