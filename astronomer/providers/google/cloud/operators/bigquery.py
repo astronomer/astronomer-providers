@@ -15,7 +15,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
@@ -50,70 +49,24 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator):
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     """
-    BigQueryCheckOperatorAsync is asynchronous operator, submit the job and check
-    for the status in async mode by using the job id
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.operators.bigquery.BigQueryCheckOperator`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated."
+                "Please use `airflow.providers.google.cloud.operators.bigquery.BigQueryCheckOperator`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         poll_interval: float = kwargs.pop("poll_interval", 4.0)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
         self.poll_interval = poll_interval
-
-    def _submit_job(
-        self,
-        hook: BigQueryHook,
-        job_id: str,
-    ) -> BigQueryJob:
-        """Submit a new job and get the job id for polling the status using Trigger."""
-        configuration = {"query": {"query": self.sql}}
-
-        return hook.insert_job(
-            configuration=configuration,
-            project_id=hook.project_id,
-            location=self.location,
-            job_id=job_id,
-            nowait=True,
-        )
-
-    def execute(self, context: Context) -> None:  # noqa: D102
-        hook = BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            impersonation_chain=self.impersonation_chain,
-        )
-        job = self._submit_job(hook, job_id="")
-        context["ti"].xcom_push(key="job_id", value=job.job_id)
-
-        if job.running():
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=BigQueryCheckTrigger(
-                    conn_id=self.gcp_conn_id,
-                    job_id=job.job_id,
-                    project_id=hook.project_id,
-                    impersonation_chain=self.impersonation_chain,
-                    poll_interval=self.poll_interval,
-                ),
-                method_name="execute_complete",
-            )
-        else:
-            super().execute(context=context)
-
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> None:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-
-        records = event["records"]
-        if not records:
-            raise AirflowException("The query returned None")
-        elif not all(bool(r) for r in records):
-            raise AirflowException(f"Test failed.\nQuery:\n{self.sql}\nResults:\n{records!s}")
-        self.log.info("Record: %s", event["records"])
-        self.log.info("Success.")
 
 
 class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):

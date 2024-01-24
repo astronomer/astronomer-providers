@@ -117,7 +117,23 @@ class BigQueryInsertJobTrigger(BaseTrigger):
 
 
 class BigQueryCheckTrigger(BigQueryInsertJobTrigger):
-    """BigQueryCheckTrigger run on the trigger worker"""
+    """BigQueryCheckTrigger run on the trigger worker
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger` instead
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.bigquery.BigQueryCheckTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        super().__init__(*args, **kwargs)
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes BigQueryCheckTrigger arguments and classpath."""
