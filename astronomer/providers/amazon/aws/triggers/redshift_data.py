@@ -1,4 +1,7 @@
-from typing import Any, AsyncIterator, Dict, List, Tuple
+from __future__ import annotations
+
+import warnings
+from typing import Any, AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -8,6 +11,9 @@ from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 class RedshiftDataTrigger(BaseTrigger):
     """
     RedshiftDataTrigger is fired as deferred class with params to run the task in triggerer.
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.redshift_data.RedshiftDataTrigger` instead
 
     :param task_id: task ID of the Dag
     :param poll_interval:  polling period in seconds to check for the status
@@ -19,16 +25,25 @@ class RedshiftDataTrigger(BaseTrigger):
         self,
         task_id: str,
         poll_interval: int,
-        query_ids: List[str],
+        query_ids: list[str],
         aws_conn_id: str = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.triggers.redshift_data.RedshiftDataTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__()
         self.task_id = task_id
         self.poll_interval = poll_interval
         self.aws_conn_id = aws_conn_id
         self.query_ids = query_ids
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes RedshiftDataTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_data.RedshiftDataTrigger",
@@ -40,7 +55,7 @@ class RedshiftDataTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes async connection and gets status for a list of queries submitted by the operator.
         Even if one of the queries has a non-successful state, the hook returns a failure event and the error
