@@ -1,3 +1,4 @@
+import warnings
 from typing import Any
 
 from airflow.hooks.base import BaseHook
@@ -10,6 +11,15 @@ class GoogleBaseHookAsync(BaseHook):
     sync_hook_class: Any = None
 
     def __init__(self, **kwargs: Any):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use :class: `~airflow.providers.google.cloud.hooks.gcs.GoogleBaseAsyncHook` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         self._hook_kwargs = kwargs
         self._sync_hook = None
 
