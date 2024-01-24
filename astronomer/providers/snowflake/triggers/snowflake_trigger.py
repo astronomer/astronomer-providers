@@ -83,7 +83,7 @@ class SnowflakeTrigger(BaseTrigger):
 class SnowflakeSqlApiTrigger(BaseTrigger):
     """
     This class is deprecated and will be removed in 2.0.0.
-        Use :class: `~airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead.
+    Use :class: `~airflow.providers.snowflake.triggers.snowflake_trigger.SnowflakeSqlApiTrigger` instead.
     """
 
     def __init__(
