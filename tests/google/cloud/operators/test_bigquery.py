@@ -7,6 +7,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryGetDataOperator,
     BigQueryInsertJobOperator,
+    BigQueryIntervalCheckOperator,
 )
 
 from astronomer.providers.google.cloud.operators.bigquery import (
@@ -17,7 +18,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
 from tests.utils.airflow_util import create_context
@@ -61,86 +61,15 @@ class TestBigQueryCheckOperatorAsync:
 
 
 class TestBigQueryIntervalCheckOperatorAsync:
-    def test_bigquery_interval_check_operator_execute_complete(self):
-        """Asserts that logging occurs as expected"""
-
-        operator = BigQueryIntervalCheckOperatorAsync(
+    def test_init(self):
+        task = BigQueryIntervalCheckOperatorAsync(
             task_id="bq_interval_check_operator_execute_complete",
             table="test_table",
             metrics_thresholds={"COUNT(*)": 1.5},
             location=TEST_DATASET_LOCATION,
         )
-
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None, event={"status": "success", "message": "Job completed"})
-        mock_log_info.assert_called_with(
-            "%s completed with response %s ", "bq_interval_check_operator_execute_complete", "success"
-        )
-
-    def test_bigquery_interval_check_operator_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-
-        operator = BigQueryIntervalCheckOperatorAsync(
-            task_id="bq_interval_check_operator_execute_complete",
-            table="test_table",
-            metrics_thresholds={"COUNT(*)": 1.5},
-            location=TEST_DATASET_LOCATION,
-        )
-
-        with pytest.raises(AirflowException):
-            operator.execute_complete(
-                context=None, event={"status": "error", "message": "test failure message"}
-            )
-
-    @mock.patch("airflow.providers.google.cloud.operators.bigquery.BigQueryIntervalCheckOperator.execute")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryIntervalCheckOperator.defer")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_interval_check_operator_async_finish_before_defer(
-        self, mock_hook, mock_defer, mock_execute
-    ):
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-        mock_hook.return_value.insert_job.return_value.running.return_value = False
-
-        op = BigQueryIntervalCheckOperatorAsync(
-            task_id="bq_interval_check_operator_execute_complete",
-            table="test_table",
-            metrics_thresholds={"COUNT(*)": 1.5},
-            location=TEST_DATASET_LOCATION,
-        )
-
-        op.execute(create_context(op))
-        assert not mock_defer.called
-        assert mock_execute.called
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_interval_check_operator_async(self, mock_hook):
-        """
-        Asserts that a task is deferred and a BigQueryIntervalCheckTrigger will be fired
-        when the BigQueryIntervalCheckOperatorAsync is executed.
-        """
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-
-        op = BigQueryIntervalCheckOperatorAsync(
-            task_id="bq_interval_check_operator_execute_complete",
-            table="test_table",
-            metrics_thresholds={"COUNT(*)": 1.5},
-            location=TEST_DATASET_LOCATION,
-        )
-
-        with pytest.raises(TaskDeferred) as exc:
-            op.execute(create_context(op))
-
-        assert isinstance(
-            exc.value.trigger, BigQueryIntervalCheckTrigger
-        ), "Trigger is not a BigQueryIntervalCheckTrigger"
+        assert isinstance(task, BigQueryIntervalCheckOperator)
+        assert task.deferrable is True
 
 
 class TestBigQueryGetDataOperatorAsync:

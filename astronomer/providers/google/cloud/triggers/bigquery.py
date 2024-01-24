@@ -263,6 +263,9 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
     """
     BigQueryIntervalCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger` instead
+
     :param conn_id: Reference to google cloud connection id
     :param first_job_id:  The ID of the job 1 performed
     :param second_job_id:  The ID of the job 2 performed
@@ -298,6 +301,15 @@ class BigQueryIntervalCheckTrigger(BigQueryInsertJobTrigger):
         impersonation_chain: str | Sequence[str] | None = None,
         poll_interval: float = 4.0,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.bigquery.BigQueryIntervalCheckTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__(
             conn_id=conn_id,
             job_id=first_job_id,
