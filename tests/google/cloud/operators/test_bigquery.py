@@ -3,8 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.utils.timezone import datetime
-from google.cloud.exceptions import Conflict
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
@@ -16,7 +15,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
-    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
@@ -29,12 +27,8 @@ TEST_TABLE = "test-table"
 
 
 class TestBigQueryInsertJobOperatorAsync:
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperatorAsync.defer")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_insert_job_operator_async_finish_before_deferred(self, mock_hook, mock_defer):
+    def test_init(self):
         job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
 
         configuration = {
             "query": {
@@ -42,236 +36,15 @@ class TestBigQueryInsertJobOperatorAsync:
                 "useLegacySql": False,
             }
         }
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-        mock_hook.return_value.insert_job.return_value.running.return_value = False
-
-        op = BigQueryInsertJobOperatorAsync(
+        task = BigQueryInsertJobOperatorAsync(
             task_id="insert_query_job",
             configuration=configuration,
             location=TEST_DATASET_LOCATION,
             job_id=job_id,
             project_id=TEST_GCP_PROJECT_ID,
         )
-
-        op.execute(create_context(op))
-        assert not mock_defer.called
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_insert_job_operator_async(self, mock_hook):
-        """
-        Asserts that a task is deferred and a BigQueryInsertJobTrigger will be fired
-        when the BigQueryInsertJobOperatorAsync is executed.
-        """
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-
-        op = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-        )
-
-        with pytest.raises(TaskDeferred) as exc:
-            op.execute(create_context(op))
-
-        assert isinstance(
-            exc.value.trigger, BigQueryInsertJobTrigger
-        ), "Trigger is not a BigQueryInsertJobTrigger"
-
-    def test_bigquery_insert_job_operator_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-        job_id = "123456"
-
-        operator = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-        )
-
-        with pytest.raises(AirflowException):
-            operator.execute_complete(
-                context=None, event={"status": "error", "message": "test failure message"}
-            )
-
-    def test_bigquery_insert_job_operator_execute_complete(self):
-        """Asserts that logging occurs as expected"""
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-        job_id = "123456"
-
-        operator = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-        )
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(
-                context=create_context(operator),
-                event={"status": "success", "message": "Job completed", "job_id": job_id},
-            )
-        mock_log_info.assert_called_with(
-            "%s completed with response %s ", "insert_query_job", "Job completed"
-        )
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_insert_job_operator_with_job_id_generate(self, mock_hook):
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-
-        mock_hook.return_value.insert_job.side_effect = Conflict("any")
-        job = MagicMock(
-            job_id=real_job_id,
-            error_result=False,
-            state="PENDING",
-            done=lambda: False,
-        )
-        mock_hook.return_value.get_job.return_value = job
-
-        op = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-            reattach_states={"PENDING"},
-        )
-
-        with pytest.raises(TaskDeferred):
-            op.execute(create_context(op))
-
-        mock_hook.return_value.generate_job_id.assert_called_once_with(
-            job_id=job_id,
-            dag_id="adhoc_airflow",
-            task_id="insert_query_job",
-            logical_date=datetime(2022, 1, 1, 1, 0),
-            configuration=configuration,
-            force_rerun=True,
-        )
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_execute_reattach(self, mock_hook):
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-        mock_hook.return_value.generate_job_id.return_value = f"{job_id}_{hash_}"
-
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-
-        mock_hook.return_value.insert_job.side_effect = Conflict("any")
-        job = MagicMock(
-            job_id=real_job_id,
-            error_result=False,
-            state="PENDING",
-            done=lambda: False,
-        )
-        mock_hook.return_value.get_job.return_value = job
-
-        op = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-            reattach_states={"PENDING"},
-        )
-
-        with pytest.raises(TaskDeferred):
-            op.execute(create_context(op))
-
-        mock_hook.return_value.get_job.assert_called_once_with(
-            location=TEST_DATASET_LOCATION,
-            job_id=real_job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-        )
-
-        job._begin.assert_called_once_with()
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_execute_force_rerun(self, mock_hook):
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-        mock_hook.return_value.generate_job_id.return_value = f"{job_id}_{hash_}"
-
-        configuration = {
-            "query": {
-                "query": "SELECT * FROM any",
-                "useLegacySql": False,
-            }
-        }
-
-        mock_hook.return_value.insert_job.side_effect = Conflict("any")
-        job = MagicMock(
-            job_id=real_job_id,
-            error_result=False,
-            state="DONE",
-            done=lambda: False,
-        )
-        mock_hook.return_value.get_job.return_value = job
-
-        op = BigQueryInsertJobOperatorAsync(
-            task_id="insert_query_job",
-            configuration=configuration,
-            location=TEST_DATASET_LOCATION,
-            job_id=job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-            reattach_states={"PENDING"},
-        )
-
-        with pytest.raises(AirflowException) as exc:
-            op.execute(create_context(op))
-
-        expected_exception_msg = (
-            f"Job with id: {real_job_id} already exists and is in {job.state} state. "
-            f"If you want to force rerun it consider setting `force_rerun=True`."
-            f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
-        )
-
-        assert str(exc.value) == expected_exception_msg
-
-        mock_hook.return_value.get_job.assert_called_once_with(
-            location=TEST_DATASET_LOCATION,
-            job_id=real_job_id,
-            project_id=TEST_GCP_PROJECT_ID,
-        )
+        assert isinstance(task, BigQueryInsertJobOperator)
+        assert task.deferrable is True
 
 
 class TestBigQueryCheckOperatorAsync:

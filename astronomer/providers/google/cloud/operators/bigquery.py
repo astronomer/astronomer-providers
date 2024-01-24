@@ -1,10 +1,10 @@
 """This module contains Google BigQueryAsync providers."""
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook, BigQueryJob
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
@@ -13,13 +13,10 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryIntervalCheckOperator,
     BigQueryValueCheckOperator,
 )
-from google.api_core.exceptions import Conflict
-from google.cloud.bigquery import CopyJob, ExtractJob, LoadJob, QueryJob
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
     BigQueryCheckTrigger,
     BigQueryGetDataTrigger,
-    BigQueryInsertJobTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
@@ -28,135 +25,27 @@ from astronomer.providers.utils.typing_compat import Context
 BIGQUERY_JOB_DETAILS_LINK_FMT = "https://console.cloud.google.com/bigquery?j={job_id}"
 
 
-class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator, BaseOperator):
+class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator):
     """
-    Starts a BigQuery job asynchronously, and returns job id.
-    This operator works in the following way:
-
-    - it calculates a unique hash of the job using job's configuration or uuid if ``force_rerun`` is True
-    - creates ``job_id`` in form of
-        ``[provided_job_id | airflow_{dag_id}_{task_id}_{exec_date}]_{uniqueness_suffix}``
-    - submits a BigQuery job using the ``job_id``
-    - if job with given id already exists then it tries to reattach to the job if its not done and its
-        state is in ``reattach_states``. If the job is done the operator will raise ``AirflowException``.
-
-    Using ``force_rerun`` will submit a new job every time without attaching to already existing ones.
-
-    For job definition see here:
-
-        https://cloud.google.com/bigquery/docs/reference/v2/jobs
-
-    :param configuration: The configuration parameter maps directly to BigQuery's
-        configuration field in the job  object. For more details see
-        https://cloud.google.com/bigquery/docs/reference/v2/jobs
-    :param job_id: The ID of the job. It will be suffixed with hash of job configuration
-        unless ``force_rerun`` is True.
-        The ID must contain only letters (a-z, A-Z), numbers (0-9), underscores (_), or
-        dashes (-). The maximum length is 1,024 characters. If not provided then uuid will
-        be generated.
-    :param force_rerun: If True then operator will use hash of uuid as job id suffix
-    :param reattach_states: Set of BigQuery job's states in case of which we should reattach
-        to the job. Should be other than final states.
-    :param project_id: Google Cloud Project where the job is running
-    :param location: location the job is running
-    :param gcp_conn_id: The connection ID used to connect to Google Cloud.
-    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
-        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
-        account making the request must have domain-wide delegation enabled.
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
-    :param cancel_on_kill: Flag which indicates whether cancel the hook's job or not, when on_kill is called
-    :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds.
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperator`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated."
+                "Please use `airflow.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperator`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         poll_interval: float = kwargs.pop("poll_interval", 4.0)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
         self.poll_interval = poll_interval
-
-    def execute(self, context: Context) -> Any:  # noqa: D102
-        kwargs: dict[Any, Any] = {}
-        if hasattr(self, "delegate_to"):
-            kwargs["delegate_to"] = self.delegate_to
-        hook = BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            impersonation_chain=self.impersonation_chain,
-            location=self.location,
-            **kwargs,
-        )
-
-        self.hook = hook
-        job_id = self.hook.generate_job_id(
-            job_id=self.job_id,
-            dag_id=self.dag_id,
-            task_id=self.task_id,
-            logical_date=context["logical_date"],
-            configuration=self.configuration,
-            force_rerun=self.force_rerun,
-        )
-
-        try:
-            job = self._submit_job(hook, job_id)
-            self._handle_job_error(job)
-        except Conflict:
-            # If the job already exists retrieve it
-            job: CopyJob | QueryJob | LoadJob | ExtractJob = hook.get_job(  # type: ignore[no-redef]
-                project_id=self.project_id,
-                location=self.location,
-                job_id=job_id,
-            )
-            if job.state in self.reattach_states:
-                # We are reattaching to a job
-                job._begin()
-                self._handle_job_error(job)
-            else:
-                # Same job configuration so we need force_rerun
-                raise AirflowException(
-                    f"Job with id: {job_id} already exists and is in {job.state} state. If you "
-                    f"want to force rerun it consider setting `force_rerun=True`."
-                    f"Or, if you want to reattach in this scenario add {job.state} to `reattach_states`"
-                )
-
-        self.job_id = job.job_id
-        context["ti"].xcom_push(key="job_id", value=self.job_id)
-        if job.running():
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=BigQueryInsertJobTrigger(
-                    conn_id=self.gcp_conn_id,
-                    job_id=self.job_id,
-                    project_id=self.project_id,
-                    impersonation_chain=self.impersonation_chain,
-                    poll_interval=self.poll_interval,
-                    **kwargs,
-                ),
-                method_name="execute_complete",
-            )
-        else:
-            job.result()
-            self._handle_job_error(job)
-            return self.job_id
-
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-        self.log.info(
-            "%s completed with response %s ",
-            self.task_id,
-            event["message"],
-        )
-        return self.job_id
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):

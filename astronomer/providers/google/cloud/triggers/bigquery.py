@@ -18,6 +18,9 @@ class BigQueryInsertJobTrigger(BaseTrigger):
     """
     BigQueryInsertJobTrigger run on the trigger worker to perform insert operation
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger` instead
+
     :param conn_id: Reference to google cloud connection id
     :param job_id:  The ID of the job. It will be suffixed with hash of job configuration
     :param project_id: Google Cloud Project where the job is running
@@ -40,6 +43,15 @@ class BigQueryInsertJobTrigger(BaseTrigger):
         impersonation_chain: str | Sequence[str] | None = None,
         poll_interval: float = 4.0,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.bigquery.BigQueryInsertJobTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__()
         self.log.info("Using the connection  %s .", conn_id)
         self.conn_id = conn_id
