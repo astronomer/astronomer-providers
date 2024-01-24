@@ -424,6 +424,9 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
     """
     BigQueryValueCheckTrigger run on the trigger worker, inherits from BigQueryInsertJobTrigger class
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger` instead
+
     :param conn_id: Reference to google cloud connection id
     :param sql: the sql to be executed
     :param pass_value: pass value
@@ -450,6 +453,15 @@ class BigQueryValueCheckTrigger(BigQueryInsertJobTrigger):
         impersonation_chain: str | Sequence[str] | None = None,
         poll_interval: float = 4.0,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.bigquery.BigQueryValueCheckTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__(
             conn_id=conn_id,
             job_id=job_id,
