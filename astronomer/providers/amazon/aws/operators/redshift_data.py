@@ -53,7 +53,7 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             trigger=RedshiftDataTrigger(
                 task_id=self.task_id,
                 poll_interval=self.poll_interval,
-                aws_conn_id=self.aws_conn_id,
+                aws_conn_id=self.aws_conn_id,  # type: ignore[arg-type]
                 query_ids=query_ids,
             ),
             method_name="execute_complete",
