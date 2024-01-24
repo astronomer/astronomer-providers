@@ -15,7 +15,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryGetDataTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
@@ -71,133 +70,24 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
 
 class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     """
-    Fetches the data from a BigQuery table (alternatively fetch data for selected columns)
-    and returns data in a python list. The number of elements in the returned list will
-    be equal to the number of rows fetched. Each element in the list will again be a list
-    where element would represent the columns values for that row.
-
-    **Example Result**: ``[['Tony', '10'], ['Mike', '20'], ['Steve', '15']]``
-
-    .. note::
-        If you pass fields to ``selected_fields`` which are in different order than the
-        order of columns already in
-        BQ table, the data will still be in the order of BQ table.
-        For example if the BQ table has 3 columns as
-        ``[A,B,C]`` and you pass 'B,A' in the ``selected_fields``
-        the data would still be of the form ``'A,B'``.
-
-    **Example**: ::
-
-        get_data = BigQueryGetDataOperator(
-            task_id='get_data_from_bq',
-            dataset_id='test_dataset',
-            table_id='Transaction_partitions',
-            max_results=100,
-            selected_fields='DATE',
-            gcp_conn_id='airflow-conn-id'
-        )
-
-    :param dataset_id: The dataset ID of the requested table. (templated)
-    :param table_id: The table ID of the requested table. (templated)
-    :param max_results: The maximum number of records (rows) to be fetched from the table. (templated)
-    :param selected_fields: List of fields to return (comma-separated). If
-        unspecified, all fields are returned.
-    :param gcp_conn_id: (Optional) The connection ID used to connect to Google Cloud.
-    :param delegate_to: (Removed in apache-airflow-providers-google release 10.0.0, use impersonation_chain instead)
-        The account to impersonate using domain-wide delegation of authority, if any. For this to work, the service
-        account making the request must have domain-wide delegation enabled.
-    :param location: The location used for the operation.
-    :param impersonation_chain: Optional service account to impersonate using short-term
-        credentials, or chained list of accounts required to get the access_token
-        of the last account in the list, which will be impersonated in the request.
-        If set as a string, the account must grant the originating account
-        the Service Account Token Creator IAM role.
-        If set as a sequence, the identities from the list must grant
-        Service Account Token Creator IAM role to the directly preceding identity, with first
-        account from the list granting this role to the originating account (templated).
-    :param poll_interval: polling period in seconds to check for the status of job. Defaults to 4 seconds
+    This class is deprecated.
+    Please use :class: `~airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator`
+    and set `deferrable` param to `True` instead.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated."
+                "Please use `airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator`"
+                "and set `deferrable` param to `True` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         poll_interval: float = kwargs.pop("poll_interval", 4.0)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, deferrable=True, **kwargs)
         self.poll_interval = poll_interval
-
-    def _submit_job(  # type: ignore[override]
-        self,
-        hook: BigQueryHook,
-        job_id: str,
-        configuration: dict[str, Any],
-    ) -> BigQueryJob:
-        """Submit a new job and get the job id for polling the status using Triggerer."""
-        return hook.insert_job(
-            configuration=configuration,
-            location=self.location,
-            project_id=hook.project_id,
-            job_id=job_id,
-            nowait=True,
-        )
-
-    def generate_query(self) -> str:  # type: ignore[override]
-        """
-        Generate a select query if selected fields are given or with *
-        for the given dataset and table id
-        """
-        query = "select "
-        if self.selected_fields:
-            query += self.selected_fields
-        else:
-            query += "*"
-        query += " from " + self.dataset_id + "." + self.table_id + " limit " + str(self.max_results)
-        return query
-
-    def execute(self, context: Context) -> None:  # noqa: D102
-        get_query = self.generate_query()
-        configuration = {"query": {"query": get_query}}
-        kwargs: dict[Any, Any] = {}
-        if hasattr(self, "delegate_to"):
-            kwargs["delegate_to"] = self.delegate_to
-        hook = BigQueryHook(
-            gcp_conn_id=self.gcp_conn_id,
-            location=self.location,
-            impersonation_chain=self.impersonation_chain,
-            **kwargs,
-        )
-
-        self.hook = hook
-        job = self._submit_job(hook, job_id="", configuration=configuration)
-        self.job_id = job.job_id
-        context["ti"].xcom_push(key="job_id", value=self.job_id)
-
-        if job.running():
-            self.defer(
-                timeout=self.execution_timeout,
-                trigger=BigQueryGetDataTrigger(
-                    conn_id=self.gcp_conn_id,
-                    job_id=self.job_id,
-                    dataset_id=self.dataset_id,
-                    table_id=self.table_id,
-                    project_id=hook.project_id,
-                    impersonation_chain=self.impersonation_chain,
-                    poll_interval=self.poll_interval,
-                    **kwargs,
-                ),
-                method_name="execute_complete",
-            )
-        else:
-            super().execute(context=context)
-
-    def execute_complete(self, context: Context, event: dict[str, Any]) -> Any:
-        """
-        Callback for when the trigger fires - returns immediately.
-        Relies on trigger to throw an exception, otherwise it assumes execution was
-        successful.
-        """
-        if event["status"] == "error":
-            raise AirflowException(event["message"])
-
-        self.log.info("Total extracted rows: %s", len(event["records"]))
-        return event["records"]
 
 
 class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):

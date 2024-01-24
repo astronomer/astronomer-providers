@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
-from airflow.providers.google.cloud.operators.bigquery import BigQueryCheckOperator, BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCheckOperator,
+    BigQueryGetDataOperator,
+    BigQueryInsertJobOperator,
+)
 
 from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperatorAsync,
@@ -13,7 +17,6 @@ from astronomer.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperatorAsync,
 )
 from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryGetDataTrigger,
     BigQueryIntervalCheckTrigger,
     BigQueryValueCheckTrigger,
 )
@@ -141,112 +144,16 @@ class TestBigQueryIntervalCheckOperatorAsync:
 
 
 class TestBigQueryGetDataOperatorAsync:
-    @mock.patch("airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator.execute")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryGetDataOperatorAsync.defer")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_get_data_operator_async_finish_before_deferred(
-        self, mock_hook, mock_defer, mock_execute
-    ):
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-        mock_hook.return_value.insert_job.return_value.running.return_value = False
-
-        op = BigQueryGetDataOperatorAsync(
+    def test_init(self):
+        task = BigQueryGetDataOperatorAsync(
             task_id="get_data_from_bq",
             dataset_id=TEST_DATASET,
             table_id=TEST_TABLE,
             max_results=100,
             selected_fields="value,name",
         )
-
-        op.execute(create_context(op))
-        assert not mock_defer.called
-        assert mock_execute.called
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_get_data_operator_async_with_selected_fields(self, mock_hook):
-        """
-        Asserts that a task is deferred and a BigQuerygetDataTrigger will be fired
-        when the BigQuerygetDataOperatorAsync is executed.
-        """
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-
-        op = BigQueryGetDataOperatorAsync(
-            task_id="get_data_from_bq",
-            dataset_id=TEST_DATASET,
-            table_id=TEST_TABLE,
-            max_results=100,
-            selected_fields="value,name",
-        )
-
-        with pytest.raises(TaskDeferred) as exc:
-            op.execute(create_context(op))
-
-        assert isinstance(
-            exc.value.trigger, BigQueryGetDataTrigger
-        ), "Trigger is not a BigQueryGetDataTrigger"
-
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_bigquery_get_data_operator_async_without_selected_fields(self, mock_hook):
-        """
-        Asserts that a task is deferred and a BigQuerygetDataTrigger will be fired
-        when the BigQuerygetDataOperatorAsync is executed.
-        """
-        job_id = "123456"
-        hash_ = "hash"
-        real_job_id = f"{job_id}_{hash_}"
-
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=real_job_id, error_result=False)
-
-        op = BigQueryGetDataOperatorAsync(
-            task_id="get_data_from_bq",
-            dataset_id=TEST_DATASET,
-            table_id=TEST_TABLE,
-            max_results=100,
-        )
-
-        with pytest.raises(TaskDeferred) as exc:
-            op.execute(create_context(op))
-
-        assert isinstance(
-            exc.value.trigger, BigQueryGetDataTrigger
-        ), "Trigger is not a BigQueryGetDataTrigger"
-
-    def test_bigquery_get_data_operator_execute_failure(self, context):
-        """Tests that an AirflowException is raised in case of error event"""
-
-        operator = BigQueryGetDataOperatorAsync(
-            task_id="get_data_from_bq",
-            dataset_id=TEST_DATASET,
-            table_id="any",
-            max_results=100,
-        )
-
-        with pytest.raises(AirflowException):
-            operator.execute_complete(
-                context=None, event={"status": "error", "message": "test failure message"}
-            )
-
-    def test_bigquery_get_data_op_execute_complete_with_records(self):
-        """Asserts that exception is raised with correct expected exception message"""
-
-        operator = BigQueryGetDataOperatorAsync(
-            task_id="get_data_from_bq",
-            dataset_id=TEST_DATASET,
-            table_id="any",
-            max_results=100,
-        )
-
-        with mock.patch.object(operator.log, "info") as mock_log_info:
-            operator.execute_complete(context=None, event={"status": "success", "records": [20]})
-        mock_log_info.assert_called_with("Total extracted rows: %s", 1)
+        assert isinstance(task, BigQueryGetDataOperator)
+        assert task.deferrable is True
 
 
 class TestBigQueryValueCheckOperatorAsync:
