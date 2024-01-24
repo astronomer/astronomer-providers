@@ -1,5 +1,6 @@
 """This module contains the Apache Livy Trigger."""
 import asyncio
+import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -9,21 +10,8 @@ from astronomer.providers.apache.livy.hooks.livy import BatchState, LivyHookAsyn
 
 class LivyTrigger(BaseTrigger):
     """
-    Check for the state of a previously submitted job with batch_id
-
-    :param batch_id: Batch job id
-    :param spark_params: Spark parameters; for example,
-            spark_params = {"file": "test/pi.py", "class_name": "org.apache.spark.examples.SparkPi",
-            "args": ["/usr/lib/spark/bin/run-example", "SparkPi", "10"],"jars": "command-runner.jar",
-            "driver_cores": 1, "executor_cores": 4,"num_executors": 1}
-    :param livy_conn_id: reference to a pre-defined Livy Connection.
-    :param polling_interval: time in seconds between polling for job completion.  If poll_interval=0, in that case
-        return the batch_id and if polling_interval > 0, poll the livy job for termination in the polling interval
-        defined.
-    :param extra_options: A dictionary of options, where key is string and value
-        depends on the option that's being modified.
-    :param extra_headers: A dictionary of headers passed to the HTTP request to livy.
-    :param livy_hook_async: LivyHookAsync object
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.apache.livy.triggers.livy.LivyTrigger` instead.
     """
 
     def __init__(
@@ -36,6 +24,10 @@ class LivyTrigger(BaseTrigger):
         extra_headers: Optional[Dict[str, Any]] = None,
         livy_hook_async: Optional[LivyHookAsync] = None,
     ):
+        warnings.warn(
+            "This class is deprecated. "
+            "Use `airflow.providers.apache.livy.triggers.livy.LivyTrigger` instead.",
+        )
         super().__init__()
         self._batch_id = batch_id
         self.spark_params = spark_params
