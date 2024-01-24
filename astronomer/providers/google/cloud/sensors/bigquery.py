@@ -2,16 +2,9 @@
 from __future__ import annotations
 
 import warnings
-from datetime import timedelta
 from typing import Any
 
 from airflow.providers.google.cloud.sensors.bigquery import BigQueryTableExistenceSensor
-
-from astronomer.providers.google.cloud.triggers.bigquery import (
-    BigQueryTableExistenceTrigger,
-)
-from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
-from astronomer.providers.utils.typing_compat import Context
 
 
 class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
