@@ -36,10 +36,7 @@ class HttpHookAsync(BaseHook):
         keep_response: bool = False,
     ) -> None:
         warnings.warn(
-            (
-                "This class is deprecated. "
-                "Use `~airflow.providers.http.hooks.http.HttpAsyncHook` instead."
-            ),
+            ("This class is deprecated. " "Use `~airflow.providers.http.hooks.http.HttpAsyncHook` instead."),
             DeprecationWarning,
             stacklevel=2,
         )
