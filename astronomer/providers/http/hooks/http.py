@@ -38,7 +38,7 @@ class HttpHookAsync(BaseHook):
         warnings.warn(
             (
                 "This class is deprecated. "
-                "Use `airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook` instead."
+                "Use `~airflow.providers.http.hooks.http.HttpAsyncHook` instead."
             ),
             DeprecationWarning,
             stacklevel=2,
