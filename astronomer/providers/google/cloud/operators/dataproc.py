@@ -60,9 +60,8 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
             DeprecationWarning,
             stacklevel=2,
         )
+        kwargs["polling_interval_seconds"] = polling_interval
         super().__init__(deferrable=True, **kwargs)
-
-        self.polling_interval = polling_interval
         if self.timeout is None:
             self.timeout: float = 24 * 60 * 60
 
@@ -109,7 +108,7 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
             DeprecationWarning,
             stacklevel=2,
         )
+        kwargs["polling_interval_seconds"] = polling_interval
         super().__init__(deferrable=True, **kwargs)
-        self.polling_interval = polling_interval
         if self.timeout is None:
             self.timeout: float = 24 * 60 * 60
