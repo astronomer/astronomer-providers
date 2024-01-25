@@ -8,7 +8,7 @@ MODULE = "astronomer.providers.http.sensors.http"
 
 class TestHttpSensorAsync:
     def test_init(self):
-        task = HttpSensorAsync(HttpSensorAsync(task_id="run_now", endpoint="test-endpoint"))
+        task = HttpSensorAsync(task_id="run_now", endpoint="test-endpoint")
         assert isinstance(task, HttpSensor)
         assert task.deferrable is True
 
