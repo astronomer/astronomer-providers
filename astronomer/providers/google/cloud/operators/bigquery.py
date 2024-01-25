@@ -33,9 +33,7 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator):
             stacklevel=2,
         )
 
-        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
-        self.poll_interval = poll_interval
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
@@ -55,9 +53,7 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
-        self.poll_interval = poll_interval
 
 
 class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
@@ -77,10 +73,8 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
         self.use_legacy_sql = use_legacy_sql
-        self.poll_interval = poll_interval
 
 
 class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
@@ -100,9 +94,7 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
-        self.poll_interval = poll_interval
 
 
 class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
@@ -122,6 +114,4 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
-        self.poll_interval = poll_interval
