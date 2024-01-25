@@ -42,7 +42,11 @@ class TestDataprocCreateClusterOperatorAsync:
 class TestDataprocDeleteClusterOperatorAsync:
     def test_init(self):
         task = DataprocDeleteClusterOperatorAsync(
-            task_id="task-id", project_id=TEST_PROJECT_ID, cluster_name=TEST_CLUSTER_NAME, region=TEST_REGION
+            task_id="task-id",
+            project_id=TEST_PROJECT_ID,
+            cluster_name=TEST_CLUSTER_NAME,
+            region=TEST_REGION,
+            timeout=None,
         )
         assert isinstance(task, DataprocDeleteClusterOperator)
         assert task.deferrable is True
