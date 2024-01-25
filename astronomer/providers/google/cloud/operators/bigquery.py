@@ -33,7 +33,8 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator):
             stacklevel=2,
         )
 
-        super().__init__(*args, deferrable=True, **kwargs)
+        # https://github.com/python/mypy/issues/6799#issuecomment-1882059741
+        super().__init__(*args, deferrable=True, **kwargs)  # type: ignore[misc]
 
 
 class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
