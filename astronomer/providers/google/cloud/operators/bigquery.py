@@ -67,7 +67,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     and set `deferrable` param to `True` instead.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, use_legacy_sql: bool = False, **kwargs: Any) -> None:
         warnings.warn(
             (
                 "This class is deprecated."
@@ -79,6 +79,7 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
         )
         poll_interval: float = kwargs.pop("poll_interval", 4.0)
         super().__init__(*args, deferrable=True, **kwargs)
+        self.use_legacy_sql = use_legacy_sql
         self.poll_interval = poll_interval
 
 
