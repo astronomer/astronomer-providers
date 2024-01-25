@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from typing import TYPE_CHECKING, Any, Callable
 
 import aiohttp
@@ -15,17 +16,8 @@ if TYPE_CHECKING:
 
 class HttpHookAsync(BaseHook):
     """
-    Interact with HTTP servers using Python Async.
-
-    :param method: the API method to be called
-    :param http_conn_id: http connection id that has the base
-        API url i.e https://www.google.com/ and optional authentication credentials. Default
-        headers can also be specified in the Extra field in json format.
-    :param auth_type: The auth type for the service
-    :param keep_response: Keep the aiohttp response returned by run method without releasing it.
-        Use it with caution. Without properly releasing response, it might cause "Unclosed connection" error.
-        See https://github.com/astronomer/astronomer-providers/issues/909
-    :type auth_type: AuthBase of python aiohttp lib
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.http.hooks.http.HttpAsyncHook` instead.
     """
 
     conn_name_attr = "http_conn_id"
@@ -43,6 +35,14 @@ class HttpHookAsync(BaseHook):
         *,
         keep_response: bool = False,
     ) -> None:
+        warnings.warn(
+            (
+                "This class is deprecated. "
+                "Use `airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.http_conn_id = http_conn_id
         self.method = method.upper()
         self.base_url: str = ""

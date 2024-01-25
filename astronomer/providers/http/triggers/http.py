@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union
 
 from airflow.exceptions import AirflowException
@@ -9,17 +10,8 @@ from astronomer.providers.http.hooks.http import HttpHookAsync
 
 class HttpTrigger(BaseTrigger):
     """
-    A trigger that fires when the request to a URL returns a non-404 status code
-
-    :param endpoint: The relative part of the full url
-    :param http_conn_id: The HTTP Connection ID to run the sensor against
-    :param method: The HTTP request method to use
-    :param data: payload to be uploaded or aiohttp parameters
-    :param headers: The HTTP headers to be added to the GET request
-    :type headers: a dictionary of string key/value pairs
-    :param extra_options: Additional kwargs to pass when creating a request.
-        For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
-    :param poke_interval: Time to sleep using asyncio
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.http.triggers.http.HttpSensorTrigger` instead.
     """
 
     def __init__(
@@ -32,6 +24,14 @@ class HttpTrigger(BaseTrigger):
         extra_options: Optional[Dict[str, Any]] = None,
         poke_interval: float = 5.0,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated. "
+                "Use `~airflow.providers.http.triggers.http.HttpSensorTrigger` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.endpoint = endpoint
         self.method = method
