@@ -13,8 +13,6 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
 
     def __init__(
         self,
-        *,
-        poll_interval: int = 5,
         **kwargs: Any,
     ) -> None:
         warnings.warn(
@@ -26,5 +24,4 @@ class RedshiftDataOperatorAsync(RedshiftDataOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        kwargs["poll_interval"] = poll_interval
         super().__init__(deferrable=True, **kwargs)
