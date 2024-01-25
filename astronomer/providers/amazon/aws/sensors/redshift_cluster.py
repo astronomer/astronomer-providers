@@ -13,13 +13,11 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
 
     def __init__(
         self,
-        *,
-        poll_interval: float = 5,
         **kwargs: Any,
     ):
         # TODO: Remove once deprecated
-        if poll_interval:
-            kwargs["poke_interval"] = poll_interval
+        if kwargs.get("poll_interval"):
+            kwargs["poke_interval"] = kwargs["poll_interval"]
             warnings.warn(
                 "Argument `poll_interval` is deprecated and will be removed "
                 "in a future release.  Please use  `poke_interval` instead.",
