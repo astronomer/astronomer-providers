@@ -1,4 +1,3 @@
-
 import pytest
 from airflow.providers.http.sensors.http import HttpSensor
 
