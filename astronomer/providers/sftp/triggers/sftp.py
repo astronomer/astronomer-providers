@@ -9,8 +9,6 @@ from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.timezone import convert_to_utc
 from dateutil.parser import parse as parse_date
 
-from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
-
 
 class SFTPTrigger(BaseTrigger):
     """
