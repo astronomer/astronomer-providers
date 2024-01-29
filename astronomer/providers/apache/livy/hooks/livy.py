@@ -1,6 +1,7 @@
 """This module contains the Apache Livy hook async."""
 import asyncio
 import re
+import warnings
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import aiohttp
@@ -15,16 +16,8 @@ from astronomer.providers.http.hooks.http import HttpHookAsync
 
 class LivyHookAsync(HttpHookAsync, LoggingMixin):
     """
-    Hook for Apache Livy through the REST API using LivyHookAsync
-
-    :param livy_conn_id: reference to a pre-defined Livy Connection.
-    :param extra_options: Additional option can be passed when creating a request.
-            For example, ``run(json=obj)`` is passed as ``aiohttp.ClientSession().get(json=obj)``
-    :param extra_headers: A dictionary of headers passed to the HTTP request to livy.
-
-    .. seealso::
-        For more details refer to the Apache Livy API reference:
-        `Apache Livy API reference <https://livy.apache.org/docs/latest/rest-api.html>`_
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.apache.livy.hooks.livy.LivyHook` instead.
     """
 
     TERMINAL_STATES = {
@@ -47,6 +40,10 @@ class LivyHookAsync(HttpHookAsync, LoggingMixin):
         extra_options: Optional[Dict[str, Any]] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
     ) -> None:
+        warnings.warn(
+            "This class is deprecated and will be removed in 2.0.0."
+            "Use `airflow.providers.apache.livy.hooks.livy.LivyHook` instead."
+        )
         super().__init__(http_conn_id=livy_conn_id)
         self.extra_headers = extra_headers or {}
         self.extra_options = extra_options or {}

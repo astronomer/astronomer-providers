@@ -42,9 +42,8 @@ def provide_account_id(func: T) -> T:
 
 class DbtCloudHookAsync(BaseHook):
     """
-    Interact with dbt Cloud using the V2 API.
-
-    :param dbt_cloud_conn_id: The ID of the :ref:`dbt Cloud connection <howto/connection:dbt-cloud>`.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook` instead.
     """
 
     conn_name_attr = "dbt_cloud_conn_id"
@@ -53,6 +52,14 @@ class DbtCloudHookAsync(BaseHook):
     hook_name = "dbt Cloud"
 
     def __init__(self, dbt_cloud_conn_id: str):
+        warnings.warn(
+            (
+                "This class is deprecated. "
+                "Use `airflow.providers.dbt.cloud.hooks.dbt.DbtCloudHook` instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.dbt_cloud_conn_id = dbt_cloud_conn_id
 
     async def get_headers_tenants_from_connection(self) -> Tuple[Dict[str, Any], str]:

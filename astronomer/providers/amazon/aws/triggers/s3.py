@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from typing import Any, AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -11,6 +12,9 @@ from astronomer.providers.amazon.aws.hooks.s3 import S3HookAsync
 class S3KeyTrigger(BaseTrigger):
     """
     S3KeyTrigger is fired as deferred class with params to run the task in trigger worker
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.s3.S3KeyTrigger` instead
 
     :param bucket_name: Name of the S3 bucket. Only needed when ``bucket_key``
         is not provided as a full s3:// url.
@@ -37,6 +41,14 @@ class S3KeyTrigger(BaseTrigger):
         should_check_fn: bool = False,
         **hook_params: Any,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.triggers.s3.S3KeyTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.bucket_name = bucket_name
         self.bucket_key = bucket_key

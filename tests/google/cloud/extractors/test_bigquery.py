@@ -64,11 +64,13 @@ RUN_FACETS = {
 
 class TestBigQueryAsyncExtractor:
     @mock.patch("astronomer.providers.google.cloud.extractors.bigquery.BigQueryHook")
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperatorAsync._submit_job"
+    )
     @mock.patch("airflow.models.TaskInstance.xcom_pull")
     @mock.patch("openlineage.common.provider.bigquery.BigQueryDatasetsProvider.get_facets")
     def test_extract_on_complete(
-        self, mock_bg_dataset_provider, mock_xcom_pull, mock_hook, mock_extractor_hook
+        self, mock_bg_dataset_provider, mock_xcom_pull, mock_submit_job, mock_extractor_hook
     ):
         """
         Tests that  the custom extractor's implementation for the BigQueryInsertJobOperatorAsync is able to process the
@@ -81,7 +83,7 @@ class TestBigQueryAsyncExtractor:
             }
         }
         job_id = "123456"
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
+        mock_submit_job.job.return_value = MagicMock(job_id=job_id, error_result=False)
         mock_extractor_hook.return_value.insert_job.return_value = MagicMock(
             job_id=job_id, error_result=False
         )
@@ -131,8 +133,10 @@ class TestBigQueryAsyncExtractor:
         operator = BigQueryInsertJobOperatorAsync(task_id=task_id, configuration={})
         assert type(operator).__name__ in BigQueryAsyncExtractor.get_operator_classnames()
 
-    @mock.patch("astronomer.providers.google.cloud.operators.bigquery.BigQueryHook")
-    def test_unavailable_xcom_raises_exception(self, mock_hook):
+    @mock.patch(
+        "astronomer.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperatorAsync._submit_job"
+    )
+    def test_unavailable_xcom_raises_exception(self, mock_submit_job):
         """
         Tests that an exception is raised when the custom extractor is not available to retrieve required XCOM for the
         BigQueryInsertJobOperatorAsync Operator.
@@ -144,7 +148,7 @@ class TestBigQueryAsyncExtractor:
             }
         }
         job_id = "123456"
-        mock_hook.return_value.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
+        mock_submit_job.insert_job.return_value = MagicMock(job_id=job_id, error_result=False)
         task_id = "insert_query_job"
         operator = BigQueryInsertJobOperatorAsync(
             task_id=task_id,
