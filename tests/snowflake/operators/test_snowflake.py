@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.models.dag import DAG
+from airflow.providers.snowflake.operators.snowflake import SnowflakeSqlApiOperator
 from snowflake.connector.constants import QueryStatus
 
 from astronomer.providers.snowflake.hooks.snowflake import SnowflakeHookAsync
@@ -165,5 +166,5 @@ class TestSnowflakeSqlApiOperatorAsync:
             statement_count=statement_count,
         )
 
-        assert isinstance(task, SnowflakeSqlApiOperatorAsync)
+        assert isinstance(task, SnowflakeSqlApiOperator)
         assert task.deferrable is True
