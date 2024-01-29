@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,9 @@ from astronomer.providers.snowflake.hooks.sql_api_generate_jwt import JWTGenerat
 
 class SnowflakeSqlApiHookAsync(SnowflakeHook):
     """
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead.
+
     A client to interact with Snowflake using SQL API  and allows submitting
     multiple SQL statements in a single request. In combination with aiohttp, make post request to submit SQL
     statements for execution, poll to check the status of the execution of a statement. Fetch query results
@@ -58,6 +62,14 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         *args: Any,
         **kwargs: Any,
     ):
+        warnings.warn(
+            (
+                "This class is deprecated and will be removed in 2.0.0."
+                "Use `airflow.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHook` instead"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.snowflake_conn_id = snowflake_conn_id
         self.token_life_time = token_life_time
         self.token_renewal_delta = token_renewal_delta
