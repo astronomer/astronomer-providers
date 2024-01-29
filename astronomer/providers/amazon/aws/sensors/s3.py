@@ -17,7 +17,7 @@ class S3KeySensorAsync(S3KeySensor):
     def __init__(self, **kwargs: Any) -> None:
         warnings.warn(
             (
-                "This module is deprecated and will be removed in 2.0.0."
+                "This module is deprecated."
                 "Please use `airflow.providers.amazon.aws.sensors.s3.S3KeySensor`"
                 "and set `deferrable` param to `True` instead."
             ),
