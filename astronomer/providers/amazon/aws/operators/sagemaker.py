@@ -52,7 +52,7 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
 class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
     """
     This class is deprecated.
-    Please use :class: `~airflow.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperator`
+    Please use :class: `~airflow.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperator`
     and set `deferrable` param to `True` instead.
     """
 
