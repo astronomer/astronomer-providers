@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import warnings
 from typing import Any, Dict, cast
 
 import aiohttp
@@ -21,20 +22,16 @@ USER_AGENT_HEADER = {"user-agent": f"airflow-{__version__}"}
 
 class DatabricksHookAsync(DatabricksHook):
     """
-    Interact with Databricks.
-
-    :param databricks_conn_id: Reference to the Databricks connection.
-    :type databricks_conn_id: str
-    :param timeout_seconds: The amount of time in seconds the requests library
-        will wait before timing-out.
-    :type timeout_seconds: int
-    :param retry_limit: The number of times to retry the connection in case of
-        service outages.
-    :type retry_limit: int
-    :param retry_delay: The number of seconds to wait between retries (it
-        might be a floating point number).
-    :type retry_delay: float
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.databricks.hooks.databricks.DatabricksHook` instead.
     """
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        warnings.warn(
+            "This class is deprecated and will be removed in 2.0.0. "
+            "Use `airflow.providers.databricks.hooks.databricks.DatabricksHook` instead "
+        )
+        super().__init__(*args, **kwargs)
 
     async def get_run_state_async(self, run_id: str) -> RunState:
         """
