@@ -26,7 +26,7 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
             )
         warnings.warn(
             (
-                "This module is deprecated and will be removed in 2.0.0."
+                "This module is deprecated."
                 "Please use `airflow.providers.amazon.aws.sensors.redshift_cluster.RedshiftClusterSensor`"
                 "and set `deferrable` param to `True` instead."
             ),
