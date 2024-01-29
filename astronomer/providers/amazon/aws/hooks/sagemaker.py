@@ -26,7 +26,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
     are passed down to the underlying AwsBaseHookAsync.
 
     This class is deprecated and will be removed in 2.0.0.
-    Use :class: `~airflow.providers.amazon.aws.sensors.sagemaker.SageMakerHook` instead
+    Use :class: `~airflow.providers.amazon.aws.hooks.sagemaker.SageMakerHook` instead
     """
 
     NON_TERMINAL_STATES = ("InProgress", "Stopping", "Stopped")
