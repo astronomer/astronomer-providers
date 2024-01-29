@@ -1,4 +1,5 @@
 """Master Dag to run all the example dags."""
+
 import logging
 import os
 import time

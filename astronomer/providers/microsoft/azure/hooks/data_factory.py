@@ -1,4 +1,5 @@
 """This module contains the Azure Data Factory hook's asynchronous implementation."""
+
 from __future__ import annotations
 
 import inspect

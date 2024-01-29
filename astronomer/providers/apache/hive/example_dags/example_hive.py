@@ -1,4 +1,5 @@
 """This is an example dag for hive partition sensors."""
+
 import logging
 import os
 import time

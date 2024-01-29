@@ -7,6 +7,7 @@ A Deferrable Airflow operator for AWS Batch services
     - `Batch <http://boto3.readthedocs.io/en/latest/reference/services/batch.html>`_
     - `Welcome <https://docs.aws.amazon.com/batch/latest/APIReference/Welcome.html>`_
 """
+
 from __future__ import annotations
 
 import warnings

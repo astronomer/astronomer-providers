@@ -15,9 +15,12 @@ class TestHttpHookAsync:
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=400)
 
-        with pytest.raises(AirflowException) as exc, mock.patch.dict(
-            "os.environ",
-            AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
+        with (
+            pytest.raises(AirflowException) as exc,
+            mock.patch.dict(
+                "os.environ",
+                AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
+            ),
         ):
             await hook.run(endpoint="non_existent_endpoint")
 
@@ -29,9 +32,12 @@ class TestHttpHookAsync:
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=500, repeat=True)
 
-        with pytest.raises(AirflowException) as exc, mock.patch.dict(
-            "os.environ",
-            AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
+        with (
+            pytest.raises(AirflowException) as exc,
+            mock.patch.dict(
+                "os.environ",
+                AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
+            ),
         ):
             await hook.run(endpoint="non_existent_endpoint")
 

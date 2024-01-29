@@ -1,4 +1,5 @@
 """DAG to nuke AWS resources."""
+
 import logging
 import os
 from datetime import datetime, timedelta

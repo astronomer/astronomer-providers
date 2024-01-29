@@ -1,4 +1,5 @@
 """DAG to delete stale GCP resources."""
+
 import os
 from datetime import timedelta
 

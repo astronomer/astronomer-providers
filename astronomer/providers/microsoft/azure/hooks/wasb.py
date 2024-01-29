@@ -1,4 +1,5 @@
 """This module contains the Azure WASB hook's asynchronous implementation."""
+
 from __future__ import annotations
 
 import warnings

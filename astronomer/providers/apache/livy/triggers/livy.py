@@ -1,4 +1,5 @@
 """This module contains the Apache Livy Trigger."""
+
 import asyncio
 import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union

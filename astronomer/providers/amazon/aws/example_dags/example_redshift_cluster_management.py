@@ -1,4 +1,5 @@
 """Airflow operators example to manage AWS Redshift cluster."""
+
 import os
 from datetime import datetime, timedelta
 from typing import Any

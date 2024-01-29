@@ -1,4 +1,5 @@
 """This module contains the Apache HiveCli hook async."""
+
 import asyncio
 from typing import Tuple
 
