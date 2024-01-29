@@ -4,6 +4,8 @@ import datetime
 import warnings
 from typing import TYPE_CHECKING, Any
 
+from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.http.sensors.http import HttpSensor
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
 
@@ -12,7 +14,6 @@ from astronomer.providers.core.triggers.external_task import (
     ExternalDeploymentTaskTrigger,
     TaskStateTrigger,
 )
-from astronomer.providers.http.sensors.http import HttpSensorAsync
 from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
 from astronomer.providers.utils.typing_compat import Context
 
@@ -101,10 +102,10 @@ class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
         return execution_dates
 
 
-class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
+class ExternalDeploymentTaskSensorAsync(HttpSensor):
     """
     External deployment task sensor Make HTTP call and poll for the response state of externally
-    deployed DAG task to complete. Inherits from HttpSensorAsync, the host should be external deployment url, header
+    deployed DAG task to complete. Inherits from HttpSensor, the host should be external deployment url, header
     with access token
 
     .. seealso::
@@ -124,6 +125,17 @@ class ExternalDeploymentTaskSensorAsync(HttpSensorAsync):
         ``socket.TCP_KEEPINTVL``)
     :param poke_interval: Time in seconds that the job should wait in between each tries
     """  # noqa
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.hook = HttpHook(
+            method=self.method,
+            http_conn_id=self.http_conn_id,
+            tcp_keep_alive=self.tcp_keep_alive,
+            tcp_keep_alive_idle=self.tcp_keep_alive_idle,
+            tcp_keep_alive_count=self.tcp_keep_alive_count,
+            tcp_keep_alive_interval=self.tcp_keep_alive_interval,
+        )
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
