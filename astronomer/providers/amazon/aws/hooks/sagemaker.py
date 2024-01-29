@@ -35,7 +35,7 @@ class SageMakerHookAsync(AwsBaseHookAsync):
         warnings.warn(
             (
                 "This module is deprecated and will be removed in 2.0.0."
-                "Please use `airflow.providers.amazon.aws.sensors.sagemaker.SageMakerHook`"
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerHook`"
             ),
             DeprecationWarning,
             stacklevel=2,
