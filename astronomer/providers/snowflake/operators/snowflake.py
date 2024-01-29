@@ -7,19 +7,7 @@ from contextlib import closing
 from typing import Any, Callable, List
 
 from airflow.exceptions import AirflowException
-
-from snowflake.connector import SnowflakeConnection
-from snowflake.connector.constants import QueryStatus
-
-try:
-    from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator, SnowflakeSqlApiOperator
-except ImportError:  # pragma: no cover
-    # For apache-airflow-providers-snowflake > 3.3.0
-    # currently added type: ignore[no-redef, attr-defined] and pragma: no cover because this import
-    # path won't be available in current setup
-    from airflow.providers.common.sql.operators.sql import (  # type: ignore[assignment]
-        SQLExecuteQueryOperator as SnowflakeOperator,
-    )
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator, SnowflakeSqlApiOperator
 
 from astronomer.providers.snowflake.hooks.snowflake import (
     SnowflakeHookAsync,
@@ -30,6 +18,8 @@ from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     get_db_hook,
 )
 from astronomer.providers.utils.typing_compat import Context
+from snowflake.connector import SnowflakeConnection
+from snowflake.connector.constants import QueryStatus
 
 
 def _check_queries_finish(conn: SnowflakeConnection, query_ids: list[str]) -> bool:
