@@ -26,7 +26,7 @@ class DatabricksHookAsync(DatabricksHook):
     Use :class: `~airflow.providers.databricks.hooks.databricks.DatabricksHook` instead.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         warnings.warn(
             "This class is deprecated and will be removed in 2.0.0. "
             "Use `airflow.providers.databricks.hooks.databricks.DatabricksHook` instead "
