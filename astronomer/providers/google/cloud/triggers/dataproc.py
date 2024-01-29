@@ -19,6 +19,9 @@ class DataprocCreateClusterTrigger(BaseTrigger):
     """
     Asynchronously check the status of a cluster
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.dataproc.DataprocClusterTrigger` instead
+
     :param project_id: The ID of the Google Cloud project the cluster belongs to
     :param region: The Cloud Dataproc region in which to handle the request
     :param cluster_name: The name of the cluster
@@ -52,6 +55,14 @@ class DataprocCreateClusterTrigger(BaseTrigger):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.dataproc.DataprocClusterTrigger`."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(**kwargs)
         self.project_id = project_id
         self.region = region
@@ -194,6 +205,9 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
     """
     Asynchronously check the status of a cluster
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.dataproc.DataprocDeleteClusterTrigger` instead
+
     :param cluster_name: The name of the cluster
     :param end_time: Time in second left to check the cluster status
     :param project_id: The ID of the Google Cloud project the cluster belongs to
@@ -223,6 +237,14 @@ class DataprocDeleteClusterTrigger(BaseTrigger):
         polling_interval: float = 5.0,
         **kwargs: Any,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.dataproc.DataprocDeleteClusterTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(**kwargs)
         self.cluster_name = cluster_name
         self.end_time = end_time
