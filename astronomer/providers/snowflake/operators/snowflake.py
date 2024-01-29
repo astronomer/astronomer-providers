@@ -226,7 +226,7 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeSqlApiOperator):
     and set `deferrable` param to `True` instead.
     """
 
-    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def __init__(self, *args: Any, **kwargs: Any):
         warnings.warn(
             (
                 "This class is deprecated. "
