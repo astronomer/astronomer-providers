@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
 from airflow.providers.databricks.hooks.databricks import RunState
@@ -9,20 +10,8 @@ from astronomer.providers.databricks.hooks.databricks import DatabricksHookAsync
 
 class DatabricksTrigger(BaseTrigger):
     """
-    Wait asynchronously for databricks job to reach the terminal state.
-
-    :param conn_id: The databricks connection id.
-        The default value is ``databricks_default``.
-    :param task_id: The task id.
-    :param run_id: The databricks job run id.
-    :param retry_limit: Amount of times retry if the Databricks backend is
-        unreachable. Its value must be greater than or equal to 1.
-    :param retry_delay: Number of seconds to wait between retries (it
-            might be a floating point number).
-    :param polling_period_seconds: Controls the rate which we poll for the result of
-        this run. By default, the operator will poll every 30 seconds.
-    :param job_id: The databricks job id.
-    :param run_page_url: The databricks run page url.
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.databricks.triggers.databricks.DatabricksExecutionTrigger` instead.
     """
 
     def __init__(
@@ -36,6 +25,10 @@ class DatabricksTrigger(BaseTrigger):
         job_id: Optional[int] = None,
         run_page_url: Optional[str] = None,
     ):
+        warnings.warn(
+            "This class is deprecated and will be removed in 2.0.0."
+            "Use `airflow.providers.databricks.triggers.databricks.DatabricksExecutionTrigger` instead."
+        )
         super().__init__()
         self.conn_id = conn_id
         self.task_id = task_id
