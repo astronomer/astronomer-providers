@@ -60,7 +60,7 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
         warnings.warn(
             (
                 "This module is deprecated and will be removed in 2.0.0."
-                "Please use `airflow.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperator`"
+                "Please use `airflow.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperator`"
                 "and set `deferrable` param to `True` instead."
             ),
             DeprecationWarning,
