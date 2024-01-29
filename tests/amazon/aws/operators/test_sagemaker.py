@@ -4,6 +4,10 @@ import pytest
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.providers.amazon.aws.hooks.sagemaker import SageMakerHook
 from airflow.providers.amazon.aws.operators import sagemaker
+from airflow.providers.amazon.aws.operators.sagemaker import (
+    SageMakerProcessingOperator,
+    SageMakerTransformOperator,
+)
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.amazon.aws.operators.sagemaker import (
@@ -12,7 +16,6 @@ from astronomer.providers.amazon.aws.operators.sagemaker import (
     SageMakerTransformOperatorAsync,
 )
 from astronomer.providers.amazon.aws.triggers.sagemaker import (
-    SagemakerProcessingTrigger,
     SagemakerTrainingWithLogTrigger,
     SagemakerTrigger,
 )
@@ -136,158 +139,15 @@ class TestSagemakerProcessingOperatorAsync:
     CHECK_INTERVAL = 5
     MAX_INGESTION_TIME = 60 * 60 * 24 * 7
 
-    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
-    @mock.patch.object(
-        SageMakerHook, "describe_processing_job", return_value={"ProcessingJobStatus": "Completed"}
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_processing_job",
-        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async_complete_before_defer(
-        self, mock_hook, mock_processing, mock_describe, mock_defer, context
-    ):
+    def test_init(self):
         task = SageMakerProcessingOperatorAsync(
             config=CREATE_PROCESSING_PARAMS,
             task_id=self.TASK_ID,
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
-        task.execute(context)
-
-        assert not mock_defer.called
-
-    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
-    @mock.patch.object(SageMakerHook, "describe_processing_job", return_value=Exception)
-    @mock.patch.object(
-        SageMakerHook,
-        "create_processing_job",
-        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async_encounter_exception_before_defer(
-        self, mock_hook, mock_processing, mock_describe, mock_defer, context
-    ):
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-
-        with pytest.raises(Exception):
-            task.execute(context)
-
-        assert not mock_defer.called
-
-    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync.defer")
-    @mock.patch.object(
-        SageMakerHook,
-        "describe_processing_job",
-        return_value={"ProcessingJobStatus": "Failed", "FailureReason": "it just failed"},
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_processing_job",
-        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async_failed_before_defer(
-        self, mock_hook, mock_processing, mock_describe, mock_defer, context
-    ):
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        with pytest.raises(AirflowException):
-            task.execute(context)
-
-        assert not mock_defer.called
-
-    @mock.patch.object(
-        SageMakerHook, "describe_processing_job", return_value={"ProcessingJobStatus": "InProgress"}
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_processing_job",
-        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async(self, mock_hook, mock_processing, mock_describe, context):
-        """Assert SageMakerProcessingOperatorAsync deferred properly"""
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        with pytest.raises(TaskDeferred) as exc:
-            task.execute(context)
-        assert isinstance(
-            exc.value.trigger, SagemakerProcessingTrigger
-        ), "Trigger is not a SagemakerProcessingTrigger"
-
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=True)
-    def test_sagemakerprocessing_op_async_duplicate_failure(self, mock_hook, context):
-        """Tests that an AirflowException is raised in case of error event from find_processing_job_name"""
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-        )
-        with pytest.raises(AirflowException):
-            task.execute(context)
-
-    @mock.patch.object(
-        SageMakerHook,
-        "create_processing_job",
-        return_value={"ProcessingJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 404}},
-    )
-    @mock.patch.object(SageMakerHook, "count_processing_jobs_by_name", return_value=False)
-    def test_sagemakerprocessing_op_async_failure(self, mock_hook, mock_processing_job, context):
-        """Tests that an AirflowException is raised in case of error event from create_processing_job"""
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-        )
-        with pytest.raises(AirflowException):
-            task.execute(context)
-
-    @pytest.mark.parametrize(
-        "event",
-        [{"status": "error", "message": "test failure message"}, None],
-    )
-    def test_sagemakerprocessing_op_async_execute_failure(self, event):
-        """Tests that an AirflowException is raised in case of error event"""
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        with pytest.raises(AirflowException):
-            task.execute_complete(context=None, event=event)
-
-    @pytest.mark.parametrize(
-        "event",
-        [{"status": "success", "message": "Job completed"}],
-    )
-    def test_sagemakerprocessing_op_async_execute_complete(self, event):
-        """Asserts that logging occurs as expected"""
-        task = SageMakerProcessingOperatorAsync(
-            config=CREATE_PROCESSING_PARAMS,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        with mock.patch.object(task.log, "info") as mock_log_info:
-            task.execute_complete(context=None, event=event)
-        mock_log_info.assert_called_with("%s completed successfully.", "test_sagemaker_processing_operator")
+        assert isinstance(task, SageMakerProcessingOperator)
+        assert task.deferrable is True
 
 
 class TestSagemakerTransformOperatorAsync:
@@ -295,30 +155,7 @@ class TestSagemakerTransformOperatorAsync:
     CHECK_INTERVAL = 5
     MAX_INGESTION_TIME = 60 * 60 * 24 * 7
 
-    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync.defer")
-    @mock.patch.object(SageMakerHook, "describe_model", return_value={})
-    @mock.patch.object(
-        SageMakerHook,
-        "describe_transform_job",
-        return_value={"TransformJobStatus": "Failed", "FailureReason": "it just failed"},
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_transform_job",
-        return_value={"TransformJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
-    @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async_failed_before_defer(
-        self,
-        mock_create_model,
-        mock_list_transform_jobs,
-        mock_transform_job,
-        mock_describe_transform_job,
-        mock_describe_model,
-        mock_defer,
-        context,
-    ):
+    def test_init(self):
         task = SageMakerTransformOperatorAsync(
             config=CONFIG,
             task_id=self.TASK_ID,
@@ -326,120 +163,8 @@ class TestSagemakerTransformOperatorAsync:
             check_interval=self.CHECK_INTERVAL,
             max_ingestion_time=self.MAX_INGESTION_TIME,
         )
-        with pytest.raises(AirflowException):
-            task.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch("astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync.defer")
-    @mock.patch.object(SageMakerHook, "describe_model", return_value={})
-    @mock.patch.object(
-        SageMakerHook, "describe_transform_job", return_value={"TransformJobStatus": "Completed"}
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_transform_job",
-        return_value={"TransformJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
-    @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async_complete_before_defer(
-        self,
-        mock_create_model,
-        mock_list_transform_jobs,
-        mock_transform_job,
-        mock_describe_transform_job,
-        mock_describe_model,
-        mock_defer,
-        context,
-    ):
-        task = SageMakerTransformOperatorAsync(
-            config=CONFIG,
-            task_id=self.TASK_ID,
-            check_if_job_exists=False,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        task.execute(context)
-        assert not mock_defer.called
-
-    @mock.patch.object(
-        SageMakerHook, "describe_transform_job", return_value={"TransformJobStatus": "InProgress"}
-    )
-    @mock.patch.object(
-        SageMakerHook,
-        "create_transform_job",
-        return_value={"TransformJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 200}},
-    )
-    @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
-    @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async(
-        self,
-        mock_create_model,
-        mock_list_transform_jobs,
-        mock_transform_job,
-        mock_describe_transform_job,
-        context,
-    ):
-        """Assert SageMakerTransformOperatorAsync deferred properly"""
-        task = SageMakerTransformOperatorAsync(
-            config=CONFIG,
-            task_id=self.TASK_ID,
-            check_if_job_exists=False,
-            check_interval=self.CHECK_INTERVAL,
-            max_ingestion_time=self.MAX_INGESTION_TIME,
-        )
-        with pytest.raises(TaskDeferred) as exc:
-            task.execute(context)
-        assert isinstance(exc.value.trigger, SagemakerTrigger), "Trigger is not a SagemakerTrigger"
-
-    @mock.patch.object(
-        SageMakerHook,
-        "create_transform_job",
-        return_value={"TransformJobArn": "test_arn", "ResponseMetadata": {"HTTPStatusCode": 404}},
-    )
-    @mock.patch.object(SageMakerHook, "list_transform_jobs", return_value=[])
-    @mock.patch.object(SageMakerHook, "create_model", return_value=None)
-    def test_sagemaker_transform_op_async_execute_failure(self, mock_hook, mock_transform_job, context):
-        """Tests that an AirflowException is raised in case of error event from create_transform_job"""
-        task = SageMakerTransformOperatorAsync(
-            config=CONFIG,
-            task_id=self.TASK_ID,
-            check_if_job_exists=False,
-            check_interval=self.CHECK_INTERVAL,
-        )
-        with pytest.raises(AirflowException):
-            task.execute(context)
-
-    @pytest.mark.parametrize(
-        "mock_event",
-        [{"status": "error", "message": "test failure message"}, None],
-    )
-    def test_sagemaker_transform_op_async_execute_complete_failure(self, mock_event):
-        """Tests that an AirflowException is raised in case of error event"""
-        task = SageMakerTransformOperatorAsync(
-            config=CONFIG,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-        )
-        with pytest.raises(AirflowException):
-            task.execute_complete(context=None, event=mock_event)
-
-    @pytest.mark.parametrize(
-        "mock_event",
-        [{"status": "success", "message": "Job completed"}],
-    )
-    @mock.patch.object(SageMakerHook, "describe_model")
-    def test_sagemaker_transform_op_async_execute_complete(self, mock_model_output, mock_event):
-        """Asserts that logging occurs as expected"""
-        task = SageMakerTransformOperatorAsync(
-            config=CONFIG,
-            task_id=self.TASK_ID,
-            check_interval=self.CHECK_INTERVAL,
-        )
-        mock_model_output.return_value = {"test": "test"}
-        with mock.patch.object(task.log, "info") as mock_log_info:
-            task.execute_complete(context=None, event=mock_event)
-        mock_log_info.assert_called_with("%s completed successfully.", "test_sagemaker_transform_operator")
+        assert isinstance(task, SageMakerTransformOperator)
+        assert task.deferrable is True
 
 
 class TestSagemakerTrainingOperatorAsync:

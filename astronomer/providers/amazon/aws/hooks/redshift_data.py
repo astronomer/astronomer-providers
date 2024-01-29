@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from typing import Any, Iterable
 
 import botocore.exceptions
@@ -18,6 +19,9 @@ class RedshiftDataHook(AwsBaseHook):
     RedshiftDataHook inherits from AwsBaseHook to connect with AWS redshift
     by using boto3 client_type as redshift-data we can interact with redshift cluster database and execute the query
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook` instead
+
     :param aws_conn_id: The Airflow connection used for AWS credentials.
         If this is None or empty then the default boto3 behaviour is used. If
         running Airflow in a distributed manner and aws_conn_id is None or
@@ -34,6 +38,15 @@ class RedshiftDataHook(AwsBaseHook):
     """
 
     def __init__(self, *args: Any, poll_interval: int = 0, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.redshift_data.RedshiftDataHook`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         aws_connection_type: str = "redshift-data"
         try:
             # for apache-airflow-providers-amazon>=3.0.0

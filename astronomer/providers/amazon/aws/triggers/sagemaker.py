@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import time
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+import warnings
+from typing import Any, AsyncIterator
 
 from airflow.providers.amazon.aws.hooks.sagemaker import LogState
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -11,6 +14,9 @@ from astronomer.providers.amazon.aws.hooks.sagemaker import SageMakerHookAsync
 class SagemakerProcessingTrigger(BaseTrigger):
     """
     SagemakerProcessingTrigger is fired as deferred class with params to run the task in triggerer.
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.sagemaker.SageMakerTrigger` instead
 
     :param job_name: name of the job to check status
     :param poll_interval:  polling period in seconds to check for the status
@@ -26,16 +32,24 @@ class SagemakerProcessingTrigger(BaseTrigger):
         self,
         job_name: str,
         poll_interval: float,
-        end_time: Optional[float],
+        end_time: float | None,
         aws_conn_id: str = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_name = job_name
         self.poll_interval = poll_interval
         self.aws_conn_id = aws_conn_id
         self.end_time = end_time
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SagemakerProcessingTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerProcessingTrigger",
@@ -47,7 +61,7 @@ class SagemakerProcessingTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
@@ -80,6 +94,9 @@ class SagemakerTrigger(BaseTrigger):
     SagemakerTrigger is common trigger for both transform and training sagemaker job and it is
      fired as deferred class with params to run the task in triggerer.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.sagemaker.SageMakerTrigger` instead
+
     :param job_name: name of the job to check status
     :param job_type: Type of the sagemaker job whether it is Transform or Training
     :param response_key: The key which needs to be look in the response.
@@ -97,9 +114,17 @@ class SagemakerTrigger(BaseTrigger):
         job_type: str,
         response_key: str,
         poke_interval: float,
-        end_time: Optional[float] = None,
+        end_time: float | None = None,
         aws_conn_id: str = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_name = job_name
         self.job_type = job_type
@@ -108,7 +133,7 @@ class SagemakerTrigger(BaseTrigger):
         self.end_time = end_time
         self.aws_conn_id = aws_conn_id
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SagemakerTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerTrigger",
@@ -122,7 +147,7 @@ class SagemakerTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
@@ -148,7 +173,7 @@ class SagemakerTrigger(BaseTrigger):
         return SageMakerHookAsync(aws_conn_id=self.aws_conn_id)
 
     @staticmethod
-    async def get_job_status(hook: SageMakerHookAsync, job_name: str, job_type: str) -> Dict[str, Any]:
+    async def get_job_status(hook: SageMakerHookAsync, job_name: str, job_type: str) -> dict[str, Any]:
         """
         Based on the job type the SageMakerHookAsync connect to sagemaker related function
         and get the response of the job and return it
@@ -181,7 +206,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         instance_count: int,
         status: str,
         poke_interval: float,
-        end_time: Optional[float] = None,
+        end_time: float | None = None,
         aws_conn_id: str = "aws_default",
     ):
         super().__init__()
@@ -192,7 +217,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         self.end_time = end_time
         self.aws_conn_id = aws_conn_id
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes SagemakerTrainingWithLogTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.sagemaker.SagemakerTrainingWithLogTrigger",
@@ -206,7 +231,7 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Makes async connection to sagemaker async hook and gets job status for a job submitted by the operator.
         Trigger returns a failure event if any error and success in state return the success event.
@@ -214,8 +239,8 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         hook = self._get_async_hook()
 
         last_description = await hook.describe_training_job_async(self.job_name)
-        stream_names: List[str] = []  # The list of log streams
-        positions: Dict[str, Any] = {}  # The current position in each stream, map of stream name -> position
+        stream_names: list[str] = []  # The list of log streams
+        positions: dict[str, Any] = {}  # The current position in each stream, map of stream name -> position
 
         job_already_completed = self.status not in self.NON_TERMINAL_STATES
 

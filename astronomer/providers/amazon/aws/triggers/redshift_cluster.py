@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 import warnings
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -29,7 +31,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         operation_type: str,
         polling_period_seconds: float = 5.0,
         skip_final_cluster_snapshot: bool = True,
-        final_cluster_snapshot_identifier: Optional[str] = None,
+        final_cluster_snapshot_identifier: str | None = None,
     ):
         warnings.warn(
             (
@@ -48,7 +50,7 @@ class RedshiftClusterTrigger(BaseTrigger):
         self.skip_final_cluster_snapshot = skip_final_cluster_snapshot
         self.final_cluster_snapshot_identifier = final_cluster_snapshot_identifier
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes RedshiftClusterTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger",
@@ -63,7 +65,7 @@ class RedshiftClusterTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Make async connection to redshift, based on the operation type call
         the RedshiftHookAsync functions
@@ -112,6 +114,9 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
     """
     RedshiftClusterSensorTrigger is fired as deferred class with params to run the task in trigger worker
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger` instead
+
     :param task_id: Reference to task id of the Dag
     :param aws_conn_id: Reference to AWS connection id for redshift
     :param cluster_identifier: unique identifier of a cluster
@@ -127,6 +132,14 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         target_status: str,
         poke_interval: float,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.task_id = task_id
         self.aws_conn_id = aws_conn_id
@@ -134,7 +147,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
         self.target_status = target_status
         self.poke_interval = poke_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes RedshiftClusterSensorTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_cluster.RedshiftClusterSensorTrigger",
@@ -147,7 +160,7 @@ class RedshiftClusterSensorTrigger(BaseTrigger):
             },
         )
 
-    async def run(self) -> AsyncIterator["TriggerEvent"]:
+    async def run(self) -> AsyncIterator[TriggerEvent]:
         """Simple async function run until the cluster status match the target status."""
         try:
             hook = RedshiftHookAsync(aws_conn_id=self.aws_conn_id)
