@@ -15,14 +15,12 @@ class TestHttpHookAsync:
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=400)
 
-        with (
-            pytest.raises(AirflowException) as exc,
-            mock.patch.dict(
+        with pytest.raises(AirflowException) as exc:
+            with mock.patch.dict(
                 "os.environ",
                 AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
-            ),
-        ):
-            await hook.run(endpoint="non_existent_endpoint")
+            ) as exc:
+                await hook.run(endpoint="non_existent_endpoint")
 
         assert str(exc.value) == "400:Bad Request"
 
@@ -32,14 +30,12 @@ class TestHttpHookAsync:
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=500, repeat=True)
 
-        with (
-            pytest.raises(AirflowException) as exc,
-            mock.patch.dict(
+        with pytest.raises(AirflowException) as exc:
+            with mock.patch.dict(
                 "os.environ",
                 AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
-            ),
-        ):
-            await hook.run(endpoint="non_existent_endpoint")
+            ) as exc:
+                await hook.run(endpoint="non_existent_endpoint")
 
         assert str(exc.value) == "500:Internal Server Error"
         assert "[Try 3 of 3] Request to http://httpbin.org/non_existent_endpoint failed" in caplog.text
