@@ -76,9 +76,9 @@ def _get_gke_config_file(
 
     # Write config to a temp file and set the environment variable to point to it.
     # This is to avoid race conditions of reading/writing a single file
-    with tempfile.NamedTemporaryFile() as conf_file, patch_environ(
-            {KUBE_CONFIG_ENV_VAR: conf_file.name}
-    ), hook.provide_authorized_gcloud():   # fmt: off
+    with tempfile.NamedTemporaryFile() as conf_file:
+        with patch_environ({KUBE_CONFIG_ENV_VAR: conf_file.name}):
+            hook.provide_authorized_gcloud()
         # Attempt to get/update credentials
         # We call gcloud directly instead of using google-cloud-python api
         # because there is no way to write kubernetes config to a file, which is
