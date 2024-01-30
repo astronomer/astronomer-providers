@@ -11,34 +11,24 @@ from astronomer.providers.http.hooks.http import HttpHookAsync
 
 class TestHttpHookAsync:
     @pytest.mark.asyncio
-    async def test_do_api_call_async_non_retryable_error(self, aioresponse):
+    async def test_do_api_call_async_non_retryable_error(self, aioresponse, monkeypatch):
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=400)
 
-        with (
-            pytest.raises(AirflowException) as exc,
-            mock.patch.dict(
-                "os.environ",
-                AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
-            ),
-        ):
+        monkeypatch.setenv("AIRFLOW_CONN_HTTP_DEFAULT", "http://httpbin.org/")
+        with pytest.raises(AirflowException) as exc:
             await hook.run(endpoint="non_existent_endpoint")
 
         assert str(exc.value) == "400:Bad Request"
 
     @pytest.mark.asyncio
-    async def test_do_api_call_async_retryable_error(self, caplog, aioresponse):
+    async def test_do_api_call_async_retryable_error(self, caplog, aioresponse, monkeypatch):
         caplog.set_level(logging.WARNING, logger="astronomer.providers.http.hooks.http")
         hook = HttpHookAsync(method="GET")
         aioresponse.get("http://httpbin.org/non_existent_endpoint", status=500, repeat=True)
 
-        with (
-            pytest.raises(AirflowException) as exc,
-            mock.patch.dict(
-                "os.environ",
-                AIRFLOW_CONN_HTTP_DEFAULT="http://httpbin.org/",
-            ),
-        ):
+        monkeypatch.setenv("AIRFLOW_CONN_HTTP_DEFAULT", "http://httpbin.org/")
+        with pytest.raises(AirflowException) as exc:
             await hook.run(endpoint="non_existent_endpoint")
 
         assert str(exc.value) == "500:Internal Server Error"
