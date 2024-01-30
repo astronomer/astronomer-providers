@@ -189,6 +189,9 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
     """
     SagemakerTrainingWithLogTrigger is fired as deferred class with params to run the task in triggerer.
 
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.amazon.aws.triggers.sagemaker.SageMakerTrainingPrintLogTrigger` instead
+
     :param job_name: name of the job to check status
     :param instance_count: count of the instance created for running the training job
     :param status: The status of the training job created.
@@ -209,6 +212,14 @@ class SagemakerTrainingWithLogTrigger(BaseTrigger):
         end_time: float | None = None,
         aws_conn_id: str = "aws_default",
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.amazon.aws.hooks.sagemaker.SageMakerTrainingPrintLogTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.job_name = job_name
         self.instance_count = instance_count
