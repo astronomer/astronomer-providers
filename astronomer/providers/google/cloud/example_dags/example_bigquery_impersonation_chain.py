@@ -1,4 +1,5 @@
 """Example Airflow DAG which uses impersonation parameters for authenticating with Google BigQuery service."""
+
 import os
 from datetime import datetime, timedelta
 from typing import Any

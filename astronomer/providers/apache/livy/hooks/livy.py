@@ -1,4 +1,5 @@
 """This module contains the Apache Livy hook async."""
+
 import asyncio
 import re
 import warnings

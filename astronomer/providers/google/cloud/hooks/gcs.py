@@ -1,4 +1,5 @@
 """This module contains a Google Cloud Storage hook."""
+
 import warnings
 from typing import Any, cast
 

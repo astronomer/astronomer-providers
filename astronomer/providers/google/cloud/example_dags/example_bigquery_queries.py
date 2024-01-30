@@ -2,6 +2,7 @@
 Example Airflow DAG for Google BigQuery service.
 Uses Async version of BigQueryInsertJobOperator and BigQueryCheckOperator.
 """
+
 import os
 from datetime import datetime, timedelta
 from typing import Any

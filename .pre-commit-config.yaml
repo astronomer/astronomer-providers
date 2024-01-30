@@ -44,7 +44,7 @@ repos:
         args: ["--config=mlc-config.json"]
 
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.1.1
     hooks:
       - id: black
 
@@ -90,7 +90,7 @@ repos:
         additional_dependencies: ['toml']
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.6
+    rev: 1.7.7
     hooks:
       - id: bandit
         # Excluding Example DAGs temporarily until they can be fixed

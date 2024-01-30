@@ -1,4 +1,5 @@
 """This module contains the Apache Livy operator async."""
+
 from __future__ import annotations
 
 import warnings

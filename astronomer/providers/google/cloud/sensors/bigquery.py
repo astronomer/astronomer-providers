@@ -1,4 +1,5 @@
 """This module contains Google Big Query sensors."""
+
 from __future__ import annotations
 
 import warnings

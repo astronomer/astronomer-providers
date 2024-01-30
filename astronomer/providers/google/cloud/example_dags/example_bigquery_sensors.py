@@ -1,4 +1,5 @@
 """Example Airflow DAG for Google BigQuery Sensors."""
+
 import os
 from datetime import datetime, timedelta
 from typing import Any
