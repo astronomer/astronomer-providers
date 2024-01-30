@@ -9,7 +9,7 @@ import yaml
 from airflow.exceptions import AirflowException
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.utils.process_utils import execute_in_subprocess, patch_environ
-from google.auth import impersonated_credentials  # type: ignore[attr-defined]
+from google.auth import impersonated_credentials
 from google.cloud.container_v1 import ClusterManagerClient
 from google.oauth2.service_account import Credentials
 from kubernetes_asyncio.config.kube_config import KubeConfigLoader
@@ -76,11 +76,9 @@ def _get_gke_config_file(
 
     # Write config to a temp file and set the environment variable to point to it.
     # This is to avoid race conditions of reading/writing a single file
-    with (
-        tempfile.NamedTemporaryFile() as conf_file,
-        patch_environ({KUBE_CONFIG_ENV_VAR: conf_file.name}),
-        hook.provide_authorized_gcloud(),
-    ):
+    with tempfile.NamedTemporaryFile() as conf_file, patch_environ(
+            {KUBE_CONFIG_ENV_VAR: conf_file.name}
+    ), hook.provide_authorized_gcloud():
         # Attempt to get/update credentials
         # We call gcloud directly instead of using google-cloud-python api
         # because there is no way to write kubernetes config to a file, which is
