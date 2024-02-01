@@ -23,7 +23,63 @@ Astronomer Providers
    :target: https://github.com/PyCQA/bandit
    :alt: Security: bandit
 
-`Apache Airflow <https://airflow.apache.org/>`_ Providers containing Deferrable Operators & Sensors from Astronomer.
+
+.. warning::
+    The majority of operators and sensors within this repository have been deprecated and will not receive further updates.
+    Read more about the deprecation in the `Deprecation Notice` section below.
+
+Deprecation Notice
+------------------
+
+With the release ``1.19.0`` of the astronomer-providers package, most of the operators and sensors are deprecated and will
+no longer receive updates. We recommend migrating to the official Apache Airflow Providers for the latest features and support.
+For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Providers
+is as simple as changing the import path from
+
+.. code-block::
+
+    from astronomer.providers.*.*.operator_module import SomeOperatorAsync
+
+to
+
+.. code-block::
+
+    from airflow.providers.*.*.operator_module import SomeOperator
+
+and setting the ``deferrable`` argument to ``True`` while using the operator or sensor in your DAG.
+Setting the ``deferrable`` argument to ``True`` will ensure that the operator or sensor is using the async version
+of the operator or sensor from the official Apache Airflow Providers.
+
+For example, to migrate from
+``astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync`` to
+``airflow.providers.amazon.aws.operators.s3.BatchOperator``, simply change the import path and pass
+the deferrable argument:
+
+.. code-block:: python
+
+    BatchOperator(
+        task_id="copy_object",
+        your_arguments,
+        your_keyword_arguments,
+        deferrable=True,
+    )
+
+For more information on using the deferrable operators and sensors from the official Apache Airflow Providers, visit the following links:
+
+- https://airflow.apache.org/docs/apache-airflow-providers/index.html
+- https://airflow.apache.org/docs/#providers-packages-docs-apache-airflow-providers-index-html
+- https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/deferring.html
+
+.. note::
+    Although the default value for the `deferrable` argument is `False`, it's possible to configure the default value for the `deferrable` argument across
+    your deployment by setting the `default_deferrable` flag in the `operators` sections of your Airflow configuration. Once you set the `default_deferrable` flag to `True`,
+    you can remove the `deferrable` argument from your operators and sensors and they will use the async version of the operator or sensor from the official Apache Airflow Providers
+    if it exists.
+
+    See more at: https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#default-deferrable
+
+For troubleshooting of issues with migrations, you are suggested to open up a `GitHub discussion <https://github.com/astronomer/astronomer-providers/discussions>`_
+
 
 Installation
 ------------
