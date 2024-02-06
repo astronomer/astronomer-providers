@@ -10,6 +10,11 @@ def get_provider_info() -> Dict[str, Any]:
         "description": "Apache Airflow Providers containing Deferrable Operators & Sensors from Astronomer",
         "versions": "1.18.4",
         # Optional.
-        "hook-class-names": [],
+        "connection-types": [
+            {
+                "hook-class-name": "astronomer.providers.core.hooks.astro.AstroHook",
+                "connection-type": "Astro Cloud",
+            }
+        ],
         "extra-links": [],
     }
