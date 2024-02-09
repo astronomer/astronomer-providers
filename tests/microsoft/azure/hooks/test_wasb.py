@@ -27,7 +27,7 @@ TEST_CONNECTION_PROXIES = {"http": "http_proxy_uri", "https": "https_proxy_uri"}
 
 
 class TestWasbHookAsyncConnection:
-    def setup(self):
+    def setup_method(self):
         db.merge_conn(Connection(conn_id="wasb_test_key", conn_type="wasb", login="login", password="key"))
         self.connection_type = "wasb"
         self.connection_string_id = "azure_test_connection_string"
