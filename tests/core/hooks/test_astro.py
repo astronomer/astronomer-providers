@@ -19,7 +19,8 @@ class TestAstroHook:
                 "password": "Astro Cloud API Token",
             },
             "placeholders": {
-                "password": "ey...xz.ey...fq.tw...ap",
+                "host": "https://clmkpsyfc010391acjie00t1l.astronomer.run/d5lc9c9x",
+                "password": "Astro API JWT Token",
             },
         }
 

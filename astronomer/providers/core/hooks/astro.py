@@ -39,7 +39,7 @@ class AstroHook(BaseHook):
             },
             "placeholders": {
                 "host": "https://clmkpsyfc010391acjie00t1l.astronomer.run/d5lc9c9x",
-                "password": "JWT API Token",
+                "password": "Astro API JWT Token",
             },
         }
 
