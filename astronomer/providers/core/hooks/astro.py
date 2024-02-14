@@ -69,7 +69,11 @@ class AstroHook(BaseHook):
         """
         base_url, _ = self.get_conn()
         path = f"/api/v1/dags/{external_dag_id}/dagRuns"
-        params: dict[str, int | str | list[str]] = {"limit": 1, "state": ["running", "queued"]}
+        params: dict[str, int | str | list[str]] = {
+            "limit": 1,
+            "state": ["running", "queued"],
+            "order_by": "-execution_date",
+        }
         url = f"{base_url}{path}"
         response = requests.get(url, headers=self._headers, params=params)
         response.raise_for_status()

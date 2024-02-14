@@ -26,7 +26,7 @@ with DAG(
     )
 
 with DAG(
-    dag_id="wait_to_test_example_astro_dag",
+    dag_id="example_wait_to_test_example_astro_task",
     start_date=datetime(2022, 1, 1),
     schedule=None,
     catchup=False,
@@ -50,7 +50,7 @@ with DAG(
 ):
     run_wait_dag = TriggerDagRunOperator(
         task_id="run_wait_dag",
-        trigger_dag_id="example_external_task_async_waits_for_me",
+        trigger_dag_id="example_wait_to_test_example_astro_task",
         wait_for_completion=False,
     )
 
