@@ -16,11 +16,12 @@ class PodNotFoundException(AirflowException):
 class KubernetesPodOperatorAsync(KubernetesPodOperator):
     """
     This class is deprecated.
+
     Please use :class: `~airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator`
     and set `deferrable` param to `True` instead.
     """
 
-    def __init__(self, *, logging_interval: int | None = None, **kwargs: Any):
+    def __init__(self, **kwargs: Any):
         warnings.warn(
             (
                 "This module is deprecated."
@@ -30,5 +31,4 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        self.logging_interval = logging_interval
         super().__init__(deferrable=True, **kwargs)
