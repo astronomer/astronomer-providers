@@ -59,7 +59,7 @@ class AstroDeploymentTrigger(BaseTrigger):
         hook = AstroHook(self.astro_cloud_conn_id)
         while True:
             if self.external_task_id is not None:
-                task_instance = hook.get_task_instance(
+                task_instance = await hook.get_a_task_instance(
                     self.external_dag_id, self.dag_run_id, self.external_task_id
                 )
                 state = task_instance.get("state") if task_instance else None
@@ -68,7 +68,7 @@ class AstroDeploymentTrigger(BaseTrigger):
                 elif state in ("failed", "upstream_failed"):
                     yield TriggerEvent({"status": "failed"})
             else:
-                dag_run = hook.get_dag_run(self.external_dag_id, self.dag_run_id)
+                dag_run = await hook.get_a_dag_run(self.external_dag_id, self.dag_run_id)
                 state = dag_run.get("state") if dag_run else None
                 if state == "success":
                     yield TriggerEvent({"status": "done"})

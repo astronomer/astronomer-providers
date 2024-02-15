@@ -1,6 +1,8 @@
-from unittest.mock import MagicMock, patch
+from unittest import mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from aioresponses import aioresponses
 from airflow.exceptions import AirflowException
 
 from astronomer.providers.core.hooks.astro import AstroHook
@@ -143,3 +145,98 @@ class TestAstroHook:
         # Assertions
         mock_requests_get.assert_called_once()
         assert result == {"task_instance_id": "456", "state": "success"}
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.core.hooks.astro.AstroHook._headers")
+    async def test_get_a_dag_run(self, mock_headers):
+        external_dag_id = "your_external_dag_id"
+        dag_run_id = "your_dag_run_id"
+        url = f"https://test.com/api/v1/dags/{external_dag_id}/dagRuns/{dag_run_id}"
+
+        # Mocking necessary objects
+        your_class_instance = AstroHook()
+        your_class_instance.get_conn = Mock(return_value=("https://test.com", "Test Token"))
+        mock_headers.return_value = {"accept": "application/json", "Authorization": "Bearer Token"}
+        response_data = {
+            "conf": {},
+            "dag_id": "my_dag",
+            "dag_run_id": "manual__2024-02-14T19:06:32.053905+00:00",
+            "data_interval_end": "2024-02-14T19:06:32.053905+00:00",
+            "data_interval_start": "2024-02-14T19:06:32.053905+00:00",
+            "end_date": "2024-02-14T19:16:33.987139+00:00",
+            "execution_date": "2024-02-14T19:06:32.053905+00:00",
+            "external_trigger": True,
+            "last_scheduling_decision": "2024-02-14T19:16:33.985973+00:00",
+            "logical_date": "2024-02-14T19:06:32.053905+00:00",
+            "note": None,
+            "run_type": "manual",
+            "start_date": "2024-02-14T19:06:33.004299+00:00",
+            "state": "success",
+        }
+
+        with aioresponses() as mock_session:
+            mock_session.get(
+                url,
+                headers=your_class_instance._headers,
+                status=200,
+                payload=response_data,
+            )
+
+            result = await your_class_instance.get_a_dag_run(external_dag_id, dag_run_id)
+
+        assert result == response_data
+
+    @pytest.mark.asyncio
+    @mock.patch("astronomer.providers.core.hooks.astro.AstroHook._headers")
+    async def test_get_a_task_instance(self, mock_headers):
+        external_dag_id = "your_external_dag_id"
+        dag_run_id = "your_dag_run_id"
+        external_task_id = "your_external_task_id"
+        url = f"https://test.com/api/v1/dags/{external_dag_id}/dagRuns/{dag_run_id}/taskInstances/{external_task_id}"
+
+        # Mocking necessary objects
+        your_class_instance = AstroHook()
+        your_class_instance.get_conn = Mock(return_value=("https://test.com", "Test Token"))
+        mock_headers.return_value = {"accept": "application/json", "Authorization": "Bearer Token"}
+        response_data = {
+            "dag_id": "my_dag",
+            "dag_run_id": "manual__2024-02-14T19:06:32.053905+00:00",
+            "duration": 600.233105,
+            "end_date": "2024-02-14T19:16:33.459676+00:00",
+            "execution_date": "2024-02-14T19:06:32.053905+00:00",
+            "executor_config": "{}",
+            "hostname": "d10fc8b0ad27",
+            "map_index": -1,
+            "max_tries": 0,
+            "note": None,
+            "operator": "_PythonDecoratedOperator",
+            "pid": 927,
+            "pool": "default_pool",
+            "pool_slots": 1,
+            "priority_weight": 1,
+            "queue": "default",
+            "queued_when": "2024-02-14T19:06:33.036108+00:00",
+            "rendered_fields": {"op_args": [], "op_kwargs": {}, "templates_dict": None},
+            "sla_miss": None,
+            "start_date": "2024-02-14T19:06:33.226571+00:00",
+            "state": "success",
+            "task_id": "my_python_function",
+            "trigger": None,
+            "triggerer_job": None,
+            "try_number": 1,
+            "unixname": "astro",
+        }
+
+        with aioresponses() as mock_session:
+            mock_session.get(
+                url,
+                headers=your_class_instance._headers,
+                status=200,
+                payload=response_data,
+            )
+
+            result = await your_class_instance.get_a_task_instance(
+                external_dag_id, dag_run_id, external_task_id
+            )
+
+        assert result == response_data

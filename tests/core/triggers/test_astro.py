@@ -34,7 +34,7 @@ class TestAstroDeploymentTrigger:
         assert serialized_data == expected_result
 
     @pytest.mark.asyncio
-    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_task_instance")
+    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_a_task_instance")
     async def test_run_task_successful(self, mock_get_task_instance):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",
@@ -51,7 +51,7 @@ class TestAstroDeploymentTrigger:
         assert actual == TriggerEvent({"status": "done"})
 
     @pytest.mark.asyncio
-    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_task_instance")
+    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_a_task_instance")
     async def test_run_task_failed(self, mock_get_task_instance):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",
@@ -68,7 +68,7 @@ class TestAstroDeploymentTrigger:
         assert actual == TriggerEvent({"status": "failed"})
 
     @pytest.mark.asyncio
-    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_dag_run")
+    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_a_dag_run")
     async def test_run_dag_successful(self, mock_get_dag_run):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",
@@ -85,7 +85,7 @@ class TestAstroDeploymentTrigger:
         assert actual == TriggerEvent({"status": "done"})
 
     @pytest.mark.asyncio
-    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_dag_run")
+    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_a_dag_run")
     async def test_run_dag_failed(self, mock_get_dag_run):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",
@@ -101,7 +101,7 @@ class TestAstroDeploymentTrigger:
         assert actual == TriggerEvent({"status": "failed"})
 
     @pytest.mark.asyncio
-    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_dag_run")
+    @patch("astronomer.providers.core.hooks.astro.AstroHook.get_a_dag_run")
     async def test_run_dag_wait(self, mock_get_dag_run):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",

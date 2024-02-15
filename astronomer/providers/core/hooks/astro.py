@@ -5,6 +5,7 @@ from typing import Any
 from urllib.parse import quote
 
 import requests
+from aiohttp import ClientSession
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
@@ -96,6 +97,24 @@ class AstroHook(BaseHook):
         dr: dict[str, Any] = response.json()
         return dr
 
+    async def get_a_dag_run(self, external_dag_id: str, dag_run_id: str) -> dict[str, Any] | None:
+        """
+        Retrieves information about a specific DAG run.
+
+        :param external_dag_id: External ID of the DAG.
+        :param dag_run_id: ID of the DAG run.
+        """
+        base_url, _ = self.get_conn()
+        dag_run_id = quote(dag_run_id)
+        path = f"/api/v1/dags/{external_dag_id}/dagRuns/{dag_run_id}"
+        url = f"{base_url}{path}"
+
+        async with ClientSession(headers=self._headers) as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                dr: dict[str, Any] = await response.json()
+                return dr
+
     def get_task_instance(
         self, external_dag_id: str, dag_run_id: str, external_task_id: str
     ) -> dict[str, Any] | None:
@@ -114,3 +133,24 @@ class AstroHook(BaseHook):
         response.raise_for_status()
         ti: dict[str, Any] = response.json()
         return ti
+
+    async def get_a_task_instance(
+        self, external_dag_id: str, dag_run_id: str, external_task_id: str
+    ) -> dict[str, Any] | None:
+        """
+        Retrieves information about a specific task instance within a DAG run.
+
+        :param external_dag_id: External ID of the DAG.
+        :param dag_run_id: ID of the DAG run.
+        :param external_task_id: External ID of the task.
+        """
+        base_url, _ = self.get_conn()
+        dag_run_id = quote(dag_run_id)
+        path = f"/api/v1/dags/{external_dag_id}/dagRuns/{dag_run_id}/taskInstances/{external_task_id}"
+        url = f"{base_url}{path}"
+
+        async with ClientSession(headers=self._headers) as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                ti: dict[str, Any] = await response.json()
+                return ti
