@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import datetime
-
-# import time
 from typing import Any, cast
 
 from airflow.exceptions import AirflowException, AirflowSkipException
@@ -37,18 +35,6 @@ class ExternalDeploymentSensor(BaseSensorOperator):
         self.external_dag_id = external_dag_id
         self._dag_run_id: str = ""
 
-    # def wait_for_dag_start(self, second_to_wait: int = 120, sleep: int = 5) -> None:
-    #     """TODO"""
-    #     hook = AstroHook(self.astro_cloud_conn_id)
-    #     end_time = datetime.datetime.now() + datetime.timedelta(seconds=second_to_wait)
-    #     while end_time >= datetime.datetime.now():
-    #         try:
-    #             dag_runs = hook.get_dag_runs(self.external_dag_id)
-    #             if dag_runs is not None:
-    #                 return
-    #         except Exception:
-    #             time.sleep(sleep)
-
     def poke(self, context: Context) -> bool | PokeReturnValue:
         """
         Check the status of a DAG/task in another deployment.
@@ -60,7 +46,7 @@ class ExternalDeploymentSensor(BaseSensorOperator):
         """
         hook = AstroHook(self.astro_cloud_conn_id)
         dag_runs: list[dict[str, Any]] = hook.get_dag_runs(self.external_dag_id)
-        if dag_runs is None or len(dag_runs) == 0:
+        if not dag_runs:
             self.log.info("No DAG runs found for DAG %s", self.external_dag_id)
             return True
         self._dag_run_id = cast(str, dag_runs[0]["dag_run_id"])
@@ -111,5 +97,4 @@ class ExternalDeploymentSensor(BaseSensorOperator):
         if event.get("status") == "failed":
             if self.soft_fail:
                 raise AirflowSkipException("Upstream job failed. Skipping the task.")
-            else:
-                raise AirflowException("Upstream job failed.")
+            raise AirflowException("Upstream job failed.")
