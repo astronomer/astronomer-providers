@@ -25,12 +25,5 @@ class GKEStartPodOperatorAsync(GKEStartPodOperator):
             DeprecationWarning,
             stacklevel=2,
         )
-        if kwargs.get("logging_interval"):
-            warnings.warn(
-                ("Argument 'loggin_interval' has been deprecated"),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            kwargs.pop("logging_interval")
 
         super().__init__(*args, deferrable=True, **kwargs)
