@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os.path
+import warnings
 from datetime import datetime
 from fnmatch import fnmatch
 from typing import Sequence
@@ -14,17 +15,8 @@ from asgiref.sync import sync_to_async
 
 class SFTPHookAsync(BaseHook):
     """
-    Interact with an SFTP server via asyncssh package
-
-    :param sftp_conn_id: SFTP connection ID to be used for connecting to SFTP server
-    :param host: hostname of the SFTP server
-    :param port: port of the SFTP server
-    :param username: username used when authenticating to the SFTP server
-    :param password: password used when authenticating to the SFTP server.
-        Can be left blank if using a key file
-    :param known_hosts: path to the known_hosts file on the local file system. Defaults to ``~/.ssh/known_hosts``.
-    :param key_file: path to the client key file used for authentication to SFTP server
-    :param passphrase: passphrase used with the key_file for authentication to SFTP server
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.sftp.hooks.sftp.SFTPHookAsync` instead.
     """
 
     conn_name_attr = "ssh_conn_id"
@@ -45,6 +37,10 @@ class SFTPHookAsync(BaseHook):
         passphrase: str = "",
         private_key: str = "",
     ) -> None:
+        warnings.warn(
+            "This class is deprecated and will be removed in 2.0.0. "
+            "Use `airflow.providers.sftp.hooks.sftp.SFTPHookAsync` instead."
+        )
         self.sftp_conn_id = sftp_conn_id
         self.host = host
         self.port = port
