@@ -21,6 +21,7 @@ class TestGKEStartPodOperatorAsync:
             namespace=NAMESPACE,
             image="ubuntu",
             gcp_conn_id=GCP_CONN_ID,
+            logging_interval=1,
         )
         assert isinstance(task, GKEStartPodOperator)
         assert task.deferrable is True
