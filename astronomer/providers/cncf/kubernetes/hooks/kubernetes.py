@@ -1,4 +1,7 @@
-from typing import Any, Dict
+from __future__ import annotations
+
+import warnings
+from typing import Any
 
 import aiofiles
 from airflow.exceptions import AirflowException
@@ -6,7 +9,7 @@ from airflow.providers.cncf.kubernetes.hooks.kubernetes import KubernetesHook
 from kubernetes_asyncio import client, config
 
 
-def get_field(extras: Dict[str, Any], field_name: str, strict: bool = False) -> Any:
+def get_field(extras: dict[str, Any], field_name: str, strict: bool = False) -> Any:
     """Get field from extra, first checking short name, then for backward compatibility we check for prefixed name."""
     backward_compatibility_prefix = "extra__kubernetes__"
     if field_name.startswith("extra__"):
@@ -24,6 +27,22 @@ def get_field(extras: Dict[str, Any], field_name: str, strict: bool = False) -> 
 
 
 class KubernetesHookAsync(KubernetesHook):  # noqa: D101
+    """
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.cncf.kubernetes.hooks.kubernetes.AsyncKubernetesHook` instead
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.cncf.kubernetes.hooks.kubernetes.AsyncKubernetesHook`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
     async def _load_config(self) -> client.ApiClient:
         """
         cluster_context: Optional[str] = None,

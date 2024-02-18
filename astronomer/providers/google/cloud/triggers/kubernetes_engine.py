@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any, AsyncIterator, Sequence
 
 from airflow.providers.cncf.kubernetes.utils.pod_manager import PodPhase
@@ -16,6 +17,9 @@ from astronomer.providers.google.cloud.gke_utils import _get_gke_config_file
 class GKEStartPodTrigger(WaitContainerTrigger):
     """
     Fetch GKE cluster config and wait for pod to start up.
+
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.google.cloud.triggers.kubernetes_engine.GKEStartPodTrigger` instead
 
     :param location: The name of the Google Kubernetes Engine zone or region in which the
         cluster resides
@@ -53,6 +57,15 @@ class GKEStartPodTrigger(WaitContainerTrigger):
         pending_phase_timeout: float = 120.0,
         logging_interval: int | None = None,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.google.cloud.triggers.kubernetes_engine.GKEStartPodTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         super().__init__(
             container_name=self.BASE_CONTAINER_NAME,
             pod_name=name,
