@@ -17,7 +17,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     """
     This class is deprecated.
 
-    Please use :class: `~airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator`
+    Please use :class: `~airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator`
     and set `deferrable` param to `True` instead.
     """
 
@@ -25,7 +25,7 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
         warnings.warn(
             (
                 "This module is deprecated."
-                "Please use `airflow.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperator`"
+                "Please use `airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator`"
                 "and set `deferrable` param to `True` instead."
             ),
             DeprecationWarning,
