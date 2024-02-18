@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Dict
 
 import aiofiles
@@ -24,6 +25,22 @@ def get_field(extras: Dict[str, Any], field_name: str, strict: bool = False) -> 
 
 
 class KubernetesHookAsync(KubernetesHook):  # noqa: D101
+    """
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.cncf.kubernetes.hooks.kubernetes.AsyncKubernetesHook` instead
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.cncf.kubernetes.hooks.kubernetes.AsyncKubernetesHook`",
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
     async def _load_config(self) -> client.ApiClient:
         """
         cluster_context: Optional[str] = None,
