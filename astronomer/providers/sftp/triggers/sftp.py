@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from datetime import datetime
 from typing import Any, AsyncIterator
 
@@ -14,16 +15,8 @@ from astronomer.providers.sftp.hooks.sftp import SFTPHookAsync
 
 class SFTPTrigger(BaseTrigger):
     """
-    Trigger that fires when either the path on the SFTP server does not exist,
-    or when there are no files matching the file pattern at the path
-
-    :param path: The path on the SFTP server to search for a file matching the file pattern.
-                Authentication method used in the SFTP connection must have access to this path
-    :param file_pattern: Pattern to be used for matching against the list of files at the path above.
-                Uses the fnmatch module from std library to perform the matching.
-
-    :param sftp_conn_id: SFTP connection ID to be used for connecting to SFTP server
-    :param poke_interval: How often, in seconds, to check for the existence of the file on the SFTP server
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.sftp.triggers.sftp.SFTPTrigger` instead.
     """
 
     def __init__(
@@ -34,6 +27,10 @@ class SFTPTrigger(BaseTrigger):
         newer_than: datetime | str | None = None,
         poke_interval: float = 5,
     ) -> None:
+        warnings.warn(
+            "This class is deprecated and will be removed in 2.0.0. "
+            "Use `airflow.providers.sftp.triggers.sftp.SFTPTrigger` instead."
+        )
         super().__init__()
         self.path = path
         self.file_pattern = file_pattern
