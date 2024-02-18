@@ -1,5 +1,6 @@
 import asyncio
 import traceback
+import warnings
 from datetime import timedelta
 from typing import Any, AsyncIterator, Dict, Optional, Tuple
 
@@ -22,19 +23,8 @@ class PodLaunchTimeoutException(AirflowException):
 
 class WaitContainerTrigger(BaseTrigger):
     """
-    First, waits for pod ``pod_name`` to reach running state within ``pending_phase_timeout``.
-    Next, waits for ``container_name`` to reach a terminal state.
-
-    :param kubernetes_conn_id: Airflow connection ID to use
-    :param hook_params: kwargs for hook
-    :param container_name: container to wait for
-    :param pod_name: name of pod to monitor
-    :param pod_namespace: pod namespace
-    :param pending_phase_timeout: max time in seconds to wait for pod to leave pending phase
-    :param poll_interval: number of seconds between reading pod state
-    :param logging_interval: number of seconds to wait before kicking it back to
-        the operator to print latest logs. If ``None`` will wait until container done.
-    :param last_log_time: where to resume logs from
+    This class is deprecated and will be removed in 2.0.0.
+    Use :class: `~airflow.providers.cncf.kubernetes.triggers.pod.KubernetesPodTrigger` instead
     """
 
     def __init__(
@@ -50,6 +40,14 @@ class WaitContainerTrigger(BaseTrigger):
         logging_interval: Optional[int] = None,
         last_log_time: Optional[DateTime] = None,
     ):
+        warnings.warn(
+            (
+                "This module is deprecated and will be removed in 2.0.0."
+                "Please use `airflow.providers.cncf.kubernetes.triggers.pod.KubernetesPodTrigger`"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.kubernetes_conn_id = kubernetes_conn_id
         self.hook_params = hook_params

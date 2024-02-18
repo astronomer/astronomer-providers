@@ -45,7 +45,7 @@ with DAG(
             "-cx",
             (
                 "i=0; "
-                "while [ $i -ne 30 ]; "
+                "while [ $i -ne 150 ]; "
                 "do i=$(($i+1)); "
                 "echo $i; "
                 "sleep 1; "
@@ -55,6 +55,7 @@ with DAG(
             ),
         ],
         do_xcom_push=True,
+        logging_interval=5,
     )
     # [END howto_operator_kubernetes_pod_async]
 
