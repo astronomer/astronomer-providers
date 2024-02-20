@@ -2,11 +2,9 @@ import os
 from datetime import timedelta
 from typing import Any, Dict
 
-import requests
 from airflow import DAG
 from airflow.hooks.base import BaseHook
 from airflow.operators.python import PythonOperator
-from airflow.utils.log.secrets_masker import mask_secret
 from airflow.utils.timezone import datetime
 
 from astronomer.providers.core.sensors.external_task import (
@@ -31,24 +29,11 @@ default_args = {
 def astro_access_token() -> Dict[str, Any]:
     """Get the Headers with access token by making post request with client_id and client_secret"""
     conn = BaseHook.get_connection(DEPLOYMENT_CONN_ID)
-    _json = {
-        "audience": "astronomer-ee",
-        "grant_type": "client_credentials",
-        "client_id": ASTRONOMER_KEY_ID,
-        "client_secret": ASTRONOMER_KEY_SECRET,
-    }
-    token_resp = requests.post(
-        url=conn.host,
-        headers={"Content-type": "application/json"},
-        json=_json,
-    )
-    masked_access_token = token_resp.json()["access_token"]
-    mask_secret(masked_access_token)
     return {
         "cache-control": "no-cache",
         "content-type": "application/json",
         "accept": "application/json",
-        "Authorization": "Bearer " + masked_access_token,
+        "Authorization": "Bearer " + conn.password,
     }
 
 
