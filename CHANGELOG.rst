@@ -52,7 +52,9 @@ Changelog
     * DbtCloudJobRunSensorAsync
     * DbtCloudRunJobOperatorAsync
     * LivyOperatorAsync
+* Add deprecation notice docs for astronomer-providers (#1468)
 * Increase min airflow version to 2.6 (#1438)
+
 
 1.18.4 (2023-12-07)
 -------------------
