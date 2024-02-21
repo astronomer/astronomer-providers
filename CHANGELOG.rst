@@ -1,6 +1,59 @@
 Changelog
 =========
 
+1.19.0 (2024-02-21)
+-------------------
+
+* Add ExternalDeploymentSensor (#1472)
+* Derepcate the following operators and fallbacks to their OSS counterparts
+    * EmrContainerSensorAsync
+    * EmrStepSensorAsync
+    * EmrJobFlowSensorAsync
+    * RedshiftClusterSensorAsync
+    * BatchSensorAsync
+    * S3KeySensorAsync
+    * S3KeysUnchangedSensorAsync
+    * EmrContainerOperatorAsync
+    * RedshiftDeleteClusterOperatorAsync
+    * RedshiftResumeClusterOperatorAsync
+    * RedshiftPauseClusterOperatorAsync
+    * BatchOperatorAsync
+    * SageMakerProcessingOperatorAsync
+    * SageMakerTransformOperatorAsync
+    * SageMakerTrainingOperatorAsync
+    * RedshiftDataOperatorAsync
+    * GCSObjectExistenceSensorAsync
+    * GCSObjectsWithPrefixExistenceSensorAsync
+    * GCSUploadSessionCompleteSensorAsync
+    * GCSObjectUpdateSensorAsync
+    * GKEStartPodOperatorAsync
+    * BigQueryInsertJobOperatorAsync
+    * BigQueryCheckOperatorAsync
+    * BigQueryGetDataOperatorAsync
+    * BigQueryIntervalCheckOperatorAsync
+    * BigQueryValueCheckOperatorAsync
+    * DataprocCreateClusterOperatorAsync
+    * DataprocDeleteClusterOperatorAsync
+    * DataprocSubmitJobOperatorAsync
+    * DataprocUpdateClusterOperatorAsync
+    * BigQueryTableExistenceSensorAsync
+    * AzureDataFactoryPipelineRunStatusSensorAsync
+    * WasbBlobSensorAsync
+    * WasbPrefixSensorAsync
+    * AzureDataFactoryRunPipelineOperatorAsync
+    * FileSensorAsync
+    * ExternalTaskSensorAsync
+    * SnowflakeSqlApiOperatorAsync
+    * DatabricksSubmitRunOperatorAsync
+    * DatabricksRunNowOperatorAsync
+    * KubernetesPodOperatorAsync
+    * SFTPSensorAsync
+    * HttpSensorAsync
+    * DbtCloudJobRunSensorAsync
+    * DbtCloudRunJobOperatorAsync
+    * LivyOperatorAsync
+* Increase min airflow version to 2.6 (#1438)
+
 1.18.4 (2023-12-07)
 -------------------
 
