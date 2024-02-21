@@ -1,6 +1,62 @@
 Changelog
 =========
 
+1.19.0 (2024-02-21)
+-------------------
+
+* Add ExternalDeploymentSensor (#1472)
+* Deprecate the following operators and sensors and proxy them to their upstream Apache Airflow providers' deferrable counterparts
+    * EmrContainerSensorAsync
+    * EmrStepSensorAsync
+    * EmrJobFlowSensorAsync
+    * RedshiftClusterSensorAsync
+    * BatchSensorAsync
+    * S3KeySensorAsync
+    * S3KeysUnchangedSensorAsync
+    * EmrContainerOperatorAsync
+    * RedshiftDeleteClusterOperatorAsync
+    * RedshiftResumeClusterOperatorAsync
+    * RedshiftPauseClusterOperatorAsync
+    * BatchOperatorAsync
+    * SageMakerProcessingOperatorAsync
+    * SageMakerTransformOperatorAsync
+    * SageMakerTrainingOperatorAsync
+    * RedshiftDataOperatorAsync
+    * GCSObjectExistenceSensorAsync
+    * GCSObjectsWithPrefixExistenceSensorAsync
+    * GCSUploadSessionCompleteSensorAsync
+    * GCSObjectUpdateSensorAsync
+    * GKEStartPodOperatorAsync
+    * BigQueryInsertJobOperatorAsync
+    * BigQueryCheckOperatorAsync
+    * BigQueryGetDataOperatorAsync
+    * BigQueryIntervalCheckOperatorAsync
+    * BigQueryValueCheckOperatorAsync
+    * DataprocCreateClusterOperatorAsync
+    * DataprocDeleteClusterOperatorAsync
+    * DataprocSubmitJobOperatorAsync
+    * DataprocUpdateClusterOperatorAsync
+    * BigQueryTableExistenceSensorAsync
+    * AzureDataFactoryPipelineRunStatusSensorAsync
+    * WasbBlobSensorAsync
+    * WasbPrefixSensorAsync
+    * AzureDataFactoryRunPipelineOperatorAsync
+    * FileSensorAsync
+    * ExternalTaskSensorAsync
+    * SnowflakeSqlApiOperatorAsync
+    * DatabricksSubmitRunOperatorAsync
+    * DatabricksRunNowOperatorAsync
+    * KubernetesPodOperatorAsync
+    * SFTPSensorAsync
+    * HttpSensorAsync
+    * DbtCloudJobRunSensorAsync
+    * DbtCloudRunJobOperatorAsync
+    * LivyOperatorAsync
+* Add deprecation notice docs for astronomer-providers (#1468)
+* Increase min airflow version to 2.6 (#1438)
+* Bump mininium python to 3.8 (#1442)
+
+
 1.18.4 (2023-12-07)
 -------------------
 
