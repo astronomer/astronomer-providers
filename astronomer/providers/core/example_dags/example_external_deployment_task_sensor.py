@@ -11,6 +11,10 @@ from astronomer.providers.core.sensors.external_task import (
     ExternalDeploymentTaskSensorAsync,
 )
 
+# The below Airflow connection is of type http
+# Add host and password param in connection
+# Example host for connection is: https://cll9nj92h00iw02j51htnafw3.astronomer.run/d4be4ykx
+# Example password for connection is: Astro JWT API token
 DEPLOYMENT_CONN_ID = os.getenv("ASTRO_DEPLOYMENT_CONN_ID", "deployment_conn_id")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 DAG_ID = os.getenv("DAG_ID", "")
