@@ -12,8 +12,6 @@ from astronomer.providers.core.sensors.external_task import (
 )
 
 DEPLOYMENT_CONN_ID = os.getenv("ASTRO_DEPLOYMENT_CONN_ID", "deployment_conn_id")
-ASTRONOMER_KEY_ID = os.getenv("ASTRONOMER_KEY_ID", "")
-ASTRONOMER_KEY_SECRET = os.getenv("ASTRONOMER_KEY_SECRET", "")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 DAG_ID = os.getenv("DAG_ID", "")
 RUN_ID = os.getenv("RUN_ID", "")
