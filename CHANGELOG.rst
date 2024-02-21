@@ -5,7 +5,7 @@ Changelog
 -------------------
 
 * Add ExternalDeploymentSensor (#1472)
-* Derepcate the following operators and fallbacks to their OSS counterparts
+* Deprecate the following operators and sensors and proxy them to their upstream Apache Airflow providers' deferrable counterparts
     * EmrContainerSensorAsync
     * EmrStepSensorAsync
     * EmrJobFlowSensorAsync
