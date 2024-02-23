@@ -4,7 +4,6 @@ import datetime
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.session import provide_session
@@ -128,14 +127,6 @@ class ExternalDeploymentTaskSensorAsync(HttpSensor):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.hook = HttpHook(
-            method=self.method,
-            http_conn_id=self.http_conn_id,
-            tcp_keep_alive=self.tcp_keep_alive,
-            tcp_keep_alive_idle=self.tcp_keep_alive_idle,
-            tcp_keep_alive_count=self.tcp_keep_alive_count,
-            tcp_keep_alive_interval=self.tcp_keep_alive_interval,
-        )
 
     def execute(self, context: Context) -> None:
         """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
@@ -143,7 +134,7 @@ class ExternalDeploymentTaskSensorAsync(HttpSensor):
             timeout=self.execution_timeout,
             trigger=ExternalDeploymentTaskTrigger(
                 http_conn_id=self.http_conn_id,
-                method=self.hook.method,
+                method=self.method,
                 endpoint=self.endpoint,
                 data=self.request_params,
                 headers=self.headers,
