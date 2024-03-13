@@ -2,8 +2,12 @@
 name: Deploy integration tests to astro cloud
 
 on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 19 * * *"
+  # Since we have deprecated astronomer-providers in 1.19.0, it would make sense to disable the scheduled
+  # workflow for running the integration tests on the providers deployment. We can re-enable it if we
+  # need to run the integration tests on the providers deployment again. This will help us save some
+  # cloud costs on the resources used for running the integration tests.
+  # schedule:
+  #   - cron: "0 19 * * *"
   workflow_dispatch:
     inputs:
       git_rev:
