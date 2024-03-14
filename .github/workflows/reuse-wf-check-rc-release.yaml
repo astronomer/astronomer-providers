@@ -1,7 +1,7 @@
 ---
 name: (Reusable workflows) Check airflow provider RC releases and create testing branch
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       rc_testing_branch:
@@ -13,19 +13,19 @@ on:  # yamllint disable-line rule:truthy
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
         type: string
-        default: ''
+        default: ""
       issue_url:
         description: |
           issue_url: the GitHub issue URL that tracks the status of Providers release
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
         type: string
-        default: ''
+        default: ""
       base_git_rev:
-        description: 'The base git revision to test Providers RCs'
+        description: "The base git revision to test Providers RCs"
         required: false
         type: string
-        default: 'main'
+        default: "main"
       git_email:
         description: "bot's email for setting up git"
         required: true
@@ -38,19 +38,25 @@ on:  # yamllint disable-line rule:truthy
         description: "the path to run scripts"
         required: false
         type: string
-        default: ''
+        default: ""
     secrets:
       BOT_ACCESS_TOKEN:
-        description: 'personal access token for the bot to push the commit and create pull request'
+        description: "personal access token for the bot to push the commit and create pull request"
         required: true
     outputs:
       rc_testing_branch:
-        description: 'personal access token for the bot to push the commit and create pull request'
+        description: "personal access token for the bot to push the commit and create pull request"
         value: ${{ jobs.export-rc-testing-branch-name.outputs.rc_testing_branch }}
+      no_provider_changed:
+        description: "no provider has been changed in this rc release"
+        value: ${{ jobs.create-branch-for-testing-rc-release.outputs.no_provider_changed }}
+      rc_issue_url:
+        description: "the newly found GitHub issue URL that tracks the status of Providers release"
+        value: ${{ jobs.check-rc-testing-announcement.outputs.rc_issue_url }}
 
 jobs:
   check-rc-testing-announcement:
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     if: github.event_name == 'schedule'
     env:
       GH_TOKEN: ${{ github.token }}
@@ -58,7 +64,7 @@ jobs:
       - name: Checkout apache-airflow
         uses: actions/checkout@v3
         with:
-          repository: 'apache/airflow'
+          repository: "apache/airflow"
 
       - name: Parse the latest 100 GitHub issues from apache-airflow to check providers testing announcement
         id: parse-airflow-gh-issues
@@ -115,20 +121,20 @@ jobs:
       rc_issue_url: ${{ steps.export-rc-issue-url.outputs.rc_issue_url }}
 
   validate-manual-input:
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Validate user input
         if: |
-           (inputs.rc_testing_branch == '' && inputs.issue_url == '') ||
-           (inputs.rc_testing_branch != '' && inputs.issue_url != '')
+          (inputs.rc_testing_branch == '' && inputs.issue_url == '') ||
+          (inputs.rc_testing_branch != '' && inputs.issue_url != '')
         run: |
           echo "Either rc_testing_branch or issue_url is required, and you cannot give both."
           exit 1
 
   create-branch-for-testing-rc-release:
     needs: [validate-manual-input, check-rc-testing-announcement]
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     if: |
       always() &&
       (
@@ -182,6 +188,7 @@ jobs:
             echo "no_provider_changed=true" >> $GITHUB_OUTPUT
           else
             echo "$difference"
+            echo "no_provider_changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create RC branch
@@ -215,6 +222,7 @@ jobs:
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
       rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
+      no_provider_changed: ${{ steps.check-repo-provideres-updated.outputs.no_provider_changed }}
 
   export-rc-testing-branch-name:
     needs: [validate-manual-input, create-branch-for-testing-rc-release]
@@ -228,7 +236,7 @@ jobs:
         needs.validate-manual-input.result == 'success' &&
         inputs.rc_testing_branch
       )
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     steps:
       - name: export rc_testing_branch
         id: export-rc-testing-branch-name-step
