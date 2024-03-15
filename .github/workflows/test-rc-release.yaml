@@ -14,17 +14,17 @@ on:  # yamllint disable-line rule:truthy
           rc_testing_branch: existing testing branch
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
-        default: ''
+        default: ""
       issue_url:
         description: |
           issue_url: the GitHub issue URL that tracks the status of Providers release
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
       base_git_rev:
-        description: 'The base git revision to test Providers RCs'
+        description: "The base git revision to test Providers RCs"
         required: false
         type: string
-        default: 'main'
+        default: "main"
 
 jobs:
   check-airflow-provider-rc-release:
@@ -42,11 +42,15 @@ jobs:
     needs: check-airflow-provider-rc-release
     if: |
       always() &&
-      needs.check-airflow-provider-rc-release.result == 'success'
+      (
+        needs.check-airflow-provider-rc-release.outputs.rc_issue_url != '' ||
+        inputs.issue_url != ''
+      ) &&
+      needs.check-airflow-provider-rc-release.outputs.no_provider_changed != 'true'
     uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
-      environment_to_deploy: 'providers-integration-tests'
+      environment_to_deploy: "providers-integration-tests"
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
@@ -55,7 +59,11 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-master-dag:
-    needs: [deploy-rc-testing-branch-to-astro-cloud, check-airflow-provider-rc-release]
+    needs:
+      [
+        deploy-rc-testing-branch-to-astro-cloud,
+        check-airflow-provider-rc-release,
+      ]
     if: |
       always() &&
       needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
@@ -73,11 +81,15 @@ jobs:
     needs: check-airflow-provider-rc-release
     if: |
       always() &&
-      needs.check-airflow-provider-rc-release.result == 'success'
+      (
+        needs.check-airflow-provider-rc-release.outputs.rc_issue_url != '' ||
+        inputs.issue_url != ''
+      ) &&
+      needs.check-airflow-provider-rc-release.outputs.no_provider_changed != 'true'
     uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
     with:
       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
-      environment_to_deploy: 'providers-integration-tests'
+      environment_to_deploy: "providers-integration-tests"
     secrets:
       docker_registry: ${{ secrets.DOCKER_REGISTRY }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
@@ -86,7 +98,11 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-master-dag-on-GCP:
-    needs: [deploy-rc-testing-branch-to-astro-cloud, check-airflow-provider-rc-release]
+    needs:
+      [
+        deploy-rc-testing-branch-to-astro-cloud,
+        check-airflow-provider-rc-release,
+      ]
     if: |
       always() &&
       needs.deploy-rc-testing-branch-to-astro-cloud.result == 'success'
