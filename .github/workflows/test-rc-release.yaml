@@ -1,7 +1,7 @@
 ---
 name: Test providers RC releases
 
-on: # yamllint disable-line rule:truthy
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: "0 0,12 * * *"
   workflow_dispatch:
