@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from airflow import DAG, settings
 from airflow.exceptions import AirflowException
@@ -24,6 +24,9 @@ from botocore.exceptions import ClientError
 from requests import get
 
 from astronomer.providers.apache.livy.operators.livy import LivyOperatorAsync
+
+if TYPE_CHECKING:
+    from airflow.models.taskinstance import TaskInstance
 
 LIVY_CLUSTER = os.getenv("LIVY_CLUSTER", "example_livy_operator_cluster")
 BOTO_DUPLICATE_PERMISSION_ERROR = "InvalidPermission.Duplicate"
@@ -172,6 +175,26 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             )
         else:
             raise error
+
+
+def revoke_inbound_rules(task_instance: TaskInstance) -> None:
+    """Remove an ingress rule from security group"""
+    import boto3
+
+    current_docker_ip = get("https://api.ipify.org").text
+    ip_range = str(current_docker_ip) + "/32"
+    logging.info("Trying to revoke ingress ip address is: %s", str(ip_range))
+    client = boto3.client("ec2", **AWS_S3_CREDS)
+    response = client.revoke_security_group_ingress(
+        CidrIp=ip_range,
+        FromPort=LIVY_OPERATOR_INGRESS_PORT,
+        ToPort=LIVY_OPERATOR_INGRESS_PORT,
+        GroupId=task_instance.xcom_pull(
+            key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
+        )[0],
+        IpProtocol="tcp",
+    )
+    logging.info("%s", response)
 
 
 def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
@@ -336,6 +359,11 @@ with DAG(
     )
     # [END howto_operator_emr_terminate_job_flow]
 
+    revoke_inbound_rule = PythonOperator(
+        task_id="revoke_inbound_rules",
+        python_callable=revoke_inbound_rules,
+    )
+
     dag_final_status = PythonOperator(
         task_id="dag_final_status",
         provide_context=True,
@@ -354,5 +382,6 @@ with DAG(
         >> livy_java_task
         >> livy_python_task
         >> remove_cluster
+        >> revoke_inbound_rule
         >> dag_final_status
     )
