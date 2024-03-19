@@ -171,7 +171,9 @@ def revoke_inbound_rules(task_instance):
         GroupId=task_instance.xcom_pull(
                 key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
             )[0],
+        IpProtocol="tcp",
     )
+    logging.info("%s", response)
 
 
 def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
