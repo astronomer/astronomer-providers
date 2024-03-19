@@ -359,12 +359,10 @@ with DAG(
     )
     # [END howto_operator_emr_terminate_job_flow]
 
-    # [START add_ip_address_for_inbound_rules]
     revoke_inbound_rule = PythonOperator(
         task_id="revoke_inbound_rules",
         python_callable=revoke_inbound_rules,
     )
-    # [END add_ip_address_for_inbound_rules]
 
     dag_final_status = PythonOperator(
         task_id="dag_final_status",

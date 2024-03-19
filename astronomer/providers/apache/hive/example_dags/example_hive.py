@@ -362,12 +362,10 @@ with DAG(
     )
     # [END add_ip_address_for_inbound_rules]
 
-    # [START add_ip_address_for_inbound_rules]
     revoke_inbound_rule = PythonOperator(
         task_id="revoke_inbound_rules",
         python_callable=revoke_inbound_rules,
     )
-    # [END add_ip_address_for_inbound_rules]
 
     # [START add_example_pi_file_in_hdfs]
     ssh_and_copy_pifile_to_hdfs = PythonOperator(
