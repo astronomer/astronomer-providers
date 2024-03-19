@@ -175,6 +175,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
 
 
 def revoke_inbound_rules(task_instance):
+    """Remove an ingress rule from security group"""
     import boto3
 
     current_docker_ip = get("https://api.ipify.org").text
@@ -186,8 +187,8 @@ def revoke_inbound_rules(task_instance):
         FromPort=LIVY_OPERATOR_INGRESS_PORT,
         ToPort=LIVY_OPERATOR_INGRESS_PORT,
         GroupId=task_instance.xcom_pull(
-                key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
-            )[0],
+            key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
+        )[0],
         IpProtocol="tcp",
     )
     logging.info("%s", response)
