@@ -174,6 +174,23 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             raise error
 
 
+def revoke_inbound_rules(task_instance):
+    import boto3
+
+    current_docker_ip = get("https://api.ipify.org").text
+    ip_range = str(current_docker_ip) + "/32"
+    logging.info("Trying to revoke ingress ip address is: %s", str(ip_range))
+    client = boto3.client("ec2", **AWS_S3_CREDS)
+    response = client.revoke_security_group_ingress(
+        CidrIp=ip_range,
+        FromPort=LIVY_OPERATOR_INGRESS_PORT,
+        ToPort=LIVY_OPERATOR_INGRESS_PORT,
+        GroupId=task_instance.xcom_pull(
+                key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
+            )[0],
+    )
+
+
 def ssh_and_run_command(task_instance: Any, **kwargs: Any) -> None:
     """
     Load the private_key from airflow variable and creates a pem_file
@@ -336,6 +353,13 @@ with DAG(
     )
     # [END howto_operator_emr_terminate_job_flow]
 
+    # [START add_ip_address_for_inbound_rules]
+    revoke_inbound_rules = PythonOperator(
+        task_id="revoke_inbound_rules",
+        python_callable=revoke_inbound_rules,
+    )
+    # [END add_ip_address_for_inbound_rules]
+
     dag_final_status = PythonOperator(
         task_id="dag_final_status",
         provide_context=True,
@@ -354,5 +378,6 @@ with DAG(
         >> livy_java_task
         >> livy_python_task
         >> remove_cluster
+        >> revoke_inbound_rules
         >> dag_final_status
     )
