@@ -360,7 +360,7 @@ with DAG(
     # [END howto_operator_emr_terminate_job_flow]
 
     # [START add_ip_address_for_inbound_rules]
-    revoke_inbound_rules = PythonOperator(
+    revoke_inbound_rule = PythonOperator(
         task_id="revoke_inbound_rules",
         python_callable=revoke_inbound_rules,
     )
@@ -384,6 +384,6 @@ with DAG(
         >> livy_java_task
         >> livy_python_task
         >> remove_cluster
-        >> revoke_inbound_rules
+        >> revoke_inbound_rule
         >> dag_final_status
     )

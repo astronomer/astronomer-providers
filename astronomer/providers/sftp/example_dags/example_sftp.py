@@ -299,7 +299,7 @@ with DAG(
         task_id="terminate_instance", trigger_rule=TriggerRule.ALL_DONE, python_callable=terminate_instance
     )
 
-    revoke_inbound_rules = PythonOperator(
+    revoke_inbound_rule = PythonOperator(
         task_id="revoke_inbound_rules",
         trigger_rule=TriggerRule.ALL_DONE,
         python_callable=revoke_inbound_rules,
@@ -321,6 +321,6 @@ with DAG(
         >> create_sftp_default_airflow_connection
         >> [async_sftp_sensor, async_sftp_sensor_without_pattern]
         >> terminate_ec2_instance
-        >> revoke_inbound_rules
+        >> revoke_inbound_rule
         >> dag_final_status
     )
