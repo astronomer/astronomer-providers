@@ -222,11 +222,25 @@ def revoke_inbound_rules(task_instance):
     response = client.revoke_security_group_ingress(
         CidrIp=ip_range,
         FromPort=22,
+        ToPort=22,
         GroupId=task_instance.xcom_pull(
             key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
         )[0],
         IpProtocol="tcp",
     )
+
+    logging.info("%s", response)
+
+    response = client.revoke_security_group_ingress(
+        CidrIp=ip_range,
+        FromPort=HIVE_OPERATOR_INGRESS_PORT,
+        ToPort=HIVE_OPERATOR_INGRESS_PORT,
+        GroupId=task_instance.xcom_pull(
+            key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
+        )[0],
+        IpProtocol="tcp",
+    )
+
     logging.info("%s", response)
 
 
