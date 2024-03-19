@@ -157,7 +157,7 @@ def add_inbound_rule_for_security_group(task_instance: "TaskInstance") -> None:
             raise error
 
 
-def revoke_inbound_rules(task_instance):
+def revoke_inbound_rules(task_instance: TaskInstance) -> None:
     """Remove an ingress rule from security group"""
     import boto3
 

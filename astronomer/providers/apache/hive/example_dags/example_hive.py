@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from airflow import DAG, settings
 from airflow.exceptions import AirflowException
@@ -25,6 +25,9 @@ from astronomer.providers.apache.hive.sensors.hive_partition import (
 from astronomer.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensorAsync,
 )
+
+if TYPE_CHECKING:
+    from airflow.models.taskinstance import TaskInstance
 
 HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 AWS_S3_CREDS = {
@@ -211,7 +214,7 @@ def add_inbound_rule_for_security_group(task_instance: Any) -> None:
             raise error
 
 
-def revoke_inbound_rules(task_instance):
+def revoke_inbound_rules(task_instance: TaskInstance) -> None:
     """Remove an ingress rule from security group"""
     import boto3
 
