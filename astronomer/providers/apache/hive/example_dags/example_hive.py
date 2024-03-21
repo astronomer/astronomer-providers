@@ -4,11 +4,11 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, List
+from typing import Any, List
 
 from airflow import DAG, settings
 from airflow.exceptions import AirflowException
-from airflow.models import Connection, Variable
+from airflow.models import Connection, TaskInstance, Variable
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.emr import (
     EmrCreateJobFlowOperator,
@@ -25,9 +25,6 @@ from astronomer.providers.apache.hive.sensors.hive_partition import (
 from astronomer.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensorAsync,
 )
-
-if TYPE_CHECKING:
-    from airflow.models.taskinstance import TaskInstance
 
 HIVE_CLUSTER = os.getenv("HIVE_CLUSTER", "example_hive_sensor_cluster")
 AWS_S3_CREDS = {

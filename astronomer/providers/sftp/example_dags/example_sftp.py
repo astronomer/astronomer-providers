@@ -3,10 +3,10 @@ import logging
 import os
 import time
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, List
+from typing import Any, List
 
 from airflow import DAG, AirflowException, settings
-from airflow.models import Connection, Variable
+from airflow.models import Connection, TaskInstance, Variable
 from airflow.operators.python import PythonOperator, get_current_context
 from airflow.utils.state import State
 from airflow.utils.timezone import datetime
@@ -14,9 +14,6 @@ from airflow.utils.trigger_rule import TriggerRule
 from requests import get
 
 from astronomer.providers.sftp.sensors.sftp import SFTPSensorAsync
-
-if TYPE_CHECKING:
-    from airflow.models import TaskInstance
 
 SFTP_CONN_ID = os.getenv("ASTRO_SFTP_CONN_ID", "sftp_default")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
