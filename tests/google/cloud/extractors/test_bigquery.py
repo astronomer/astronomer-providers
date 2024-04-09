@@ -88,7 +88,7 @@ class TestBigQueryAsyncExtractor:
             job_id=job_id, error_result=False
         )
         mock_bg_dataset_provider.return_value = BigQueryFacets(
-            run_facets=RUN_FACETS, inputs=INPUT_STATS, output=OUTPUT_STATS
+            run_facets=RUN_FACETS, inputs=INPUT_STATS, outputs=OUTPUT_STATS
         )
 
         task_id = "insert_query_job"

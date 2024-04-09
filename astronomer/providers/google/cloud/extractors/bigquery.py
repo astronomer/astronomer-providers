@@ -107,7 +107,7 @@ class BigQueryAsyncExtractor(BaseExtractor):
 
         stats = BigQueryDatasetsProvider(client=self._big_query_client).get_facets(bigquery_job_id)
         inputs = stats.inputs
-        output = stats.output
+        output = stats.outputs
         run_facets = stats.run_facets
         job_facets = {}
         if isinstance(
