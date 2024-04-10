@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
 import warnings
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from airflow.hooks.filesystem import FSHook
 from airflow.sensors.filesystem import FileSensor
@@ -54,7 +56,7 @@ class FileSensorAsync(FileSensor):
                 method_name="execute_complete",
             )
 
-    def execute_complete(self, context: Context, event: Optional[Dict[str, Any]]) -> None:
+    def execute_complete(self, context: Context, event: bool | None = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
