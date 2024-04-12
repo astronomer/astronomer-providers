@@ -360,14 +360,6 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*sftp_trigger_tasks)
 
-    # DBT
-    dbt_task_info = [
-        {"dbt_dag": "example_dbt_cloud"},
-    ]
-    dbt_trigger_tasks, ids = prepare_dag_dependency(dbt_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*dbt_trigger_tasks)
-
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -401,7 +393,6 @@ with DAG(
         hive_trigger_tasks[0],
         azure_trigger_tasks[0],
         sftp_trigger_tasks[0],
-        dbt_trigger_tasks[0],
     ]
 
     last_task = [
@@ -424,7 +415,6 @@ with DAG(
         hive_trigger_tasks[-1],
         azure_trigger_tasks[-1],
         sftp_trigger_tasks[-1],
-        dbt_trigger_tasks[-1],
     ]
 
     last_task >> report >> end
