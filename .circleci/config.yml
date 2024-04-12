@@ -43,7 +43,7 @@ workflows:
       - generate-constraints:
           name: constraints-3.12-2.9.0
           python_version: "3.12"
-          airflow_version: "2.9.0b1"
+          airflow_version: "2.9.0"
           <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
