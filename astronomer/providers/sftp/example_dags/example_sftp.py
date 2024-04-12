@@ -166,9 +166,7 @@ def revoke_inbound_rules(task_instance: TaskInstance) -> None:
         CidrIp=ip_range,
         FromPort=22,
         ToPort=22,
-        GroupId=task_instance.xcom_pull(
-            key="instance_response_master_security_group", task_ids=["create_ec2_instance"]
-        )[0],
+        GroupId=task_instance.xcom_pull(key=INSTANCE_SECURITY_GROUP, task_ids=["create_ec2_instance"])[0],
         IpProtocol="tcp",
     )
     logging.info("%s", response)
