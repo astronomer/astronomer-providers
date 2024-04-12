@@ -40,13 +40,18 @@ workflows:
               python_version: ["3.8", "3.9", "3.10", "3.11"]
               airflow_version: ["2.6.3", "2.7.3", "2.8.1"]
           <<: *main_and_release_branches
+      - generate-constraints:
+          name: constraints-3.12-2.9.0
+          python_version: "3.12"
+          airflow_version: "2.9.0"
+          <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
       - test:
           name: test-python<< matrix.python_version >>
           matrix:
             parameters:
-              python_version: ["3.8", "3.9", "3.10", "3.11"]
+              python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
           <<: *all_branches_and_version_tag
           requires:
             - markdown-link-check
@@ -104,7 +109,7 @@ jobs:
     description: "Mypy"
     executor:
       name: docker-executor
-      python_version: "3.10"
+      python_version: "3.12"
     steps:
       - checkout
       - restore_cache:
@@ -137,7 +142,7 @@ jobs:
     description: "Build docs"
     executor:
       name: docker-executor
-      python_version: "3.10"
+      python_version: "3.12"
     steps:
       - checkout
       - restore_cache:
@@ -244,7 +249,7 @@ jobs:
   build-and-verify:
     executor:
       name: docker-executor
-      python_version: "3.10"
+      python_version: "3.12"
     steps:
       - checkout
       - run:
@@ -266,7 +271,7 @@ jobs:
   publish:
     executor:
       name: docker-executor
-      python_version: "3.10"
+      python_version: "3.12"
     steps:
       - checkout
       - attach_workspace:
