@@ -167,7 +167,7 @@ def revoke_inbound_rules(task_instance: TaskInstance) -> None:
         FromPort=22,
         ToPort=22,
         GroupId=task_instance.xcom_pull(
-            key="cluster_response_master_security_group", task_ids=["describe_created_cluster"]
+            key="instance_response_master_security_group", task_ids=["create_ec2_instance"]
         )[0],
         IpProtocol="tcp",
     )
