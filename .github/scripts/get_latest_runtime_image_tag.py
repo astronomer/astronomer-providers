@@ -10,7 +10,7 @@ from semantic_version import Version
 
 def get_latest_tag(repository: str) -> str:
     """Get the latest semantic version tag from a Quay.io repository."""
-    url = f"https://quay.io/api/v1/repository/{repository}/tag/"
+    url = f"https://quay.io/api/v1/repository/{repository}/tag/?limit=1000"
     response = requests.get(url)
     response.raise_for_status()
     data = response.json()
