@@ -29,7 +29,7 @@ def get_latest_tag(repository: str) -> str:
         print(valid_tags)
         latest_tag = max(valid_tags)
 
-       # print(latest_tag)
+        # print(latest_tag)
         return str(latest_tag)
     else:
         sys.exit("No valid semantic version tags found.")
