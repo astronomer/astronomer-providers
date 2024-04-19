@@ -10,10 +10,11 @@ from semantic_version import Version
 
 def get_latest_tag(repository: str) -> str:
     """Get the latest semantic version tag from a Quay.io repository."""
-    url = f"https://quay.io/api/v1/repository/{repository}/tag/"
+    url = f"https://quay.io/api/v1/repository/{repository}/tag/?limit=1000"
     response = requests.get(url)
     response.raise_for_status()
     data = response.json()
+    print("Response data:", data)
     tags = data["tags"]
     valid_tags = []
     for tag in tags:
@@ -25,7 +26,10 @@ def get_latest_tag(repository: str) -> str:
         except ValueError:
             continue
     if valid_tags:
+        print(valid_tags)
         latest_tag = max(valid_tags)
+
+       # print(latest_tag)
         return str(latest_tag)
     else:
         sys.exit("No valid semantic version tags found.")
