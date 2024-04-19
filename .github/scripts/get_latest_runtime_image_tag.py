@@ -14,7 +14,6 @@ def get_latest_tag(repository: str) -> str:
     response = requests.get(url)
     response.raise_for_status()
     data = response.json()
-    print("Response data:", data)
     tags = data["tags"]
     valid_tags = []
     for tag in tags:
@@ -26,10 +25,7 @@ def get_latest_tag(repository: str) -> str:
         except ValueError:
             continue
     if valid_tags:
-        print(valid_tags)
         latest_tag = max(valid_tags)
-
-       # print(latest_tag)
         return str(latest_tag)
     else:
         sys.exit("No valid semantic version tags found.")
