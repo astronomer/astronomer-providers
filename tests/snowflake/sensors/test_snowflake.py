@@ -103,3 +103,25 @@ class TestPytestSnowflakeSensorAsync:
         )
         with pytest.raises(AirflowSkipException):
             sensor.execute(context)
+
+    @mock.patch("airflow.providers.common.sql.sensors.sql.SqlSensor.__init__")
+    def test_call_with_parameters(self, mock_sql_sensor):
+        """Ensure SQL parameters are passed to the SqlSensor parent class."""
+        SnowflakeSensorAsync(
+            sql="SELECT * FROM %(src)s;",
+            task_id="snowflake_sensor",
+            snowflake_conn_id=CONN_ID,
+            parameters={"src", "my_table"},
+        )
+
+        mock_sql_sensor.assert_called_once_with(
+            conn_id=CONN_ID,
+            task_id="snowflake_sensor",
+            sql="SELECT * FROM %(src)s;",
+            parameters={"src", "my_table"},
+            success=None,
+            failure=None,
+            fail_on_empty=False,
+            hook_params=None,
+            default_args={},
+        )
