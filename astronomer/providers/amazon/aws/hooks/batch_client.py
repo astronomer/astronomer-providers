@@ -78,7 +78,7 @@ class BatchClientHookAsync(BatchClientHook, AwsBaseHookAsync):
         else:
             await self.wait_for_job(self.job_id)
             await self.check_job_success(self.job_id)
-            success_msg = "AWS Batch job (%s) succeeded" % self.job_id
+            success_msg = f"AWS Batch job ({self.job_id}) succeeded"
             self.log.info(success_msg)
             return {"status": "success", "message": success_msg}
 
