@@ -111,14 +111,14 @@ class TestPytestSnowflakeSensorAsync:
             sql="SELECT * FROM %(src)s;",
             task_id="snowflake_sensor",
             snowflake_conn_id=CONN_ID,
-            parameters={"src", "my_table"},
+            parameters={"src": "my_table"},
         )
 
         mock_sql_sensor.assert_called_once_with(
             conn_id=CONN_ID,
             task_id="snowflake_sensor",
             sql="SELECT * FROM %(src)s;",
-            parameters={"src", "my_table"},
+            parameters={"src": "my_table"},
             success=None,
             failure=None,
             fail_on_empty=False,
