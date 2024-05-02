@@ -17,13 +17,13 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update -y \
     && apt-get install -y \
-        git \
-        unzip \
+    git \
+    unzip \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        libsasl2-2 \
-        libsasl2-dev \
-        libsasl2-modules \
+    build-essential \
+    libsasl2-2 \
+    libsasl2-dev \
+    libsasl2-modules \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get install -y curl gnupg \
@@ -31,9 +31,11 @@ RUN apt-get update -y \
     && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - \
     && apt-get update -y \
     && apt-get install -y \
-        google-cloud-sdk \
-        google-cloud-sdk-gke-gcloud-auth-plugin \
-        jq
+    google-cloud-sdk \
+    google-cloud-sdk-gke-gcloud-auth-plugin \
+    jq \
+    pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl
+
 
 # Set Hive and Hadoop versions.
 ENV HIVE_LIBRARY_VERSION=hive-2.3.9
