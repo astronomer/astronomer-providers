@@ -263,6 +263,23 @@ class TestSnowflakeSqlApiHookAsync:
         result = hook.get_headers()
         assert result == HEADERS
 
+    @mock.patch(
+        "airflow.providers.snowflake.hooks.snowflake.SnowflakeHook._get_conn_params",
+        new_callable=mock.PropertyMock,
+    )
+    def test__get_conn_params__with_property_upstream(self, mock_conn_param):
+        mock_conn_param.return_value = CONN_PARAMS
+
+        hook = SnowflakeSqlApiHookAsync(snowflake_conn_id="mock_conn_id")
+        assert hook._get_conn_params == CONN_PARAMS
+
+    @mock.patch("airflow.providers.snowflake.hooks.snowflake.SnowflakeHook._get_conn_params")
+    def test__get_conn_params__with_callable_upstream(self, mock_conn_param):
+        mock_conn_param.return_value = CONN_PARAMS
+
+        hook = SnowflakeSqlApiHookAsync(snowflake_conn_id="mock_conn_id")
+        assert hook._get_conn_params == CONN_PARAMS
+
     @pytest.fixture()
     def non_encrypted_temporary_private_key(self, tmp_path: Path) -> Path:
         """Encrypt the pem file from the path"""

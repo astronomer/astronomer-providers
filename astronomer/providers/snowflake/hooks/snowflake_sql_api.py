@@ -80,7 +80,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
     @cached_property
     def _get_conn_params(self) -> dict[str, str | None]:
         # for apache-airflow-providers-snowflake<5.5.0
-        if callable(self._get_conn_params):
+        if callable(super()._get_conn_params):
             return super()._get_conn_params()  # type: ignore[no-any-return,operator]
         return super()._get_conn_params
 
