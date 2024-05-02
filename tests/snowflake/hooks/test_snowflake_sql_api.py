@@ -234,7 +234,8 @@ class TestSnowflakeSqlApiHookAsync:
             assert airflow_exception
 
     @mock.patch(
-        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync._get_conn_params"
+        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync._get_conn_params",
+        new_callable=mock.PropertyMock,
     )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.get_headers")
     def test_get_request_url_header_params(self, mock_get_header, mock_conn_param):
@@ -250,7 +251,8 @@ class TestSnowflakeSqlApiHookAsync:
         "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync.get_private_key"
     )
     @mock.patch(
-        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync._get_conn_params"
+        "astronomer.providers.snowflake.hooks.snowflake_sql_api.SnowflakeSqlApiHookAsync._get_conn_params",
+        new_callable=mock.PropertyMock,
     )
     @mock.patch("astronomer.providers.snowflake.hooks.sql_api_generate_jwt.JWTGenerator.get_token")
     def test_get_headers(self, mock_get_token, mock_conn_param, mock_private_key):
