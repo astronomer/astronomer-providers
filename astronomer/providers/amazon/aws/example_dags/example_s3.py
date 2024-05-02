@@ -17,7 +17,7 @@ from astronomer.providers.amazon.aws.sensors.s3 import (
     S3KeysUnchangedSensorAsync,
 )
 
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "test-bucket-astronomer-providers")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "test-astronomer-providers-bucket")
 S3_BUCKET_KEY = os.getenv("S3_BUCKET_KEY", "test")
 S3_BUCKET_KEY_LIST = os.getenv("S3_BUCKET_KEY_LIST", "test2")
 S3_BUCKET_WILDCARD_KEY = os.getenv("S3_BUCKET_WILDCARD_KEY", "test*")
