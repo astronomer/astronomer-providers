@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 import warnings
 from datetime import timedelta
+from functools import cached_property
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +77,13 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         super().__init__(snowflake_conn_id, *args, **kwargs)
         self.private_key: Any = None
 
+    @cached_property
+    def _get_conn_params(self) -> dict[str, str | None]:
+        # for apache-airflow-providers-snowflake<5.5.0
+        if callable(self._get_conn_params):
+            return super()._get_conn_params()  # type: ignore[no-any-return,operator]
+        return super()._get_conn_params
+
     def get_private_key(self) -> None:
         """Gets the private key from snowflake connection"""
         conn = self.get_connection(self.snowflake_conn_id)
@@ -127,7 +135,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
             When executing the statement, Snowflake replaces placeholders (? and :name) in
             the statement with these specified values.
         """
-        conn_config = self._get_conn_params()
+        conn_config = self._get_conn_params
 
         req_id = uuid.uuid4()
         url = "https://{}.snowflakecomputing.com/api/v2/statements".format(conn_config["account"])
@@ -171,7 +179,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
         """Based on the private key, and with connection details JWT Token is generated and header is formed"""
         if not self.private_key:
             self.get_private_key()
-        conn_config = self._get_conn_params()
+        conn_config = self._get_conn_params
 
         # Get the JWT token from the connection details and the private key
         token = JWTGenerator(
@@ -197,7 +205,7 @@ class SnowflakeSqlApiHookAsync(SnowflakeHook):
 
         :param query_id: statement handles query ids for the individual statements.
         """
-        conn_config = self._get_conn_params()
+        conn_config = self._get_conn_params
         req_id = uuid.uuid4()
         header = self.get_headers()
         params = {"requestId": str(req_id), "page": 2, "pageSize": 10}
