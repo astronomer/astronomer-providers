@@ -48,6 +48,16 @@ convention = "pep257"
 [tool.ruff]
 line-length = 120
 
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    "__pycache__",
+    "docs/conf.py",
+]
+
+target-version = "py37"
+fix = true
+
+[tool.ruff.lint]
 # Enable Pyflakes `E` and `F` codes by default.
 extend-select = [
     "W",    # pycodestyle warnings
@@ -66,19 +76,10 @@ extend-select = [
 # Remove this in future
 extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
 
-# Exclude a variety of commonly ignored directories.
-extend-exclude = [
-    "__pycache__",
-    "docs/conf.py",
-]
-
-target-version = "py37"
-fix = true
-
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 6
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 combine-as-imports = true
 known-first-party = ["astronomer", "tests"]
 # TODO: for now, https://github.com/charliermarsh/ruff/issues/1817
