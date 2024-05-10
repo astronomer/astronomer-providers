@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.19.1 (2024-05-10)
+-------------------
+
+Bug Fixes
+"""""""""
+* Pass ``parameters`` to parent class in ``SnowflakeSensorAsync`` (#1519)
+
+
 1.19.0 (2024-02-21)
 -------------------
 
