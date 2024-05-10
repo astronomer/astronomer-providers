@@ -46,7 +46,7 @@ class SnowflakeSensorAsync(SqlSensor):
         *,
         snowflake_conn_id: str,
         sql: str,
-        parameters: str | None = None,
+        parameters: dict[str, Any] | None = None,
         success: str | None = None,
         failure: str | None = None,
         fail_on_empty: bool = False,
@@ -63,6 +63,7 @@ class SnowflakeSensorAsync(SqlSensor):
         super().__init__(
             conn_id=snowflake_conn_id,
             sql=sql,
+            parameters=parameters,
             success=success,
             failure=failure,
             fail_on_empty=fail_on_empty,
