@@ -5,7 +5,6 @@ import warnings
 from datetime import timedelta
 from typing import Any, AsyncIterator
 
-from airflow import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
 
@@ -16,7 +15,6 @@ from astronomer.providers.snowflake.hooks.snowflake import (
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
     SnowflakeSqlApiHookAsync,
 )
-from astronomer.providers.utils import load_function
 
 
 def get_db_hook(snowflake_conn_id: str) -> SnowflakeHookAsync:
@@ -188,8 +186,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
         parameters: str | None = None,
         success: str | None = None,
         failure: str | None = None,
-        success_func_path: str | None = None,
-        failure_func_path: str | None = None,
         fail_on_empty: bool = False,
         poke_interval: float = 60,
     ):
@@ -198,8 +194,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
         self._parameters = parameters
         self._success = success
         self._failure = failure
-        self._success_path = success_func_path
-        self._failure_path = failure_func_path
         self._fail_on_empty = fail_on_empty
         self._dag_id = dag_id
         self._task_id = task_id
@@ -217,8 +211,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 "poke_interval": self._poke_interval,
                 "success": self._success,
                 "failure": self._failure,
-                "success_func_path": self._success_path,
-                "failure_func_path": self._failure_path,
                 "fail_on_empty": self._fail_on_empty,
                 "dag_id": self._dag_id,
                 "task_id": self._task_id,
@@ -226,30 +218,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 "snowflake_conn_id": self._conn_id,
             },
         )
-
-    def validate_result(self, result: list[tuple[Any]]) -> Any:
-        """Validates query result and verifies if it returns a row"""
-        if not result:
-            if self._fail_on_empty:
-                raise AirflowException("No rows returned, raising as per fail_on_empty flag")
-            else:
-                return False
-
-        first_cell = result[0][0]
-        if self._failure is not None:
-            failure_func = load_function(self._failure_path, self._failure)
-            if callable(failure_func):
-                if failure_func(first_cell):
-                    raise AirflowException(f"Failure criteria met. self.failure({first_cell}) returned True")
-            else:
-                raise AirflowException(f"self.failure is present, but not callable -> {self._failure}")
-        if self._success is not None:
-            success_func = load_function(self._success_path, self._success)
-            if callable(success_func):
-                return success_func(first_cell)
-            else:
-                raise AirflowException(f"self.success is present, but not callable -> {self._success}")
-        return bool(first_cell)
 
     async def run(self) -> AsyncIterator[TriggerEvent]:
         """
@@ -259,7 +227,9 @@ class SnowflakeSensorTrigger(BaseTrigger):
         try:
             hook = get_db_hook(self._conn_id)
             while True:
-                query_ids = await sync_to_async(hook.run)(self._sql, parameters=self._parameters)  # type: ignore[arg-type]
+                query_ids = await sync_to_async(hook.run)(
+                    self._sql, parameters=self._parameters
+                )  # type: ignore[arg-type]
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:
                     result = await sync_to_async(hook.check_query_output)(
@@ -274,15 +244,21 @@ class SnowflakeSensorTrigger(BaseTrigger):
                         self._task_id,
                         self._run_id,
                     )
-
-                    if await sync_to_async(self.validate_result)(result):  # type: ignore[arg-type]
+                    if self._success or self._failure:
+                        yield TriggerEvent(
+                            {
+                                "status": "validate",
+                                "result": result,
+                            }
+                        )
+                        return
+                    elif bool(result[0][0]):
                         yield TriggerEvent(
                             {
                                 "status": "success",
                                 "message": "Found expected markers.",
                             }
                         )
-
                     else:
                         self.log.info(
                             (

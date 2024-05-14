@@ -264,8 +264,6 @@ class TestSnowflakeSensorTrigger:
             "fail_on_empty": False,
             "dag_id": "unit_test_dag",
             "run_id": None,
-            "failure_func_path": None,
-            "success_func_path": None,
         }
 
     @pytest.mark.asyncio

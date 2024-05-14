@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import inspect
 from datetime import timedelta
 from typing import Any, Sequence
 
+from airflow.exceptions import AirflowException
 from airflow.providers.common.sql.sensors.sql import SqlSensor
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
@@ -74,41 +74,62 @@ class SnowflakeSensorAsync(SqlSensor):
 
     def execute(self, context: Context) -> None:
         """Check for query result in Snowflake by deferring using the trigger"""
-        success_func_path = None
-        failure_func_path = None
-        try:
-            success_func_path = inspect.getmodule(self.success).__file__ if self.success else None
-            failure_func_path = inspect.getmodule(self.failure).__file__ if self.failure else None
-        except Exception:
-            self.log.info("TODO")
-
         if not poke(self, context):
-            self.defer(
-                timeout=timedelta(seconds=self.timeout),
-                trigger=SnowflakeSensorTrigger(
-                    sql=self.sql,
-                    poke_interval=self.poke_interval,
-                    parameters=self.parameters,
-                    success=self.success,
-                    failure=self.failure,
-                    success_func_path=success_func_path,
-                    failure_func_path=failure_func_path,
-                    fail_on_empty=self.fail_on_empty,
-                    dag_id=context["dag"].dag_id,
-                    task_id=context["task"].task_id,
-                    run_id=context["dag_run"].run_id,
-                    snowflake_conn_id=self.snowflake_conn_id,
-                ),
-                method_name=self.execute_complete.__name__,
-            )
+            self._defer(context)
 
-    def execute_complete(self, context: Context, event: dict[str, str] | None = None) -> Any:
+    def validate_result(self, result: list[tuple[Any]]) -> Any:
+        """Validates query result and verifies if it returns a row"""
+        if not result:
+            if self.fail_on_empty:
+                raise AirflowException("No rows returned, raising as per fail_on_empty flag")
+            else:
+                return False
+
+        first_cell = result[0][0]
+        if self.failure is not None:
+            if callable(self.failure):
+                if self.failure(first_cell):
+                    raise AirflowException(f"Failure criteria met. self.failure({first_cell}) returned True")
+            else:
+                raise AirflowException(f"self.failure is present, but not callable -> {self.failure}")
+        if self.success is not None:
+            if callable(self.success):
+                return self.success(first_cell)
+            else:
+                raise AirflowException(f"self.success is present, but not callable -> {self.success}")
+        return bool(first_cell)
+
+    def _defer(self, context):
+        self.defer(
+            timeout=timedelta(seconds=self.timeout),
+            trigger=SnowflakeSensorTrigger(
+                sql=self.sql,
+                poke_interval=self.poke_interval,
+                parameters=self.parameters,
+                success=self.success,
+                failure=self.failure,
+                fail_on_empty=self.fail_on_empty,
+                dag_id=context["dag"].dag_id,
+                task_id=context["task"].task_id,
+                run_id=context["dag_run"].run_id,
+                snowflake_conn_id=self.snowflake_conn_id,
+            ),
+            method_name=self.execute_complete.__name__,
+        )
+
+    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was
         successful.
         """
         if event:
+            if "status" in event and event["status"] == "validate":
+                marker = self.validate_result(event["result"])
+                if marker:
+                    return
+                else:
+                    self._defer(context)
             if "status" in event and event["status"] == "error":
                 raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
