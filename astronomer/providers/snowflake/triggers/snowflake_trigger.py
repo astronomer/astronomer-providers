@@ -16,6 +16,7 @@ from astronomer.providers.snowflake.hooks.snowflake import (
 from astronomer.providers.snowflake.hooks.snowflake_sql_api import (
     SnowflakeSqlApiHookAsync,
 )
+from astronomer.providers.utils import load_function
 
 
 def get_db_hook(snowflake_conn_id: str) -> SnowflakeHookAsync:
@@ -187,6 +188,8 @@ class SnowflakeSensorTrigger(BaseTrigger):
         parameters: str | None = None,
         success: str | None = None,
         failure: str | None = None,
+        success_func_path: str | None = None,
+        failure_func_path: str | None = None,
         fail_on_empty: bool = False,
         poke_interval: float = 60,
     ):
@@ -195,6 +198,8 @@ class SnowflakeSensorTrigger(BaseTrigger):
         self._parameters = parameters
         self._success = success
         self._failure = failure
+        self._success_path = success_func_path
+        self._failure_path = failure_func_path
         self._fail_on_empty = fail_on_empty
         self._dag_id = dag_id
         self._task_id = task_id
@@ -212,6 +217,8 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 "poke_interval": self._poke_interval,
                 "success": self._success,
                 "failure": self._failure,
+                "success_func_path": self._success_path,
+                "failure_func_path": self._failure_path,
                 "fail_on_empty": self._fail_on_empty,
                 "dag_id": self._dag_id,
                 "task_id": self._task_id,
@@ -230,14 +237,16 @@ class SnowflakeSensorTrigger(BaseTrigger):
 
         first_cell = result[0][0]
         if self._failure is not None:
-            if callable(self._failure):
-                if self._failure(first_cell):
+            failure_func = load_function(self._failure_path, self._failure)
+            if callable(failure_func):
+                if failure_func(first_cell):
                     raise AirflowException(f"Failure criteria met. self.failure({first_cell}) returned True")
             else:
                 raise AirflowException(f"self.failure is present, but not callable -> {self._failure}")
         if self._success is not None:
-            if callable(self._success):
-                return self._success(first_cell)
+            success_func = load_function(self._success_path, self._success)
+            if callable(success_func):
+                return success_func(first_cell)
             else:
                 raise AirflowException(f"self.success is present, but not callable -> {self._success}")
         return bool(first_cell)
