@@ -79,8 +79,8 @@ class SnowflakeSensorAsync(SqlSensor):
         try:
             success_func_path = inspect.getmodule(self.success).__file__ if self.success else None
             failure_func_path = inspect.getmodule(self.failure).__file__ if self.failure else None
-        except:
-            pass
+        except Exception:
+            self.log.info("TODO")
 
         if not poke(self, context):
             self.defer(

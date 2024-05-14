@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import typing
 
 
-def load_function(file_path, function_name) -> callable | None:
+def load_function(file_path: str, function_name: str | callable) -> typing.Callable | None:
+    """Load a callable from path and name."""
     try:
         # Load the module from the file path
         spec = importlib.util.spec_from_file_location("module_name", file_path)
