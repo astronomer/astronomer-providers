@@ -74,10 +74,6 @@ class SnowflakeSensorAsync(SqlSensor):
 
     def execute(self, context: Context) -> None:
         """Check for query result in Snowflake by deferring using the trigger"""
-        # print("failure: ", self.failure)
-        # print("failure1: ", self.failure.__module__)
-        # print("failure2: ", inspect.getmodule(self.failure))
-        # print("failure2: ", inspect.getmodule(self.failure).__file__)
         success_func_path = None
         failure_func_path = None
         try:
