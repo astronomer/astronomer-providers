@@ -271,8 +271,8 @@ class TestSnowflakeSensorTrigger:
         [
             (
                 True,
-                {"status": "success", "message": "Found expected markers."},
-                TriggerEvent({"status": "success", "message": "Found expected markers."}),
+                {"status": "validate", "message": [[True]]},
+                TriggerEvent({"status": "validate", "result": [[True]]}),
             ),
             (
                 None,
@@ -300,7 +300,7 @@ class TestSnowflakeSensorTrigger:
     ):
         """Tests that the SnowflakeTrigger in"""
         mock_get_query_status.return_value = return_value
-        # mock_validate_result.return_value = result
+        mock_check_query_output.return_value = [[True]]
 
         generator = self.TRIGGER.run()
         actual = await generator.asend(None)
