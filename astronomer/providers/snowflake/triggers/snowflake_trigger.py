@@ -228,11 +228,11 @@ class SnowflakeSensorTrigger(BaseTrigger):
             hook = get_db_hook(self._conn_id)
             while True:
                 query_ids = await sync_to_async(hook.run)(
-                    self._sql, parameters=self._parameters
-                )  # type: ignore[arg-type]
+                    self._sql, parameters=self._parameters  # type: ignore[arg-type]
+                )
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:
-                    result = await sync_to_async(hook.check_query_output)(
+                    result: list[tuple[Any]] = await sync_to_async(hook.check_query_output)(
                         query_ids=query_ids,
                         handler=fetch_all_snowflake_handler,
                     )

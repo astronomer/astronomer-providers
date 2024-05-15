@@ -99,7 +99,7 @@ class SnowflakeSensorAsync(SqlSensor):
                 raise AirflowException(f"self.success is present, but not callable -> {self.success}")
         return bool(first_cell)
 
-    def _defer(self, context):
+    def _defer(self, context: Context) -> None:
         self.defer(
             timeout=timedelta(seconds=self.timeout),
             trigger=SnowflakeSensorTrigger(
