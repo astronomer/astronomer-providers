@@ -246,10 +246,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                     )
                     if result is not None:
                         yield TriggerEvent(
-                            {
-                                "status": "validate",
-                                "result": result,
-                            }
+                            {"status": "validate", "result": result, "message": "waiting to validate query"}
                         )
                         return
                     else:

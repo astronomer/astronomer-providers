@@ -272,7 +272,9 @@ class TestSnowflakeSensorTrigger:
             (
                 True,
                 {"status": "validate", "message": [[True]]},
-                TriggerEvent({"status": "validate", "result": [[True]]}),
+                TriggerEvent(
+                    {"status": "validate", "result": [[True]], "message": "waiting to validate query"}
+                ),
             ),
             (
                 None,

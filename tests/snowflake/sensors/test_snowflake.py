@@ -17,6 +17,14 @@ TASK_TIMEOUT = 1
 TEST_SQL = "select * from any;"
 
 
+def dummy_callable(result):
+    return True
+
+
+def dummy_callable_false(result):
+    return False
+
+
 class TestPytestSnowflakeSensorAsync:
     @pytest.mark.parametrize("mock_sql", [TEST_SQL, [TEST_SQL]])
     @mock.patch("airflow.providers.common.sql.sensors.sql.BaseHook")
@@ -92,6 +100,33 @@ class TestPytestSnowflakeSensorAsync:
         else:
             mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
 
+    def test_execute_complete_validate(self):
+        sensor = SnowflakeSensorAsync(
+            task_id="execute_complete",
+            snowflake_conn_id=CONN_ID,
+            sql=TEST_SQL,
+            timeout=TASK_TIMEOUT * 60,
+            success=dummy_callable,
+        )
+
+        result = sensor.execute_complete(context=None, event={"status": "validate", "result": [[(True)]]})
+        assert result is None
+
+    @mock.patch("astronomer.providers.snowflake.sensors.snowflake.SnowflakeSensorAsync._defer")
+    def test_execute_complete_validate_false(self, mock_defer):
+        sensor = SnowflakeSensorAsync(
+            task_id="execute_complete",
+            snowflake_conn_id=CONN_ID,
+            sql=TEST_SQL,
+            timeout=TASK_TIMEOUT * 60,
+            success=dummy_callable_false,
+        )
+
+        sensor.execute_complete(
+            context=None, event={"status": "validate", "result": [[(True)]], "message": ""}
+        )
+        mock_defer.assert_called_once()
+
     def test_soft_fail_enable(self, context):
         """Sensor should raise AirflowSkipException if soft_fail is True and error occur"""
         sensor = SnowflakeSensorAsync(
@@ -125,3 +160,58 @@ class TestPytestSnowflakeSensorAsync:
             hook_params=None,
             default_args={},
         )
+
+    @staticmethod
+    def get_sensor_instance():
+        return SnowflakeSensorAsync(
+            task_id="execute_complete",
+            snowflake_conn_id=CONN_ID,
+            sql=TEST_SQL,
+            timeout=TASK_TIMEOUT * 60,
+        )
+
+    def test_validate_result_empty_result(self):
+        instance = self.get_sensor_instance()
+        instance.fail_on_empty = True
+        with pytest.raises(AirflowException) as exc_info:
+            instance._validate_result([])
+        assert "No rows returned, raising as per fail_on_empty flag" in str(exc_info.value)
+
+    def test_validate_result_fail_empty_false(self):
+        instance = self.get_sensor_instance()
+        instance.fail_on_empty = False
+        result = instance._validate_result([])
+        assert not result
+
+    def test_validate_result(self):
+        instance = self.get_sensor_instance()
+        result = instance._validate_result([("cell_value",)])
+        assert result
+
+    def test_validate_result_failure(self):
+        instance = self.get_sensor_instance()
+        instance.failure = "failed"
+        with pytest.raises(AirflowException) as exc_info:
+            instance._validate_result([("",)])
+        assert "self.failure is present, but not callable -> failed" in str(exc_info.value)
+
+    def test_validate_result_failure_callable(self):
+        instance = self.get_sensor_instance()
+        instance.failure = dummy_callable
+        with pytest.raises(AirflowException) as exc_info:
+            instance._validate_result([("1", "2")])
+        assert "Failure criteria met. self.failure(1) returned True" in str(exc_info.value)
+
+    def test_validate_result_success(self):
+        instance = self.get_sensor_instance()
+        instance.success = "success"
+        with pytest.raises(AirflowException) as exc_info:
+            instance._validate_result([("cell_value",)])
+        assert "self.success is present, but not callable ->" in str(exc_info.value)
+
+    def test_validate_result_success_callable(self):
+        instance = self.get_sensor_instance()
+        instance.success = dummy_callable
+
+        result = instance._validate_result([("cell_value",)])
+        assert result
