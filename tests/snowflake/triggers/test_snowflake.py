@@ -325,7 +325,7 @@ class TestSnowflakeSensorTrigger:
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
     async def test_snowflake_sensor_trigger_pending(self, mock_run, mock_result):
         """Tests the SnowflakeTrigger does not fire if it reaches a failed state."""
-        mock_result.return_value = [[0]]
+        mock_result.return_value = None
 
         task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
