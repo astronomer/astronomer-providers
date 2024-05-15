@@ -31,11 +31,6 @@ default_args = {
 }
 
 
-def test(result):
-    print("result: ", result)
-    return False
-
-
 with DAG(
     dag_id="example_snowflake_sensor",
     start_date=datetime(2022, 1, 1),
@@ -63,7 +58,6 @@ with DAG(
         sql=SNOWFLAKE_SLACK_SQL,
         poke_interval=POKE_INTERVAL,
         timeout=TASK_TIMEOUT * 60,
-        success=test,
     )
     # [END howto_sensor_snowflake_async]
 
