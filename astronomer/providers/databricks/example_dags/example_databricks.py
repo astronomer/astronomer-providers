@@ -13,7 +13,7 @@ from astronomer.providers.databricks.operators.databricks import (
 
 DATABRICKS_CONN_ID = os.getenv("ASTRO_DATABRICKS_CONN_ID", "databricks_default")
 # Notebook path as a Json object
-notebook_task = '{"notebook_path": "/Users/phani.kumar@astronomer.io/quick_start"}'
+notebook_task = '{"notebook_path": "/Users/rahul.vats@astronomer.io/quick_start"}'
 NOTEBOOK_TASK = json.loads(os.getenv("DATABRICKS_NOTEBOOK_TASK", notebook_task))
 notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
