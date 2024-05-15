@@ -26,15 +26,15 @@ default_args = {
 
 new_cluster = {
     "num_workers": 1,
-    "spark_version": "10.4.x-scala2.12",  # Update to the desired Databricks runtime version
-    "spark_conf": {},  # Additional Spark configuration options if needed
-    "azure_attributes": {  # Azure-specific attributes
-        "availability": "ON_DEMAND_AZURE",  # Optionally use SPOT_AZURE for spot instances
-        "spot_bid_max_price": -1,  # Use the default spot pricing; set a max price if needed
+    "spark_version": "10.4.x-scala2.12",
+    "spark_conf": {},
+    "azure_attributes": {
+        "availability": "ON_DEMAND_AZURE",
+        "spot_bid_max_price": -1,
     },
-    "node_type_id": "Standard_D3_v2",  # Replace with an appropriate Azure VM type
-    "ssh_public_keys": [],  # Add SSH public keys if you need SSH access to the nodes
-    "custom_tags": {},  # Add custom tags if needed
+    "node_type_id": "Standard_D3_v2",
+    "ssh_public_keys": [],
+    "custom_tags": {},
     "spark_env_vars": {
         "PYSPARK_PYTHON": "/databricks/python3/bin/python3"  # Ensure the correct Python path
     },
