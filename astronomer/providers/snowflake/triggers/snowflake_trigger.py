@@ -232,7 +232,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                 )
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:
-                    result: list[tuple[Any]] = await sync_to_async(hook.check_query_output)(
+                    result = await sync_to_async(hook.check_query_output)(
                         query_ids=query_ids,
                         handler=fetch_all_snowflake_handler,
                     )
@@ -244,7 +244,7 @@ class SnowflakeSensorTrigger(BaseTrigger):
                         self._task_id,
                         self._run_id,
                     )
-                    if self._success or self._failure:
+                    if result is not None:
                         yield TriggerEvent(
                             {
                                 "status": "validate",
@@ -252,13 +252,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
                             }
                         )
                         return
-                    elif bool(result[0][0]):
-                        yield TriggerEvent(
-                            {
-                                "status": "success",
-                                "message": "Found expected markers.",
-                            }
-                        )
                     else:
                         self.log.info(
                             (
