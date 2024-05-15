@@ -77,7 +77,7 @@ class SnowflakeSensorAsync(SqlSensor):
         if not poke(self, context):
             self._defer(context)
 
-    def validate_result(self, result: list[tuple[Any]]) -> Any:
+    def _validate_result(self, result: list[tuple[Any]]) -> Any:
         """Validates query result and verifies if it returns a row"""
         if not result:
             if self.fail_on_empty:
@@ -125,7 +125,7 @@ class SnowflakeSensorAsync(SqlSensor):
         """
         if event:
             if "status" in event and event["status"] == "validate":
-                marker = self.validate_result(event["result"])
+                marker = self._validate_result(event["result"])
                 if marker:
                     return
                 else:
