@@ -36,7 +36,7 @@ new_cluster = {
         "ebs_volume_count": 1,
         "ebs_volume_size": 100,
     },
-    "node_type_id": "m4.large",
+    "node_type_id": "Standard_DS3_v2",
     "ssh_public_keys": [],
     "custom_tags": {},
     "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
