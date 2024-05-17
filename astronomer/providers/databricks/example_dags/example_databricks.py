@@ -35,13 +35,10 @@ new_cluster = {
     "node_type_id": "Standard_D3_v2",
     "ssh_public_keys": [],
     "custom_tags": {},
-    "spark_env_vars": {
-        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-    },
+    "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
     "cluster_source": "JOB",
     "init_scripts": [],
 }
-
 
 
 with DAG(
