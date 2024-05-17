@@ -13,7 +13,7 @@ from astronomer.providers.databricks.operators.databricks import (
 
 DATABRICKS_CONN_ID = os.getenv("ASTRO_DATABRICKS_CONN_ID", "databricks_default")
 # Notebook path as a Json object
-notebook_task = '{"notebook_path": "/Users/rahul.vats@astronomer.io/quick_start"}'
+notebook_task = '{"notebook_path": "/Shared/Notebook_1"}'
 NOTEBOOK_TASK = json.loads(os.getenv("DATABRICKS_NOTEBOOK_TASK", notebook_task))
 notebook_params: Optional[Dict[str, str]] = {"Variable": "5"}
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
@@ -36,10 +36,10 @@ new_cluster = {
     "ssh_public_keys": [],
     "custom_tags": {},
     "spark_env_vars": {
-        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"  # Ensure the correct Python path
+        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
     },
     "cluster_source": "JOB",
-    "init_scripts": [],  # Specify any initialization scripts if needed
+    "init_scripts": [],
 }
 
 
