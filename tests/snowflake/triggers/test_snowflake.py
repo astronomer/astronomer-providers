@@ -3,7 +3,6 @@ from datetime import timedelta
 from unittest import mock
 
 import pytest
-from airflow import AirflowException
 from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
@@ -272,8 +271,10 @@ class TestSnowflakeSensorTrigger:
         [
             (
                 True,
-                {"status": "success", "message": "Found expected markers."},
-                TriggerEvent({"status": "success", "message": "Found expected markers."}),
+                {"status": "validate", "message": [[True]]},
+                TriggerEvent(
+                    {"status": "validate", "result": [[True]], "message": "waiting to validate query"}
+                ),
             ),
             (
                 None,
@@ -287,9 +288,6 @@ class TestSnowflakeSensorTrigger:
             ),
         ],
     )
-    @mock.patch(
-        "astronomer.providers.snowflake.triggers.snowflake_trigger.SnowflakeSensorTrigger.validate_result"
-    )
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.get_query_status")
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.check_query_output")
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
@@ -298,14 +296,13 @@ class TestSnowflakeSensorTrigger:
         mock_hook,
         mock_check_query_output,
         mock_get_query_status,
-        mock_validate_result,
         result,
         return_value,
         response,
     ):
         """Tests that the SnowflakeTrigger in"""
         mock_get_query_status.return_value = return_value
-        mock_validate_result.return_value = result
+        mock_check_query_output.return_value = [[True]]
 
         generator = self.TRIGGER.run()
         actual = await generator.asend(None)
@@ -330,7 +327,7 @@ class TestSnowflakeSensorTrigger:
     @mock.patch("astronomer.providers.snowflake.hooks.snowflake.SnowflakeHookAsync.run")
     async def test_snowflake_sensor_trigger_pending(self, mock_run, mock_result):
         """Tests the SnowflakeTrigger does not fire if it reaches a failed state."""
-        mock_result.return_value = [[0]]
+        mock_result.return_value = None
 
         task = asyncio.create_task(self.TRIGGER.run().__anext__())
         await asyncio.sleep(0.5)
@@ -349,98 +346,3 @@ class TestSnowflakeSensorTrigger:
         task = [i async for i in self.TRIGGER.run()]
         assert len(task) == 1
         assert TriggerEvent({"status": "error", "message": "Test exception"}) in task
-
-    @pytest.mark.parametrize(
-        "mock_result,expected_status",
-        [
-            ([[0]], False),
-            ([[1]], True),
-        ],
-    )
-    def test_snowflake_sensor_validate_results(self, mock_result, expected_status):
-        """Tests the SnowflakeSensorTrigger does not fire if there is an exception."""
-
-        result = self.TRIGGER.validate_result(mock_result)
-
-        assert result == expected_status
-
-    def test_snowflake_sensor_fail_on_empty(self):
-        """Tests the SnowflakeSensorTrigger does not fire if there is an exception."""
-        mock_result = []
-        trigger = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            fail_on_empty=True,
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-
-        with pytest.raises(AirflowException):
-            trigger.validate_result(mock_result)
-
-        trigger_2 = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            dag_id="unit_test_dag",
-            run_id=None,
-        )
-
-        assert not trigger_2.validate_result(mock_result)
-
-    def test_sql_sensor_snowflake_poke_failure_success(self):
-        trigger = SnowflakeSensorTrigger(
-            task_id=TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            dag_id="unit_test_dag",
-            run_id=None,
-            failure=lambda x: x in [1],
-            success=lambda x: x in [2],
-        )
-
-        mock_value = []
-        assert not trigger.validate_result(mock_value)
-
-        mock_value = [[1]]
-        with pytest.raises(AirflowException):
-            trigger.validate_result(mock_value)
-
-        mock_value = [[2]]
-        assert trigger.validate_result(mock_value)
-
-    def test_sql_sensor_snowflake_poke_invalid_failure(self):
-        trigger = SnowflakeSensorTrigger(
-            dag_id="unit_test_dag",
-            task_id=self.TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            run_id=None,
-            failure=[1],
-        )
-
-        mock_value = [[1]]
-        with pytest.raises(AirflowException) as ctx:
-            trigger.validate_result(mock_value)
-        assert "self.failure is present, but not callable -> [1]" == str(ctx.value)
-
-    def test_sql_sensor_snowflake_poke_invalid_success(self):
-        trigger = SnowflakeSensorTrigger(
-            task_id=self.TASK_ID,
-            sql=self.TEST_SQL,
-            poke_interval=POLL_INTERVAL,
-            snowflake_conn_id="test_conn",
-            dag_id="unit_test_dag",
-            run_id=None,
-            success=[1],
-        )
-
-        mock_value = [[1]]
-        with pytest.raises(AirflowException) as ctx:
-            trigger.validate_result(mock_value)
-        assert "self.success is present, but not callable -> [1]" == str(ctx.value)

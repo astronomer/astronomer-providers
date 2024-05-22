@@ -5,7 +5,6 @@ import warnings
 from datetime import timedelta
 from typing import Any, AsyncIterator
 
-from airflow import AirflowException
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
 
@@ -220,28 +219,6 @@ class SnowflakeSensorTrigger(BaseTrigger):
             },
         )
 
-    def validate_result(self, result: list[tuple[Any]]) -> Any:
-        """Validates query result and verifies if it returns a row"""
-        if not result:
-            if self._fail_on_empty:
-                raise AirflowException("No rows returned, raising as per fail_on_empty flag")
-            else:
-                return False
-
-        first_cell = result[0][0]
-        if self._failure is not None:
-            if callable(self._failure):
-                if self._failure(first_cell):
-                    raise AirflowException(f"Failure criteria met. self.failure({first_cell}) returned True")
-            else:
-                raise AirflowException(f"self.failure is present, but not callable -> {self._failure}")
-        if self._success is not None:
-            if callable(self._success):
-                return self._success(first_cell)
-            else:
-                raise AirflowException(f"self.success is present, but not callable -> {self._success}")
-        return bool(first_cell)
-
     async def run(self) -> AsyncIterator[TriggerEvent]:
         """
         Make an asynchronous connection to Snowflake and defer until query
@@ -250,7 +227,9 @@ class SnowflakeSensorTrigger(BaseTrigger):
         try:
             hook = get_db_hook(self._conn_id)
             while True:
-                query_ids = await sync_to_async(hook.run)(self._sql, parameters=self._parameters)  # type: ignore[arg-type]
+                query_ids = await sync_to_async(hook.run)(
+                    self._sql, parameters=self._parameters  # type: ignore[arg-type]
+                )
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:
                     result = await sync_to_async(hook.check_query_output)(
@@ -265,15 +244,11 @@ class SnowflakeSensorTrigger(BaseTrigger):
                         self._task_id,
                         self._run_id,
                     )
-
-                    if await sync_to_async(self.validate_result)(result):  # type: ignore[arg-type]
+                    if result is not None:
                         yield TriggerEvent(
-                            {
-                                "status": "success",
-                                "message": "Found expected markers.",
-                            }
+                            {"status": "validate", "result": result, "message": "waiting to validate query"}
                         )
-
+                        return
                     else:
                         self.log.info(
                             (
