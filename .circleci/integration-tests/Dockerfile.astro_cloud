@@ -62,17 +62,17 @@ RUN curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03
     && mv ./kubectl /usr/local/bin
 
 # Install Apache Hive (Download same version of library to match EMR Hive version created by DAG)
-#RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz" -o  "/tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz"  \
-#    && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
-#ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
+RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz" -o  "/tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz"  \
+    && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
+ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
 
 # Install Apache Hadoop (Download same version of library to match EMR Hadoop version created by DAG)
-#RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
-#    && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
-#ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
-#ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
+RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
+    && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
+ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
 
-#ENV PATH $PATH:$JAVA_HOME/bin::$HIVE_HOME/bin:$HADOOP_HOME/bin
+ENV PATH $PATH:$JAVA_HOME/bin::$HIVE_HOME/bin:$HADOOP_HOME/bin
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN  python3 -m pip install --upgrade pip
