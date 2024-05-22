@@ -61,4 +61,13 @@ with DAG(
     )
     # [END howto_sensor_snowflake_async]
 
-    snowflake_op_sql_str >> snowflake_op_with_params >> snowflake_op_sql_sensor
+    snowflake_with_callable = SnowflakeSensorAsync(
+        task_id="snowflake_with_callable",
+        snowflake_conn_id="snowflake_conn",
+        sql=SNOWFLAKE_SLACK_SQL,
+        poke_interval=POKE_INTERVAL,
+        timeout=TASK_TIMEOUT * 60,
+        success=lambda: True,
+    )
+
+    snowflake_op_sql_str >> snowflake_op_with_params >> snowflake_op_sql_sensor >> snowflake_with_callable

@@ -125,8 +125,8 @@ class SnowflakeSensorAsync(SqlSensor):
         """
         if event:
             if "status" in event and event["status"] == "validate":
-                marker = self._validate_result(event["result"])
-                if marker:
+                if self._validate_result(event["result"]):
+                    self.log.info("%s completed successfully.", self.task_id)
                     return
                 else:
                     self._defer(context)
@@ -134,4 +134,4 @@ class SnowflakeSensorAsync(SqlSensor):
                 raise_error_or_skip_exception(self.soft_fail, event["message"])
             self.log.info(event["message"])
         else:
-            self.log.info("%s completed successfully.", self.task_id)
+            raise_error_or_skip_exception(self.soft_fail, "Trigger returns an empty event")

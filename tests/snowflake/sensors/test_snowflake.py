@@ -83,7 +83,8 @@ class TestPytestSnowflakeSensorAsync:
             {"status": "success", "message": "Found expected markers."},
         ],
     )
-    def test_snowflake_async_execute_complete(self, mock_event):
+    @mock.patch("astronomer.providers.snowflake.sensors.snowflake.raise_error_or_skip_exception")
+    def test_snowflake_async_execute_complete(self, mock_error_skip, mock_event):
         """Tests execute_complete assert with successful message"""
 
         sensor = SnowflakeSensorAsync(
@@ -98,7 +99,7 @@ class TestPytestSnowflakeSensorAsync:
         if mock_event:
             mock_log_info.assert_called_with("Found expected markers.")
         else:
-            mock_log_info.assert_called_with("%s completed successfully.", "execute_complete")
+            mock_error_skip.assert_called_once_with(sensor.soft_fail, "Trigger returns an empty event")
 
     def test_execute_complete_validate(self):
         sensor = SnowflakeSensorAsync(
