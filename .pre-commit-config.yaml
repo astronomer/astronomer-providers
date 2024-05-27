@@ -38,7 +38,7 @@ repos:
       - id: remove-tabs
 
   - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.12.1
+    rev: v3.12.2
     hooks:
       - id: markdown-link-check
         args: ["--config=mlc-config.json"]
@@ -55,13 +55,13 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.4.4'
+    rev: 'v0.4.5'
     hooks:
       - id: ruff
         args: ["--config", "./pyproject.toml"]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.3.0
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files

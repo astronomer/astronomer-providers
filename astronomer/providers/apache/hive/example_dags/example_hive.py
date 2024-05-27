@@ -52,7 +52,7 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
 
 # This example uses an emr-5.34.0 cluster, apache-hive-2.3.9 and hadoop-2.10.1.
 # If you would like to use a different version of the EMR cluster, then we need to
-# match the hive and hadoop versions same as specified in the integration tests `Dockefile`.
+# match the hive and hadoop versions same as specified in the integration tests `Dockerfile`.
 JOB_FLOW_OVERRIDES = {
     "Name": HIVE_CLUSTER,
     "ReleaseLabel": "emr-6.6.0",
