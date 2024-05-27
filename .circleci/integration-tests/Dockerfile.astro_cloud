@@ -38,6 +38,7 @@ RUN apt-get update -y \
 
 
 # Set Hive and Hadoop versions.
+
 ENV HIVE_LIBRARY_VERSION=hive-3.1.2
 ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 
