@@ -38,7 +38,7 @@ RUN apt-get update -y \
 
 
 # Set Hive and Hadoop versions.
-ENV HIVE_LIBRARY_VERSION=hive-2.3.9
+ENV HIVE_LIBRARY_VERSION=hive-4.0.0
 ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 
 # install AWS CLI
