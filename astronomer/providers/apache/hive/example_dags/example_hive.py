@@ -55,7 +55,7 @@ main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
 # match the hive and hadoop versions same as specified in the integration tests `Dockefile`.
 JOB_FLOW_OVERRIDES = {
     "Name": HIVE_CLUSTER,
-    "ReleaseLabel": "emr-5.34.0",
+    "ReleaseLabel": "emr-6.6.0",
     "Applications": [
         {"Name": "Spark"},
         {
