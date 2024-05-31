@@ -17,9 +17,7 @@ TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 5))
 
 
 # SQL commands
-CREATE_TABLE_SQL_STRING = (
-    f"CREATE OR REPLACE TRANSIENT TABLE {SNOWFLAKE_SAMPLE_TABLE} (name VARCHAR(250), id INT);"
-)
+CREATE_TABLE_SQL_STRING = f"CREATE OR REPLACE TRANSIENT TABLE {SNOWFLAKE_SAMPLE_TABLE} (name VARCHAR(250), id INT);"
 SQL_INSERT_STATEMENT = f"INSERT INTO {SNOWFLAKE_SAMPLE_TABLE} VALUES ('name', %(id)s)"
 SNOWFLAKE_SLACK_SQL = f"SELECT name, id FROM {SNOWFLAKE_SAMPLE_TABLE};"
 
@@ -67,7 +65,7 @@ with DAG(
         sql=SNOWFLAKE_SLACK_SQL,
         poke_interval=POKE_INTERVAL,
         timeout=TASK_TIMEOUT * 60,
-        success=lambda result: True,  # type: ignore[arg-type]
+        success=lambda result: True,
     )
 
     snowflake_op_sql_str >> snowflake_op_with_params >> snowflake_op_sql_sensor >> snowflake_with_callable
