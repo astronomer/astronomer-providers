@@ -67,7 +67,7 @@ with DAG(
         sql=SNOWFLAKE_SLACK_SQL,
         poke_interval=POKE_INTERVAL,
         timeout=TASK_TIMEOUT * 60,
-        success=lambda result: True,  # type: ignore[arg-type]
+        success=lambda result: True,
     )
 
     snowflake_op_sql_str >> snowflake_op_with_params >> snowflake_op_sql_sensor >> snowflake_with_callable
