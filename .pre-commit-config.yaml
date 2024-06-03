@@ -55,7 +55,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.4.5'
+    rev: 'v0.4.7'
     hooks:
       - id: ruff
         args: ["--config", "./pyproject.toml"]
@@ -99,7 +99,7 @@ repos:
         additional_dependencies: [".[toml]"]
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.0
+    rev: v1.7.1
     hooks:
       - id: actionlint
         args: ["-ignore", "shellcheck"]
