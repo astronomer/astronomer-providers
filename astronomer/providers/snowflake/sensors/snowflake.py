@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.providers.common.sql.sensors.sql import SqlSensor
@@ -48,8 +48,8 @@ class SnowflakeSensorAsync(SqlSensor):
         snowflake_conn_id: str,
         sql: str,
         parameters: dict[str, Any] | None = None,
-        success: str | None = None,
-        failure: str | None = None,
+        success: Callable[[Any], bool] | None = None,
+        failure: Callable[[Any], bool] | None = None,
         fail_on_empty: bool = False,
         hook_params: dict[str, Any] | None = None,
         **kwargs: Any,
