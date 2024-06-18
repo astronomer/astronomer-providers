@@ -10,8 +10,8 @@ from airflow.exceptions import AirflowException
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.utils.process_utils import execute_in_subprocess, patch_environ
 from google.auth import impersonated_credentials
+from google.auth.credentials import Credentials
 from google.cloud.container_v1 import ClusterManagerClient
-from google.oauth2.service_account import Credentials
 from kubernetes_asyncio.config.kube_config import KubeConfigLoader
 
 KUBE_CONFIG_ENV_VAR = "KUBECONFIG"
