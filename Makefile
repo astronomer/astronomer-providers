@@ -14,7 +14,7 @@ ifeq (run-mypy,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
-ASTRO_RUNTIME_IMAGE_NAME = "quay.io/astronomer/astro-runtime:11.5.0-slim-base"
+ASTRO_RUNTIME_IMAGE_NAME = "quay.io/astronomer/astro-runtime:11.6.0-slim-base"
 
 dev: ## Create a development Environment using `docker compose` file.
 	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker compose -f dev/docker-compose.yaml up -d
