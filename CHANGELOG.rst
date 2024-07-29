@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.19.2 (2024-07-29)
+-------------------
+
+Bug Fixes
+"""""""""
+
+* Fix ``SnowflakeSensorTrigger`` storing callable as string (#1530)
+
+
 1.19.1 (2024-05-10)
 -------------------
 
