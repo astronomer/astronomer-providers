@@ -310,7 +310,7 @@ with DAG(
     chain(*kubernetes_trigger_tasks)
 
     # Databricks DAG
-    databricks_task_info = [{"databricks_dag": "example_async_databricks"}]
+    databricks_task_info = [{"databricks_dag": "example_async_databricks"}, {"databricks_workflow_dag": "example_databricks_workflow"}]
     databricks_trigger_tasks, ids = prepare_dag_dependency(databricks_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*databricks_trigger_tasks)

@@ -43,6 +43,16 @@ jobs:
         id: get_git_revision
         run: echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
+
+      - name: install breeze and build LLM Providers
+        working-directory: .github/integration-tests
+        run: |
+            git clone https://github.com/apache/airflow.git
+            mkdir -p databricks
+            cp  airflow/tests/system/providers/databricks/example_databricks_workflow.py databricks/
+            python ../scripts/refactor_dag.py databricks/example_databricks_workflow.py
+
+
       - name: deploy
         working-directory: .circleci/integration-tests
         run: |
