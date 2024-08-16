@@ -14,7 +14,6 @@ RUN apt-get install -y --no-install-recommends \
 COPY setup.cfg ${AIRFLOW_HOME}/astronomer_providers/setup.cfg
 COPY pyproject.toml ${AIRFLOW_HOME}/astronomer_providers/pyproject.toml
 
-COPY databricks  ${AIRFLOW_HOME}/dags/
 RUN pip install -e "${AIRFLOW_HOME}/astronomer_providers[all,tests,mypy]"
 RUN pip install apache-airflow-providers-slack
 

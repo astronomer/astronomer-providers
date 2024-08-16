@@ -45,7 +45,7 @@ jobs:
 
 
       - name: Clone airflow and copy system tests
-        working-directory: dev
+        working-directory: .circleci/integration-tests
         run: |
             git clone https://github.com/apache/airflow.git
             mkdir -p databricks

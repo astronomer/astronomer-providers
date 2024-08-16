@@ -87,6 +87,7 @@ RUN mkdir -p ${AIRFLOW_HOME}/dags
 COPY . .
 RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
+COPY databricks  ${AIRFLOW_HOME}/dags/
 RUN cp astronomer_migration_dag.py  ${AIRFLOW_HOME}/dags/
 RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
 # we have an issue with connexion==3.0.0, so for now pinning previous stable version
