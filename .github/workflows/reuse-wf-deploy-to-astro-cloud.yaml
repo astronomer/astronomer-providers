@@ -50,7 +50,7 @@ jobs:
             git clone https://github.com/apache/airflow.git
             mkdir -p databricks
             cp  airflow/tests/system/providers/databricks/example_databricks_workflow.py databricks/
-            python ../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
+            python ../../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
 
 
       - name: deploy
