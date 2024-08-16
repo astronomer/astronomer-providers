@@ -4,6 +4,16 @@ import argparse
 
 
 def remove_lines_after(file_path, target_line):
+    """
+    Remove all lines in a file after the first occurrence of a specified target line.
+
+    This function reads a file and rewrites it, keeping only the lines up to and including
+    the first occurrence of the target line. All lines following the target line are removed.
+
+    Args:
+        file_path (str): The path to the file to be modified.
+        target_line (str): The line after which all content in the file should be removed.
+    """
     with open(file_path) as input_file:
         lines = input_file.readlines()
 
