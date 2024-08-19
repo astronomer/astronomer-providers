@@ -14,6 +14,9 @@ class S3KeySensorAsync(S3KeySensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor"
+
     def __init__(self, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -30,8 +33,11 @@ class S3KeySensorAsync(S3KeySensor):
 class S3KeySizeSensorAsync(S3KeySensorAsync):
     """
     This class is deprecated.
-    Please use :class: `~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+    Please use :class: `~airflow.providers.amazon.aws.sensors.s3.S3KeySensor`.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor"
 
     def __init__(
         self,
@@ -42,7 +48,7 @@ class S3KeySizeSensorAsync(S3KeySensorAsync):
         warnings.warn(
             """
             S3KeySizeSensorAsync is deprecated.
-            Please use `astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+            Please use `airflow.providers.amazon.aws.sensors.s3.S3KeySensor`.
             """,
             DeprecationWarning,
             stacklevel=2,
@@ -56,6 +62,9 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
     This class is deprecated.
     Please use :class: `~airflow.providers.amazon.aws.sensors.s3.S3KeysUnchangedSensor`.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.s3 import S3KeysUnchangedSensor"
 
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
@@ -73,8 +82,11 @@ class S3KeysUnchangedSensorAsync(S3KeysUnchangedSensor):
 class S3PrefixSensorAsync(BaseSensorOperator):
     """
     This class is deprecated.
-    Please use :class: `~astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+    Please use :class: `~airflow.providers.amazon.aws.sensors.s3.S3KeySensor`.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor"
 
     def __init__(
         self,
@@ -89,7 +101,7 @@ class S3PrefixSensorAsync(BaseSensorOperator):
         warnings.warn(
             """
             S3PrefixSensor is deprecated.
-            Please use `astronomer.providers.amazon.aws.sensor.s3.S3KeySensorAsync`.
+            Please use `airflow.providers.amazon.aws.sensors.s3.S3KeySensor`.
             """,
             DeprecationWarning,
             stacklevel=2,

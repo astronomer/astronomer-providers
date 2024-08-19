@@ -11,6 +11,11 @@ class RedshiftClusterSensorAsync(RedshiftClusterSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.sensors.redshift_cluster import RedshiftClusterSensor"
+    )
+
     def __init__(
         self,
         **kwargs: Any,

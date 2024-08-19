@@ -23,6 +23,9 @@ class BatchOperatorAsync(BatchOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.operators.batch import BatchOperator"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (

@@ -9,6 +9,11 @@ class EmrContainerOperatorAsync(EmrContainerOperator):
     Please use :class: `~airflow.providers.amazon.aws.operators.emr.EmrContainerOperator`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.emr import EmrContainerOperator"
+    )
+
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
             (

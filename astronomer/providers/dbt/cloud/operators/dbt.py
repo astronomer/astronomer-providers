@@ -17,6 +17,11 @@ class DbtCloudRunJobOperatorAsync(DbtCloudRunJobOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator"
+    )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (

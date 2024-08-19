@@ -21,6 +21,9 @@ if TYPE_CHECKING:
 
 
 class ExternalTaskSensorAsync(ExternalTaskSensor):  # noqa: D101
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.sensors.external_task import ExternalTaskSensor"
+
     def __init__(
         self,
         poke_interval: float = 5.0,

@@ -15,6 +15,11 @@ class GKEStartPodOperatorAsync(GKEStartPodOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.operators.kubernetes_engine import GKEStartPodOperator"
+    )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (

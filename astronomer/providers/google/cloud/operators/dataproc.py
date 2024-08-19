@@ -20,6 +20,11 @@ class DataprocCreateClusterOperatorAsync(DataprocCreateClusterOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.operators.dataproc import DataprocCreateClusterOperator"
+    )
+
     def __init__(
         self,
         *,
@@ -45,6 +50,11 @@ class DataprocDeleteClusterOperatorAsync(DataprocDeleteClusterOperator):
     Please use :class: `~airflow.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperator`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.operators.dataproc import DataprocDeleteClusterOperator"
+    )
 
     def __init__(
         self,
@@ -74,6 +84,11 @@ class DataprocSubmitJobOperatorAsync(DataprocSubmitJobOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator"
+    )
+
     def __init__(self, *args: Any, **kwargs: Any):
         warnings.warn(
             (
@@ -93,6 +108,11 @@ class DataprocUpdateClusterOperatorAsync(DataprocUpdateClusterOperator):
     Please use :class: `~airflow.providers.google.cloud.operators.dataproc.DataprocUpdateClusterOperator`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.operators.dataproc import DataprocUpdateClusterOperator"
+    )
 
     def __init__(
         self,

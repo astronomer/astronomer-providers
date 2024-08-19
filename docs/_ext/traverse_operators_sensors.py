@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import ast
+import importlib
 import os
 from pathlib import Path
-from typing import List, Tuple
 
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
@@ -20,9 +22,9 @@ ASTRONOMER_PROVIDERS_PATH = CURRENT_FILE_PATH.parent.parent.parent / "astronomer
 
 def collect_elements(
     directory_path: str,
-    files: List[str],
+    files: list[str],
     element_type: str,
-    elements_list: List[Tuple[str, str]],
+    elements_list: list[tuple[str, str, str, str]],
     current_module_path: str,
 ):
     """
@@ -47,7 +49,13 @@ def collect_elements(
                 if isinstance(element, ast.ClassDef):
                     element_name = element.name
                     if element_type in element_name and ASYNC_SUBSTRING in element_name:
-                        elements_list.append((element_name, module_import_path))
+                        module = importlib.import_module(module_import_path)
+                        cls = getattr(module, element_name)
+                        is_deprecated = "Yes" if getattr(cls, "is_deprecated", False) else "No"
+                        post_deprecation_replacement = str(getattr(cls, "post_deprecation_replacement", ""))
+                        elements_list.append(
+                            (element_name, is_deprecated, module_import_path, post_deprecation_replacement)
+                        )
 
 
 def search_providers():
@@ -79,7 +87,13 @@ class TraverseOperatorsSensors(SphinxDirective):
         """Generates raw html to list the operators and sensors parsed using `ast`."""
         operators, sensors = search_providers()
         operators_html = (
-            "<h3>Operators</h3> " "<table>" "<th>#</th>" "<th>Operator name</th>" "<th>Import path</th>"
+            "<h3>Operators</h3> "
+            "<table>"
+            "<th>#</th>"
+            "<th>Operator name</th>"
+            "<th>Is deprecated</th>"
+            "<th>Import path</th>"
+            "<th>Post deprecation replacement</th>"
         )
         for index, operator in enumerate(operators, start=1):
             class_def_link = operator[1].replace(".", "/") + "/index.html#" + operator[1] + "." + operator[0]
@@ -87,7 +101,9 @@ class TraverseOperatorsSensors(SphinxDirective):
                 f"<tr>"
                 f"<td>{index}</td>"
                 f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
-                f"<td><span><pre><code class='python'>from {operator[1]} import {operator[0]}</code></pre></span></td>"
+                f"<td style='text-align: center;'>{operator[1]}</td>"
+                f"<td><span><pre><code class='python'>from {operator[2]} import {operator[0]}</code></pre></span></td>"
+                f"<td><span><pre><code class='python'>{operator[3]}</code></pre></span></td>"
                 f"</tr>"
             )
             # The below script generates the URL for the class definition by extracting the selected doc version from
@@ -101,14 +117,24 @@ class TraverseOperatorsSensors(SphinxDirective):
             )
         operators_html += "</table> <br/>"
 
-        sensors_html = "<h3>Sensors</h3>" "<table>" "<th>#</th>" "<th>Sensor name</th>" "<th>Import path</th>"
+        sensors_html = (
+            "<h3>Sensors</h3>"
+            "<table>"
+            "<th>#</th>"
+            "<th>Sensor name</th>"
+            "<th>Is deprecated</th>"
+            "<th>Import path</th>"
+            "<th>Replacement import path</th>"
+        )
         for index, sensor in enumerate(sensors, start=1):
             class_def_link = sensor[1].replace(".", "/") + "/index.html#" + sensor[1] + "." + sensor[0]
             sensors_html += (
                 f"<tr>"
                 f"<td>{index}</td>"
                 f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
-                f"<td><span><pre><code class='python'>from {sensor[1]} import {sensor[0]}</code></pre></span></td>"
+                f"<td style='text-align: center;'>{sensor[1]}</td>"
+                f"<td><span><pre><code class='python'>from {sensor[2]} import {sensor[0]}</code></pre></span></td>"
+                f"<td><span><pre><code class='python'>{sensor[3]}</code></pre></span></td>"
                 f"</tr>"
             )
             sensors_html += (

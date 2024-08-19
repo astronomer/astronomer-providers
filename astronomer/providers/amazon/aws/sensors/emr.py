@@ -15,6 +15,9 @@ class EmrContainerSensorAsync(EmrContainerSensor):
     Please use :class: `~airflow.providers.amazon.aws.sensors.emr.EmrContainerSensor`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.emr import EmrContainerSensor"
+
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         poll_interval = kwargs.pop("poll_interval")
         if poll_interval:
@@ -44,6 +47,9 @@ class EmrStepSensorAsync(EmrStepSensor):
     Please use :class: `~airflow.providers.amazon.aws.sensors.emr.EmrStepSensor`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.emr import EmrStepSensor"
+
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         warnings.warn(
             (
@@ -62,6 +68,9 @@ class EmrJobFlowSensorAsync(EmrJobFlowSensor):
     This class is deprecated.
     Please use :class: `~airflow.providers.amazon.aws.sensors.emr.EmrJobFlowSensor`.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.emr import EmrJobFlowSensor"
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         warnings.warn(

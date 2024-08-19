@@ -11,6 +11,9 @@ class SFTPSensorAsync(SFTPSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.sftp.sensors.sftp import SFTPSensor"
+
     def __init__(
         self,
         *args: Any,

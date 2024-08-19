@@ -23,6 +23,9 @@ class BigQueryInsertJobOperatorAsync(BigQueryInsertJobOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from google.cloud.operators.bigquery import BigQueryInsertJobOperator"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -45,6 +48,9 @@ class BigQueryCheckOperatorAsync(BigQueryCheckOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from google.cloud.operators.bigquery import BigQueryCheckOperator"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -64,6 +70,9 @@ class BigQueryGetDataOperatorAsync(BigQueryGetDataOperator):
     Please use :class: `~airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from google.cloud.operators.bigquery import BigQueryGetDataOperator"
 
     def __init__(self, *args: Any, use_legacy_sql: bool = False, **kwargs: Any) -> None:
         warnings.warn(
@@ -86,6 +95,9 @@ class BigQueryIntervalCheckOperatorAsync(BigQueryIntervalCheckOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from google.cloud.operators.bigquery import BigQueryIntervalCheckOperator"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -105,6 +117,9 @@ class BigQueryValueCheckOperatorAsync(BigQueryValueCheckOperator):
     Please use :class: `~airflow.providers.google.cloud.operators.bigquery.BigQueryValueCheckOperator`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = "from google.cloud.operators.bigquery import BigQueryValueCheckOperator"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(

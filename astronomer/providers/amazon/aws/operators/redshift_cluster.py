@@ -13,6 +13,11 @@ class RedshiftDeleteClusterOperatorAsync(RedshiftDeleteClusterOperator):
     Please use :class: `~airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftDeleteClusterOperator`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.redshift_cluster import RedshiftDeleteClusterOperator"
+    )
+
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
             (
@@ -32,6 +37,11 @@ class RedshiftResumeClusterOperatorAsync(RedshiftResumeClusterOperator):
     Please use :class: `~airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftResumeClusterOperator`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.redshift_cluster import RedshiftResumeClusterOperator"
+    )
+
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
             (
@@ -50,6 +60,11 @@ class RedshiftPauseClusterOperatorAsync(RedshiftPauseClusterOperator):
     This class is deprecated.
     Please use :class: `~airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftPauseClusterOperator`.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.redshift_cluster import RedshiftPauseClusterOperator"
+    )
 
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(

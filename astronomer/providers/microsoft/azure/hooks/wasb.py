@@ -36,9 +36,9 @@ class WasbHookAsync(WasbHook):
         )
         self.conn_id = wasb_conn_id
         self.public_read = public_read
-        self.blob_service_client: BlobServiceClient = self.get_conn()
+        self.blob_service_client: BlobServiceClient = self.get_conn()  # type: ignore[assignment]
 
-    def get_conn(self) -> BlobServiceClient:
+    def get_conn(self) -> BlobServiceClient:  # type: ignore[override]
         """Return the async BlobServiceClient object."""
         conn = self.get_connection(self.conn_id)
         extra = conn.extra_dejson or {}
@@ -87,7 +87,7 @@ class WasbHookAsync(WasbHook):
             **extra,
         )
 
-    def _get_blob_client(self, container_name: str, blob_name: str) -> BlobClient:
+    def _get_blob_client(self, container_name: str, blob_name: str) -> BlobClient:  # type: ignore[override]
         """
         Instantiate a blob client.
 
@@ -110,7 +110,7 @@ class WasbHookAsync(WasbHook):
             return False
         return True
 
-    def _get_container_client(self, container_name: str) -> ContainerClient:
+    def _get_container_client(self, container_name: str) -> ContainerClient:  # type: ignore[override]
         """
         Instantiate a container client.
 

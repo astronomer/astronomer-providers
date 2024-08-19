@@ -128,7 +128,7 @@ class DatabricksHookAsync(DatabricksHook):
                         json=json if method in ("POST", "PATCH") else None,
                         params=json if method == "GET" else None,
                         headers=headers,
-                        timeout=self.timeout_seconds,
+                        timeout=self.timeout_seconds,  # type: ignore[arg-type]
                     )
                     response.raise_for_status()
                     return cast(Dict[str, Any], await response.json())
