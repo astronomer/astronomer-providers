@@ -11,6 +11,9 @@ class HttpSensorAsync(HttpSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.http.sensors.http import HttpSensor"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (

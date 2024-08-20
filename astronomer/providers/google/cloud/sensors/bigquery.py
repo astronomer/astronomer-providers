@@ -15,6 +15,11 @@ class BigQueryTableExistenceSensorAsync(BigQueryTableExistenceSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.sensors.bigquery import BigQueryTableExistenceSensor"
+    )
+
     def __init__(
         self,
         gcp_conn_id: str = "google_cloud_default",

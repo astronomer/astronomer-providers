@@ -14,6 +14,9 @@ class WasbBlobSensorAsync(WasbBlobSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.microsoft.azure.sensors.wasb import WasbBlobSensor"
+
     def __init__(
         self,
         *args: Any,
@@ -47,6 +50,11 @@ class WasbPrefixSensorAsync(WasbPrefixSensor):
     Use :class: `~airflow.providers.microsoft.azure.sensors.wasb.WasbPrefixSensor` instead
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.microsoft.azure.sensors.wasb import WasbPrefixSensor"
+    )
 
     def __init__(
         self,

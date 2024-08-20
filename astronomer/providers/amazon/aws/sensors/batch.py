@@ -9,6 +9,9 @@ class BatchSensorAsync(BatchSensor):
     Please use :class: `~airflow.providers.amazon.aws.sensors.batch.BatchSensor`.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.amazon.aws.sensors.batch import BatchSensor"
+
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         warnings.warn(
             (

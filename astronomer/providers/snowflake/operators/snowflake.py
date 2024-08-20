@@ -216,6 +216,11 @@ class SnowflakeSqlApiOperatorAsync(SnowflakeSqlApiOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.snowflake.operators.snowflake import SnowflakeSqlApiOperator"
+    )
+
     def __init__(self, *args: Any, **kwargs: Any):
         warnings.warn(
             (
