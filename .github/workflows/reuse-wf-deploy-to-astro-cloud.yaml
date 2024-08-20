@@ -62,6 +62,7 @@ jobs:
       - name: deploy
         working-directory: .circleci/integration-tests
         run: |
+          ls -la databricks
           echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
           bash script.sh astro-cloud \
             ${{ secrets.docker_registry }} \
