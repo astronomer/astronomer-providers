@@ -29,7 +29,8 @@ def collect_elements(
 ):
     """
     Checks that ``Async`` class definitions exist using ``ast.parse`` in the given files, that those are
-    ``operators/sensors`` and appends the operator/sensor along with its import path to the given output list.
+    ``operators/sensors`` and appends the operator/sensor along with its import path and deprecation status to the
+    given output list.
 
     :param directory_path: path of the directory in which the given ``files`` are located
     :param files: list of files to look for async operator/sensor class definitions
@@ -98,9 +99,7 @@ class TraverseOperatorsSensors(SphinxDirective):
         for index, operator in enumerate(operators, start=1):
             class_def_link = operator[2].replace(".", "/") + "/index.html#" + operator[2] + "." + operator[0]
             operators_html += (
-                f"<tr>"
-                f"<td>{index}</td>"
-                f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
+                f"<tr>" f"<td>{index}</td>" f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
             )
             if operator[1]:
                 operators_html += "<td style='text-align: center;'>✅</td>"
@@ -131,9 +130,7 @@ class TraverseOperatorsSensors(SphinxDirective):
         for index, sensor in enumerate(sensors, start=1):
             class_def_link = sensor[2].replace(".", "/") + "/index.html#" + sensor[2] + "." + sensor[0]
             sensors_html += (
-                f"<tr>"
-                f"<td>{index}</td>"
-                f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
+                f"<tr>" f"<td>{index}</td>" f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
             )
             if sensor[1]:
                 sensors_html += "<td style='text-align: center;'>✅</td>"
