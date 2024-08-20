@@ -5,6 +5,7 @@ ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
 ENV AWS_NUKE_VERSION=v2.17.0
 
 USER root
+COPY . .
 RUN ls -la databricks
 RUN apt-get update -y \
     && apt-get install -y software-properties-common \
