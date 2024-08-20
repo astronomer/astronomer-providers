@@ -49,6 +49,9 @@ jobs:
         run: |
             git clone https://github.com/apache/airflow.git
             cp -r airflow/tests/system/providers/databricks .
+            ls -la databricks  # List files to verify they were copied
+            cat databricks/example_databricks_workflow.py  # Display content of a specific file
+            echo "Files copied successfully."
             python ../../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
 
 
