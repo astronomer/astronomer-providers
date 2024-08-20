@@ -85,7 +85,7 @@ RUN pip install astronomer-starship-provider
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 COPY . .
-ls -la databricks
+RUN ls -la databricks
 RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
 COPY databricks  ${AIRFLOW_HOME}/dags/
