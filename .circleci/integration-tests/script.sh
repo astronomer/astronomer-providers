@@ -60,7 +60,7 @@ else
   exit 1
 fi
 
-#clean
+clean
 
 # Copy source files
 mkdir "${SCRIPT_PATH}"/astronomer-providers
