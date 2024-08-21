@@ -35,7 +35,7 @@ function clean() {
   [[ -f ${SCRIPT_PATH}/setup.cfg ]] && rm "${SCRIPT_PATH}"/setup.cfg
   [[ -f ${SCRIPT_PATH}/packages.txt ]] && rm "${SCRIPT_PATH}"/packages.txt
   [[ -f ${SCRIPT_PATH}/requirements.txt ]] && rm "${SCRIPT_PATH}"/requirements.txt
- # find . -name "example_*" ! -name "example_databricks_workflow" -exec rm {} \;
+  find . -name "example_*" ! -name "example_databricks_workflow.py" -exec rm {} \;
 }
 
 if [ "$1" == "-h" ]; then
