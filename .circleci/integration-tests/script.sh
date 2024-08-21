@@ -68,12 +68,9 @@ cp -r "${PROJECT_PATH}"/astronomer "${SCRIPT_PATH}"/astronomer-providers
 cp -r  "${PROJECT_PATH}"/pyproject.toml "${SCRIPT_PATH}"/astronomer-providers
 cp -r  "${PROJECT_PATH}"/setup.cfg "${SCRIPT_PATH}"/astronomer-providers
 
-echo "Listing contents of the databricks directory:"
-ls -la databricks
 # Copy examples
 for dag in $(find "${PROVIDER_PATH}" -type f -name 'example_*'); do cp "${dag}" "${SCRIPT_PATH}"; done;
 
-ls -la databricks
 # Build image and deploy
 BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
 if [[ ${DEPLOYMENT_INSTANCE} == "astro-cloud" ]]; then
