@@ -35,7 +35,7 @@ function clean() {
   [[ -f ${SCRIPT_PATH}/setup.cfg ]] && rm "${SCRIPT_PATH}"/setup.cfg
   [[ -f ${SCRIPT_PATH}/packages.txt ]] && rm "${SCRIPT_PATH}"/packages.txt
   [[ -f ${SCRIPT_PATH}/requirements.txt ]] && rm "${SCRIPT_PATH}"/requirements.txt
-  find . -name "example_*" ! -name "example_databricks_workflow" -exec rm {} \;
+ # find . -name "example_*" ! -name "example_databricks_workflow" -exec rm {} \;
 }
 
 if [ "$1" == "-h" ]; then
@@ -60,7 +60,7 @@ else
   exit 1
 fi
 
-clean
+#clean
 
 # Copy source files
 mkdir "${SCRIPT_PATH}"/astronomer-providers
@@ -68,7 +68,7 @@ cp -r "${PROJECT_PATH}"/astronomer "${SCRIPT_PATH}"/astronomer-providers
 cp -r  "${PROJECT_PATH}"/pyproject.toml "${SCRIPT_PATH}"/astronomer-providers
 cp -r  "${PROJECT_PATH}"/setup.cfg "${SCRIPT_PATH}"/astronomer-providers
 
-
+echo "Listing contents of the databricks directory:"
 ls -la databricks
 # Copy examples
 for dag in $(find "${PROVIDER_PATH}" -type f -name 'example_*'); do cp "${dag}" "${SCRIPT_PATH}"; done;
