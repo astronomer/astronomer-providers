@@ -53,11 +53,11 @@ jobs:
             cat databricks/example_databricks_workflow.py  # Display content of a specific file
             echo "Files copied successfully."
 
-      - name: Run refactor script
-        working-directory: .circleci/integration-tests
-        run: |
-          ls -la databricks
-          python ../../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
+#      - name: Run refactor script
+#        working-directory: .circleci/integration-tests
+#        run: |
+#          ls -la databricks
+#          python ../../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
 
       - name: deploy
         working-directory: .circleci/integration-tests
