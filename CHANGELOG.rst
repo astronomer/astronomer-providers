@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.19.4 (2024-08-23)
+-------------------
+
+Docs
+""""
+
+* Change deprecation status to Yes/No instead of icons (#1572)
+
+
 1.19.3 (2024-08-20)
 -------------------
 
