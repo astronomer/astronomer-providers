@@ -53,7 +53,6 @@ def collect_elements(
                         module = importlib.import_module(module_import_path)
                         cls = getattr(module, element_name)
                         is_deprecated = bool(getattr(cls, "is_deprecated", False))
-                        # is_deprecated = "✅" if getattr(cls, "is_deprecated", False) else "❌"
                         post_deprecation_replacement = str(getattr(cls, "post_deprecation_replacement", ""))
                         elements_list.append(
                             (element_name, is_deprecated, module_import_path, post_deprecation_replacement)
@@ -93,7 +92,7 @@ class TraverseOperatorsSensors(SphinxDirective):
             "<table>"
             "<th>#</th>"
             "<th>Operator name</th>"
-            "<th>Deprecated</th>"
+            "<th>Is deprecated?</th>"
             "<th>Import path</th>"
         )
         for index, operator in enumerate(operators, start=1):
@@ -102,10 +101,10 @@ class TraverseOperatorsSensors(SphinxDirective):
                 f"<tr>" f"<td>{index}</td>" f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
             )
             if operator[1]:
-                operators_html += "<td style='text-align: center;'>✅</td>"
+                operators_html += "<td style='text-align: center;'><b> Yes </b></td>"
                 operators_html += f"<td><b>Old Path:</b>\n <span><pre><code class='python'>from {operator[2]} import {operator[0]}</code></pre></span>\n <b>New Path:</b> \n<span><pre><code class='python'>{operator[3]}</code></pre></span></td>"
             else:
-                operators_html += "<td style='text-align: center;'>❌</td>"
+                operators_html += "<td style='text-align: center;'><b> No </b></td>"
                 operators_html += f"<td><span><pre><code class='python'>from {operator[2]} import {operator[0]}</code></pre></span></td>"
             operators_html += "</tr>"
             # The below script generates the URL for the class definition by extracting the selected doc version from
@@ -124,7 +123,7 @@ class TraverseOperatorsSensors(SphinxDirective):
             "<table>"
             "<th>#</th>"
             "<th>Sensor name</th>"
-            "<th>Deprecated</th>"
+            "<th>Is deprecated?</th>"
             "<th>Import path</th>"
         )
         for index, sensor in enumerate(sensors, start=1):
@@ -133,10 +132,10 @@ class TraverseOperatorsSensors(SphinxDirective):
                 f"<tr>" f"<td>{index}</td>" f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
             )
             if sensor[1]:
-                sensors_html += "<td style='text-align: center;'>✅</td>"
+                sensors_html += "<td style='text-align: center;'><b> Yes </b></td>"
                 sensors_html += f"<td><b>Old Path:</b>\n <span><pre><code class='python'>from {sensor[2]} import {sensor[0]}</code></pre></span>\n <b>New Path:</b> \n<span><pre><code class='python'>{sensor[3]}</code></pre></span></td>"
             else:
-                sensors_html += "<td style='text-align: center;'>❌</td>"
+                sensors_html += "<td style='text-align: center;'><b> No </b></td>"
                 sensors_html += f"<td><span><pre><code class='python'>from {sensor[2]} import {sensor[0]}</code></pre></span></td>"
             sensors_html += "</tr>"
             sensors_html += (
