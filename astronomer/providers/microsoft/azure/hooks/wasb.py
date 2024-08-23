@@ -87,7 +87,7 @@ class WasbHookAsync(WasbHook):
             **extra,
         )
 
-    def _get_blob_client(self, container_name: str, blob_name: str) -> BlobClient:  # type: ignore[override]
+    def _get_blob_client(self, container_name: str, blob_name: str) -> BlobClient:
         """
         Instantiate a blob client.
 
