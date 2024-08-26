@@ -10,10 +10,10 @@ RUN apt-get update -y \
     && apt-get install -y software-properties-common \
     && apt-get install -y wget procps gnupg2
 
-# Install openjdk-8
+# Install openjdk-17
 RUN apt-add-repository 'deb http://archive.debian.org/debian stretch main' \
-    && apt-get update && apt-get install -y openjdk-8-jdk
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+    && apt-get update && apt-get install -y openjdk-17-jdk
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
 
 RUN apt-get update -y \
     && apt-get install -y \
