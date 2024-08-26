@@ -21,6 +21,11 @@ class KubernetesPodOperatorAsync(KubernetesPodOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator"
+    )
+
     def __init__(self, **kwargs: Any):
         warnings.warn(
             (

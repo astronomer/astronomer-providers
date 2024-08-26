@@ -12,6 +12,9 @@ class AzureDataFactoryRunPipelineOperatorAsync(AzureDataFactoryRunPipelineOperat
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.providers.microsoft.azure.operators.data_factory import AzureDataFactoryRunPipelineOperator"
+
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         warnings.warn(
             (

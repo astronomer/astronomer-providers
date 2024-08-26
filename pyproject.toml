@@ -91,7 +91,7 @@ known-third-party = ["google", "gcloud"]
 skips = ["B113"]
 
 [tool.commitizen]
-version = "1.19.2"
+version = "1.19.4"
 version_files = [
     "docs/conf.py",
     "astronomer/providers/package.py",

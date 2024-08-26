@@ -24,6 +24,11 @@ class SageMakerProcessingOperatorAsync(SageMakerProcessingOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.sagemaker import SageMakerProcessingOperator"
+    )
+
     def __init__(self, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -44,6 +49,11 @@ class SageMakerTransformOperatorAsync(SageMakerTransformOperator):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.sagemaker import SageMakerTransformOperator"
+    )
+
     def __init__(self, **kwargs: Any) -> None:
         warnings.warn(
             (
@@ -63,6 +73,11 @@ class SageMakerTrainingOperatorAsync(SageMakerTrainingOperator):
     Please use :class: `~airflow.providers.amazon.aws.operators.sagemaker.SageMakerTrainingOperator`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.amazon.aws.operators.sagemaker import SageMakerTrainingOperator"
+    )
 
     def __init__(self, **kwargs: Any) -> None:
         warnings.warn(

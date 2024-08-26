@@ -20,6 +20,11 @@ class GCSObjectExistenceSensorAsync(GCSObjectExistenceSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor"
+    )
+
     def __init__(
         self,
         *args: Any,
@@ -54,6 +59,11 @@ class GCSObjectsWithPrefixExistenceSensorAsync(GCSObjectsWithPrefixExistenceSens
     Please use :class: `~airflow.providers.google.cloud.sensors.gcs.GCSObjectsWithPrefixExistenceSensor`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensor"
+    )
 
     def __init__(
         self,
@@ -90,6 +100,11 @@ class GCSUploadSessionCompleteSensorAsync(GCSUploadSessionCompleteSensor):
     and set `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.sensors.gcs import GCSUploadSessionCompleteSensor"
+    )
+
     def __init__(
         self,
         *args: Any,
@@ -125,6 +140,11 @@ class GCSObjectUpdateSensorAsync(GCSObjectUpdateSensor):
     Please use :class: `~airflow.providers.google.cloud.sensors.gcs.GCSObjectUpdateSensor`
     and set `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.google.cloud.sensors.gcs import GCSObjectUpdateSensor"
+    )
 
     def __init__(
         self,

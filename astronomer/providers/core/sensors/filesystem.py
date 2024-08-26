@@ -26,6 +26,9 @@ class FileSensorAsync(FileSensor):
         ``**`` in glob filepath parameter. Defaults to ``False``.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = "from airflow.sensors.filesystem import FileSensor"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             (

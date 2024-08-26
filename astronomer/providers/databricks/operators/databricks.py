@@ -16,6 +16,11 @@ class DatabricksSubmitRunOperatorAsync(DatabricksSubmitRunOperator):
     `deferrable` param to `True` instead.
     """
 
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.databricks.operators.databricks import DatabricksSubmitRunOperator"
+    )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             "This class is deprecated."
@@ -31,6 +36,11 @@ class DatabricksRunNowOperatorAsync(DatabricksRunNowOperator):
     Use :class: `~airflow.providers.databricks.operators.databricks.DatabricksRunNowOperator` and set
     `deferrable` param to `True` instead.
     """
+
+    is_deprecated = True
+    post_deprecation_replacement = (
+        "from airflow.providers.databricks.operators.databricks import DatabricksRunNowOperator"
+    )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
