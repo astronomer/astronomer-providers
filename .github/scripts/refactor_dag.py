@@ -28,5 +28,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path", help="file path", type=str)
     args = parser.parse_args()
-    target_line = "from dev.tests_common.test_utils.watcher import watcherr"
+    target_line = "from dev.tests_common.test_utils.watcher import watcher"
     remove_lines_after(args.file_path, target_line)
