@@ -48,7 +48,7 @@ jobs:
         working-directory: .circleci/integration-tests
         run: |
             git clone https://github.com/apache/airflow.git
-            cp -r airflow/tests/system/providers/databricks .
+            cp -r airflow/providers/tests/system/databricks .
             python ../../.github/scripts/refactor_dag.py databricks/example_databricks_workflow.py
             cat databricks/example_databricks_workflow.py
 
