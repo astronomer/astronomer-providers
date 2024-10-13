@@ -282,7 +282,7 @@ with DAG(
         job_name=JOB_NAME,
         job_queue=JOB_QUEUE,
         job_definition=JOB_DEFINITION,
-        overrides=JOB_OVERRIDES,
+        container_overrides=JOB_OVERRIDES,
         aws_conn_id=AWS_CONN_ID,
         region_name=AWS_DEFAULT_REGION,
     )
