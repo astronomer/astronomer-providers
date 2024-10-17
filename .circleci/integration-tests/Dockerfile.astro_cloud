@@ -1,5 +1,5 @@
 # Deploy from astro runtime image
-FROM quay.io/astronomer/astro-runtime:12.1.1-slim-base
+FROM quay.io/astronomer/astro-runtime:12.2.0-slim-base
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
 ENV AWS_NUKE_VERSION=v2.17.0
