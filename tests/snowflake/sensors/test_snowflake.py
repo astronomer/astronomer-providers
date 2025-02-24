@@ -110,7 +110,7 @@ class TestPytestSnowflakeSensorAsync:
             success=dummy_callable,
         )
 
-        result = sensor.execute_complete(context=None, event={"status": "validate", "result": [[(True)]]})
+        result = sensor.execute_complete(context=None, event={"status": "validate", "result": [[True]]})
         assert result is None
 
     @mock.patch("astronomer.providers.snowflake.sensors.snowflake.SnowflakeSensorAsync._defer")
@@ -123,9 +123,7 @@ class TestPytestSnowflakeSensorAsync:
             success=dummy_callable_false,
         )
 
-        sensor.execute_complete(
-            context=None, event={"status": "validate", "result": [[(True)]], "message": ""}
-        )
+        sensor.execute_complete(context=None, event={"status": "validate", "result": [[True]], "message": ""})
         mock_defer.assert_called_once()
 
     def test_soft_fail_enable(self, context):
