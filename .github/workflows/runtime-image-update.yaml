@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   runtime-image-tag-update-job:
-    runs-on: 'ubuntu-20.04'
+    runs-on: 'ubuntu-latest'
 
     steps:
       - name: Checkout repository

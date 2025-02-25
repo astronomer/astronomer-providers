@@ -32,7 +32,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   deploy-to-astro-cloud:
-    runs-on: 'ubuntu-20.04'
+    runs-on: 'ubuntu-latest'
     steps:
       - name: checkout
         uses: actions/checkout@v3
