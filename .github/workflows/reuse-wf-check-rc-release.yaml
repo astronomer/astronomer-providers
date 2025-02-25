@@ -56,7 +56,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   check-rc-testing-announcement:
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     if: github.event_name == 'schedule'
     env:
       GH_TOKEN: ${{ github.token }}
@@ -121,7 +121,7 @@ jobs:
       rc_issue_url: ${{ steps.export-rc-issue-url.outputs.rc_issue_url }}
 
   validate-manual-input:
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Validate user input
@@ -134,7 +134,7 @@ jobs:
 
   create-branch-for-testing-rc-release:
     needs: [validate-manual-input, check-rc-testing-announcement]
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     if: |
       always() &&
       (
@@ -236,7 +236,7 @@ jobs:
         needs.validate-manual-input.result == 'success' &&
         inputs.rc_testing_branch
       )
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     steps:
       - name: export rc_testing_branch
         id: export-rc-testing-branch-name-step
