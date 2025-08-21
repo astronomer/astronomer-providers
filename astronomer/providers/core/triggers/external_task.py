@@ -6,7 +6,6 @@ from typing import Any, AsyncIterator, Dict, List, Tuple
 
 from airflow import AirflowException
 from airflow.models import DagRun, TaskInstance
-from airflow.providers.http.hooks.http import HttpHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
@@ -180,21 +179,21 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
 
     async def run(self) -> AsyncIterator["TriggerEvent"]:
         """
-        Makes a series of http calls via an http hook poll for state of the job
+        Makes a series of asynchronous http calls via an http hook poll for state of the job
         run until it reaches a failure state or success state. It yields a Trigger if response state is successful.
         """
         from airflow.utils.state import State
 
-        hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
+        hook = self._get_async_hook()
         while True:
             try:
-                response = hook.run(
+                response = await hook.run(
                     endpoint=self.endpoint,
                     data=self.data,
                     headers=self.headers,
                     extra_options=self.extra_options,
                 )
-                resp_json = response.json()
+                resp_json = await response.json()
                 if resp_json["state"] in State.finished:
                     yield TriggerEvent(resp_json)
                     return
