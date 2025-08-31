@@ -133,7 +133,6 @@ class ExternalDeploymentTaskSensorAsync(HttpSensor):
 
     def execute(self, context: Context) -> None:
         # """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-        hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
 
         self.defer(
             timeout=self.execution_timeout,
