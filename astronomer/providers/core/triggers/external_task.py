@@ -4,12 +4,12 @@ import typing
 import warnings
 from typing import Any, AsyncIterator, Dict, List, Tuple
 
+from aiohttp import ClientConnectionError
 from airflow import AirflowException
 from airflow.models import DagRun, TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
-from aiohttp import ClientConnectionError
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
