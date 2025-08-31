@@ -9,6 +9,7 @@ from airflow.models import DagRun, TaskInstance
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from airflow.utils.session import provide_session
 from asgiref.sync import sync_to_async
+from aiohttp import ClientConnectionError
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -203,9 +204,18 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
                     self.poke_interval,
                 )
                 await asyncio.sleep(self.poke_interval)
+            except ClientConnectionError as exc:
+                self.log.info(
+                    "Connection issue while calling API: %s. Sleeping for %s seconds",
+                    str(exc),
+                    self.poke_interval,
+                )
+                await asyncio.sleep(self.poke_interval)
+                continue
             except AirflowException as exc:
                 self.log.info("An error occur while calling API %s", str(exc))
                 if str(exc).startswith("404"):
                     await asyncio.sleep(self.poke_interval)
+                    continue
                 yield TriggerEvent({"state": "error", "message": str(exc)})
                 return

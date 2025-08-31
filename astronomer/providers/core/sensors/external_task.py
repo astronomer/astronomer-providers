@@ -131,31 +131,31 @@ class ExternalDeploymentTaskSensorAsync(HttpSensor):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    # def execute(self, context: Context) -> None:
-    #     # """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
-    #     hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
-    #
-    #     # self.defer(
-    #     #     timeout=self.execution_timeout,
-    #     #     trigger=ExternalDeploymentTaskTrigger(
-    #     #         http_conn_id=self.http_conn_id,
-    #     #         method=self.method,
-    #     #         endpoint=self.endpoint,
-    #     #         data=self.request_params,
-    #     #         headers=self.headers,
-    #     #         extra_options=self.extra_options,
-    #     #         poke_interval=self.poke_interval,
-    #     #     ),
-    #     #     method_name="execute_complete",
-    #     # )
-    #
-    # def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
-    #     """
-    #     Callback for when the trigger fires - returns immediately.
-    #     Return true and log the response if state is not success state raise ValueError
-    #     """
-    #     if event and "state" in event:
-    #         if event["state"] == "success":
-    #             self.log.info("Task Succeeded with response: %s", event)
-    #             return True
-    #     raise ValueError(f"Task Failed with response: {event}")
+    def execute(self, context: Context) -> None:
+        # """Defers trigger class to poll for state of the job run until it reaches a failure state or success state"""
+        hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
+
+        self.defer(
+            timeout=self.execution_timeout,
+            trigger=ExternalDeploymentTaskTrigger(
+                http_conn_id=self.http_conn_id,
+                method=self.method,
+                endpoint=self.endpoint,
+                data=self.request_params,
+                headers=self.headers,
+                extra_options=self.extra_options,
+                poke_interval=self.poke_interval,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context: Context, event: dict[str, Any] | None = None) -> Any:
+        """
+        Callback for when the trigger fires - returns immediately.
+        Return true and log the response if state is not success state raise ValueError
+        """
+        if event and "state" in event:
+            if event["state"] == "success":
+                self.log.info("Task Succeeded with response: %s", event)
+                return True
+        raise ValueError(f"Task Failed with response: {event}")
