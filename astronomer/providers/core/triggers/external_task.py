@@ -14,7 +14,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from astronomer.providers.http.hooks.http import HttpHookAsync
-
 from astronomer.providers.http.triggers.http import HttpTrigger
 
 
