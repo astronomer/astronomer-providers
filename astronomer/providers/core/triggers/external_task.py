@@ -13,6 +13,8 @@ from asgiref.sync import sync_to_async
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from astronomer.providers.http.hooks.http import HttpHookAsync
+
 from astronomer.providers.http.triggers.http import HttpTrigger
 
 
@@ -185,7 +187,12 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
         """
         from airflow.utils.state import State
 
-        hook = self._get_async_hook()
+        # hook = self._get_async_hook()
+        hook = HttpHookAsync(
+            method=self.method,
+            http_conn_id=self.http_conn_id,
+            keep_response=True,
+        )
         while True:
             try:
                 response = await hook.run(
