@@ -186,7 +186,6 @@ class ExternalDeploymentTaskTrigger(HttpTrigger):
         """
         from airflow.utils.state import State
 
-        # hook = self._get_async_hook()
         hook = HttpHookAsync(
             method=self.method,
             http_conn_id=self.http_conn_id,
