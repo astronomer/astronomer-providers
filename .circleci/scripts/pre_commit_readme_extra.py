@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Pre-commit hook to verify that all extras are documented in README.rst"""
+
 import configparser
 import re
 from pathlib import Path

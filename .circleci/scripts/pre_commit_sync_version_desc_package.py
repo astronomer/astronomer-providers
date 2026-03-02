@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Pre-commit hook to sync the "version" & "description" in setup.cfg and astronomer/providers/package.py."""
+
 import configparser
 import re
 from pathlib import Path

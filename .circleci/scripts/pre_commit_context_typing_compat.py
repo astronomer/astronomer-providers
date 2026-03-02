@@ -4,6 +4,7 @@ Pre-commit hook to verify ``airflow.utils.context.Context`` is not imported in p
 
 # TODO: This pre-commit hook can be removed once the repo has a minimum Apache Airflow requirement of 2.3.3+.
 """
+
 from __future__ import annotations
 
 import os

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Pre-commit hook to sync the "version" in setup.cfg and version in docs/conf.py."""
+
 import configparser
 import re
 from pathlib import Path

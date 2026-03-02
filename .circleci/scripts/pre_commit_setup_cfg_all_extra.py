@@ -3,6 +3,7 @@
 Pre-commit hook to sync an "all" extra in setup.cfg.
 It will contain all the dependencies apart from tests and mypy.
 """
+
 import configparser
 from pathlib import Path
 
