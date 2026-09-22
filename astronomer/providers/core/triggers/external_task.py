@@ -1,9 +1,12 @@
 import asyncio
+import inspect
 from collections.abc import AsyncIterator
+from contextlib import AsyncExitStack
 from typing import Any
 
+import aiohttp
 from airflow.exceptions import AirflowException
-from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.http.hooks.http import HttpAsyncHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 
@@ -61,16 +64,24 @@ class ExternalDeploymentTaskTrigger(BaseTrigger):
         """
         from airflow.utils.state import State
 
-        hook = HttpHook(method="GET", http_conn_id=self.http_conn_id)
+        hook = HttpAsyncHook(method="GET", http_conn_id=self.http_conn_id)
+        # `session` became a parameter of `HttpAsyncHook.run` in apache-airflow-providers-http 6.0.0.
+        # Managing our own session lets us safely read the response body once the hook returns it.
+        # On older provider versions the hook manages (and closes) its own session internally.
+        hook_accepts_session = "session" in inspect.signature(hook.run).parameters
         while True:
             try:
-                response = hook.run(
-                    endpoint=self.endpoint,
-                    data=self.data,
-                    headers=self.headers,
-                    extra_options=self.extra_options,
-                )
-                resp_json = response.json()
+                async with AsyncExitStack() as stack:
+                    run_kwargs: dict[str, Any] = {
+                        "endpoint": self.endpoint,
+                        "data": self.data,
+                        "headers": self.headers,
+                        "extra_options": self.extra_options,
+                    }
+                    if hook_accepts_session:
+                        run_kwargs["session"] = await stack.enter_async_context(aiohttp.ClientSession())
+                    response = await hook.run(**run_kwargs)
+                    resp_json = await response.json()
                 if resp_json["state"] in State.finished:
                     yield TriggerEvent(resp_json)
                     return

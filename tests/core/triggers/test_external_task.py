@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 from airflow import AirflowException
-from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.http.hooks.http import HttpAsyncHook
 from airflow.triggers.base import TriggerEvent
 
 from astronomer.providers.core.triggers.external_task import ExternalDeploymentTaskTrigger
@@ -35,11 +35,11 @@ class TestExternalDeploymentTaskTrigger:
         }
 
     @pytest.mark.asyncio
-    @mock.patch("airflow.providers.http.hooks.http.HttpHook.run")
+    @mock.patch("airflow.providers.http.hooks.http.HttpAsyncHook.run")
     async def test_deployment_task_run_trigger(self, mock_run):
         """Test ExternalDeploymentTaskTrigger is triggered and in running state."""
-        mock.Mock(HttpHook)
-        mock_run.return_value.json = mock.Mock(return_value={"state": "running"})
+        mock.Mock(HttpAsyncHook)
+        mock_run.return_value.json = mock.AsyncMock(return_value={"state": "running"})
         trigger = ExternalDeploymentTaskTrigger(
             endpoint=self.TEST_END_POINT,
             http_conn_id=self.CONN_ID,
@@ -54,10 +54,10 @@ class TestExternalDeploymentTaskTrigger:
         asyncio.get_event_loop().stop()
 
     @pytest.mark.asyncio
-    @mock.patch("airflow.providers.http.hooks.http.HttpHook.run")
+    @mock.patch("airflow.providers.http.hooks.http.HttpAsyncHook.run")
     async def test_deployment_task_exception_404(self, mock_run):
         """Test ExternalDeploymentTaskTrigger is triggered and in exception state."""
-        mock.Mock(HttpHook)
+        mock.Mock(HttpAsyncHook)
         mock_run.side_effect = AirflowException("404 test error")
         trigger = ExternalDeploymentTaskTrigger(
             endpoint=self.TEST_END_POINT,
@@ -73,10 +73,10 @@ class TestExternalDeploymentTaskTrigger:
         asyncio.get_event_loop().stop()
 
     @pytest.mark.asyncio
-    @mock.patch("airflow.providers.http.hooks.http.HttpHook.run")
+    @mock.patch("airflow.providers.http.hooks.http.HttpAsyncHook.run")
     async def test_deployment_task_exception(self, mock_run):
         """Test ExternalDeploymentTaskTrigger is triggered and in exception state."""
-        mock.Mock(HttpHook)
+        mock.Mock(HttpAsyncHook)
         mock_run.side_effect = AirflowException("Test exception")
         trigger = ExternalDeploymentTaskTrigger(
             endpoint=self.TEST_END_POINT,
@@ -89,11 +89,11 @@ class TestExternalDeploymentTaskTrigger:
         assert TriggerEvent({"state": "error", "message": "Test exception"}) == actual
 
     @pytest.mark.asyncio
-    @mock.patch("airflow.providers.http.hooks.http.HttpHook.run")
+    @mock.patch("airflow.providers.http.hooks.http.HttpAsyncHook.run")
     async def test_deployment_complete(self, mock_run):
         """Assert ExternalDeploymentTaskTrigger runs and complete the run in success state"""
-        mock.Mock(HttpHook)
-        mock_run.return_value.json = mock.Mock(return_value={"state": "success"})
+        mock.Mock(HttpAsyncHook)
+        mock_run.return_value.json = mock.AsyncMock(return_value={"state": "success"})
         trigger = ExternalDeploymentTaskTrigger(
             endpoint=self.TEST_END_POINT,
             http_conn_id=self.CONN_ID,
