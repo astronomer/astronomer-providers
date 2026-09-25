@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException

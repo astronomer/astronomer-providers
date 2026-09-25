@@ -98,7 +98,7 @@ class TraverseOperatorsSensors(SphinxDirective):
         for index, operator in enumerate(operators, start=1):
             class_def_link = operator[2].replace(".", "/") + "/index.html#" + operator[2] + "." + operator[0]
             operators_html += (
-                f"<tr>" f"<td>{index}</td>" f"<td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
+                f"<tr><td>{index}</td><td><span><a id={operator[0]}>{operator[0]}</a></span></td>"
             )
             if operator[1]:
                 operators_html += "<td style='text-align: center;'><b> Yes </b></td>"
@@ -119,18 +119,11 @@ class TraverseOperatorsSensors(SphinxDirective):
         operators_html += "</table> <br/>"
 
         sensors_html = (
-            "<h3>Sensors</h3>"
-            "<table>"
-            "<th>#</th>"
-            "<th>Sensor name</th>"
-            "<th>Is deprecated?</th>"
-            "<th>Import path</th>"
+            "<h3>Sensors</h3><table><th>#</th><th>Sensor name</th><th>Is deprecated?</th><th>Import path</th>"
         )
         for index, sensor in enumerate(sensors, start=1):
             class_def_link = sensor[2].replace(".", "/") + "/index.html#" + sensor[2] + "." + sensor[0]
-            sensors_html += (
-                f"<tr>" f"<td>{index}</td>" f"<td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
-            )
+            sensors_html += f"<tr><td>{index}</td><td><span><a id={sensor[0]}>{sensor[0]}</a></span></td>"
             if sensor[1]:
                 sensors_html += "<td style='text-align: center;'><b> Yes </b></td>"
                 sensors_html += f"<td><b>Old Path:</b>\n <span><pre><code class='python'>from {sensor[2]} import {sensor[0]}</code></pre></span>\n <b>New Path:</b> \n<span><pre><code class='python'>{sensor[3]}</code></pre></span></td>"

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from asgiref.sync import sync_to_async
@@ -81,7 +82,8 @@ class SnowflakeSensorTrigger(BaseTrigger):
             hook = get_db_hook(self._conn_id)
             while True:
                 query_ids = await sync_to_async(hook.run)(
-                    self._sql, parameters=self._parameters  # type: ignore[arg-type]
+                    self._sql,
+                    parameters=self._parameters,  # type: ignore[arg-type]
                 )
                 run_state = await hook.get_query_status(query_ids, 5)
                 if run_state:

@@ -1,7 +1,6 @@
 """This module contains the Apache HiveCli hook async."""
 
 import asyncio
-from typing import Tuple
 
 from airflow.configuration import conf
 from airflow.hooks.base import BaseHook
@@ -64,7 +63,7 @@ class HiveCliHookAsync(BaseHook):
         return "success"
 
     @staticmethod
-    def parse_partition_name(partition: str) -> Tuple[str, str, str]:
+    def parse_partition_name(partition: str) -> tuple[str, str, str]:
         """Parse partition string into schema, table, and partition."""
         first_split = partition.split(".", 1)
         if len(first_split) == 1:

@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from airflow import DAG
 from airflow.hooks.base import BaseHook
@@ -28,7 +28,7 @@ default_args = {
 }
 
 
-def astro_access_token() -> Dict[str, Any]:
+def astro_access_token() -> dict[str, Any]:
     """Get the Headers with access token by making post request with client_id and client_secret"""
     conn = BaseHook.get_connection(DEPLOYMENT_CONN_ID)
     return {

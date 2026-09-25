@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union
+from collections.abc import AsyncIterator
+from typing import Any
 
 from airflow import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
@@ -25,9 +26,9 @@ class ExternalDeploymentTaskTrigger(BaseTrigger):
         endpoint: str,
         http_conn_id: str = "http_default",
         method: str = "GET",
-        data: Optional[Union[Dict[str, Any], str]] = None,
-        headers: Optional[Dict[str, Any]] = None,
-        extra_options: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | str | None = None,
+        headers: dict[str, Any] | None = None,
+        extra_options: dict[str, Any] | None = None,
         poke_interval: float = 5.0,
     ):
         super().__init__()
@@ -39,7 +40,7 @@ class ExternalDeploymentTaskTrigger(BaseTrigger):
         self.http_conn_id = http_conn_id
         self.poke_interval = poke_interval
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes ExternalDeploymentTaskTrigger arguments and classpath."""
         return (
             "astronomer.providers.core.triggers.external_task.ExternalDeploymentTaskTrigger",

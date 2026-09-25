@@ -8,7 +8,6 @@ from astronomer.providers.core.triggers.astro import AstroDeploymentTrigger
 
 
 class TestExternalDeploymentSensor:
-
     @pytest.mark.parametrize(
         "get_dag_runs_response",
         [
@@ -58,9 +57,9 @@ class TestExternalDeploymentSensor:
         else:
             with pytest.raises(TaskDeferred) as exc:
                 sensor.execute(context)
-            assert isinstance(
-                exc.value.trigger, AstroDeploymentTrigger
-            ), "Trigger is not a AstroDeploymentTrigger"
+            assert isinstance(exc.value.trigger, AstroDeploymentTrigger), (
+                "Trigger is not a AstroDeploymentTrigger"
+            )
 
     @pytest.mark.parametrize(
         "event,soft_fail",

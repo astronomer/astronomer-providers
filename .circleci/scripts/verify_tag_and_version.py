@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify the version of the Package with the version in Git tag."""
+
 import configparser
 import os
 from pathlib import Path

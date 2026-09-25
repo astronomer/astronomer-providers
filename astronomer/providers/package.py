@@ -1,7 +1,7 @@
-from typing import Any, Dict
+from typing import Any
 
 
-def get_provider_info() -> Dict[str, Any]:
+def get_provider_info() -> dict[str, Any]:
     """Return provider metadata to Airflow"""
     return {
         # Required.

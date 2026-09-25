@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import Any
 
 from airflow import DAG, settings
 from airflow.exceptions import AirflowException
@@ -43,7 +43,7 @@ JOB_FLOW_ROLE = os.getenv("EMR_JOB_FLOW_ROLE", "EMR_EC2_DefaultRole")
 SERVICE_ROLE = os.getenv("EMR_SERVICE_ROLE", "EMR_DefaultRole")
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 
-COMMAND_TO_CREATE_TABLE_DATA_FILE: List[str] = [
+COMMAND_TO_CREATE_TABLE_DATA_FILE: list[str] = [
     "curl https://raw.githubusercontent.com/astronomer/astronomer-providers/\
 main/astronomer/providers/apache/hive/example_dags/zipcodes.csv \
  >> zipcodes.csv",
