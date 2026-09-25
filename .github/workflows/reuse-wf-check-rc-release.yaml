@@ -62,7 +62,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout apache-airflow
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: "apache/airflow"
 
@@ -83,7 +83,7 @@ jobs:
           echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
 
       - name: Checkout current repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
 
       - name: Parse the latest GitHub pull requests for checking existing RC provider testing pull request
@@ -143,7 +143,7 @@ jobs:
       )
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.base_git_rev }}
           token: ${{ secrets.BOT_ACCESS_TOKEN }}

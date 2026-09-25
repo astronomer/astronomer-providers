@@ -61,7 +61,7 @@ jobs:
           echo "${{ secrets.deployment_id }} is in HEALTHY state now"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.git_rev }}
 
