@@ -376,14 +376,10 @@ All tests are inside ``./tests`` directory.
 
 .. code-block:: bash
 
-   pytest tests/google/cloud/operators/test_bigquery.py
+   pytest tests/snowflake/sensors/test_snowflake.py
     ============================= test session starts ==============================
-    platform linux -- Python 3.9.10, pytest-7.0.1, pluggy-1.0.0
-    rootdir: /home/circleci/project, configfile: setup.cfg, testpaths: tests
-    plugins: anyio-3.5.0, asyncio-0.18.1
-    asyncio: mode=legacy
-    collected 6 items
+    collected 16 items
 
-    tests/google/cloud/operators/test_bigquery.py ......
+    tests/snowflake/sensors/test_snowflake.py ................
 
-   ======================================== 6 passed in 4.88s ========================================
+   ======================================== 16 passed in 1.52s ========================================

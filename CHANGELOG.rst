@@ -104,20 +104,36 @@ Breaking changes
 * Remove the OpenLineage extractors (``RedshiftAsyncExtractor``, ``BigQueryAsyncExtractor`` and
   ``SnowflakeAsyncExtractor``). ``openlineage-airflow`` is discontinued; the upstream providers emit lineage through
   ``apache-airflow-providers-openlineage``.
-* Remove the ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``microsoft.azure``, ``sftp`` and
-  ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies, ``aiobotocore`` from the ``amazon`` extra and
-  ``gcloud-aio-storage`` and ``gcloud-aio-bigquery`` from the ``google`` extra. ``paramiko``, previously pulled in
-  by ``apache.livy``, moves to the ``apache.hive`` extra because the Hive example DAG uses it.
+* Remove the ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``google``, ``microsoft.azure``,
+  ``sftp`` and ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies and ``aiobotocore`` from the
+  ``amazon`` extra. ``paramiko``, previously pulled in by ``apache.livy``, moves to the ``apache.hive`` extra because
+  the Hive example DAG uses it.
 * ``ExternalDeploymentTaskTrigger`` now subclasses ``BaseTrigger`` instead of the removed ``HttpTrigger``. Its
   constructor arguments and serialized form are unchanged.
 * ``RedshiftDataHook`` no longer emits a ``DeprecationWarning``; ``RedshiftSQLOperatorAsync`` still uses it.
+* Remove the ``S3XComBackend`` and ``GCSXComBackend`` custom XCom backends. Use
+  ``airflow.providers.common.io.xcom.backend.XComObjectStorageBackend`` from
+  ``apache-airflow-providers-common-io>=1.3.0`` (Airflow 2.8+) instead, which stores XComs in any object store
+  Airflow supports. Pandas DataFrames and datetimes serialize through Airflow's own serializers. A configuration
+  close to the removed S3 backend is below; the ``COMPRESSION`` line matches
+  ``XCOM_BACKEND_UPLOAD_CONTENT_AS_GZIP=True`` and is optional:
+
+  .. code-block:: bash
+
+      AIRFLOW__CORE__XCOM_BACKEND=airflow.providers.common.io.xcom.backend.XComObjectStorageBackend
+      AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH=s3://aws_default@my-bucket/xcom
+      AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_THRESHOLD=0
+      AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_COMPRESSION=gzip
+
+  XComs written by the removed backends are not readable by the new one, so tasks that pull an XCom from a run
+  made before the switch fail.
 * Before upgrading, let deferred tasks that use a removed operator or sensor finish, or clear them. Their trigger
   rows reference classes such as ``HttpTrigger`` or ``SnowflakeTrigger`` that no longer exist, and the triggerer
   cannot load them after the upgrade.
 
 The operators and sensors that remain are ``RedshiftSQLOperatorAsync``, ``HivePartitionSensorAsync``,
 ``NamedHivePartitionSensorAsync``, ``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and
-``SnowflakeSensorAsync``, plus the S3 and GCS XCom backends.
+``SnowflakeSensorAsync``.
 
 Misc
 """"

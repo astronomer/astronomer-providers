@@ -22,10 +22,6 @@ x-airflow-common:
     ASTRONOMER_ENVIRONMENT: local
     # AWS_NUKE_DAG_SCHEDULE: "28 6 * * *"
 
-    # For enabling custom XCOM backend, uncomment the below variables and ensure that the given bucket exists.
-    # AIRFLOW__CORE__XCOM_BACKEND: astronomer.providers.amazon.aws.xcom_backends.s3.S3XComBackend
-    # XCOM_BACKEND_BUCKET_NAME: "test-xcom-bucket"
-
   volumes:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
