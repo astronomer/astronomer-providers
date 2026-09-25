@@ -1,6 +1,130 @@
 Changelog
 =========
 
+2.0.0 (unreleased)
+------------------
+
+Breaking changes
+""""""""""""""""
+
+* Remove the operators and sensors deprecated in 1.19.0, along with the async hooks and triggers that backed them.
+  Use the upstream Apache Airflow provider class listed next to each one and pass ``deferrable=True``.
+
+* Amazon
+
+  * ``astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.batch.BatchOperator``
+  * ``astronomer.providers.amazon.aws.operators.emr.EmrContainerOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.emr.EmrContainerOperator``
+  * ``astronomer.providers.amazon.aws.operators.redshift_cluster.RedshiftDeleteClusterOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftDeleteClusterOperator``
+  * ``astronomer.providers.amazon.aws.operators.redshift_cluster.RedshiftPauseClusterOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftPauseClusterOperator``
+  * ``astronomer.providers.amazon.aws.operators.redshift_cluster.RedshiftResumeClusterOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.redshift_cluster.RedshiftResumeClusterOperator``
+  * ``astronomer.providers.amazon.aws.operators.redshift_data.RedshiftDataOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.redshift_data.RedshiftDataOperator``
+  * ``astronomer.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.sagemaker.SageMakerProcessingOperator``
+  * ``astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTrainingOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.sagemaker.SageMakerTrainingOperator``
+  * ``astronomer.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperatorAsync`` -> ``airflow.providers.amazon.aws.operators.sagemaker.SageMakerTransformOperator``
+  * ``astronomer.providers.amazon.aws.sensors.batch.BatchSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.batch.BatchSensor``
+  * ``astronomer.providers.amazon.aws.sensors.emr.EmrContainerSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.emr.EmrContainerSensor``
+  * ``astronomer.providers.amazon.aws.sensors.emr.EmrJobFlowSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.emr.EmrJobFlowSensor``
+  * ``astronomer.providers.amazon.aws.sensors.emr.EmrStepSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.emr.EmrStepSensor``
+  * ``astronomer.providers.amazon.aws.sensors.redshift_cluster.RedshiftClusterSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.redshift_cluster.RedshiftClusterSensor``
+  * ``astronomer.providers.amazon.aws.sensors.s3.S3KeySensorAsync`` -> ``airflow.providers.amazon.aws.sensors.s3.S3KeySensor``
+  * ``astronomer.providers.amazon.aws.sensors.s3.S3KeySizeSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.s3.S3KeySensor`` (move the size check into ``check_fn``)
+  * ``astronomer.providers.amazon.aws.sensors.s3.S3KeysUnchangedSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.s3.S3KeysUnchangedSensor``
+  * ``astronomer.providers.amazon.aws.sensors.s3.S3PrefixSensorAsync`` -> ``airflow.providers.amazon.aws.sensors.s3.S3KeySensor`` (pass ``prefix*`` as ``bucket_key`` with ``wildcard_match=True``)
+
+* Apache Livy
+
+  * ``astronomer.providers.apache.livy.operators.livy.LivyOperatorAsync`` -> ``airflow.providers.apache.livy.operators.livy.LivyOperator``
+
+* CNCF Kubernetes
+
+  * ``astronomer.providers.cncf.kubernetes.operators.kubernetes_pod.KubernetesPodOperatorAsync`` -> ``airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator``
+
+* Core
+
+  * ``astronomer.providers.core.sensors.external_task.ExternalTaskSensorAsync`` -> ``airflow.sensors.external_task.ExternalTaskSensor``
+  * ``astronomer.providers.core.sensors.filesystem.FileSensorAsync`` -> ``airflow.sensors.filesystem.FileSensor``
+
+* Databricks
+
+  * ``astronomer.providers.databricks.operators.databricks.DatabricksRunNowOperatorAsync`` -> ``airflow.providers.databricks.operators.databricks.DatabricksRunNowOperator``
+  * ``astronomer.providers.databricks.operators.databricks.DatabricksSubmitRunOperatorAsync`` -> ``airflow.providers.databricks.operators.databricks.DatabricksSubmitRunOperator``
+
+* dbt Cloud
+
+  * ``astronomer.providers.dbt.cloud.operators.dbt.DbtCloudRunJobOperatorAsync`` -> ``airflow.providers.dbt.cloud.operators.dbt.DbtCloudRunJobOperator``
+  * ``astronomer.providers.dbt.cloud.sensors.dbt.DbtCloudJobRunSensorAsync`` -> ``airflow.providers.dbt.cloud.sensors.dbt.DbtCloudJobRunSensor``
+
+* Google
+
+  * ``astronomer.providers.google.cloud.operators.bigquery.BigQueryCheckOperatorAsync`` -> ``airflow.providers.google.cloud.operators.bigquery.BigQueryCheckOperator``
+  * ``astronomer.providers.google.cloud.operators.bigquery.BigQueryGetDataOperatorAsync`` -> ``airflow.providers.google.cloud.operators.bigquery.BigQueryGetDataOperator``
+  * ``astronomer.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperatorAsync`` -> ``airflow.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperator``
+  * ``astronomer.providers.google.cloud.operators.bigquery.BigQueryIntervalCheckOperatorAsync`` -> ``airflow.providers.google.cloud.operators.bigquery.BigQueryIntervalCheckOperator``
+  * ``astronomer.providers.google.cloud.operators.bigquery.BigQueryValueCheckOperatorAsync`` -> ``airflow.providers.google.cloud.operators.bigquery.BigQueryValueCheckOperator``
+  * ``astronomer.providers.google.cloud.operators.dataproc.DataprocCreateClusterOperatorAsync`` -> ``airflow.providers.google.cloud.operators.dataproc.DataprocCreateClusterOperator``
+  * ``astronomer.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperatorAsync`` -> ``airflow.providers.google.cloud.operators.dataproc.DataprocDeleteClusterOperator``
+  * ``astronomer.providers.google.cloud.operators.dataproc.DataprocSubmitJobOperatorAsync`` -> ``airflow.providers.google.cloud.operators.dataproc.DataprocSubmitJobOperator``
+  * ``astronomer.providers.google.cloud.operators.dataproc.DataprocUpdateClusterOperatorAsync`` -> ``airflow.providers.google.cloud.operators.dataproc.DataprocUpdateClusterOperator``
+  * ``astronomer.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperatorAsync`` -> ``airflow.providers.google.cloud.operators.kubernetes_engine.GKEStartPodOperator``
+  * ``astronomer.providers.google.cloud.sensors.bigquery.BigQueryTableExistenceSensorAsync`` -> ``airflow.providers.google.cloud.sensors.bigquery.BigQueryTableExistenceSensor``
+  * ``astronomer.providers.google.cloud.sensors.gcs.GCSObjectExistenceSensorAsync`` -> ``airflow.providers.google.cloud.sensors.gcs.GCSObjectExistenceSensor``
+  * ``astronomer.providers.google.cloud.sensors.gcs.GCSObjectUpdateSensorAsync`` -> ``airflow.providers.google.cloud.sensors.gcs.GCSObjectUpdateSensor``
+  * ``astronomer.providers.google.cloud.sensors.gcs.GCSObjectsWithPrefixExistenceSensorAsync`` -> ``airflow.providers.google.cloud.sensors.gcs.GCSObjectsWithPrefixExistenceSensor``
+  * ``astronomer.providers.google.cloud.sensors.gcs.GCSUploadSessionCompleteSensorAsync`` -> ``airflow.providers.google.cloud.sensors.gcs.GCSUploadSessionCompleteSensor``
+
+* HTTP
+
+  * ``astronomer.providers.http.sensors.http.HttpSensorAsync`` -> ``airflow.providers.http.sensors.http.HttpSensor``
+
+* Microsoft Azure
+
+  * ``astronomer.providers.microsoft.azure.operators.data_factory.AzureDataFactoryRunPipelineOperatorAsync`` -> ``airflow.providers.microsoft.azure.operators.data_factory.AzureDataFactoryRunPipelineOperator``
+  * ``astronomer.providers.microsoft.azure.sensors.data_factory.AzureDataFactoryPipelineRunStatusSensorAsync`` -> ``airflow.providers.microsoft.azure.sensors.data_factory.AzureDataFactoryPipelineRunStatusSensor``
+  * ``astronomer.providers.microsoft.azure.sensors.wasb.WasbBlobSensorAsync`` -> ``airflow.providers.microsoft.azure.sensors.wasb.WasbBlobSensor``
+  * ``astronomer.providers.microsoft.azure.sensors.wasb.WasbPrefixSensorAsync`` -> ``airflow.providers.microsoft.azure.sensors.wasb.WasbPrefixSensor``
+
+* SFTP
+
+  * ``astronomer.providers.sftp.sensors.sftp.SFTPSensorAsync`` -> ``airflow.providers.sftp.sensors.sftp.SFTPSensor``
+
+* Snowflake
+
+  * ``astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperatorAsync`` -> ``airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator``
+
+* Remove ``SnowflakeOperatorAsync``. Its base class, ``SnowflakeOperator``, was removed from
+  ``apache-airflow-providers-snowflake`` 6.0.0. Use
+  ``airflow.providers.common.sql.operators.sql.SQLExecuteQueryOperator``, or
+  ``airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator`` with ``deferrable=True``.
+* Remove the async hooks and triggers that only the removed operators and sensors used, including
+  ``AwsBaseHookAsync``, ``AwsLogsHookAsync``, ``EmrContainerHookAsync``, ``EmrStepSensorHookAsync``,
+  ``EmrContainerBaseTrigger``, ``BigQueryTableHookAsync``, ``GoogleBaseHookAsync``, ``HttpHookAsync``,
+  ``HttpTrigger``, ``TaskStateTrigger``, ``DagStateTrigger``, ``SnowflakeTrigger``, ``SnowflakeSqlApiTrigger``,
+  ``JWTGenerator``, ``PodNotFoundException``, ``PodLaunchTimeoutException`` and the
+  ``astronomer.providers.google.cloud.gke_utils`` module.
+* Remove the OpenLineage extractors (``RedshiftAsyncExtractor``, ``BigQueryAsyncExtractor`` and
+  ``SnowflakeAsyncExtractor``). ``openlineage-airflow`` is discontinued; the upstream providers emit lineage through
+  ``apache-airflow-providers-openlineage``.
+* Remove the ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``microsoft.azure``, ``sftp`` and
+  ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies, ``aiobotocore`` from the ``amazon`` extra and
+  ``gcloud-aio-storage`` and ``gcloud-aio-bigquery`` from the ``google`` extra. ``paramiko``, previously pulled in
+  by ``apache.livy``, moves to the ``apache.hive`` extra because the Hive example DAG uses it.
+* ``ExternalDeploymentTaskTrigger`` now subclasses ``BaseTrigger`` instead of the removed ``HttpTrigger``. Its
+  constructor arguments and serialized form are unchanged.
+* ``RedshiftDataHook`` no longer emits a ``DeprecationWarning``; ``RedshiftSQLOperatorAsync`` still uses it.
+* Before upgrading, let deferred tasks that use a removed operator or sensor finish, or clear them. Their trigger
+  rows reference classes such as ``HttpTrigger`` or ``SnowflakeTrigger`` that no longer exist, and the triggerer
+  cannot load them after the upgrade.
+
+The operators and sensors that remain are ``RedshiftSQLOperatorAsync``, ``HivePartitionSensorAsync``,
+``NamedHivePartitionSensorAsync``, ``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and
+``SnowflakeSensorAsync``, plus the S3 and GCS XCom backends.
+
+Misc
+""""
+
+* Drop support for Python 3.8 and 3.9.
+
+
 1.19.4 (2024-08-23)
 -------------------
 

@@ -23,17 +23,6 @@ from airflow.utils.timezone import datetime
 
 TEST_DAG_ID = "unit_test_dag"
 
-# These cover deprecated code that current upstream providers have broken: the kubernetes_pod shim
-# is gone in cncf-kubernetes 10, SnowflakeOperator in snowflake 6, and databricks 7 dropped the
-# "api/" prefix from the endpoints DatabricksHookAsync builds URLs from. They are deleted along with
-# the deprecated classes, so skip collecting them rather than patching dead code.
-collect_ignore = [
-    "cncf/kubernetes/operators/test_kubernetes_pod.py",
-    "databricks/hooks/test_databricks.py",
-    "snowflake/extractors/test_snowflake.py",
-    "snowflake/operators/test_snowflake.py",
-]
-
 
 @pytest.fixture(scope="session", autouse=True)
 def airflow_db():

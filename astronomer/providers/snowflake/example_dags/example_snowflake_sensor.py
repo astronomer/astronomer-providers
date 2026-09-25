@@ -4,9 +4,9 @@ import os
 from datetime import timedelta
 
 from airflow import DAG
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.utils.timezone import datetime
 
-from astronomer.providers.snowflake.operators.snowflake import SnowflakeOperatorAsync
 from astronomer.providers.snowflake.sensors.snowflake import SnowflakeSensorAsync
 
 SNOWFLAKE_CONN_ID = os.getenv("ASTRO_SNOWFLAKE_CONN_ID", "snowflake_default")
@@ -40,13 +40,15 @@ with DAG(
     catchup=False,
 ) as dag:
     # Creating a table and inserting data
-    snowflake_op_sql_str = SnowflakeOperatorAsync(
+    snowflake_op_sql_str = SQLExecuteQueryOperator(
         task_id="snowflake_op_sql_str",
+        conn_id=SNOWFLAKE_CONN_ID,
         sql=CREATE_TABLE_SQL_STRING,
     )
 
-    snowflake_op_with_params = SnowflakeOperatorAsync(
+    snowflake_op_with_params = SQLExecuteQueryOperator(
         task_id="snowflake_op_with_params",
+        conn_id=SNOWFLAKE_CONN_ID,
         sql=SQL_INSERT_STATEMENT,
         parameters={"id": 56},
     )
