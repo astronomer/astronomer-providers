@@ -5,12 +5,12 @@ from typing import Any, Callable, Sequence
 
 from airflow.exceptions import AirflowException
 from airflow.providers.common.sql.sensors.sql import SqlSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.snowflake.triggers.snowflake_trigger import (
     SnowflakeSensorTrigger,
 )
 from astronomer.providers.utils.sensor_util import poke, raise_error_or_skip_exception
-from astronomer.providers.utils.typing_compat import Context
 
 
 class SnowflakeSensorAsync(SqlSensor):

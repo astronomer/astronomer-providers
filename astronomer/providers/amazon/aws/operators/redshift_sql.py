@@ -1,6 +1,7 @@
 from typing import Any, cast
 
 from airflow.exceptions import AirflowException
+from airflow.utils.context import Context
 
 try:
     from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
@@ -14,7 +15,6 @@ except ImportError:  # pragma: no cover
 
 from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 from astronomer.providers.amazon.aws.triggers.redshift_sql import RedshiftSQLTrigger
-from astronomer.providers.utils.typing_compat import Context
 
 
 class RedshiftSQLOperatorAsync(RedshiftSQLOperator):

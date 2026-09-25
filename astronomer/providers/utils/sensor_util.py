@@ -6,7 +6,7 @@ from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.sensors.base import BaseSensorOperator
 
 if TYPE_CHECKING:  # pragma: no cover
-    from astronomer.providers.utils.typing_compat import Context
+    from airflow.utils.context import Context
 
 
 def poke(cls: BaseSensorOperator, context: Context) -> bool:

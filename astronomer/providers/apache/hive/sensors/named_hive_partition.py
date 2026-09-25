@@ -5,12 +5,12 @@ from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.named_hive_partition import (
     NamedHivePartitionSensor,
 )
+from airflow.utils.context import Context
 
 from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.named_hive_partition import (
     NamedHivePartitionTrigger,
 )
-from astronomer.providers.utils.typing_compat import Context
 
 
 class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
