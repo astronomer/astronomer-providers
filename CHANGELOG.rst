@@ -137,6 +137,14 @@ The operators and sensors that remain are ``RedshiftSQLOperatorAsync``, ``HivePa
 ``NamedHivePartitionSensorAsync``, ``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and
 ``SnowflakeSensorAsync``.
 
+Features
+""""""""
+
+* ``ExternalDeploymentSensor`` and ``AstroHook`` work against Airflow 3 deployments. The hook probes the
+  deployment for the Airflow 3 REST API (``/api/v2``) and falls back to ``/api/v1`` when it gets a 404. On
+  ``/api/v2`` it picks the latest DAG run by ``run_after``, since Airflow 3 runs can have no logical date. With no
+  host on the connection, it reads ``AIRFLOW__API__BASE_URL`` before ``AIRFLOW__WEBSERVER__BASE_URL``.
+
 Misc
 """"
 
