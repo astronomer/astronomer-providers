@@ -1,4 +1,4 @@
-FROM cimg/python:3.9
+FROM cimg/python:3.12
 
 # Copy this first so it's the only file that will trigger rebuild of the pip dependencies layer
 COPY .circleci/requirements.txt ci/requirements.txt

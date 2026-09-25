@@ -13,7 +13,7 @@ class TestBatchOperatorAsync:
             max_retries=2,
             status_retries=3,
             parameters=None,
-            overrides={},
+            container_overrides={},
             array_properties=None,
             aws_conn_id="aws_default",
             region_name="eu-west-1",
