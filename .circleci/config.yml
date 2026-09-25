@@ -2,7 +2,7 @@
 version: 2.1
 
 orbs:
-  codecov: codecov/codecov@3.2.2
+  codecov: codecov/codecov@6.1.0
 
 # Run jobs only for version-number tagged builds & All Branches
 all_branches_and_version_tag: &all_branches_and_version_tag
@@ -219,7 +219,7 @@ jobs:
             TEST_FILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
             pytest --junit-xml=test-report/report.xml  $TEST_FILES
       - codecov/upload:
-          file: coverage.xml
+          files: coverage.xml
       - store_test_results:
           path: test-report
       - save_cache:
