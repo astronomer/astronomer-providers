@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from airflow.exceptions import AirflowException, AirflowSkipException
-from airflow.sensors.base import BaseSensorOperator
+from airflow.exceptions import AirflowException
+
+from astronomer.providers.utils.compat import AirflowSkipException, BaseSensorOperator
 
 if TYPE_CHECKING:  # pragma: no cover
-    from airflow.utils.context import Context
+    from astronomer.providers.utils.compat import Context
 
 
 def poke(cls: BaseSensorOperator, context: Context) -> bool:

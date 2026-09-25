@@ -7,7 +7,8 @@ from urllib.parse import quote
 import requests
 from aiohttp import ClientSession
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
+
+from astronomer.providers.utils.compat import BaseHook
 
 
 class AstroHook(BaseHook):

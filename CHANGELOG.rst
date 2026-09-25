@@ -141,6 +141,9 @@ Misc
 """"
 
 * Drop support for Python 3.8 and 3.9.
+* On Airflow 3, import ``BaseHook``, ``BaseSensorOperator``, ``Context`` and the other moved classes from
+  ``airflow.sdk``. Importing the package's hooks, operators, sensors and triggers no longer raises
+  ``DeprecatedImportWarning``.
 
 
 1.19.4 (2024-08-23)
