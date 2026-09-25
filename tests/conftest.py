@@ -1,7 +1,6 @@
 import os
 
 import pytest
-from aioresponses import aioresponses
 
 # These have to come before any Airflow imports
 os.environ["AIRFLOW__CORE__UNIT_TEST_MODE"] = "True"
@@ -15,11 +14,15 @@ from airflow.models import (
     TaskReschedule,
     Trigger,
     Variable,
-    XCom,
 )
 from airflow.utils import db
 from airflow.utils.session import create_session
 from airflow.utils.timezone import datetime
+
+try:
+    from airflow.models.xcom import XComModel as XCom
+except ImportError:  # Airflow 2
+    from airflow.models import XCom
 
 TEST_DAG_ID = "unit_test_dag"
 
@@ -63,18 +66,6 @@ def dag():
     """
     dag = DAG(TEST_DAG_ID, start_date=datetime(2022, 1, 1))
     yield dag
-
-
-@pytest.fixture
-def aioresponse():
-    """
-    Creates an mock async API response.
-    This comes from a mock library specific to the aiohttp package:
-    https://github.com/pnuckowski/aioresponses
-
-    """
-    with aioresponses() as async_response:
-        yield async_response
 
 
 @pytest.fixture
