@@ -40,7 +40,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     async def get_client_async(self) -> AioBaseClient:
         """Create an Async Client object to communicate with AWS services."""
         # Fetch the Airflow connection object
-        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)  # type: ignore[arg-type]
+        connection_object = await sync_to_async(self.get_connection)(self.aws_conn_id)
 
         conn_config = AwsConnectionWrapper(
             conn=connection_object,
@@ -92,7 +92,7 @@ class AwsBaseHookAsync(AwsBaseHook):
     def _refresh_credentials(self) -> dict[str, str]:
         """Refresh the credentials using the STS client."""
         conn_config = AwsConnectionWrapper(
-            conn=self.get_connection(self.aws_conn_id),  # type: ignore[arg-type]
+            conn=self.get_connection(self.aws_conn_id),
             region_name=self.region_name,
             botocore_config=self.config,
             verify=self.verify,

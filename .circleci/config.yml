@@ -2,7 +2,7 @@
 version: 2.1
 
 orbs:
-  codecov: codecov/codecov@3.2.2
+  codecov: codecov/codecov@6.1.0
 
 # Run jobs only for version-number tagged builds & All Branches
 all_branches_and_version_tag: &all_branches_and_version_tag
@@ -37,13 +37,8 @@ workflows:
           name: constraints-<< matrix.python_version >>-<< matrix.airflow_version >>
           matrix:
             parameters:
-              python_version: ["3.8", "3.9", "3.10", "3.11"]
-              airflow_version: ["2.6.3", "2.7.3", "2.8.1"]
-          <<: *main_and_release_branches
-      - generate-constraints:
-          name: constraints-3.12-2.9.0
-          python_version: "3.12"
-          airflow_version: "2.9.0"
+              python_version: ["3.10", "3.11", "3.12"]
+              airflow_version: ["2.9.3", "2.10.5", "2.11.2"]
           <<: *main_and_release_branches
       - build-docs:
           <<: *all_branches_and_version_tag
@@ -51,7 +46,7 @@ workflows:
           name: test-python<< matrix.python_version >>
           matrix:
             parameters:
-              python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+              python_version: ["3.10", "3.11", "3.12"]
           <<: *all_branches_and_version_tag
           requires:
             - markdown-link-check
@@ -71,6 +66,28 @@ workflows:
           requires:
             - Needs-Approval
           <<: *version_tag_only
+
+commands:
+  install-dependencies:
+    parameters:
+      extras:
+        type: string
+      airflow_version:
+        type: string
+        default: "2.11.2"
+    steps:
+      - run:
+          name: Install Dependencies
+          command: |
+            PYTHON_VERSION=$(python -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
+            # Without Airflow's constraints pip backtracks for longer than CircleCI's no-output timeout.
+            # openlineage-airflow is discontinued and pins an older openlineage-python than the
+            # constraints do, so the openlineage lines are dropped.
+            CONSTRAINTS="constraints-<<parameters.airflow_version>>/constraints-${PYTHON_VERSION}.txt"
+            curl -sSfL "https://raw.githubusercontent.com/apache/airflow/${CONSTRAINTS}" \
+              | grep -v '^openlineage' > /tmp/constraints.txt
+            pip install -U -e ".[<<parameters.extras>>]" "apache-airflow==<<parameters.airflow_version>>" \
+              -c /tmp/constraints.txt
 
 executors:
   docker-executor:
@@ -123,9 +140,8 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-      - run:
-          name: Install Dependencies
-          command: pip install -U -e .[all,mypy]
+      - install-dependencies:
+          extras: "all,mypy"
       - run:
           name: Run Mypy
           command: |
@@ -156,9 +172,8 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-      - run:
-          name: Install Dependencies
-          command: pip install -U -e .[docs]
+      - install-dependencies:
+          extras: "docs"
       - run:
           name: Run Sphinx
           command: |
@@ -194,9 +209,8 @@ jobs:
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get install libsasl2-dev
-      - run:
-          name: Install Dependencies
-          command: pip install -U -e .[all,tests]
+      - install-dependencies:
+          extras: "all,tests"
       - run: pip freeze
       - run:
           name: Run tests
@@ -205,7 +219,7 @@ jobs:
             TEST_FILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
             pytest --junit-xml=test-report/report.xml  $TEST_FILES
       - codecov/upload:
-          file: coverage.xml
+          files: coverage.xml
       - store_test_results:
           path: test-report
       - save_cache:
@@ -234,9 +248,9 @@ jobs:
             sudo apt-get install -y --no-install-recommends build-essential
             sudo apt-get update
             sudo apt-get install libsasl2-dev
-      - run:
-          name: Install Dependencies
-          command: pip install -U -e .[all,tests] apache-airflow==<<parameters.airflow_version>>
+      - install-dependencies:
+          extras: "all,tests"
+          airflow_version: "<<parameters.airflow_version>>"
       - run:
           name: Generate Constraints
           command: pip freeze
