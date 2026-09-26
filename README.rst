@@ -129,10 +129,6 @@ Extras
      - ``pip install 'astronomer-providers[apache.hive]'``
      - Apache Hive
 
-   * - ``google``
-     - ``pip install 'astronomer-providers[google]'``
-     - Google
-
    * - ``http``
      - ``pip install 'astronomer-providers[http]'``
      - Http
