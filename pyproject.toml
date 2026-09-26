@@ -40,26 +40,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-# Deprecated modules (and their example DAGs) that no longer type-check against current upstream
-# providers. They are removed with the rest of the deprecated surface, so don't fix them here.
-[[tool.mypy.overrides]]
-module = [
-    "astronomer.providers.amazon.aws.example_dags.example_emr_sensor",
-    "astronomer.providers.cncf.kubernetes.hooks.kubernetes",
-    "astronomer.providers.google.cloud.example_dags.example_bigquery_impersonation_chain",
-    "astronomer.providers.google.cloud.example_dags.example_bigquery_queries",
-    "astronomer.providers.google.cloud.example_dags.example_bigquery_sensors",
-    "astronomer.providers.google.cloud.gke_utils",
-    "astronomer.providers.google.cloud.hooks.dataproc",
-    "astronomer.providers.google.cloud.operators.kubernetes_engine",
-    "astronomer.providers.microsoft.azure.example_dags.example_adf_run_pipeline",
-    "astronomer.providers.microsoft.azure.example_dags.example_wasb_sensors",
-    "astronomer.providers.microsoft.azure.hooks.wasb",
-    "astronomer.providers.snowflake.hooks.snowflake_sql_api",
-    "astronomer.providers.snowflake.operators.snowflake",
-]
-ignore_errors = true
-
 [tool.pydocstyle]
 inherit = false
 add_ignore = "D100,D104,D105,D107,D205,D400,D401"
@@ -111,7 +91,7 @@ known-third-party = ["google", "gcloud"]
 skips = ["B113"]
 
 [tool.commitizen]
-version = "1.19.4"
+version = "2.0.0"
 version_files = [
     "docs/conf.py",
     "astronomer/providers/package.py",

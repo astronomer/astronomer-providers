@@ -25,16 +25,18 @@ Astronomer Providers
 
 
 .. warning::
-    The majority of operators and sensors within this repository have been deprecated and will not receive further updates.
-    Read more about the deprecation in the `Deprecation Notice` section below.
+    ``astronomer-providers`` 2.0.0 removed the operators and sensors that were deprecated in 1.19.0.
+    Read more in the `Deprecation Notice` section below.
 
 Deprecation Notice
 ------------------
 
-With the release ``1.19.0`` of the astronomer-providers package, most of the operators and sensors are deprecated and will
-no longer receive updates. We recommend migrating to the official Apache Airflow Providers for the latest features and support.
-For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Providers
-is as simple as changing the import path from
+With the release ``1.19.0`` of the astronomer-providers package, most of the operators and sensors were deprecated in
+favour of the deferrable operators and sensors in the official Apache Airflow Providers. Release ``2.0.0`` removed them.
+See the `CHANGELOG <https://github.com/astronomer/astronomer-providers/blob/main/CHANGELOG.rst>`_ for the list of
+removed classes and their replacements.
+
+Migrating to the official Apache Airflow Providers is as simple as changing the import path from
 
 .. code-block::
 
@@ -52,7 +54,7 @@ of the operator or sensor from the official Apache Airflow Providers.
 
 For example, to migrate from
 ``astronomer.providers.amazon.aws.operators.batch.BatchOperatorAsync`` to
-``airflow.providers.amazon.aws.operators.s3.BatchOperator``, simply change the import path and pass
+``airflow.providers.amazon.aws.operators.batch.BatchOperator``, change the import path and pass
 the deferrable argument:
 
 .. code-block:: python
@@ -97,11 +99,11 @@ This only installs dependencies for core provider. To install all dependencies, 
     pip install 'astronomer-providers[all]'
 
 To only install the dependencies for a specific provider, specify the integration name as extra argument, example
-to install Kubernetes provider dependencies, run:
+to install Snowflake provider dependencies, run:
 
 .. code-block:: bash
 
-    pip install 'astronomer-providers[cncf.kubernetes]'
+    pip install 'astronomer-providers[snowflake]'
 
 Extras
 ^^^^^^
@@ -127,22 +129,6 @@ Extras
      - ``pip install 'astronomer-providers[apache.hive]'``
      - Apache Hive
 
-   * - ``apache.livy``
-     - ``pip install 'astronomer-providers[apache.livy]'``
-     - Apache Livy
-
-   * - ``cncf.kubernetes``
-     - ``pip install 'astronomer-providers[cncf.kubernetes]'``
-     - Cncf Kubernetes
-
-   * - ``databricks``
-     - ``pip install 'astronomer-providers[databricks]'``
-     - Databricks
-
-   * - ``dbt.cloud``
-     - ``pip install 'astronomer-providers[dbt.cloud]'``
-     - Dbt Cloud
-
    * - ``google``
      - ``pip install 'astronomer-providers[google]'``
      - Google
@@ -150,18 +136,6 @@ Extras
    * - ``http``
      - ``pip install 'astronomer-providers[http]'``
      - Http
-
-   * - ``microsoft.azure``
-     - ``pip install 'astronomer-providers[microsoft.azure]'``
-     - Microsoft Azure
-
-   * - ``openlineage``
-     - ``pip install 'astronomer-providers[openlineage]'``
-     - Openlineage
-
-   * - ``sftp``
-     - ``pip install 'astronomer-providers[sftp]'``
-     - Sftp
 
    * - ``snowflake``
      - ``pip install 'astronomer-providers[snowflake]'``
@@ -177,18 +151,17 @@ if you want to import Async operators, you can import it as follows:
 
 .. code-block:: python
 
-    from astronomer.providers.amazon.aws.sensors.s3 import S3KeySensorAsync as S3KeySensor
+    from astronomer.providers.snowflake.sensors.snowflake import SnowflakeSensorAsync
 
-    waiting_for_s3_key = S3KeySensor(
-        task_id="waiting_for_s3_key",
-        bucket_key="sample_key.txt",
-        wildcard_match=False,
-        bucket_name="sample-bucket",
+    waiting_for_rows = SnowflakeSensorAsync(
+        task_id="waiting_for_rows",
+        snowflake_conn_id="snowflake_default",
+        sql="SELECT COUNT(*) FROM my_table",
     )
 
 **Example DAGs** for each provider is within the respective provider's folder. For example,
-the Kubernetes provider's DAGs are within the
-`astronomer/providers/cncf/kubernetes/example_dags <https://github.com/astronomer/astronomer-providers/tree/main/astronomer/providers/cncf/kubernetes/example_dags>`_
+the Snowflake provider's DAGs are within the
+`astronomer/providers/snowflake/example_dags <https://github.com/astronomer/astronomer-providers/tree/main/astronomer/providers/snowflake/example_dags>`_
 folder.
 
 Principle

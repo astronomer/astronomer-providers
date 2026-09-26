@@ -8,7 +8,7 @@ def get_provider_info() -> Dict[str, Any]:
         "package-name": "astronomer-providers",
         "name": "Astronomer Providers",
         "description": "Apache Airflow Providers containing Deferrable Operators & Sensors from Astronomer",
-        "versions": "1.19.4",
+        "versions": "2.0.0",
         # Optional.
         "connection-types": [
             {
