@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.providers.apache.hive.sensors.named_hive_partition import (
@@ -69,7 +68,7 @@ class NamedHivePartitionSensorAsync(NamedHivePartitionSensor):
             )
         self.log.info("Named hive partition found.")
 
-    def execute_complete(self, context: Context, event: Optional[Dict[str, str]] = None) -> None:
+    def execute_complete(self, context: Context, event: dict[str, str] | None = None) -> None:
         """
         Callback for when the trigger fires - returns immediately.
         Relies on trigger to throw an exception, otherwise it assumes execution was

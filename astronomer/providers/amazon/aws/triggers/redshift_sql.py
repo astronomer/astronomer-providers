@@ -1,4 +1,5 @@
-from typing import Any, AsyncIterator, Dict, List, Tuple
+from collections.abc import AsyncIterator
+from typing import Any
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -20,7 +21,7 @@ class RedshiftSQLTrigger(BaseTrigger):
         task_id: str,
         polling_period_seconds: float,
         aws_conn_id: str,
-        query_ids: List[str],
+        query_ids: list[str],
     ):
         super().__init__()
         self.task_id = task_id
@@ -28,7 +29,7 @@ class RedshiftSQLTrigger(BaseTrigger):
         self.aws_conn_id = aws_conn_id
         self.query_ids = query_ids
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes RedshiftSQLTrigger arguments and classpath."""
         return (
             "astronomer.providers.amazon.aws.triggers.redshift_sql.RedshiftSQLTrigger",

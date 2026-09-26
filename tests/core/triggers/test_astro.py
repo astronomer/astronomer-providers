@@ -8,7 +8,6 @@ from astronomer.providers.core.triggers.astro import AstroDeploymentTrigger
 
 
 class TestAstroDeploymentTrigger:
-
     def test_serialize(self):
         trigger = AstroDeploymentTrigger(
             external_dag_id="external_dag_id",

@@ -53,9 +53,9 @@ class TestPytestSnowflakeSensorAsync:
             operator.poke(None)
             operator.execute(create_context(operator, dag=dag))
 
-        assert isinstance(
-            exc.value.trigger, SnowflakeSensorTrigger
-        ), "Trigger is not a SnowflakeSensorTrigger"
+        assert isinstance(exc.value.trigger, SnowflakeSensorTrigger), (
+            "Trigger is not a SnowflakeSensorTrigger"
+        )
 
     def test_snowflake_async_execute_complete_failure(self):
         """Tests that an AirflowException is raised in case of error event"""

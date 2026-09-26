@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, List, Tuple
+from collections.abc import AsyncIterator
+from typing import Any
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -19,7 +20,7 @@ class NamedHivePartitionTrigger(BaseTrigger):
 
     def __init__(
         self,
-        partition_names: List[str],
+        partition_names: list[str],
         metastore_conn_id: str,
         polling_interval: float,
     ):
@@ -28,7 +29,7 @@ class NamedHivePartitionTrigger(BaseTrigger):
         self.polling_interval = polling_interval
         self.metastore_conn_id: str = metastore_conn_id
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes NamedHivePartitionTrigger arguments and classpath."""
         return (
             "astronomer.providers.apache.hive.triggers.named_hive_partition.NamedHivePartitionTrigger",

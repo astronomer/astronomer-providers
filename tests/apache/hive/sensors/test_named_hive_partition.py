@@ -58,9 +58,9 @@ class TestNamedHivePartitionSensorAsync:
         )
         with pytest.raises(TaskDeferred) as exc:
             task.execute(context)
-        assert isinstance(
-            exc.value.trigger, NamedHivePartitionTrigger
-        ), "Trigger is not a NamedHivePartitionTrigger"
+        assert isinstance(exc.value.trigger, NamedHivePartitionTrigger), (
+            "Trigger is not a NamedHivePartitionTrigger"
+        )
 
     def test_named_hive_partition_sensor_async_exception(self):
         """

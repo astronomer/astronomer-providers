@@ -61,7 +61,7 @@ class TestSnowflakeSensorTrigger:
                 TriggerEvent(
                     {
                         "status": "error",
-                        "message": f"{TASK_ID} " f"failed with terminal state: False",
+                        "message": f"{TASK_ID} failed with terminal state: False",
                     }
                 ),
             ),

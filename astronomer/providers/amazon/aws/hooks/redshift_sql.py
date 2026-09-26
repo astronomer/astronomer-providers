@@ -1,5 +1,4 @@
 import asyncio
-from typing import Dict, List, Union
 
 import botocore.exceptions
 from asgiref.sync import sync_to_async
@@ -10,7 +9,7 @@ from astronomer.providers.amazon.aws.hooks.redshift_data import RedshiftDataHook
 class RedshiftSQLHookAsync(RedshiftDataHook):
     """RedshiftSQL async hook inherits from RedshiftDataHook to interact with AWS redshift cluster database"""
 
-    async def get_query_status(self, query_ids: List[str]) -> Dict[str, Union[str, List[str]]]:
+    async def get_query_status(self, query_ids: list[str]) -> dict[str, str | list[str]]:
         """
         Async function to get the Query status by query Ids, this function
         takes list of query_ids make async connection
@@ -26,7 +25,7 @@ class RedshiftSQLHookAsync(RedshiftDataHook):
                 # for apache-airflow-providers-amazon>=4.1.0
                 self.resource_type = None
                 client = await sync_to_async(self.get_conn)()
-            completed_ids: List[str] = []
+            completed_ids: list[str] = []
             for qid in query_ids:
                 while await self.is_still_running(qid):
                     await asyncio.sleep(1)
@@ -47,7 +46,7 @@ class RedshiftSQLHookAsync(RedshiftDataHook):
         except botocore.exceptions.ClientError as error:
             return {"status": "error", "message": str(error), "type": "ERROR"}
 
-    async def is_still_running(self, qid: str) -> Union[bool, Dict[str, str]]:
+    async def is_still_running(self, qid: str) -> bool | dict[str, str]:
         """
         Async function to whether the query is still running or in
         "PICKED", "STARTED", "SUBMITTED" state and returns True else

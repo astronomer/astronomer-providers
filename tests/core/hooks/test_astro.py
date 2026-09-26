@@ -9,7 +9,6 @@ from astronomer.providers.core.hooks.astro import AstroHook
 
 
 class TestAstroHook:
-
     def test_get_ui_field_behaviour(self):
         hook = AstroHook()
 

@@ -25,9 +25,9 @@ class TestExternalDeploymentTaskSensorAsync:
         )
         with pytest.raises(TaskDeferred) as exc:
             task.execute({})
-        assert isinstance(
-            exc.value.trigger, ExternalDeploymentTaskTrigger
-        ), "Trigger is not a ExternalDeploymentTaskTrigger"
+        assert isinstance(exc.value.trigger, ExternalDeploymentTaskTrigger), (
+            "Trigger is not a ExternalDeploymentTaskTrigger"
+        )
 
     @pytest.mark.parametrize(
         "mock_state, mock_message",

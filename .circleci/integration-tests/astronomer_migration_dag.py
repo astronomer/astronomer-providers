@@ -11,7 +11,7 @@ with DAG(
     start_date=datetime(2020, 8, 15),
     schedule_interval=None,
 ) as dag:
-    AstroMigrationOperator(  # nosec B106
+    AstroMigrationOperator(
         task_id="export_meta",
         deployment_url='{{ dag_run.conf["deployment_url"] }}',
         token='{{ dag_run.conf["astro_token"] }}',

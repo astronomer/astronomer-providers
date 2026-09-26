@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import timedelta
-from typing import Any, Callable, Sequence
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.providers.common.sql.sensors.sql import SqlSensor

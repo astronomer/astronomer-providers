@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Any, List
+from typing import Any
 
 from airflow import DAG
 from airflow.models import DagRun
@@ -38,11 +38,11 @@ redshift_default
 """
 
 
-def get_report(dag_run_ids: List[str], **context: Any) -> None:
+def get_report(dag_run_ids: list[str], **context: Any) -> None:
     """Fetch dags run details and generate report."""
     with create_session() as session:
-        last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
-        message_list: List[str] = []
+        last_dags_runs: list[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
+        message_list: list[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
@@ -93,7 +93,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
 
         output_list = [
             f"*Total DAGS*: {dag_count} \n",
-            f"*Success DAGS*: {dag_count-failed_dag_count} :green_apple: \n",
+            f"*Success DAGS*: {dag_count - failed_dag_count} :green_apple: \n",
             f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
         ]
         output_list = report_details + output_list
@@ -103,7 +103,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         dag_run = context["dag_run"]
         task_instances = dag_run.get_task_instances()
 
-        task_failure_message_list: List[str] = [
+        task_failure_message_list: list[str] = [
             f":red_circle: {ti.task_id} \n" for ti in task_instances if ti.state == "failed"
         ]
 

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Generator
 from contextlib import closing, contextmanager
 from io import StringIO
-from typing import Any, Callable, Generator
+from typing import Any
 
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from asgiref.sync import sync_to_async

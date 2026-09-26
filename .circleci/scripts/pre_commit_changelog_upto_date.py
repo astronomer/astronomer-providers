@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Pre-commit hook to verify changelog is updated when releasing a new version."""
+
 import configparser
 from pathlib import Path
 

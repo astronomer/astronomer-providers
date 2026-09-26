@@ -1,6 +1,6 @@
 import argparse
 import re
-import subprocess  # nosec B404
+import subprocess
 from datetime import datetime
 
 CHANGELOG_HEADER = """Changelog
@@ -26,7 +26,7 @@ EXCLUDE_PATTERN = (
 def draft_changelog(release_version: str) -> None:
     """Extract commit messages after release_version and write them into changelog"""
     latest_tag = (
-        subprocess.run(  # nosec B603 B607
+        subprocess.run(
             ["git", "tag", "--sort=-authordate", "--merged"],
             capture_output=True,
             text=True,
@@ -36,9 +36,7 @@ def draft_changelog(release_version: str) -> None:
     )
     print(f"The latest version is {latest_tag}")
     git_log_messages = (
-        subprocess.run(
-            ["git", "log", "--format=%s", f"{latest_tag}.."], capture_output=True, text=True
-        )  # nosec B603 B607
+        subprocess.run(["git", "log", "--format=%s", f"{latest_tag}.."], capture_output=True, text=True)
         .stdout.strip()
         .split("\n")
     )

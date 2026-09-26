@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, AsyncIterator, Dict, Tuple
+from collections.abc import AsyncIterator
+from typing import Any
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
@@ -33,7 +34,7 @@ class HivePartitionTrigger(BaseTrigger):
         self.metastore_conn_id: str = metastore_conn_id
         self.schema = schema
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         """Serializes HivePartitionTrigger arguments and classpath."""
         return (
             "astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger",
