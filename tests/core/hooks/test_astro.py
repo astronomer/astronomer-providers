@@ -2,10 +2,20 @@ from unittest import mock
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from aioresponses import aioresponses
+from aiohttp import ClientResponse, ClientSession
 from airflow.exceptions import AirflowException
 
 from astronomer.providers.core.hooks.astro import AstroHook
+
+
+def mock_client_session(mock_session_cls, payload):
+    """Make ``async with ClientSession() as s, s.get(url) as r`` yield a response returning ``payload``."""
+    response = MagicMock(spec=ClientResponse)
+    response.json.return_value = payload
+    session = MagicMock(spec=ClientSession)
+    session.get.return_value.__aenter__.return_value = response
+    mock_session_cls.return_value.__aenter__.return_value = session
+    return session
 
 
 class TestAstroHook:
@@ -173,15 +183,12 @@ class TestAstroHook:
             "state": "success",
         }
 
-        with aioresponses() as mock_session:
-            mock_session.get(
-                url,
-                headers=your_class_instance._headers,
-                status=200,
-                payload=response_data,
-            )
+        with patch("astronomer.providers.core.hooks.astro.ClientSession", autospec=True) as mock_session_cls:
+            session = mock_client_session(mock_session_cls, response_data)
 
             result = await your_class_instance.get_a_dag_run(external_dag_id, dag_run_id)
+
+        session.get.assert_called_once_with(url)
 
         assert result == response_data
 
@@ -226,16 +233,13 @@ class TestAstroHook:
             "unixname": "astro",
         }
 
-        with aioresponses() as mock_session:
-            mock_session.get(
-                url,
-                headers=your_class_instance._headers,
-                status=200,
-                payload=response_data,
-            )
+        with patch("astronomer.providers.core.hooks.astro.ClientSession", autospec=True) as mock_session_cls:
+            session = mock_client_session(mock_session_cls, response_data)
 
             result = await your_class_instance.get_a_task_instance(
                 external_dag_id, dag_run_id, external_task_id
             )
+
+        session.get.assert_called_once_with(url)
 
         assert result == response_data
