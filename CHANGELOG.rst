@@ -111,6 +111,8 @@ Breaking changes
 * ``ExternalDeploymentTaskTrigger`` now subclasses ``BaseTrigger`` instead of the removed ``HttpTrigger``. Its
   constructor arguments and serialized form are unchanged.
 * ``RedshiftDataHook`` no longer emits a ``DeprecationWarning``; ``RedshiftSQLOperatorAsync`` still uses it.
+* Remove ``astronomer.providers.utils.typing_compat``. It was a fallback for Airflow versions older than 2.2.3,
+  below the 2.6.0 minimum. Import ``Context`` from ``airflow.utils.context`` instead.
 * Remove the ``S3XComBackend`` and ``GCSXComBackend`` custom XCom backends. Use
   ``airflow.providers.common.io.xcom.backend.XComObjectStorageBackend`` from
   ``apache-airflow-providers-common-io>=1.3.0`` (Airflow 2.8+) instead, which stores XComs in any object store

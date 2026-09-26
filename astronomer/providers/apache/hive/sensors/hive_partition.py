@@ -3,13 +3,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 from airflow.providers.apache.hive.sensors.hive_partition import HivePartitionSensor
+from airflow.utils.context import Context
 
 from astronomer.providers.apache.hive.hooks.hive import HiveCliHookAsync
 from astronomer.providers.apache.hive.triggers.hive_partition import (
     HivePartitionTrigger,
 )
 from astronomer.providers.utils.sensor_util import raise_error_or_skip_exception
-from astronomer.providers.utils.typing_compat import Context
 
 
 class HivePartitionSensorAsync(HivePartitionSensor):

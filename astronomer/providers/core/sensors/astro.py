@@ -5,10 +5,10 @@ from typing import Any, cast
 
 from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.sensors.base import BaseSensorOperator, PokeReturnValue
+from airflow.utils.context import Context
 
 from astronomer.providers.core.hooks.astro import AstroHook
 from astronomer.providers.core.triggers.astro import AstroDeploymentTrigger
-from astronomer.providers.utils.typing_compat import Context
 
 
 class ExternalDeploymentSensor(BaseSensorOperator):
