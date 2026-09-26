@@ -155,13 +155,6 @@ jobs:
           keys:
             # yamllint disable-line rule:line-length
             - mypy-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}-{{ .Environment.CACHE_VERSION }}
-      - run:
-          name: Install Dependencies for sasl
-          command: |
-            sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
-            sudo apt-get upgrade
-            sudo apt-get install libsasl2-dev
       - install-dependencies:
           extras: "all,mypy"
       - run:
@@ -187,13 +180,6 @@ jobs:
           keys:
             # yamllint disable-line rule:line-length
             - docs-{{ .Branch }}-{{ checksum "setup.cfg" }}-{{ checksum ".readthedocs.yaml" }}-{{ .Environment.CACHE_VERSION }}
-      - run:
-          name: Install Dependencies for sasl
-          command: |
-            sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
-            sudo apt-get upgrade
-            sudo apt-get install libsasl2-dev
       - install-dependencies:
           extras: "docs"
       - run:
@@ -228,13 +214,6 @@ jobs:
           keys:
             # yamllint disable-line rule:line-length
             - deps-{{ .Branch }}-<<parameters.airflow_version>>-{{ checksum "setup.cfg" }}-{{ checksum "/home/circleci/.pyenv/version" }}-{{ .Environment.CACHE_VERSION }}
-      - run:
-          name: Install Dependencies for sasl
-          command: |
-            sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
-            sudo apt-get upgrade
-            sudo apt-get install libsasl2-dev
       - install-dependencies:
           extras: "all,tests"
           airflow_version: "<<parameters.airflow_version>>"
@@ -269,12 +248,6 @@ jobs:
       python_version: "<<parameters.python_version>>"
     steps:
       - checkout
-      - run:
-          name: Install Dependencies for sasl
-          command: |
-            sudo apt-get install -y --no-install-recommends build-essential
-            sudo apt-get update
-            sudo apt-get install libsasl2-dev
       - install-dependencies:
           extras: "all,tests"
           airflow_version: "<<parameters.airflow_version>>"
