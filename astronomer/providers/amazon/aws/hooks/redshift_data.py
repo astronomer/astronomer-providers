@@ -6,11 +6,11 @@ from typing import Any
 
 import botocore.exceptions
 from airflow.exceptions import AirflowException
-from airflow.models.param import ParamsDict
 from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 from airflow.providers.common.sql.hooks.sql import DbApiHook
-from airflow.utils.context import Context
 from asgiref.sync import sync_to_async
+
+from astronomer.providers.utils.compat import Context, ParamsDict
 
 
 class RedshiftDataHook(AwsBaseHook):

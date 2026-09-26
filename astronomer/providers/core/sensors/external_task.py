@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from airflow.providers.http.sensors.http import HttpSensor
-from airflow.utils.context import Context
 
 from astronomer.providers.core.triggers.external_task import ExternalDeploymentTaskTrigger
+from astronomer.providers.utils.compat import Context
 
 
 class ExternalDeploymentTaskSensorAsync(HttpSensor):

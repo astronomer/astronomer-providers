@@ -3,9 +3,10 @@
 import asyncio
 
 from airflow.configuration import conf
-from airflow.hooks.base import BaseHook
 from impala.dbapi import connect
 from impala.hiveserver2 import HiveServer2Connection
+
+from astronomer.providers.utils.compat import BaseHook
 
 
 class HiveCliHookAsync(BaseHook):

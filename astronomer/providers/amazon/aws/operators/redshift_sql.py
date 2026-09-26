@@ -1,7 +1,8 @@
 from typing import Any, cast
 
 from airflow.exceptions import AirflowException
-from airflow.utils.context import Context
+
+from astronomer.providers.utils.compat import Context
 
 try:
     from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator

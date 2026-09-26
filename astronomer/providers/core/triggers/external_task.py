@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
