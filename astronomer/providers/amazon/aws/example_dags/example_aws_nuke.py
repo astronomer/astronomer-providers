@@ -123,15 +123,6 @@ with DAG(
         do_xcom_push=True,
     )
 
-    terminate_running_emr_virtual_clusters = BashOperator(
-        task_id="terminate_running_emr_virtual_clusters",
-        bash_command=f"set -e; "
-        f"aws configure set aws_access_key_id {AWS_ACCESS_KEY_ID}; "
-        f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
-        f"aws configure set default.region {AWS_DEFAULT_REGION}; "
-        f"aws emr-containers list-virtual-clusters --state RUNNING --region {AWS_DEFAULT_REGION} | jq -r '.virtualClusters[].id' | xargs -I % aws emr-containers delete-virtual-cluster --id % --region {AWS_DEFAULT_REGION}; ",
-    )
-
     terminate_dag_authoring_regression_clusters = BashOperator(
         task_id="terminate_dag_authoring_regression_clusters",
         bash_command=f"set -e; "
@@ -147,17 +138,6 @@ with DAG(
         f"aws configure set aws_secret_access_key {AWS_SECRET_ACCESS_KEY}; "
         f"aws configure set default.region {AWS_DEFAULT_REGION}; "
         f"aws-nuke -c /usr/local/airflow/dags/nuke-config.yml --profile default --force --no-dry-run; ",
-    )
-
-    delete_stale_emr_vpcs = BashOperator(
-        task_id="delete_stale_emr_vpcs",
-        bash_command="sh $AIRFLOW_HOME/dags/example_delete_stale_emr_vpcs.sh ",
-        trigger_rule="all_done",
-    )
-
-    delete_stale_emr_iam_roles = BashOperator(
-        task_id="delete_stale_emr_iam_roles",
-        bash_command="sh $AIRFLOW_HOME/dags/example_delete_stale_emr_iam_roles.sh ",
     )
 
     generate_report = PythonOperator(
@@ -178,11 +158,8 @@ with DAG(
     (
         start
         >> [get_airflow_version, get_airflow_executor]
-        >> terminate_running_emr_virtual_clusters
         >> terminate_dag_authoring_regression_clusters
         >> execute_aws_nuke
-        >> delete_stale_emr_vpcs
-        >> delete_stale_emr_iam_roles
         >> generate_report
         >> dag_final_status
     )

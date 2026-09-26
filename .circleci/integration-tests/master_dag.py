@@ -27,27 +27,9 @@ IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 To run this master dag across multiple deployments simultaneously, set unique values for the below environment
 variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
 
-ADF_FACTORY_NAME
-AZURE_DATA_STORAGE_BLOB_NAME
-AZURE_DATA_STORAGE_CONTAINER_NAME
-BATCH_JOB_COMPUTE_ENV
-BATCH_JOB_NAME
-BATCH_JOB_QUEUE
-EKS_CLUSTER_NAME
-EKS_NAMESPACE
-EMR_VIRTUAL_CLUSTER_NAME
-GCP_BIGQUERY_DATASET_NAME
-GCP_DATAPROC_CLUSTER_NAME
-GCP_TEST_BUCKET
-GKE_CLUSTER_NAME
-GKE_POD_NAME
 HIVE_CLUSTER
-JOB_EXECUTION_ROLE
-LIVY_CLUSTER
-MODEL_NAME
 REDSHIFT_CLUSTER_IDENTIFIER
 REDSHIFT_TABLE_NAME
-RESOURCE_GROUP_NAME
 
 
 Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
@@ -244,124 +226,27 @@ with DAG(
 
     dag_run_ids = []
 
-    # AWS sagemaker and batch
-    aws_misc_dags_info = [
-        {"sagemaker_dag": "example_async_sagemaker"},
-        {"batch_dag": "example_async_batch"},
-    ]
-    aws_misc_dags_tasks, ids = prepare_dag_dependency(aws_misc_dags_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*aws_misc_dags_tasks)
-
-    # AWS S3 and Redshift DAG
+    # AWS Redshift DAG
     amazon_task_info = [
-        {"redshift_cluster_mgmt_dag": "example_async_redshift_cluster_management"},
         {"redshift_sql_dag": "example_async_redshift_sql"},
-        {"redshift_data_dag": "example_async_redshift_data"},
-        {"s3_sensor_dag": "example_s3_sensor"},
     ]
     amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*amazon_trigger_tasks)
 
-    # AWS EMR EKS PI DAG
-    emr_eks_task_info = [
-        {"emr_eks_pi_job_dag": "example_emr_eks_pi_job"},
-    ]
-    emr_eks_trigger_tasks, ids = prepare_dag_dependency(emr_eks_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*emr_eks_trigger_tasks)
-
-    # AWS EMR Sensor DAG
-    emr_sensor_task_info = [
-        {"emr_sensor_dag": "example_emr_sensor"},
-    ]
-    emr_sensor_trigger_tasks, ids = prepare_dag_dependency(emr_sensor_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*emr_sensor_trigger_tasks)
-
-    # Google DAG
-    google_task_info = [
-        {"bigquery_dag": "example_async_bigquery_queries"},
-        {"gcs_sensor_dag": "example_async_gcs_sensors"},
-        {"big_query_sensor_dag": "example_bigquery_sensors"},
-        {"dataproc_dag": "example_gcp_dataproc"},
-        {"kubernetes_engine_dag": "example_google_kubernetes_engine"},
-        {"bigquery_impersonation_dag": "example_bigquery_impersonation"},
-        {"dataproc_impersonation_dag": "example_gcp_dataproc_impersonation"},
-    ]
-    google_trigger_tasks, ids = prepare_dag_dependency(google_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*google_trigger_tasks)
-
-    # Core DAG
-    core_task_info = [
-        {"external_task_dag": "example_external_task"},
-        {"file_sensor_dag": "example_async_file_sensor"},
-    ]
-    core_trigger_tasks, ids = prepare_dag_dependency(core_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*core_trigger_tasks)
-
-    # CNCF Kubernetes DAG
-    kubernetes_task_info = [{"kubernetes_pod_dag": "example_kubernetes_operator"}]
-    kubernetes_trigger_tasks, ids = prepare_dag_dependency(kubernetes_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*kubernetes_trigger_tasks)
-
-    # Databricks DAG
-    databricks_task_info = [
-        {"databricks_dag": "example_async_databricks"},
-        {"databricks_workflow_dag": "example_databricks_workflow"},
-    ]
-    databricks_trigger_tasks, ids = prepare_dag_dependency(databricks_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*databricks_trigger_tasks)
-
-    # HTTP DAG
-    http_task_info = [{"http_dag": "example_async_http_sensor"}]
-    http_trigger_tasks, ids = prepare_dag_dependency(http_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*http_trigger_tasks)
-
     # Snowflake DAG
     snowflake_task_info = [
-        {"snowflake_dag": "example_snowflake"},
-        {"snowflake_sql_api_dag": "example_snowflake_sql_api"},
         {"example_snowflake_sensor": "example_snowflake_sensor"},
     ]
     snowflake_trigger_tasks, ids = prepare_dag_dependency(snowflake_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
 
-    # Apache livy DAG
-    livy_task_info = [{"livy_dag": "example_livy_operator"}]
-    livy_trigger_tasks, ids = prepare_dag_dependency(livy_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*livy_trigger_tasks)
-
     # Apache Hive Dag
     hive_task_info = [{"hive_dag": "example_hive_dag"}]
     hive_trigger_tasks, ids = prepare_dag_dependency(hive_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*hive_trigger_tasks)
-
-    # Microsoft Azure DAGs
-    azure_task_info = [
-        {"wasb_sensors_dag": "example_wasb_sensors"},
-        {"adf_pipeline_dag": "example_async_adf_run_pipeline"},
-    ]
-    azure_trigger_tasks, ids = prepare_dag_dependency(azure_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*azure_trigger_tasks)
-
-    # SFTP
-    sftp_task_info = [
-        {"sftp_dag": "example_async_sftp_sensor"},
-    ]
-    sftp_trigger_tasks, ids = prepare_dag_dependency(sftp_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*sftp_trigger_tasks)
 
     report = PythonOperator(
         task_id="get_report",
@@ -382,20 +267,9 @@ with DAG(
         get_airflow_executor,
         get_astronomer_providers_version,
         get_astro_cloud_provider,
-        emr_eks_trigger_tasks[0],
-        emr_sensor_trigger_tasks[0],
-        aws_misc_dags_tasks[0],
         amazon_trigger_tasks[0],
-        google_trigger_tasks[0],
-        core_trigger_tasks[0],
-        kubernetes_trigger_tasks[0],
-        databricks_trigger_tasks[0],
-        http_trigger_tasks[0],
         snowflake_trigger_tasks[0],
-        livy_trigger_tasks[0],
         hive_trigger_tasks[0],
-        azure_trigger_tasks[0],
-        sftp_trigger_tasks[0],
     ]
 
     last_task = [
@@ -405,19 +279,8 @@ with DAG(
         get_astronomer_providers_version,
         get_astro_cloud_provider,
         amazon_trigger_tasks[-1],
-        emr_eks_trigger_tasks[-1],
-        emr_sensor_trigger_tasks[-1],
-        aws_misc_dags_tasks[-1],
-        google_trigger_tasks[-1],
-        core_trigger_tasks[-1],
-        kubernetes_trigger_tasks[-1],
-        databricks_trigger_tasks[-1],
-        http_trigger_tasks[-1],
         snowflake_trigger_tasks[-1],
-        livy_trigger_tasks[-1],
         hive_trigger_tasks[-1],
-        azure_trigger_tasks[-1],
-        sftp_trigger_tasks[-1],
     ]
 
     last_task >> report >> end
