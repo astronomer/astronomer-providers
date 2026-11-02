@@ -160,7 +160,12 @@ class TraverseOperatorsSensors(SphinxDirective):
             "</head>"
             "<body>"
         )
-        html = base_html + operators_html + sensors_html + "</body>"
+        html = base_html
+        if operators:
+            html += operators_html
+        if sensors:
+            html += sensors_html
+        html += "</body>"
         node = nodes.raw("", html, format="html")
         return [node]
 

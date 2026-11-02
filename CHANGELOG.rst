@@ -91,6 +91,23 @@ Breaking changes
 
   * ``astronomer.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperatorAsync`` -> ``airflow.providers.snowflake.operators.snowflake.SnowflakeSqlApiOperator``
 
+* Remove ``RedshiftSQLOperatorAsync``, together with ``RedshiftSQLTrigger``, ``RedshiftSQLHookAsync`` and
+  ``RedshiftDataHook``, which only it used. It was not deprecated in 1.x. Despite its name, it ran SQL through the
+  Redshift Data API, so the replacement is
+  ``airflow.providers.amazon.aws.operators.redshift_data.RedshiftDataOperator`` with ``deferrable=True``. Four things
+  change when migrating:
+
+  * Pass ``database``, ``db_user`` and ``cluster_identifier`` to the operator. They are no longer read from the
+    connection extras. Rename ``redshift_conn_id`` to ``aws_conn_id``.
+  * Credentials and region still come from the AWS connection, but only from the login and password or the
+    ``aws_access_key_id``, ``aws_secret_access_key`` and ``region_name`` extras. The ``access_key_id``,
+    ``secret_access_key`` and ``region`` aliases are not read.
+  * The removed operator split a SQL string on ``;`` and submitted each statement as a separate request, with no
+    shared transaction. ``RedshiftDataOperator`` runs a string as a single statement, and runs a list of strings in
+    order as one transaction. Pass multiple statements as a list.
+  * The XCom return value holds the IDs of the batch's sub-statements, or their results with
+    ``return_sql_result=True``, instead of the IDs of separately submitted statements.
+
 * Remove ``SnowflakeOperatorAsync``. Its base class, ``SnowflakeOperator``, was removed from
   ``apache-airflow-providers-snowflake`` 6.0.0. Use
   ``airflow.providers.common.sql.operators.sql.SQLExecuteQueryOperator``, or
@@ -104,13 +121,12 @@ Breaking changes
 * Remove the OpenLineage extractors (``RedshiftAsyncExtractor``, ``BigQueryAsyncExtractor`` and
   ``SnowflakeAsyncExtractor``). ``openlineage-airflow`` is discontinued; the upstream providers emit lineage through
   ``apache-airflow-providers-openlineage``.
-* Remove the ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``google``, ``microsoft.azure``,
-  ``sftp`` and ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies and ``aiobotocore`` from the
-  ``amazon`` extra. ``paramiko``, previously pulled in by ``apache.livy``, moves to the ``apache.hive`` extra because
-  the Hive example DAG uses it.
+* Remove the ``amazon``, ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``google``,
+  ``microsoft.azure``, ``sftp`` and ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies.
+  ``paramiko``, previously pulled in by ``apache.livy``, moves to the ``apache.hive`` extra because the Hive example
+  DAG uses it.
 * ``ExternalDeploymentTaskTrigger`` now subclasses ``BaseTrigger`` instead of the removed ``HttpTrigger``. Its
   constructor arguments and serialized form are unchanged.
-* ``RedshiftDataHook`` no longer emits a ``DeprecationWarning``; ``RedshiftSQLOperatorAsync`` still uses it.
 * Remove ``astronomer.providers.utils.typing_compat``. It was a fallback for Airflow versions older than 2.2.3,
   below the 2.6.0 minimum. Import ``Context`` from ``airflow.utils.context`` instead.
 * Remove the ``S3XComBackend`` and ``GCSXComBackend`` custom XCom backends. Use
@@ -133,9 +149,8 @@ Breaking changes
   rows reference classes such as ``HttpTrigger`` or ``SnowflakeTrigger`` that no longer exist, and the triggerer
   cannot load them after the upgrade.
 
-The operators and sensors that remain are ``RedshiftSQLOperatorAsync``, ``HivePartitionSensorAsync``,
-``NamedHivePartitionSensorAsync``, ``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and
-``SnowflakeSensorAsync``.
+The sensors that remain are ``HivePartitionSensorAsync``, ``NamedHivePartitionSensorAsync``,
+``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and ``SnowflakeSensorAsync``.
 
 Features
 """"""""

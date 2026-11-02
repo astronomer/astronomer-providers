@@ -28,13 +28,10 @@ To run this master dag across multiple deployments simultaneously, set unique va
 variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
 
 HIVE_CLUSTER
-REDSHIFT_CLUSTER_IDENTIFIER
-REDSHIFT_TABLE_NAME
 
 
 Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
 aws_default
-redshift_default
 """
 
 
@@ -226,14 +223,6 @@ with DAG(
 
     dag_run_ids = []
 
-    # AWS Redshift DAG
-    amazon_task_info = [
-        {"redshift_sql_dag": "example_async_redshift_sql"},
-    ]
-    amazon_trigger_tasks, ids = prepare_dag_dependency(amazon_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*amazon_trigger_tasks)
-
     # Snowflake DAG
     snowflake_task_info = [
         {"example_snowflake_sensor": "example_snowflake_sensor"},
@@ -267,7 +256,6 @@ with DAG(
         get_airflow_executor,
         get_astronomer_providers_version,
         get_astro_cloud_provider,
-        amazon_trigger_tasks[0],
         snowflake_trigger_tasks[0],
         hive_trigger_tasks[0],
     ]
@@ -278,7 +266,6 @@ with DAG(
         get_airflow_executor,
         get_astronomer_providers_version,
         get_astro_cloud_provider,
-        amazon_trigger_tasks[-1],
         snowflake_trigger_tasks[-1],
         hive_trigger_tasks[-1],
     ]
