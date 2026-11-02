@@ -333,15 +333,15 @@ Some Common Pitfalls
     .. code-block:: python
 
             def serialize(self) -> tuple[str, dict[str, Any]]:
-                """Serialize HivePartitionTrigger arguments and classpath."""
+                """Serialize the trigger for storage in the database."""
                 return (
-                    "astronomer.providers.apache.hive.triggers.hive_partition.HivePartitionTrigger",
+                    "astronomer.providers.core.triggers.astro.AstroDeploymentTrigger",
                     {
-                        "table": self.table,
-                        "partition": self.partition,
-                        "polling_interval": self.polling_interval,
-                        "metastore_conn_id": self.metastore_conn_id,
-                        "schema": self.schema,
+                        "external_dag_id": self.external_dag_id,
+                        "external_task_id": self.external_task_id,
+                        "dag_run_id": self.dag_run_id,
+                        "astro_cloud_conn_id": self.astro_cloud_conn_id,
+                        "poke_interval": self.poke_interval,
                     },
                 )
 

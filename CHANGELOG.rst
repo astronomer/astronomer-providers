@@ -108,6 +108,18 @@ Breaking changes
   * The XCom return value holds the IDs of the batch's sub-statements, or their results with
     ``return_sql_result=True``, instead of the IDs of separately submitted statements.
 
+* Remove ``HivePartitionSensorAsync`` and ``NamedHivePartitionSensorAsync``, together with
+  ``HivePartitionTrigger``, ``NamedHivePartitionTrigger`` and ``HiveCliHookAsync``. They were not deprecated in 1.x.
+  The upstream apache-hive provider has no deferrable Hive sensors, so use
+  ``airflow.providers.apache.hive.sensors.hive_partition.HivePartitionSensor`` or
+  ``airflow.providers.apache.hive.sensors.named_hive_partition.NamedHivePartitionSensor`` with
+  ``mode="reschedule"``, which frees the worker slot between checks. When migrating:
+
+  * Point ``metastore_conn_id`` at the Hive metastore Thrift service, usually on port 9083. The removed sensors
+    connected to HiveServer2 on port 10000 through ``impyla`` and ran ``SHOW PARTITIONS``.
+  * ``HivePartitionSensor`` passes ``partition`` to the metastore as a filter, so filter expressions such as
+    ``ds>='2024-01-01'`` work in addition to the exact ``key='value'`` specs the removed sensor accepted.
+
 * Remove ``SnowflakeOperatorAsync``. Its base class, ``SnowflakeOperator``, was removed from
   ``apache-airflow-providers-snowflake`` 6.0.0. Use
   ``airflow.providers.common.sql.operators.sql.SQLExecuteQueryOperator``, or
@@ -121,10 +133,9 @@ Breaking changes
 * Remove the OpenLineage extractors (``RedshiftAsyncExtractor``, ``BigQueryAsyncExtractor`` and
   ``SnowflakeAsyncExtractor``). ``openlineage-airflow`` is discontinued; the upstream providers emit lineage through
   ``apache-airflow-providers-openlineage``.
-* Remove the ``amazon``, ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``, ``google``,
-  ``microsoft.azure``, ``sftp`` and ``openlineage`` extras. Drop ``aiofiles`` from the core dependencies.
-  ``paramiko``, previously pulled in by ``apache.livy``, moves to the ``apache.hive`` extra because the Hive example
-  DAG uses it.
+* Remove the ``amazon``, ``apache.hive``, ``apache.livy``, ``cncf.kubernetes``, ``databricks``, ``dbt.cloud``,
+  ``google``, ``microsoft.azure``, ``sftp`` and ``openlineage`` extras, which also drops ``impyla`` and ``paramiko``.
+  Drop ``aiofiles`` from the core dependencies.
 * ``ExternalDeploymentTaskTrigger`` now subclasses ``BaseTrigger`` instead of the removed ``HttpTrigger``. Its
   constructor arguments and serialized form are unchanged.
 * Remove ``astronomer.providers.utils.typing_compat``. It was a fallback for Airflow versions older than 2.2.3,
@@ -149,8 +160,8 @@ Breaking changes
   rows reference classes such as ``HttpTrigger`` or ``SnowflakeTrigger`` that no longer exist, and the triggerer
   cannot load them after the upgrade.
 
-The sensors that remain are ``HivePartitionSensorAsync``, ``NamedHivePartitionSensorAsync``,
-``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and ``SnowflakeSensorAsync``.
+The sensors that remain are ``ExternalDeploymentTaskSensorAsync``, ``ExternalDeploymentSensor`` and
+``SnowflakeSensorAsync``.
 
 Features
 """"""""

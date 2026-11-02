@@ -7,13 +7,7 @@ ENV AWS_NUKE_VERSION=v2.17.0
 USER root
 
 RUN apt-get update -y \
-    && apt-get install -y software-properties-common \
     && apt-get install -y wget procps gnupg2
-
-# Install openjdk-17
-RUN apt-add-repository 'deb http://archive.debian.org/debian stretch main' \
-    && apt-get update && apt-get install -y openjdk-17-jdk
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
 
 RUN apt-get update -y \
     && apt-get install -y \
@@ -21,19 +15,12 @@ RUN apt-get update -y \
     unzip \
     && apt-get install -y --no-install-recommends \
     build-essential \
-    libsasl2-2 \
-    libsasl2-dev \
-    libsasl2-modules \
     curl \
     jq \
     pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-
-# Set Hive and Hadoop versions.
-ENV HIVE_LIBRARY_VERSION=hive-4.0.1
-ENV HADOOP_LIBRARY_VERSION=hadoop-2.10.1
 
 # install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -46,25 +33,12 @@ RUN wget --quiet  \
     && tar -xzvf aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz -C /usr/local/bin \
     && mv /usr/local/bin/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64 /usr/local/bin/aws-nuke
 
-# Install Apache Hive (Download same version of library to match EMR Hive version created by DAG)
-RUN curl "https://downloads.apache.org/hive/$HIVE_LIBRARY_VERSION/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz" -o  "/tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz"  \
-    && tar -xf /tmp/apache-$HIVE_LIBRARY_VERSION-bin.tar.gz -C /usr/local
-ENV HIVE_HOME=/usr/local/apache-$HIVE_LIBRARY_VERSION-bin
-
-# Install Apache Hadoop (Download same version of library to match EMR Hadoop version created by DAG)
-RUN curl "https://archive.apache.org/dist/hadoop/common/$HADOOP_LIBRARY_VERSION/$HADOOP_LIBRARY_VERSION.tar.gz" -o "/tmp/$HADOOP_LIBRARY_VERSION.tar.gz" \
-    && tar -xf /tmp/$HADOOP_LIBRARY_VERSION.tar.gz -C /usr/local
-ENV HADOOP_HOME=/usr/local/$HADOOP_LIBRARY_VERSION
-ENV HADOOP_CONF_DIR=$HADOOP_HOME/conf
-
-ENV PATH $PATH:$JAVA_HOME/bin::$HIVE_HOME/bin:$HADOOP_HOME/bin
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN  python3 -m pip install --upgrade pip
 # Ideally we should install using constraints file
 RUN pip install  --upgrade --force-reinstall  --no-cache-dir /tmp/astronomer-providers[all]
-# The Hive example DAG creates its cluster with the EMR operators from the Amazon provider
-RUN pip install apache-airflow-providers-amazon apache-airflow-providers-slack
+RUN pip install apache-airflow-providers-slack
 
 # Install astronomer-starship-provider needed for the astronomer_migration_dag to transfer Airflow metadata between deployments
 RUN pip install astronomer-starship-provider
