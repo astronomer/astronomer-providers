@@ -2,37 +2,21 @@
 FROM quay.io/astronomer/astro-runtime:12.1.1-slim-base
 
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
-ENV AWS_NUKE_VERSION=v2.17.0
 
 USER root
 
 RUN apt-get update -y \
-    && apt-get install -y wget procps gnupg2
+    && apt-get install -y procps gnupg2
 
 RUN apt-get update -y \
     && apt-get install -y \
     git \
-    unzip \
     && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    jq \
     pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-
-# install AWS CLI
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install;
-
-# install AWS nuke
-RUN wget --quiet  \
-    "https://github.com/rebuy-de/aws-nuke/releases/download/${AWS_NUKE_VERSION}/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz" \
-    && tar -xzvf aws-nuke-${AWS_NUKE_VERSION}-linux-amd64.tar.gz -C /usr/local/bin \
-    && mv /usr/local/bin/aws-nuke-${AWS_NUKE_VERSION}-linux-amd64 /usr/local/bin/aws-nuke
-
 
 COPY astronomer-providers /tmp/astronomer-providers
 RUN  python3 -m pip install --upgrade pip
@@ -48,8 +32,6 @@ COPY . .
 RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
 RUN cp astronomer_migration_dag.py  ${AIRFLOW_HOME}/dags/
-RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
-RUN cp aws_nuke_dag.py delete_eks_cluster_and_nodes.sh ${AIRFLOW_HOME}/dags/
 # we have an issue with connexion==3.0.0, so for now pinning previous stable version
 RUN pip install connexion==2.14.2
 USER astro

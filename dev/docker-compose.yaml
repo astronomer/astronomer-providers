@@ -20,7 +20,6 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "5"
     ASTRONOMER_ENVIRONMENT: local
-    # AWS_NUKE_DAG_SCHEDULE: "28 6 * * *"
 
   volumes:
     - ./dags:/usr/local/airflow/dags
