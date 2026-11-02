@@ -1,4 +1,4 @@
-.PHONY: dev logs stop clean build build-aws build-run docs
+.PHONY: dev logs stop clean build build-run docs
 .PHONY: restart restart-all run-tests run-static-checks run-mypy test-rc-deps shell help
 
 ASTRO_PROVIDER_VERSION ?= "dev"
@@ -31,9 +31,6 @@ clean: ## Remove all the containers along with volumes
 
 build: ## Build the Docker image (ignoring cache)
 	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile . -t astronomer-providers-dev:latest --no-cache
-
-build-aws: ## Build the Docker image with aws-cli installed
-	docker build --build-arg IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) -f dev/Dockerfile.aws . -t astronomer-providers-dev:latest
 
 build-run: ## Build the Docker Image & then run the containers
 	IMAGE_NAME=$(ASTRO_RUNTIME_IMAGE_NAME) docker compose -f dev/docker-compose.yaml up --build -d
