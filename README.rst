@@ -118,10 +118,6 @@ Extras
      - ``pip install 'astronomer-providers[all]'``
      - All
 
-   * - ``apache.hive``
-     - ``pip install 'astronomer-providers[apache.hive]'``
-     - Apache Hive
-
    * - ``http``
      - ``pip install 'astronomer-providers[http]'``
      - Http

@@ -23,17 +23,6 @@ SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 MASTER_DAG_SCHEDULE = os.getenv("MASTER_DAG_SCHEDULE", None)
 IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 
-"""
-To run this master dag across multiple deployments simultaneously, set unique values for the below environment
-variables; otherwise same resources will be used by all the deployments and will cause conflicts at runtime.
-
-HIVE_CLUSTER
-
-
-Additionally, ensure to have unique "cluster_identifier" values for each deployment in the below Airflow connections:
-aws_default
-"""
-
 
 def get_report(dag_run_ids: list[str], **context: Any) -> None:
     """Fetch dags run details and generate report."""
@@ -231,12 +220,6 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*snowflake_trigger_tasks)
 
-    # Apache Hive Dag
-    hive_task_info = [{"hive_dag": "example_hive_dag"}]
-    hive_trigger_tasks, ids = prepare_dag_dependency(hive_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*hive_trigger_tasks)
-
     report = PythonOperator(
         task_id="get_report",
         python_callable=get_report,
@@ -257,7 +240,6 @@ with DAG(
         get_astronomer_providers_version,
         get_astro_cloud_provider,
         snowflake_trigger_tasks[0],
-        hive_trigger_tasks[0],
     ]
 
     last_task = [
@@ -267,7 +249,6 @@ with DAG(
         get_astronomer_providers_version,
         get_astro_cloud_provider,
         snowflake_trigger_tasks[-1],
-        hive_trigger_tasks[-1],
     ]
 
     last_task >> report >> end
