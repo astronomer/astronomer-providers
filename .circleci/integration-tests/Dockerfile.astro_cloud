@@ -63,7 +63,8 @@ COPY astronomer-providers /tmp/astronomer-providers
 RUN  python3 -m pip install --upgrade pip
 # Ideally we should install using constraints file
 RUN pip install  --upgrade --force-reinstall  --no-cache-dir /tmp/astronomer-providers[all]
-RUN pip install apache-airflow-providers-slack
+# The Hive example DAG creates its cluster with the EMR operators from the Amazon provider
+RUN pip install apache-airflow-providers-amazon apache-airflow-providers-slack
 
 # Install astronomer-starship-provider needed for the astronomer_migration_dag to transfer Airflow metadata between deployments
 RUN pip install astronomer-starship-provider
@@ -74,6 +75,7 @@ RUN cp -r example_* ${AIRFLOW_HOME}/dags
 RUN cp master_dag.py  ${AIRFLOW_HOME}/dags/
 RUN cp astronomer_migration_dag.py  ${AIRFLOW_HOME}/dags/
 RUN cp nuke-config.yml  ${AIRFLOW_HOME}/dags/
+RUN cp aws_nuke_dag.py delete_eks_cluster_and_nodes.sh ${AIRFLOW_HOME}/dags/
 # we have an issue with connexion==3.0.0, so for now pinning previous stable version
 RUN pip install connexion==2.14.2
 USER astro

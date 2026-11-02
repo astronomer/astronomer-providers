@@ -3,7 +3,7 @@ Available Operators and Sensors
 
 ``astronomer-providers`` 2.0.0 removed the operators and sensors that were deprecated in favour of their upstream
 Apache Airflow providers' deferrable counterparts. See the `changelog <../changelog.html>`_ for each removed class and
-its replacement.
+its replacement. No operators remain. The sensors that remain are listed below.
 
 .. traverse_operators_sensors::
   :hidden:
